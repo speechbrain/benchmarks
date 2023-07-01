@@ -9,7 +9,7 @@
 
 <img src="https://github.blog/wp-content/uploads/2020/09/github-stars-logo_Color.png" alt="drawing" width="25"/> **Please, star our project on github (see top-right corner) if you appreciate our contribution to the community!**
 
-Welcome to the SpeechBrain Benchmarks repository! This repository is dedicated to housing a collection of benchmarks associated with the [SpeechBrain toolkit](https://speechbrain.github.io/). 
+Welcome to the SpeechBrain Benchmarks repository! This repository is dedicated to housing a collection of benchmarks associated with the [SpeechBrain toolkit](https://speechbrain.github.io/).
 
 *What are benchmarks?* Benchmarks are standardized sets of recipes that enable users to measure the performance of specific models or techniques within a standardized environment. By utilizing these benchmarks, you can evaluate and compare the effectiveness of different approaches.
 

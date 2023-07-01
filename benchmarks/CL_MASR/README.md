@@ -26,6 +26,7 @@ Each of the 20 languages in the dataset includes approximately 10 hours of train
 
 Download the dataset from [here](https://zenodo.org/record/8065754) and extract it to a data folder of your choice (`CL-MASR` by default).
 
+---------------------------------------------------------------------------------------------------------
 
 ## 🛠️️ Installation
 

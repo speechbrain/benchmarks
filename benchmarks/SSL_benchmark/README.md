@@ -1,3 +1,5 @@
+# Benchmark for speech self-supervised representations
+
 To run a downstream evaluation for a given SSL model on huggingface you will need to  :
 * Change the SSL related values in the run\_benchmark.sh file, specifying the HF hub, the encoder dimension (size of every frame vector), and the number of layers.
 * Choose a set of tasks among the ones listed  and for every task a downstream architecture among the existing ones.
@@ -26,7 +28,7 @@ Please, cite SpeechBrain if you use it for your research or business.
   note={arXiv:2106.04624}
 }
 ```
-If you use these benchmarking approaches, please cite :
+If you use this benchmark, please cite :
 
 ```bibtex
 @article{zaiem2023speech,

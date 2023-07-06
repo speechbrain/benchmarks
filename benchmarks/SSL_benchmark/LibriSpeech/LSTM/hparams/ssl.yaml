@@ -38,7 +38,7 @@ sorting: ascending
 auto_mix_prec: False
 sample_rate: 16000
 language_modelling: False
-ngram_lm_path: !PLACEHOLDER #path/to/4-gram.arpa
+#ngram_lm_path: !PLACEHOLDER #path/to/4-gram.arpa
 
 # With data_parallel batch_size is split into N jobs
 # With DDP batch_size is multiplied by N jobs

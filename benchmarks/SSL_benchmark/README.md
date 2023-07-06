@@ -6,15 +6,33 @@ To run a downstream evaluation for a given SSL model on huggingface you will nee
 * Change the variable defined in run\_benchmark.sh with two lists of equal sized where to every task  in "ConsideredTasks" corresponds in the same index in "Downstreams" the downstream architecture.
 * If you want to run two downstream decoders on the same task, just put it twice in the first list with different corresponding decoders below.
 
+If you want to run only on experiment, let us take the example of LibriSpeech using the huggingface model link : mygroup/mySSLModel, that outputs frame vectors of dimension 768 and has 13 internal layers, than you should run : 
+
+```
+python LibriSpeech/LSTM/train.py LibriSpeech/LSTM/hparams/ssl.yaml --ssl_hub mygroup/mySSLModel --encoder_dim 768 --num_layers_ssl 13 --output_folder my-output-folder --data_folder mypath/to/LibriSpeech 
+``` 
 ##Tasks and downstream heads
-* LibriSpeech train-clean-100: BiLSTM and Contextnet
-* VoxCeleb1: Xvector and ECAPA-TDNN
-* IEMOCAP: linear and ECAPA-TDNN
-* Buckeye: BiLSTM and Contextnet
-* SLURP: linear and LSTM-linear
-* CommonVoice: BiLSTM and linear
+
+| Task                                     | First Probing Head    | Second Probing Head | Dataset Download                                         |
+|------------------------------------------|-----------------------|---------------------|----------------------------------------------------------|
+| LibriSpeech ASR                          | BiLSTM                | Conformer           | https://www.openslr.org/12                               |
+| Buckeye ASR                              | BiLSTM                | ContextNet          | https://buckeyecorpus.osu.edu/                           |
+| CommonVoice Low-Resource  ASR            | BiLSTM                | Linear              | https://commonvoice.mozilla.org/fr                       |
+| VoxCeleb1 Automatic Speaker Verification | X-Vectors             | ECAPA-TDNN          | https://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox1.html |
+| IEMOCAP Emotion Recognition              | Time-Pooling + Linear | ECAPA-TDNN          | https://sail.usc.edu/iemocap/                            |
+| SLURP Intent Classification              | Time-Pooling + Linear | BiLSTM + Linear     | https://zenodo.org/record/4274930                        |
 
 # **Citing**
+If you use this benchmark, please cite :
+
+```bibtex
+@article{zaiem2023speech,
+  title={Speech Self-Supervised Representation Benchmarking: Are We Doing it Right?},
+  author={Zaiem, Salah and Kemiche, Youcef and Parcollet, Titouan and Essid, Slim and Ravanelli, Mirco},
+  journal={arXiv preprint arXiv:2306.00452},
+  year={2023}
+}
+```
 Please, cite SpeechBrain if you use it for your research or business.
 
 ```bibtex
@@ -28,17 +46,4 @@ Please, cite SpeechBrain if you use it for your research or business.
   note={arXiv:2106.04624}
 }
 ```
-If you use this benchmark, please cite :
-
-```bibtex
-@article{zaiem2023speech,
-  title={Speech Self-Supervised Representation Benchmarking: Are We Doing it Right?},
-  author={Zaiem, Salah and Kemiche, Youcef and Parcollet, Titouan and Essid, Slim and Ravanelli, Mirco},
-  journal={arXiv preprint arXiv:2306.00452},
-  year={2023}
-}
-```
-
-
-
 

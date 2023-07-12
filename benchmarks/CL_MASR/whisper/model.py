@@ -133,6 +133,18 @@ class ProgressiveWhisper(HuggingFaceWhisper):
             timestamp_tokens = [f"<|{ts:.2f}|>" for ts in timestamps]
             self.tokenizer.add_tokens(timestamp_tokens)
 
+        # The following breaking changes were introduced in transformers>=4.29:
+        # 1) mel_filters.shape = (..., feature_extractor.feature_size) instead of (feature_extractor.feature_size, ...)
+        # 2) mel_filters.dtype = float64 instead of float32
+        # The following code fixes the issue in a backward compatible way
+        if self._mel_filters.shape[0] == self._n_fft / 2 + 1:
+            mel_filters = self._mel_filters.T
+            self.register_buffer(
+                "_mel_filters",
+                torch.as_tensor(mel_filters, dtype=torch.float32),
+            )
+        #################################################################
+
     # override
     def _log_mel_spectrogram(self, audio):
         """Compute the Mel spectrogram of a batch of input waveforms.
@@ -162,9 +174,6 @@ class ProgressiveWhisper(HuggingFaceWhisper):
         magnitudes = stft[..., :-1].abs() ** 2
 
         filters = self._mel_filters
-        # Fix dependency issues with transformers>=4.29 in a backward compatible way
-        if filters.shape[-1] != magnitudes.shape[-2]:
-            filters = filters.T.to(dtype=magnitudes.dtype)
         mel_spec = filters @ magnitudes
 
         log_spec = torch.clamp(mel_spec, min=1e-10).log10()

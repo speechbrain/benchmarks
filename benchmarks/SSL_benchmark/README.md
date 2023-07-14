@@ -9,6 +9,15 @@ This recipe includes scripts to evaluate self-supervised represenations on a lis
   year={2023}
 }
 ```
+## 🛠️️ Installation
+The extra requirements are only needed if you want to use the n-gram language model during the decoding for English ASR experiments. If it is the case, navigate to `<path-to-repository>/benchmarks/SSL_BENCHMARK` and run : 
+
+```bash
+pip install -r extra_requirements.txt
+```
+
+
+## ▶️ Quickstart
 
 To run a downstream evaluation for a given SSL model on huggingface you will need to  :
 * Change the SSL related values in the run\_benchmark.sh file, specifying the HF hub, the encoder dimension (size of every frame vector), and the number of layers.
@@ -29,7 +38,7 @@ If you want to run only one experiment on a considered task, let us take the exa
 python LibriSpeech/LSTM/train.py LibriSpeech/LSTM/hparams/ssl.yaml --ssl_hub mygroup/mySSLModel --encoder_dim 768 --num_layers_ssl 13 --output_folder my-output-folder --data_folder mypath/to/LibriSpeech 
 ``` 
 
-##Tasks and downstream heads
+## Tasks and downstream heads
 
 | Task                                     | First Probing Head    | Second Probing Head | Dataset Download                                         |
 |------------------------------------------|-----------------------|---------------------|----------------------------------------------------------|
@@ -44,7 +53,7 @@ The n-gram-based language model used during decoding for the English ASR experim
 
 ## 📈️ Results
 
-The following table shows results obtained with 3 different SSL encoders, and with two different probing heads for every task. The full table can be found in the paper presenting the benchmark, cited above. 
+The following table shows results obtained with 2 different SSL encoders, and with two different probing heads for every task. The full table can be found in the paper presenting the benchmark, cited above. 
 
 | Models/Tasks                    | SSL Params | LibriSpeech Train-clean-100 | Buckeye ASR |  Welsh | Basque  |  VoxCeleb1 |       IEMOCAP      | SLURP Scenario identification |
 |---------------------------------|:----------:|:---------------------------:|:-----------:|:------:|:-------:|:----------:|:------------------:|:-----------------------------:|
@@ -56,7 +65,7 @@ The following table shows results obtained with 3 different SSL encoders, and wi
 | Data2vec Base                   |    93.8M   |             5.85            |    40.53    |  77.49 |  75.26  |    3.75    |         72         |              73.4             |
 | Data2vec Large                  |   314.3M   |             3.43            |    25.26    |  69.09 |  63.31  |    2.67    |        71.3        |              79.9             |
 
-All the experiments presented in this work, including these with large SSL encoders such as Data2Vec Large should be able to run on a 32Gb V100 GPU with the batch sizes provided in the yaml files. These batch sizes may be increased for faster training with smaller "Base" SSL encoders. The next table provides estimates of training time for every couple (task, probing head) present in the paper, using Data2vec Large as the SSL encoder. For more details, we provide also the logs of experiments done with Data2Vec Base :
+All the experiments presented in this work, including these with large SSL encoders such as Data2Vec Large should be able to run on a 32Gb V100 GPU with the batch sizes provided in the yaml files. These batch sizes may be increased for faster training with smaller "Base" SSL encoders. The next table provides estimates of training time for every couple (task, probing head) present in the paper, using Data2vec Large as the SSL encoder. For more details, we provide also the logs (and checkpoints!) of experiments done with Data2Vec Base and Large versions :
 
 |                   Task                   | First Probing Head - Training Duration | Second Probing Head - Training Duration |                            Data2Vec Base Logs                            | Data2Vec Large Logs                                                      |
 |:----------------------------------------:|:--------------------------------------:|:---------------------------------------:|:------------------------------------------------------------------------:|--------------------------------------------------------------------------|
@@ -67,6 +76,9 @@ All the experiments presented in this work, including these with large SSL encod
 | IEMOCAP Emotion Recognition              | 1h30                                   | 2 hours                                 | https://drive.google.com/drive/folders/15RBDGU7r7rIH3QIDW4ZvknstQyOVb\_eJ | https://drive.google.com/drive/folders/1F\_fU-q994Y-N6Ix05BloZi1cggoYO1BU |
 | SLURP Intent Classification              | 8 hours                                | 9 hours                                 | https://drive.google.com/drive/folders/1lPRZrfyIxREq7Ol54jqF3yJtdlGaY75g | https://drive.google.com/drive/folders/1w3ICpWjmnGbyVqEdqNpta7tBqkJRzMs_ | 
 
+## 📧 Contact
+
+[zaiemsalah@gmail.com](mailto:zaiemsalah@gmail.com)
   
 # **Citing**
 If you use this benchmark, please cite :

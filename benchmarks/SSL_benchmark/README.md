@@ -1,4 +1,14 @@
 # Benchmark for speech self-supervised representations
+This recipe includes scripts to evaluate self-supervised represenations on a list of downstreams tasks that includes ASR, speaker verification, emotion recognition and intent classification. The main particularity of this benchmark is that it allows the user to select the probing head wanted for downstream training. It has been shown that model's performances depend heavily on this choice. More details about the tasks and the results can be found in the following paper : 
+
+```bibtex
+@article{zaiem2023speech,
+  title={Speech Self-Supervised Representation Benchmarking: Are We Doing it Right?},
+  author={Zaiem, Salah and Kemiche, Youcef and Parcollet, Titouan and Essid, Slim and Ravanelli, Mirco},
+  journal={arXiv preprint arXiv:2306.00452},
+  year={2023}
+}
+```
 
 To run a downstream evaluation for a given SSL model on huggingface you will need to  :
 * Change the SSL related values in the run\_benchmark.sh file, specifying the HF hub, the encoder dimension (size of every frame vector), and the number of layers.

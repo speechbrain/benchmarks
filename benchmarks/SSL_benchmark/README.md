@@ -1,5 +1,5 @@
 # Benchmark for speech self-supervised representations
-This recipe includes scripts to evaluate self-supervised represenations on a list of downstreams tasks that includes ASR, speaker verification, emotion recognition and intent classification. The main particularity of this benchmark is that it allows the user to select the probing head wanted for downstream training. It has been shown that model's performances depend heavily on this choice. More details about the motivation, the tasks and the results can be found in the following paper : 
+This recipe includes scripts to evaluate self-supervised represenations on a list of downstreams tasks that includes ASR, speaker verification, emotion recognition and intent classification. The main particularity of this benchmark is that it allows the user to select the probing head wanted for downstream training. It has been shown that model's performances depend heavily on this choice. More details about the motivation, the tasks and the results can be found in the following paper :
 
 ```bibtex
 @article{zaiem2023speech,
@@ -10,13 +10,11 @@ This recipe includes scripts to evaluate self-supervised represenations on a lis
 }
 ```
 ## 🛠️️ Installation
-The extra requirements are only needed if you want to use the n-gram language model during the decoding for English ASR experiments. If it is the case, navigate to `<path-to-repository>/benchmarks/SSL_BENCHMARK` and run : 
+The extra requirements are only needed if you want to use the n-gram language model during the decoding for English ASR experiments. If it is the case, navigate to `<path-to-repository>/benchmarks/SSL_BENCHMARK` and run :
 
 ```bash
 pip install -r extra_requirements.txt
 ```
-
-
 ## ▶️ Quickstart
 
 To run a downstream evaluation for a given SSL model on huggingface you will need to  :
@@ -25,18 +23,18 @@ To run a downstream evaluation for a given SSL model on huggingface you will nee
 * Change the variable defined in run\_benchmark.sh with two lists of equal sized where to every task  in "ConsideredTasks" corresponds in the same index in "Downstreams" the downstream architecture.
 * If you want to run two downstream decoders on the same task, just put it twice in the first list with different corresponding decoders below.
 
-then, run : 
+then, run :
 
 ```
 bash run_benchmark.sh
 ```
-The current bash file provides an example with HuBERT Large as the SSL encoder and LibriSpeechASR and IEMOCAP as downstream tasks, respectively with BiLSTM and ECAPA-TDNN probing heads. It can be run by changing the data folder to your local setting folders containing LS and IEMOCAP. 
+The current bash file provides an example with HuBERT Large as the SSL encoder and LibriSpeechASR and IEMOCAP as downstream tasks, respectively with BiLSTM and ECAPA-TDNN probing heads. It can be run by changing the data folder to your local setting folders containing LS and IEMOCAP.
 
-If you want to run only one experiment on a considered task, let us take the example of LibriSpeech using the huggingface model link : mygroup/mySSLModel, that outputs frame vectors of dimension 768 and has 13 internal layers, than you should run : 
+If you want to run only one experiment on a considered task, let us take the example of LibriSpeech using the huggingface model link : mygroup/mySSLModel, that outputs frame vectors of dimension 768 and has 13 internal layers, than you should run :
 
 ```
-python LibriSpeech/LSTM/train.py LibriSpeech/LSTM/hparams/ssl.yaml --ssl_hub mygroup/mySSLModel --encoder_dim 768 --num_layers_ssl 13 --output_folder my-output-folder --data_folder mypath/to/LibriSpeech 
-``` 
+python LibriSpeech/LSTM/train.py LibriSpeech/LSTM/hparams/ssl.yaml --ssl_hub mygroup/mySSLModel --encoder_dim 768 --num_layers_ssl 13 --output_folder my-output-folder --data_folder mypath/to/LibriSpeech
+```
 
 ## Tasks and downstream heads
 
@@ -49,11 +47,11 @@ python LibriSpeech/LSTM/train.py LibriSpeech/LSTM/hparams/ssl.yaml --ssl_hub myg
 | IEMOCAP Emotion Recognition              | Time-Pooling + Linear | ECAPA-TDNN          | https://sail.usc.edu/iemocap/                            |
 | SLURP Intent Classification              | Time-Pooling + Linear | BiLSTM + Linear     | https://zenodo.org/record/4274930                        |
 
-The n-gram-based language model used during decoding for the English ASR experiments can be downloaded here : https://www.openslr.org/resources/11/4-gram.arpa.gz. After download, in order to use it, you need to specify its path in the ngram\_lm\_path variable, and activate language modelling during decoding by passing language\_modelling True. 
+The n-gram-based language model used during decoding for the English ASR experiments can be downloaded here : https://www.openslr.org/resources/11/4-gram.arpa.gz. After download, in order to use it, you need to specify its path in the ngram\_lm\_path variable, and activate language modelling during decoding by passing language\_modelling True.
 
 ## 📈️ Results
 
-The following table shows results obtained with 2 different SSL encoders, and with two different probing heads for every task. The full table can be found in the paper presenting the benchmark, cited above. 
+The following table shows results obtained with 2 different SSL encoders, and with two different probing heads for every task. The full table can be found in the paper presenting the benchmark, cited above.
 
 | Models/Tasks                    | SSL Params | LibriSpeech Train-clean-100 | Buckeye ASR |  Welsh | Basque  |  VoxCeleb1 |       IEMOCAP      | SLURP Scenario identification |
 |---------------------------------|:----------:|:---------------------------:|:-----------:|:------:|:-------:|:----------:|:------------------:|:-----------------------------:|
@@ -74,12 +72,12 @@ All the experiments presented in this work, including these with large SSL encod
 | CommonVoice Low-Resource ASR             | 3h30                                   | 2 hours                                 | https://drive.google.com/drive/folders/1PaRWMTPe0hltTgCEfTptHc4iOwQMgZ8o | https://drive.google.com/drive/folders/1OVzqBE-3tRYDJ9Wi8Zf4q6-RI82lCX5D |
 | VoxCeleb1 Automatic Speaker Verification | 23 hours                               | 25 hours                                | https://drive.google.com/drive/folders/1Jt9obJZL-c1VwCuhu5i7ul2zreZ7hqru | https://drive.google.com/drive/folders/19Y1vOzmUEH\_40HPkSb2nlUEKdU6nataE |
 | IEMOCAP Emotion Recognition              | 1h30                                   | 2 hours                                 | https://drive.google.com/drive/folders/15RBDGU7r7rIH3QIDW4ZvknstQyOVb\_eJ | https://drive.google.com/drive/folders/1F\_fU-q994Y-N6Ix05BloZi1cggoYO1BU |
-| SLURP Intent Classification              | 8 hours                                | 9 hours                                 | https://drive.google.com/drive/folders/1lPRZrfyIxREq7Ol54jqF3yJtdlGaY75g | https://drive.google.com/drive/folders/1w3ICpWjmnGbyVqEdqNpta7tBqkJRzMs_ | 
+| SLURP Intent Classification              | 8 hours                                | 9 hours                                 | https://drive.google.com/drive/folders/1lPRZrfyIxREq7Ol54jqF3yJtdlGaY75g | https://drive.google.com/drive/folders/1w3ICpWjmnGbyVqEdqNpta7tBqkJRzMs_ |
 
 ## 📧 Contact
 
 [zaiemsalah@gmail.com](mailto:zaiemsalah@gmail.com)
-  
+
 # **Citing**
 If you use this benchmark, please cite :
 
@@ -104,4 +102,3 @@ Please, cite SpeechBrain if you use it for your research or business.
   note={arXiv:2106.04624}
 }
 ```
-

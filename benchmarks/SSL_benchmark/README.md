@@ -30,9 +30,9 @@ To install and set up the benchmark, follow these steps:
    ```
    pip install -r extra_requirements.txt
    ```
-   
+
    This will install the required dependencies for the n-gram language model.
-   
+
 ## ▶️ Quickstart
 
 ### Running a single task
@@ -60,7 +60,7 @@ To run all tasks, make the following changes:
 1. Edit the `run_benchmark.sh` file and modify the SSL-related values. Specify the HF hub, the encoder dimension (size of each frame vector), and the number of layers.
 2. Choose a set of tasks from the provided list and, for each task, select a downstream architecture from the available options (see list below).
 3. Update the variables defined in `run_benchmark.sh` with two lists of equal size. In the `ConsideredTasks` list, specify the tasks you want to run (e.g., `'LibriSpeechASR' 'LibriSpeechASR' 'IEMOCAP'`). In the `Downstreams` list, specify the corresponding downstream architecture for each task (e.g., `'BiLSTM'`, `contextnet`, `'ecapa_tdnn'`).
-   
+
    For example, if you set `ConsideredTasks=('LibriSpeechASR' 'LibriSpeechASR' 'IEMOCAP')` and `Downstreams=('BiLSTM', 'contextnet', 'ecapa_tdnn')`, the benchmark will be executed as follows:
    - LibriSpeechASR with BiLSTM as the probing head
    - LibriSpeechASR with contextnet as the probing head
@@ -68,16 +68,16 @@ To run all tasks, make the following changes:
 
 ## Tasks and downstream heads
 
-| Task                                     | First Probing Head    | Second Probing Head | Dataset Download                                         |
-|------------------------------------------|-----------------------|---------------------|----------------------------------------------------------|
-| LibriSpeech ASR                          | BiLSTM                | Conformer           | https://www.openslr.org/12                               |
-| Buckeye ASR                              | BiLSTM                | ContextNet          | https://buckeyecorpus.osu.edu/                           |
-| CommonVoice Low-Resource  ASR            | BiLSTM                | Linear              | https://commonvoice.mozilla.org/fr                       |
-| VoxCeleb1 Automatic Speaker Verification | X-Vectors             | ECAPA-TDNN          | https://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox1.html |
-| IEMOCAP Emotion Recognition              | Time-Pooling + Linear | ECAPA-TDNN          | https://sail.usc.edu/iemocap/                            |
-| SLURP Intent Classification              | Time-Pooling + Linear | BiLSTM + Linear     | https://zenodo.org/record/4274930                        |
+| Dataset | Task                                     | First Probing Head    | Second Probing Head | Dataset Download                                         |
+|----------|------------------------------------------|-----------------------|---------------------|----------------------------------------------------------|
+| LibriSpeech |  Speech Recognition                         | BiLSTM                | Conformer           | https://www.openslr.org/12                               |
+|  Buckeye | Speech Recognition                               | BiLSTM                | ContextNet          | https://buckeyecorpus.osu.edu/                           |
+| CommonVoice |  Low-Resource  ASR             | BiLSTM                | Linear              | https://commonvoice.mozilla.org/fr                       |
+| VoxCeleb1 |  Automatic Speaker Verification | X-Vectors             | ECAPA-TDNN          | https://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox1.html |
+|  IEMOCAP | Emotion Recognition              | Time-Pooling + Linear | ECAPA-TDNN          | https://sail.usc.edu/iemocap/                            |
+| SLURP | Intent Classification              | Time-Pooling + Linear | BiLSTM + Linear     | https://zenodo.org/record/4274930                        |
 
-The n-gram-based language model used during decoding for the English ASR experiments can be downloaded here: https://www.openslr.org/resources/11/4-gram.arpa.gz. 
+The n-gram-based language model used during decoding for the English ASR experiments can be downloaded here: https://www.openslr.org/resources/11/4-gram.arpa.gz.
 
 After downloading, to use it, you need to specify its path in the `ngram_lm_path` variable and activate language modeling during decoding by passing `language_modelling` True.
 
@@ -95,7 +95,7 @@ The following table shows the results obtained with 2 different SSL encoders, an
 | Data2vec Base                   |    93.8M   |             5.85            |    40.53    |  77.49 |  75.26  |    3.75    |         72         |              73.4             |
 | Data2vec Large                  |   314.3M   |             3.43            |    25.26    |  69.09 |  63.31  |    2.67    |        71.3        |              79.9             |
 
-All the experiments presented in this work, including those with large SSL encoders such as Data2Vec Large, should be able to run on a 32Gb V100 GPU with the batch sizes provided in the yaml files. These batch sizes may be increased for faster training with smaller "Base" SSL encoders. 
+All the experiments presented in this work, including those with large SSL encoders such as Data2Vec Large, should be able to run on a 32Gb V100 GPU with the batch sizes provided in the yaml files. These batch sizes may be increased for faster training with smaller "Base" SSL encoders.
 
 The next table provides estimates of training time for every couple (task, probing head), using Data2vec Large as the SSL encoder. For more details, we provide also the [logs (and checkpoints!) of experiments](https://www.dropbox.com/sh/twwihgivj0e8tpd/AABukLIvt0rjy7ZOK5DZXjD0a?dl=0) done with Data2Vec Base and Large versions):
 

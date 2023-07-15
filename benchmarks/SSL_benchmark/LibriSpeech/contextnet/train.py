@@ -292,9 +292,10 @@ if __name__ == "__main__":
     )
     # Loading the labels for the LM decoding and the CTC decoder
     if "language_modelling" in hparams:
-        from pyctcdecode import build_ctcdecoder
 
         if hparams["language_modelling"]:
+            from pyctcdecode import build_ctcdecoder
+
             ind2lab = label_encoder.ind2lab
             labels = [ind2lab[x] for x in range(len(ind2lab))]
             labels = [""] + labels[

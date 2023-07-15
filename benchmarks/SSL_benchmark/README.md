@@ -78,6 +78,7 @@ To run all tasks, make the following changes:
 | SLURP Intent Classification              | Time-Pooling + Linear | BiLSTM + Linear     | https://zenodo.org/record/4274930                        |
 
 The n-gram-based language model used during decoding for the English ASR experiments can be downloaded here: https://www.openslr.org/resources/11/4-gram.arpa.gz. 
+
 After downloading, to use it, you need to specify its path in the `ngram_lm_path` variable and activate language modeling during decoding by passing `language_modelling` True.
 
 ## 📈️ Results
@@ -96,16 +97,16 @@ The following table shows the results obtained with 2 different SSL encoders, an
 
 All the experiments presented in this work, including those with large SSL encoders such as Data2Vec Large, should be able to run on a 32Gb V100 GPU with the batch sizes provided in the yaml files. These batch sizes may be increased for faster training with smaller "Base" SSL encoders. 
 
-The next table provides estimates of training time for every couple (task, probing head), using Data2vec Large as the SSL encoder. For more details, we provide also the logs (and checkpoints!) of experiments done with Data2Vec Base and Large versions:
+The next table provides estimates of training time for every couple (task, probing head), using Data2vec Large as the SSL encoder. For more details, we provide also the [logs (and checkpoints!) of experiments](https://www.dropbox.com/sh/twwihgivj0e8tpd/AABukLIvt0rjy7ZOK5DZXjD0a?dl=0) done with Data2Vec Base and Large versions):
 
-|                   Task                   | First Probing Head - Training Duration | Second Probing Head - Training Duration |                            Data2Vec Base Logs                            | Data2Vec Large Logs                                                      |
+|                   Task                   | First Probing Head - Training Duration | Second Probing Head - Training Duration |                            [Data2Vec Base Logs](https://www.dropbox.com/sh/rknral0jub5vl4x/AABBN5mU7Xermrd_ICSXMS6La?dl=0)                            | [Data2Vec Large Logs](https://www.dropbox.com/sh/l4lh6ngv8rzcrnp/AADWLG97ifuCv65AnH-rg2_Qa?dl=0)                                                      |
 |:----------------------------------------:|:--------------------------------------:|:---------------------------------------:|:------------------------------------------------------------------------:|--------------------------------------------------------------------------|
-| LibriSpeech ASR                          | 12 hours                               | 23 hours                                | https://drive.google.com/drive/folders/1qOPyNVbxXst6XOAogcU5FQLR5O2p8SzI | https://drive.google.com/drive/folders/1pNMDsjZDSXMSSp3N0aV9SCja4rPlFAUJ |
-| Buckeye ASR                              | 6 hours                                | 7 hours                                 | https://drive.google.com/drive/folders/1wr\_DRXM3MkSZLzhSygeuzGfwP2Ek63bc | https://drive.google.com/drive/folders/13XechHlu4Kj4gg-E7vfHfvE0qG1GSItj |
-| CommonVoice Low-Resource ASR             | 3h30                                   | 2 hours                                 | https://drive.google.com/drive/folders/1PaRWMTPe0hltTgCEfTptHc4iOwQMgZ8o | https://drive.google.com/drive/folders/1OVzqBE-3tRYDJ9Wi8Zf4q6-RI82lCX5D |
-| VoxCeleb1 Automatic Speaker Verification | 23 hours                               | 25 hours                                | https://drive.google.com/drive/folders/1Jt9obJZL-c1VwCuhu5i7ul2zreZ7hqru | https://drive.google.com/drive/folders/19Y1vOzmUEH\_40HPkSb2nlUEKdU6nataE |
-| IEMOCAP Emotion Recognition              | 1h30                                   | 2 hours                                 | https://drive.google.com/drive/folders/15RBDGU7r7rIH3QIDW4ZvknstQyOVb\_eJ | https://drive.google.com/drive/folders/1F\_fU-q994Y-N6Ix05BloZi1cggoYO1BU |
-| SLURP Intent Classification              | 8 hours                                | 9 hours                                 | https://drive.google.com/drive/folders/1lPRZrfyIxREq7Ol54jqF3yJtdlGaY75g | https://drive.google.com/drive/folders/1w3ICpWjmnGbyVqEdqNpta7tBqkJRzMs_ |
+| LibriSpeech ASR                          | 12 hours                               | 23 hours                                | https://www.dropbox.com/sh/c494uhaxp8gpdi3/AABI2_-zenjObL8i0RmVAjzHa?dl=0 | https://www.dropbox.com/sh/rchaoc5kkkslp7a/AAA314zxBxBqN8vUSFLYF8zQa?dl=0 |
+| Buckeye ASR                              | 6 hours                                | 7 hours                                 | https://www.dropbox.com/sh/aedpbio3wf0qlkb/AAD5fIaM-q6YWI31CMpNiGWNa?dl=0 | https://www.dropbox.com/sh/8p5s8ppjfr89g6f/AAAevLOybveHY5q8KPggxofCa?dl=0 |
+| CommonVoice Low-Resource ASR             | 3h30                                   | 2 hours                                 | https://www.dropbox.com/sh/21j16d7pc8g19yv/AABufUR7W8qe2SUcPcs9CWIDa?dl=0 | https://www.dropbox.com/sh/7fga8zlr1ftpk4u/AACm6LEWm2uH-EiJfolcJ3iPa?dl=0 |
+| VoxCeleb1 Automatic Speaker Verification | 23 hours                               | 25 hours                                | https://www.dropbox.com/sh/gqf4l4nivj84517/AACpe-dtnzYIkmrM0FGoe43Da?dl=0 | https://www.dropbox.com/sh/88itv8lfbqxjajd/AAAjbc-BSGVCO2bQOh9l8sToa?dl=0 |
+| IEMOCAP Emotion Recognition              | 1h30                                   | 2 hours                                 | https://www.dropbox.com/sh/s75465qsszjlyfm/AADeLQEFGi6wrG7x6LX2uCJMa?dl=0 | https://www.dropbox.com/sh/zrmh4avv970ws28/AADJH1kGDBH6kqMsu970U0Jia?dl=0 |
+| SLURP Intent Classification              | 8 hours                                | 9 hours                                 | https://www.dropbox.com/sh/g163esobi1bkjf1/AABqpUGX6k1Ydt5gZo6m7xKHa?dl=0 | https://www.dropbox.com/sh/itf1vxc5vxiw912/AADUwY2i8vlt5aBjBAKCfl1na?dl=0 |
 
 ## 📧 Contact
 

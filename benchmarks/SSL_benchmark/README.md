@@ -20,24 +20,36 @@ pip install -r extra_requirements.txt
 ```
 ## ▶️ Quickstart
 
-To run a downstream evaluation for a given SSL model on huggingface you will need to  :
-* Change the SSL related values in the run\_benchmark.sh file, specifying the HF hub, the encoder dimension (size of every frame vector), and the number of layers.
-* Choose a set of tasks among the ones listed  and for every task a downstream architecture among the existing ones.
-* Change the variable defined in run\_benchmark.sh with two lists of equal sized where to every task  in "ConsideredTasks" corresponds in the same index in "Downstreams" the downstream architecture.
-* If you want to run two downstream decoders on the same task, just put it twice in the first list with different corresponding decoders below.
+### Running a single task
 
-then, run :
+To perform a downstream evaluation using a specific SSL model (e.g., `facebook/wav2vec2-base`) with one of the available probing heads (e.g., LSTM), run the following command:
+   ```
+   python LibriSpeech/LSTM/train.py LibriSpeech/LSTM/hparams/ssl.yaml --data_folder mypath/to/LibriSpeech
+   ```
 
-```
-bash run_benchmark.sh
-```
-The current bash file provides an example with HuBERT Large as the SSL encoder and LibriSpeechASR and IEMOCAP as downstream tasks, respectively with BiLSTM and ECAPA-TDNN probing heads. It can be run by changing the data folder to your local setting folders containing LS and IEMOCAP.
+### Running a single task with your SSL model
 
-If you want to run only one experiment on a considered task, let us take the example of LibriSpeech using the huggingface model link : mygroup/mySSLModel, that outputs frame vectors of dimension 768 and has 13 internal layers, than you should run :
+If you have your own SSL model and want to benchmark it for a specific task, you need to follow these instructions:
 
-```
-python LibriSpeech/LSTM/train.py LibriSpeech/LSTM/hparams/ssl.yaml --ssl_hub mygroup/mySSLModel --encoder_dim 768 --num_layers_ssl 13 --output_folder my-output-folder --data_folder mypath/to/LibriSpeech
-```
+1. Make sure your model is available on [HuggingFace](https://huggingface.co/) (our recipes will fetch it from the specified HF path).
+2. Assume your model is located at `mygroup/mySSLModel` on [HuggingFace](https://huggingface.co/).
+3. Run the following command:
+   ```
+   python LibriSpeech/LSTM/train.py LibriSpeech/LSTM/hparams/ssl.yaml --ssl_hub mygroup/mySSLModel --encoder_dim 768 --num_layers_ssl 13 --output_folder my-output-folder --data_folder mypath/to/LibriSpeech
+   ```
+
+### Running multiple tasks
+
+To run all tasks, make the following changes:
+
+1. Edit the `run_benchmark.sh` file and modify the SSL-related values. Specify the HF hub, the encoder dimension (size of each frame vector), and the number of layers.
+2. Choose a set of tasks from the provided list and, for each task, select a downstream architecture from the available options (see list below).
+3. Update the variables defined in `run_benchmark.sh` with two lists of equal size. In the `ConsideredTasks` list, specify the tasks you want to run (e.g., `'LibriSpeechASR' 'LibriSpeechASR' 'IEMOCAP'`). In the `Downstreams` list, specify the corresponding downstream architecture for each task (e.g., `'BiLSTM'`, `contextnet`, `'ecapa_tdnn'`).
+   
+   For example, if you set `ConsideredTasks=('LibriSpeechASR' 'LibriSpeechASR' 'IEMOCAP')` and `Downstreams=('BiLSTM', 'contextnet', 'ecapa_tdnn')`, the benchmark will be executed as follows:
+   - LibriSpeechASR with BiLSTM as the probing head
+   - LibriSpeechASR with contextnet as the probing head
+   - IEMOCAP with ecapa_tdnn as the probing head.
 
 ## Tasks and downstream heads
 

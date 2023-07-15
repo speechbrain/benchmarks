@@ -30,13 +30,26 @@ Download the dataset from [here](https://zenodo.org/record/8065754) and extract 
 
 ## 🛠️️ Installation
 
-Clone the repository, navigate to `<path-to-repository>/benchmarks/CL_MASR`,
-open a terminal and run:
+To install and set up the benchmark, follow these steps:
 
-```bash
-pip install -r ../../requirements.txt    # Install base dependencies
-pip install -r extra-requirements.txt    # Install additional dependencies
-```
+1. Install SpeechBrain:
+   ```shell
+   pip install speechbrain
+   ```
+
+2. Clone the benchmark repository:
+   ```shell
+   git clone https://github.com/speechbrain/benchmarks/
+   ```
+
+3. Navigate to `<path-to-repository>/benchmarks/CL_MASR` in your file system, open a terminal, and run the following commands:
+
+   ```shell
+   pip install -r ../../requirements.txt    # Install base dependencies
+   pip install -r extra-requirements.txt    # Install additional dependencies
+   ```
+
+   These commands will install the necessary dependencies for the benchmark, including both the base requirements and the additional requirements.
 
 ---------------------------------------------------------------------------------------------------------
 

@@ -1,4 +1,6 @@
 #!/bin/zsh
+# Please consult the README.md file for instructions on how to run the benchmark.
+
 hub='facebook/hubert-large-ll60k'
 num_layers='25'
 encoder_dim='1024'

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """Recipe for training then testing speaker embeddings using the VoxCeleb Dataset.
-The embeddings are learned using the ECAPA-TNN architecture
+The embeddings are learned using the ECAPA-TDNN architecture
 """
 
 import os

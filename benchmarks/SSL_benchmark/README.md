@@ -13,11 +13,26 @@ The main particularity of this benchmark is that it allows the user to select th
 ```
 
 ## 🛠️️ Installation
-The extra requirements are only needed if you want to use the n-gram language model during the decoding for English ASR experiments. If it is the case, navigate to `<path-to-repository>/benchmarks/SSL_BENCHMARK` and run :
 
-```bash
-pip install -r extra_requirements.txt
-```
+To install and set up the benchmark, follow these steps:
+
+1. Install SpeechBrain:
+   ```
+   pip install speechbrain
+   ```
+
+2. Clone the benchmark repository:
+   ```
+   git clone https://github.com/speechbrain/benchmarks/
+   ```
+
+3. Additional requirements are only necessary if you want to use the n-gram language model during decoding for English ASR experiments. If you need it, navigate to `<path-to-repository>/benchmarks/SSL_BENCHMARK` and run the following command:
+   ```
+   pip install -r extra_requirements.txt
+   ```
+   
+   This will install the required dependencies for the n-gram language model.
+   
 ## ▶️ Quickstart
 
 ### Running a single task

@@ -1,4 +1,10 @@
 # ################################
+# Recipe for training then testing speaker embeddings using the VoxCeleb1 Dataset.
+# Embeddings are used using the Xvector network
+#
+# Authors
+# * Salah Zaiem 2023
+# * Youcef Kemiche 2023
 # ################################
 
 # Basic parameters

@@ -1,7 +1,7 @@
 # Benchmark for speech self-supervised representations
-This recipe includes scripts to evaluate self-supervised representations on a list of downstream tasks that include ASR, speaker verification, emotion recognition, and intent classification. 
+This recipe provides scripts for benchmarking self-supervised representations on various downstream tasks, including ASR, speaker verification, emotion recognition, and intent classification.
 
-The main particularity of this benchmark is that it allows the user to select the probing head wanted for downstream training. It has been shown that the model's performance depends heavily on this choice. More details about the motivation, the tasks, and the results can be found in the following [paper](https://arxiv.org/abs/2306.00452) :
+The key feature of this benchmark is that it allows users to choose their desired probing head for downstream training. It has been demonstrated that the performance of the model is greatly influenced by this selection. For more information about the motivation, tasks, and results, please refer to the following [paper](https://arxiv.org/abs/2306.00452):
 
 ```bibtex
 @article{zaiem2023speech,
@@ -77,11 +77,12 @@ To run all tasks, make the following changes:
 | IEMOCAP Emotion Recognition              | Time-Pooling + Linear | ECAPA-TDNN          | https://sail.usc.edu/iemocap/                            |
 | SLURP Intent Classification              | Time-Pooling + Linear | BiLSTM + Linear     | https://zenodo.org/record/4274930                        |
 
-The n-gram-based language model used during decoding for the English ASR experiments can be downloaded here : https://www.openslr.org/resources/11/4-gram.arpa.gz. After download, in order to use it, you need to specify its path in the ngram\_lm\_path variable, and activate language modelling during decoding by passing language\_modelling True.
+The n-gram-based language model used during decoding for the English ASR experiments can be downloaded here: https://www.openslr.org/resources/11/4-gram.arpa.gz. 
+After downloading, to use it, you need to specify its path in the `ngram_lm_path` variable and activate language modeling during decoding by passing `language_modelling` True.
 
 ## 📈️ Results
 
-The following table shows results obtained with 2 different SSL encoders, and with two different probing heads for every task. The full table can be found in the paper presenting the benchmark, cited above.
+The following table shows the results obtained with 2 different SSL encoders, and with two different probing heads for every task. The full table can be found in the [paper](https://arxiv.org/abs/2306.00452) presenting the benchmark.
 
 | Models/Tasks                    | SSL Params | LibriSpeech Train-clean-100 | Buckeye ASR |  Welsh | Basque  |  VoxCeleb1 |       IEMOCAP      | SLURP Scenario identification |
 |---------------------------------|:----------:|:---------------------------:|:-----------:|:------:|:-------:|:----------:|:------------------:|:-----------------------------:|
@@ -93,7 +94,9 @@ The following table shows results obtained with 2 different SSL encoders, and wi
 | Data2vec Base                   |    93.8M   |             5.85            |    40.53    |  77.49 |  75.26  |    3.75    |         72         |              73.4             |
 | Data2vec Large                  |   314.3M   |             3.43            |    25.26    |  69.09 |  63.31  |    2.67    |        71.3        |              79.9             |
 
-All the experiments presented in this work, including these with large SSL encoders such as Data2Vec Large should be able to run on a 32Gb V100 GPU with the batch sizes provided in the yaml files. These batch sizes may be increased for faster training with smaller "Base" SSL encoders. The next table provides estimates of training time for every couple (task, probing head) present in the paper, using Data2vec Large as the SSL encoder. For more details, we provide also the logs (and checkpoints!) of experiments done with Data2Vec Base and Large versions :
+All the experiments presented in this work, including those with large SSL encoders such as Data2Vec Large, should be able to run on a 32Gb V100 GPU with the batch sizes provided in the yaml files. These batch sizes may be increased for faster training with smaller "Base" SSL encoders. 
+
+The next table provides estimates of training time for every couple (task, probing head), using Data2vec Large as the SSL encoder. For more details, we provide also the logs (and checkpoints!) of experiments done with Data2Vec Base and Large versions:
 
 |                   Task                   | First Probing Head - Training Duration | Second Probing Head - Training Duration |                            Data2Vec Base Logs                            | Data2Vec Large Logs                                                      |
 |:----------------------------------------:|:--------------------------------------:|:---------------------------------------:|:------------------------------------------------------------------------:|--------------------------------------------------------------------------|

@@ -1,14 +1,17 @@
 # Benchmark for speech self-supervised representations
-This recipe includes scripts to evaluate self-supervised represenations on a list of downstreams tasks that includes ASR, speaker verification, emotion recognition and intent classification. The main particularity of this benchmark is that it allows the user to select the probing head wanted for downstream training. It has been shown that model's performances depend heavily on this choice. More details about the motivation, the tasks and the results can be found in the following paper :
+This recipe includes scripts to evaluate self-supervised representations on a list of downstream tasks that include ASR, speaker verification, emotion recognition, and intent classification. 
+
+The main particularity of this benchmark is that it allows the user to select the probing head wanted for downstream training. It has been shown that the model's performance depends heavily on this choice. More details about the motivation, the tasks, and the results can be found in the following [paper](https://arxiv.org/abs/2306.00452) :
 
 ```bibtex
 @article{zaiem2023speech,
   title={Speech Self-Supervised Representation Benchmarking: Are We Doing it Right?},
   author={Zaiem, Salah and Kemiche, Youcef and Parcollet, Titouan and Essid, Slim and Ravanelli, Mirco},
-  journal={arXiv preprint arXiv:2306.00452},
+  journal={In Proc. of Interspeech},
   year={2023}
 }
 ```
+
 ## 🛠️️ Installation
 The extra requirements are only needed if you want to use the n-gram language model during the decoding for English ASR experiments. If it is the case, navigate to `<path-to-repository>/benchmarks/SSL_BENCHMARK` and run :
 

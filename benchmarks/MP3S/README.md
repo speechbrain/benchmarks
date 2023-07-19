@@ -1,7 +1,7 @@
-# Benchmark for speech self-supervised representations
-This recipe provides scripts for benchmarking self-supervised representations on various downstream tasks, including ASR, speaker verification, emotion recognition, and intent classification.
+# Multi-probe Speech Self Supervision Benchmark (MP3S)
+This repository provides scripts for benchmarking self-supervised representations on various downstream tasks, including ASR, speaker verification, emotion recognition, and intent classification.
 
-The key feature of this benchmark is that it allows users to choose their desired probing head for downstream training. It has been demonstrated that the performance of the model is greatly influenced by this selection. For more information about the motivation, tasks, and results, please refer to the following [paper](https://arxiv.org/abs/2306.00452):
+The key feature of this benchmark is that it allows users to choose their desired probing head for downstream training. This is why we called it the *Multi-probe Speech Self Supervision Benchmark (MP3S)*. It has been demonstrated that the performance of the model is greatly influenced by this selection. For more information about the motivation, tasks, and results, please refer to the following [paper](https://arxiv.org/abs/2306.00452):
 
 ```bibtex
 @article{zaiem2023speech,
@@ -26,7 +26,7 @@ To install and set up the benchmark, follow these steps:
    git clone https://github.com/speechbrain/benchmarks/
    ```
 
-3. Additional requirements are only necessary if you want to use the n-gram language model during decoding for English ASR experiments. If you need it, navigate to `<path-to-repository>/benchmarks/SSL_BENCHMARK` and run the following command:
+3. Additional requirements are only necessary if you want to use the n-gram language model during decoding for English ASR experiments. If you need it, navigate to `<path-to-repository>/benchmarks/MP3S` and run the following command:
    ```
    pip install -r extra_requirements.txt
    ```
@@ -113,7 +113,7 @@ The next table provides estimates of training time for every couple (task, probi
 [zaiemsalah@gmail.com](mailto:zaiemsalah@gmail.com)
 
 # **Citing**
-If you use this benchmark, please cite :
+If you use this MP3S benchmark, please cite :
 
 ```bibtex
 @article{zaiem2023speech,

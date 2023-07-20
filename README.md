@@ -15,11 +15,10 @@ Welcome to the SpeechBrain Benchmarks repository! This repository is dedicated t
 
 The SpeechBrain Benchmarks currently include the following:
 
-- [CL_MASR]() - A benchmark designed to assess continual learning techniques, specifically focusing on the continual learning of new languages for speech recognition.
+- [CL_MASR](https://github.com/speechbrain/benchmarks/tree/main/benchmarks/CL_MASR) - A benchmark designed to assess continual learning techniques, specifically focusing on the continual learning of new languages for speech recognition.
 
-- [SSL_Benchmark]() - A benchmark created to facilitate the fair assessment of self-supervised speech representations.
+- [MP3S](https://github.com/speechbrain/benchmarks/tree/main/benchmarks/MP3S) - A benchmark created to facilitate the fair assessment of self-supervised speech representations.
 
-- [SpeechBrain-MOABB]() - A benchmark specifically tailored for evaluating novel deep neural networks in EEG processing tasks of common interest.
 
 Our benchmarks align with speechbrain's commitment to transparent and replicable research by providing standardized tools and resources for studying specific topics.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """Recipe for fine-tuning a Whisper-based ASR system on Common Voice in a continual
-learning fashion via Learning to Prompt (https://arxiv.org/abs/2112.08654).
+learning fashion via (task-aware) Learning to Prompt (https://arxiv.org/abs/2112.08654).
 
 To run this recipe, do the following:
 > python train_l2p.py hparams/train_l2p.yaml
@@ -187,11 +187,9 @@ class PromptPool(torch.nn.Module):
             corresponding prompt.
 
         """
-        if locale is None:
+        if locale is None or locale not in self.prompts:
             return input
-        prompt = self.prompts.get(locale)
-        if prompt is None:
-            return input
+        prompt = self.prompts[locale]
         return input + prompt
 
 

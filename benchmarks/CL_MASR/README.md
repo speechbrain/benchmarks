@@ -89,31 +89,31 @@ See the help (`python analyze_logs.py -h`) for advanced configuration options.
 
 | Release  |         Hyperparameters         | Average AWER | Average BWT | Average IM | Average FWT |                                       Logs                                        |     GPUs    |
 |:--------:|:-------------------------------:|:------------:|:-----------:|:----------:|:-----------:|:---------------------------------------------------------------------------------:|:-----------:|
-| 07-06-23 |  whisper/hparams/train_ft.yaml  |    98.50     |   -84.58    |   -4.16    |    -0.83    | [Link](https://www.dropbox.com/sh/gjthcje9i2rztsk/AABWcxRpyVek5VVLy1UIU5JUa?dl=0) | 1xV100 32GB |
-| 07-06-23 |  whisper/hparams/train_er.yaml  |    50.83     |   -13.20    |   -0.81    |    -4.17    | [Link](https://www.dropbox.com/sh/3ykkqss8trf4mh0/AADKIGt_IbBpYy6z1zGMv9t5a?dl=0) | 1xV100 32GB |
-| 07-06-23 | whisper/hparams/train_agem.yaml |    81.08     |   -55.85    |    0.20    |    -5.19    | [Link](https://www.dropbox.com/sh/x3inrfmktk5eqeu/AAAltNoaaiexezOjYD3J2H0Qa?dl=0) | 1xV100 32GB |
-| 07-06-23 | whisper/hparams/train_pnn.yaml  |    44.12     |     0.00    |    3.18    |    -8.16    | [Link](https://www.dropbox.com/sh/k8zeoxpbh9yjngi/AACKXnZEIInWzNfN6aZWCd5ra?dl=0) | 1xV100 32GB |
-| 07-06-23 |  whisper/hparams/train_pb.yaml  |    43.95     |     0.00    |    3.51    |    -8.50    | [Link](https://www.dropbox.com/sh/load8e6dwwl31kc/AAAoROiJLCu6haFJqJcZ_uyya?dl=0) | 1xV100 32GB |
-| 07-06-23 | whisper/hparams/train_ewc.yaml  |    98.04     |   -68.32    |    2.87    |    -7.85    | [Link](https://www.dropbox.com/sh/ve00u3jwru880x7/AAAl5tjVa3K1F_JelMC_uimpa?dl=0) | 1xV100 32GB |
-| 07-06-23 | whisper/hparams/train_lwf.yaml  |    95.76     |   -77.50    |    0.00    |    -4.98    | [Link](https://www.dropbox.com/sh/9z3ejbc371c36rk/AABypJbr782kVVOrqA0neEzxa?dl=0) | 1xV100 32GB |
-| 07-06-23 |   wavlm/hparams/train_ft.yaml   |    91.61     |   -54.67    |  -10.19    |    -0.21    | [Link](https://www.dropbox.com/sh/hluabvm3ph0j7ee/AAAZswrK0KjstZm1Q5bb29Xfa?dl=0) | 1xV100 32GB |
-| 07-06-23 |   wavlm/hparams/train_er.yaml   |    60.79     |    -8.96    |   -7.62    |    -2.77    | [Link](https://www.dropbox.com/sh/1den1zq0md5rfgv/AABrgM_1O85WwXSBvyMwxYkha?dl=0) | 1xV100 32GB |
-| 07-06-23 |  wavlm/hparams/train_agem.yaml  |    72.54     |    13.59    |   35.29    |   -45.69    | [Link](https://www.dropbox.com/sh/cn737pp6tpupsy2/AACf309ybWRFStrCbdytx16ja?dl=0) | 1xV100 32GB |
-| 07-06-23 |  wavlm/hparams/train_pnn.yaml   |    66.07     |     0.00    |   12.95    |   -23.34    | [Link](https://www.dropbox.com/sh/jz9a64xriifilmf/AADHQYrbuHNe1-rDkV28H298a?dl=0) | 1xV100 32GB |
-| 07-06-23 |   wavlm/hparams/train_pb.yaml   |    61.87     |     0.00    |    2.75    |   -13.15    | [Link](https://www.dropbox.com/sh/wfj83oh8u8xru8e/AAAqmMjMs1tK1X0I53Ldk7c5a?dl=0) | 1xV100 32GB |
-| 07-06-23 |  wavlm/hparams/train_ewc.yaml   |    86.98     |   -39.54    |   -4.26    |    -6.13    | [Link](https://www.dropbox.com/sh/poi5n6bmw3g9xs3/AABNozqigh54fKUdyWbf_WLOa?dl=0) | 1xV100 32GB |
-| 07-06-23 |  wavlm/hparams/train_lwf.yaml   |    87.17     |   -26.03    |   10.42    |   -20.82    | [Link](https://www.dropbox.com/sh/fggjafxdrtux68y/AADpdUV1Ny2may-G3pNwUrB6a?dl=0) | 1xV100 32GB |
+| 07-06-23 |  whisper/hparams/train_ft.yaml  |    98.50     |   -84.58    |   -4.16    |    -0.83    | [Link](https://www.dropbox.com/sh/qfcookgmnacz00w/AAA4kTKoeybMV1ikJLZgHjPma?dl=0) | 1xV100 32GB |
+| 07-06-23 |  whisper/hparams/train_er.yaml  |    50.83     |   -13.20    |   -0.81    |    -4.17    | [Link](?) | 1xV100 32GB |
+| 07-06-23 | whisper/hparams/train_agem.yaml |    81.08     |   -55.85    |    0.20    |    -5.19    | [Link](https://www.dropbox.com/sh/0a9vbeo4e22s5rd/AAC_KUVIbl6i4MS7Qc6wu-Qva?dl=0) | 1xV100 32GB |
+| 07-06-23 | whisper/hparams/train_pnn.yaml  |    44.12     |     0.00    |    3.18    |    -8.16    | [Link](https://www.dropbox.com/sh/75nnsef8ssz8g8d/AADrL5OKh8Kilp7gfA5pPYcOa?dl=0) | 1xV100 32GB |
+| 07-06-23 |  whisper/hparams/train_pb.yaml  |    43.95     |     0.00    |    3.51    |    -8.50    | [Link](https://www.dropbox.com/sh/ipimdg4f5tvu293/AACbk6OYQiOU5NiPa18lUv3ra?dl=0) | 1xV100 32GB |
+| 07-06-23 | whisper/hparams/train_ewc.yaml  |    98.04     |   -68.32    |    2.87    |    -7.85    | [Link](https://www.dropbox.com/sh/faagbafvkdbs8t9/AAAV9ok_Z36rwzwmMQEuELvga?dl=0) | 1xV100 32GB |
+| 07-06-23 | whisper/hparams/train_lwf.yaml  |    95.76     |   -77.50    |    0.00    |    -4.98    | [Link](https://www.dropbox.com/sh/hgaw74v233l4awb/AAAtAnBWm0IkQcmLa6mAzI_Da?dl=0) | 1xV100 32GB |
+| 07-06-23 |   wavlm/hparams/train_ft.yaml   |    91.61     |   -54.67    |  -10.19    |    -0.21    | [Link](https://www.dropbox.com/sh/bqb4k3y4gmjt4l7/AACzJc60SAdDaLkESWffEV6ka?dl=0) | 1xV100 32GB |
+| 07-06-23 |   wavlm/hparams/train_er.yaml   |    60.79     |    -8.96    |   -7.62    |    -2.77    | [Link](?) | 1xV100 32GB |
+| 07-06-23 |  wavlm/hparams/train_agem.yaml  |    72.54     |    13.59    |   35.29    |   -45.69    | [Link](https://www.dropbox.com/sh/obt9cj3cthfnfdn/AACdj-UyzmpeME6_w_CDaZe7a?dl=0) | 1xV100 32GB |
+| 07-06-23 |  wavlm/hparams/train_pnn.yaml   |    66.07     |     0.00    |   12.95    |   -23.34    | [Link](https://www.dropbox.com/sh/t4nq5qx0nl8zbtn/AACi9r_AtyJqdrbxHEZ20IxGa?dl=0) | 1xV100 32GB |
+| 07-06-23 |   wavlm/hparams/train_pb.yaml   |    61.87     |     0.00    |    2.75    |   -13.15    | [Link](https://www.dropbox.com/sh/gsziwbjqfwzrlyi/AACSDG6Y0fx93JNWnuzQufhia?dl=0) | 1xV100 32GB |
+| 07-06-23 |  wavlm/hparams/train_ewc.yaml   |    86.98     |   -39.54    |   -4.26    |    -6.13    | [Link](https://www.dropbox.com/sh/dumg837b3n7f8pg/AABYrnDdsLIkS7DYSUbx-MGJa?dl=0) | 1xV100 32GB |
+| 07-06-23 |  wavlm/hparams/train_lwf.yaml   |    87.17     |   -26.03    |   10.42    |   -20.82    | [Link](https://www.dropbox.com/sh/mm68n9ebt6484v2/AAAw3Ckrlfagi9VcJ6qBK9yxa?dl=0) | 1xV100 32GB |
 
-Raw experiment logs are available [here](https://www.dropbox.com/sh/y15vy2op74a5tbu/AACgtxN_uYRGfvCTtiUB7d_ma?dl=0).
+Raw experiment logs are available [here](https://www.dropbox.com/sh/vfxrb7z0p79vhqt/AAC5ftGfpibhuLlyQ8D9NfWAa?dl=0).
 We do not include the checkpoints due to storage limits (each experiment with Whisper large-v2 generates ~125 GB of checkpoint data).
 
-Analyses generated via `analyze_logs.py` are available [here](https://www.dropbox.com/sh/0ndrp570vlsh893/AAC2WSZQu00ZducN80Ff5dWla?dl=0).
+Analyses generated via `analyze_logs.py` are available [here](https://www.dropbox.com/sh/59uoq0ys53zf2oj/AABUvEBjNt1jUnqHdZaLdMV6a?dl=0).
 
 All the experiments were run on five CentOS Linux 7 machines with an Intel(R) Xeon(R) Silver 4216 Cascade Lake CPU
 with 32 cores @ 2.10 GHz, 64 GB RAM and an NVIDIA Tesla V100 SXM2 @ 32 GB with CUDA Toolkit 11.4.
 With the specified hardware configuration, approximately one week is necessary to complete all the experiments.
 
-**NOTE**: the checkpoint for WavLM large pretrained on the base languages is available [here](https://www.dropbox.com/sh/3h4k8ccn465bv48/AABM7fCNOU9tTQPD0vCT8-K4a?dl=0).
+**NOTE**: the checkpoint for WavLM large pretrained on the base languages is available [here](https://www.dropbox.com/sh/tbjuwi9yo1fv2ez/AABILEMY9yAhHMwhTlvyw69Pa?dl=0).
 
 ---------------------------------------------------------------------------------------------------------
 

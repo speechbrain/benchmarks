@@ -139,13 +139,13 @@ class PromptPool(torch.nn.Module):
 
     Examples
     --------
-    >>> prompt_pool = PromptPool(["en", "de"], d_prompt=768)
-    >>> input = torch.randn(2, 40, 768)
+    >>> prompt_pool = PromptPool(["en", "de"], d_prompt=1024)
+    >>> input = torch.randn(2, 40, 1024)
     >>> output = prompt_pool(input, locale="en")
 
     """
 
-    def __init__(self, locales, d_prompt=768):
+    def __init__(self, locales, d_prompt=1024):
         super().__init__()
         self.locales = locales
         self.d_prompt = d_prompt

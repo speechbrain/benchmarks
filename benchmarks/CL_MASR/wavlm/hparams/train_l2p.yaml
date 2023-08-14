@@ -36,7 +36,7 @@ num_epochs: 2
 lr: 0.0001
 improvement_threshold: 0.0025
 annealing_factor: 0.8
-d_prompt: 768
+d_prompt: 1024
 
 wavlm_variant: wavlm-large
 pretrained_wavlm_path: null

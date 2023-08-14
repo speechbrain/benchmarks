@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Recipe for fine-tuning a Whisper-based ASR system on Common Voice in a continual
+"""Recipe for fine-tuning a WavLM-based ASR system on Common Voice in a continual
 learning fashion via (task-aware) Learning to Prompt (https://arxiv.org/abs/2112.08654).
 
 To run this recipe, do the following:
@@ -13,7 +13,6 @@ Authors
 import logging
 import os
 import pathlib
-import random
 import sys
 import time
 
@@ -22,7 +21,6 @@ import torchaudio
 from hyperpyyaml import load_hyperpyyaml
 
 import speechbrain as sb
-from speechbrain.dataio.batch import PaddedBatch
 from speechbrain.utils.distributed import run_on_main
 
 from common_voice_prepare import prepare_common_voice
@@ -33,69 +31,54 @@ class ASR(sb.Brain):
         """Forward computations from the waveform batches to the output probabilities."""
         batch = batch.to(self.device)
         wavs, wav_lens = batch.sig
-        bos_tokens, _ = batch.tokens_bos
+        tokens, _ = batch.tokens
 
-        # Forward encoder + decoder
+        # Forward encoder + projection
         if self.hparams.gradient_checkpointing:
             wavs.requires_grad_()
             enc_out = torch.utils.checkpoint.checkpoint(
-                self.modules.whisper.forward_encoder, wavs,
+                self.modules.wavlm.model.encoder, wavs, wav_lens,
             )
             enc_out = torch.utils.checkpoint.checkpoint(
                 self.modules.prompt_pool,
                 enc_out,
                 self.hparams.forced_decoder_locale,
             )
-            logits, _ = torch.utils.checkpoint.checkpoint(
-                self.modules.whisper.forward_decoder, enc_out, bos_tokens
+            logits = torch.utils.checkpoint.checkpoint(
+                self.modules.wavlm.model.decoder, enc_out, wav_lens,
             )
         else:
-            enc_out = self.modules.whisper.forward_encoder(wavs)
+            enc_out = self.modules.wavlm.model.encoder(wavs, wav_lens)
             enc_out = self.modules.prompt_pool(
                 enc_out, self.hparams.forced_decoder_locale
             )
-            logits, _ = self.modules.whisper.forward_decoder(
-                enc_out, bos_tokens
-            )
+            logits = self.modules.wavlm.model.decoder(enc_out, wav_lens)
 
         hyps = None
         if stage != sb.Stage.TRAIN:
-            locale = self.hparams.forced_decoder_locale
-            if locale not in self.hparams.base_locales:
-                locale = self.hparams.base_locales[0]
-            hyps, _ = self.modules.whisper.generate(
-                audio_features=enc_out,
-                forced_decoder_locale=locale,
-                max_gen_tokens=self.hparams.max_gen_tokens,
+            hyps = sb.decoders.ctc_greedy_decode(
+                logits, wav_lens, blank_id=self.hparams.blank_index
             )
 
         return logits, hyps
 
     def compute_objectives(self, predictions, batch, stage):
         """Computes the loss given predictions and targets."""
+        _, wav_lens = batch.sig
         logits, hyps = predictions
         ids = batch.id
-        tokens_eos, _ = batch.tokens_eos
+        tokens, tokens_lens = batch.tokens
 
-        loss = self.hparams.ce_loss(
-            logits.flatten(end_dim=-2), tokens_eos.flatten()
-        )
+        logits = logits.float()  # Force float32 when using mixed precision
+        log_probs = logits.log_softmax(dim=-1)
+        loss = self.hparams.ctc_loss(log_probs, tokens, wav_lens, tokens_lens)
 
         if stage != sb.Stage.TRAIN:
             target_words = batch.target_wrd
 
             # Decode predicted tokens to words
-            predicted_words = self.tokenizer.batch_decode(
-                hyps, skip_special_tokens=True
-            )
-
-            if self.hparams.normalize_transcripts:
-                predicted_words = [
-                    self.tokenizer._normalize(text).split(" ")
-                    for text in predicted_words
-                ]
-            else:
-                predicted_words = [text.split(" ") for text in predicted_words]
+            predicted_words = self.tokenizer.decode(hyps)
+            predicted_words = [text.split(" ") for text in predicted_words]
 
             self.wer_metric.append(ids, predicted_words, target_words)
             self.cer_metric.append(ids, predicted_words, target_words)
@@ -156,13 +139,13 @@ class PromptPool(torch.nn.Module):
 
     Examples
     --------
-    >>> prompt_pool = PromptPool(["en", "de"], d_prompt=1280)
-    >>> input = torch.randn(2, 40, 1280)
+    >>> prompt_pool = PromptPool(["en", "de"], d_prompt=768)
+    >>> input = torch.randn(2, 40, 768)
     >>> output = prompt_pool(input, locale="en")
 
     """
 
-    def __init__(self, locales, d_prompt=1280):
+    def __init__(self, locales, d_prompt=768):
         super().__init__()
         self.locales = locales
         self.d_prompt = d_prompt
@@ -254,31 +237,14 @@ def dataio_prepare(hparams, tokenizer):
     sb.dataio.dataset.add_dynamic_item(datasets, audio_pipeline)
 
     # 3. Define text pipeline:
-    @sb.utils.data_pipeline.takes("wrd", "locale")
-    @sb.utils.data_pipeline.provides("tokens_bos", "tokens_eos", "target_wrd")
-    def text_pipeline(wrd, locale):
-        if locale.startswith("zh"):
-            locale = "zh"
-        locale = locale.lower()
-        language = tokenizer.supported_languages.get(
-            locale, "english"
-        )  # Use English if unknown
-        tokenizer.set_prefix_tokens(language=language)
+    @sb.utils.data_pipeline.takes("wrd")
+    @sb.utils.data_pipeline.provides("tokens", "target_wrd")
+    def text_pipeline(wrd):
         tokens_list = tokenizer.encode(wrd)
-        assert sum(i == tokenizer.unk_token_id for i in tokens_list) == 1
-        # Remove BOS and EOS tokens from tokens_list
-        bos_index, tokens_list, eos_index = (
-            tokens_list[0],
-            tokens_list[1:-1],
-            tokens_list[-1],
-        )
+        assert sum(i == hparams["blank_index"] for i in tokens_list) == 0
         tokens_list = tokens_list[: hparams["max_target_length"] - 1]
-        tokens_bos = torch.LongTensor([bos_index] + tokens_list)
-        yield tokens_bos
-        tokens_eos = torch.LongTensor(tokens_list + [eos_index])
-        yield tokens_eos
-        if hparams["normalize_transcripts"]:
-            wrd = tokenizer._normalize(wrd)
+        tokens = torch.LongTensor(tokens_list)
+        yield tokens
         wrd = wrd.split(" ")
         # When `ref_tokens` is an empty string add dummy space
         # to avoid division by 0 when computing WER/CER
@@ -291,7 +257,7 @@ def dataio_prepare(hparams, tokenizer):
 
     # 4. Set output:
     sb.dataio.dataset.set_output_keys(
-        datasets, ["id", "sig", "tokens_bos", "tokens_eos", "target_wrd"],
+        datasets, ["id", "sig", "tokens", "target_wrd"],
     )
 
     return train_data, valid_data, test_data
@@ -334,11 +300,8 @@ def test(hparams, run_opts, locales, wer_file="wer_test.txt"):
         else:
             hparams["wer_computer"] = sb.utils.metric_stats.ErrorRateStats
 
-        # Set forced decoder locale
-        hparams["forced_decoder_locale"] = locale
-
         # Define tokenizer
-        tokenizer = hparams["whisper"].tokenizer
+        tokenizer = hparams["wavlm"].tokenizer
 
         # Create datasets, tokenization and encoding
         _, _, test_data = dataio_prepare(hparams, tokenizer)
@@ -349,7 +312,6 @@ def test(hparams, run_opts, locales, wer_file="wer_test.txt"):
         )
 
         # We dynamically add the tokenizer to our brain class
-        # NB: This tokenizer corresponds to the one used for Whisper
         asr_brain.tokenizer = tokenizer
 
         # Testing
@@ -400,6 +362,12 @@ def train(hparams, run_opts):
         The runtime options.
 
     """
+    # Load checkpoint
+    if hparams["pretrained_wavlm_path"] is not None:
+        hparams["wavlm"].load_state_dict(
+            torch.load(hparams["pretrained_wavlm_path"])
+        )
+
     # Testing
     test(
         hparams, run_opts, hparams["base_locales"], f"wer_test_before.txt",
@@ -418,14 +386,14 @@ def train(hparams, run_opts):
         )
 
         # Define tokenizer
-        tokenizer = hparams["whisper"].tokenizer
+        tokenizer = hparams["wavlm"].tokenizer
 
         # Freeze the whole model to avoid forgetting
-        hparams["whisper"].model.requires_grad_(False)
+        hparams["wavlm"].model.requires_grad_(False)
 
         # Log total number of tokens
         logging.info(
-            f"Total number of tokens: {hparams['whisper'].model.decoder.embed_tokens.num_embeddings}"
+            f"Total number of tokens: {hparams['wavlm'].model.decoder.out_proj.out_features}"
         )
 
         # Set forced decoder locale
@@ -452,7 +420,6 @@ def train(hparams, run_opts):
         )
 
         # We dynamically add the tokenizer to our brain class
-        # NB: This tokenizer corresponds to the one used for Whisper
         asr_brain.tokenizer = tokenizer
 
         # Training
@@ -492,20 +459,14 @@ def profile(hparams, run_opts):
     class Model(torch.nn.Module):
         def __init__(self):
             super().__init__()
-            self.whisper = hparams["whisper"]
+            self.wavlm = hparams["wavlm"]
             self.wavs = torch.randn(
                 1, hparams["sample_rate"], device=run_opts["device"],
-            )
-            self.bos_tokens = torch.ones(
-                1,
-                self.whisper.model.config.max_length,
-                dtype=torch.int,
-                device=run_opts["device"],
             )
 
         @torch.no_grad()
         def forward(self, _=None):
-            enc_out, logits, _ = self.whisper(self.wavs, self.bos_tokens)
+            logits = self.wavlm(self.wavs)
             return logits
 
     model = Model().eval().to(run_opts["device"])
@@ -542,7 +503,6 @@ if __name__ == "__main__":
         ".txt",
         f"_base={','.join(hparams['base_locales'])}_new={','.join(hparams['new_locales'])}.txt",
     )
-    random.seed(hparams["seed"])
 
     # Create experiment directory
     sb.create_experiment_directory(
@@ -550,31 +510,6 @@ if __name__ == "__main__":
         hyperparams_to_save=hparams_file,
         overrides=overrides,
     )
-
-    class CustomPaddedBatch(PaddedBatch):
-        """PaddedBatch with custom padding values.
-
-        See the documentation of `speechbrain.dataio.batch.PaddedBatch`.
-
-        """
-
-        def __init__(self, examples, *args, **kwargs):
-            for k in ["tokens_bos", "tokens_eos"]:
-                max_len = max([len(x[k]) for x in examples])
-                pad_value = 0.0
-                if k in ["tokens_bos"]:
-                    pad_value = hparams["whisper"].tokenizer.pad_token_id
-                elif k == "tokens_eos":
-                    pad_value = hparams["ignore_index"]
-                for example in examples:
-                    x = example[k]
-                    example[k] = torch.nn.functional.pad(
-                        x, [0, max_len - len(x)], value=pad_value
-                    )
-            super().__init__(examples, *args, **kwargs)
-
-    hparams["train_dataloader_kwargs"]["collate_fn"] = CustomPaddedBatch
-    hparams["valid_dataloader_kwargs"]["collate_fn"] = CustomPaddedBatch
 
     # Train
     start_time = time.time()

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 """Recipe for fine-tuning a Whisper-based ASR system on Common Voice in a continual
-learning fashion via (task-aware) Learning to Prompt (https://arxiv.org/abs/2112.08654).
+learning fashion via (task-incremental) Dark Experience Replay (https://arxiv.org/abs/2004.07211).
 
 To run this recipe, do the following:
-> python train_l2p.py hparams/train_l2p.yaml
+> python train_der.py hparams/train_der.yaml
 
 Authors
  * Luca Della Libera 2023
@@ -38,34 +38,17 @@ class ASR(sb.Brain):
         # Forward encoder + decoder
         if self.hparams.gradient_checkpointing:
             wavs.requires_grad_()
-            enc_out = torch.utils.checkpoint.checkpoint(
-                self.modules.whisper.forward_encoder, wavs,
-            )
-            enc_out = torch.utils.checkpoint.checkpoint(
-                self.modules.prompt_pool,
-                enc_out,
-                self.hparams.forced_decoder_locale,
-            )
-            logits, _ = torch.utils.checkpoint.checkpoint(
-                self.modules.whisper.forward_decoder, enc_out, bos_tokens
+            enc_out, logits, _ = torch.utils.checkpoint.checkpoint(
+                self.modules.whisper, wavs, bos_tokens,
             )
         else:
-            enc_out = self.modules.whisper.forward_encoder(wavs)
-            enc_out = self.modules.prompt_pool(
-                enc_out, self.hparams.forced_decoder_locale
-            )
-            logits, _ = self.modules.whisper.forward_decoder(
-                enc_out, bos_tokens
-            )
+            enc_out, logits, _ = self.modules.whisper(wavs, bos_tokens)
 
         hyps = None
         if stage != sb.Stage.TRAIN:
-            locale = self.hparams.forced_decoder_locale
-            if locale not in self.hparams.base_locales:
-                locale = self.hparams.base_locales[0]
             hyps, _ = self.modules.whisper.generate(
                 audio_features=enc_out,
-                forced_decoder_locale=locale,
+                forced_decoder_locale=self.hparams.forced_decoder_locale,
                 max_gen_tokens=self.hparams.max_gen_tokens,
             )
 
@@ -80,6 +63,69 @@ class ASR(sb.Brain):
         loss = self.hparams.ce_loss(
             logits.flatten(end_dim=-2), tokens_eos.flatten()
         )
+
+        # Compute distillation loss
+        if stage == sb.Stage.TRAIN:
+            selected_samples = random.sample(
+                self.hparams.replay_buffer, len(ids),
+            )
+
+            # Retrieve wavs
+            replay_wavs = [x[0] for x in selected_samples]
+            max_len = max(len(x) for x in replay_wavs)
+            replay_wavs = [
+                torch.nn.functional.pad(x, [0, max_len - len(x)])
+                for x in replay_wavs
+            ]
+            replay_wavs = torch.stack(replay_wavs).to(self.device)
+
+            # Retrieve BOS tokens
+            replay_bos_tokens = [x[1] for x in selected_samples]
+            max_len = max(len(x) for x in replay_bos_tokens)
+            replay_bos_tokens = [
+                torch.nn.functional.pad(
+                    x, [0, max_len - len(x)], value=self.tokenizer.pad_token_id
+                )
+                for x in replay_bos_tokens
+            ]
+            replay_bos_tokens = torch.stack(replay_bos_tokens).to(self.device)
+
+            # Retrieve logits
+            target_replay_logits = [x[2] for x in selected_samples]
+            max_len = max(len(x) for x in target_replay_logits)
+            target_replay_logits = [
+                torch.nn.functional.pad(x, [0, 0, 0, max_len - len(x)])
+                for x in target_replay_logits
+            ]
+            max_len = max(x.shape[-1] for x in target_replay_logits)
+            target_replay_logits = [
+                torch.nn.functional.pad(x, [0, max_len - x.shape[-1]])
+                for x in target_replay_logits
+            ]
+            target_replay_logits = torch.stack(target_replay_logits).to(
+                self.device
+            )
+
+            if self.hparams.gradient_checkpointing:
+                replay_wavs.requires_grad_()
+                _, replay_logits, _ = torch.utils.checkpoint.checkpoint(
+                    self.modules.whisper, replay_wavs, replay_bos_tokens,
+                )
+            else:
+                _, replay_logits, _ = self.modules.whisper(
+                    replay_wavs, replay_bos_tokens
+                )
+
+            # Zero padding for logits corresponding to new tokens
+            target_replay_logits = torch.nn.functional.pad(
+                target_replay_logits,
+                [0, replay_logits.shape[-1] - target_replay_logits.shape[-1]],
+            )
+
+            loss += (
+                self.hparams.der_alpha
+                * ((replay_logits - target_replay_logits) ** 2).mean()
+            )
 
         if stage != sb.Stage.TRAIN:
             target_words = batch.target_wrd
@@ -141,59 +187,6 @@ class ASR(sb.Brain):
             )
             with open(self.hparams.wer_file, "w", encoding="utf-8") as w:
                 self.wer_metric.write_stats(w)
-
-
-class PromptPool(torch.nn.Module):
-    """Prompt pool that defines a dict of trainable prompts, one for each locale.
-    The prompt corresponding to the given locale is added to the input.
-
-    Arguments
-    ---------
-    locales : list[str]
-        The list of locales.
-    d_prompt : int, optional
-        The prompt size.
-
-    Examples
-    --------
-    >>> prompt_pool = PromptPool(["en", "de"], d_prompt=1280)
-    >>> input = torch.randn(2, 40, 1280)
-    >>> output = prompt_pool(input, locale="en")
-
-    """
-
-    def __init__(self, locales, d_prompt=1280):
-        super().__init__()
-        self.locales = locales
-        self.d_prompt = d_prompt
-        self.prompts = torch.nn.ParameterDict(
-            {
-                locale: torch.nn.Parameter(torch.randn(d_prompt, d_prompt))
-                for locale in locales
-            }
-        )
-
-    def forward(self, input, locale=None):
-        """Forward pass.
-
-        Arguments
-        ---------
-        input : torch.Tensor
-            A batch of inputs.
-        locale : str, optional
-            The input locale.
-
-        Returns
-        -------
-        torch.Tensor
-            The summation of the input and
-            its corresponding prompt.
-
-        """
-        if locale is None or locale not in self.prompts:
-            return input
-        prompt = self.prompts[locale]
-        return input @ prompt
 
 
 def dataio_prepare(hparams, tokenizer):
@@ -405,6 +398,8 @@ def train(hparams, run_opts):
         hparams, run_opts, hparams["base_locales"], f"wer_test_before.txt",
     )
 
+    replay_buffer = []
+
     # Train on new locales
     for i, locale in enumerate(hparams["new_locales"]):
         # Multi-gpu (ddp) save data preparation
@@ -417,11 +412,67 @@ def train(hparams, run_opts):
             },
         )
 
-        # Define tokenizer
+        # Add new language token
+        new_tokens = [f"<|{locale.lower()}|>"]
         tokenizer = hparams["whisper"].tokenizer
+        tokenizer._additional_special_tokens += new_tokens
+        tokenizer.supported_languages.update({locale.lower(): locale.lower()})
+        tokenizer.to_language_codes.update({locale.lower(): locale.lower()})
 
-        # Freeze the whole model to avoid forgetting
-        hparams["whisper"].model.requires_grad_(False)
+        # Check if already in Whisper tokenizer's vocabulary
+        new_tokens = sorted(
+            list(set(new_tokens) - set(tokenizer.get_vocab().keys()))
+        )
+
+        # Add to Whisper tokenizer's vocabulary
+        tokenizer.add_tokens(new_tokens)
+
+        # Log total number of tokens
+        logging.info(
+            f"Total number of tokens: {hparams['whisper'].model.decoder.embed_tokens.num_embeddings}"
+        )
+
+        # Create datasets, tokenization and encoding
+        train_data, valid_data, _ = dataio_prepare(hparams, tokenizer)
+        length = len(train_data)
+
+        # Get train data from previous tasks
+        old_locales = (
+            hparams["base_locales"]
+            if i == 0
+            else [hparams["new_locales"][i - 1]]
+        )
+        for old_locale in old_locales:
+            run_on_main(
+                prepare_common_voice,
+                kwargs={
+                    "locales": [old_locale],
+                    "data_folder": hparams["data_folder"],
+                    "max_durations": hparams["max_durations"],
+                },
+            )
+            old_train_data, _, _ = dataio_prepare(hparams, tokenizer)
+            selected_idxes = random.sample(
+                range(len(old_train_data)),
+                round(
+                    min(length * hparams["replay_ratio"], len(old_train_data))
+                ),
+            )
+            for idx in selected_idxes:
+                wavs = old_train_data[idx]["sig"].to(run_opts["device"])
+                bos_tokens = old_train_data[idx]["tokens_bos"].to(
+                    run_opts["device"]
+                )
+                with torch.no_grad():
+                    _, logits, _ = hparams["whisper"](
+                        wavs[None], bos_tokens[None]
+                    )
+                replay_buffer.append(
+                    (wavs.cpu(), bos_tokens.cpu(), logits[0].cpu())
+                )
+
+        # Add a new random embedding for the new language token
+        hparams["whisper"].model.resize_token_embeddings(len(tokenizer))
 
         # Log total number of tokens
         logging.info(
@@ -430,9 +481,6 @@ def train(hparams, run_opts):
 
         # Set forced decoder locale
         hparams["forced_decoder_locale"] = locale
-
-        # Create datasets, tokenization and encoding
-        train_data, valid_data, _ = dataio_prepare(hparams, tokenizer)
 
         # Trainer initialization
         checkpoint_folder = os.path.join(hparams["save_folder"], locale)
@@ -443,6 +491,7 @@ def train(hparams, run_opts):
         hparams["lr_annealing"].hyperparam_value = hparams["lr"]
         hparams["lr_annealing"].metric_values.clear()
         hparams["lr_annealing"].current_patient = 0
+        hparams["replay_buffer"] = replay_buffer
         asr_brain = ASR(
             modules=hparams["modules"],
             hparams=hparams,

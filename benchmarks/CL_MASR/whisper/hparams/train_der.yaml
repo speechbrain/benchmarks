@@ -3,7 +3,7 @@
 # Authors: Luca Della Libera 2023
 # ############################################################################
 
-experiment_name: L2P
+experiment_name: DER
 
 seed: 0
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
@@ -21,7 +21,7 @@ output_folder: !ref results/<whisper_variant>/<experiment_name>/<seed>
 save_folder: !ref <output_folder>/save
 
 # Training parameters
-train_batch_size: 12
+train_batch_size: 4
 valid_batch_size: 16
 train_num_workers: 6
 valid_num_workers: 6
@@ -37,7 +37,8 @@ num_epochs: 2
 lr: 0.0001
 improvement_threshold: 0.0025
 annealing_factor: 0.8
-d_prompt: 1280
+replay_ratio: 0.1
+der_alpha: 1.0
 
 whisper_variant: whisper-large-v2
 encoder_only: False
@@ -77,13 +78,8 @@ ce_loss: !new:torch.nn.CrossEntropyLoss
     ignore_index: !ref <ignore_index>
     label_smoothing: !ref <label_smoothing>
 
-prompt_pool: !new:train_l2p.PromptPool
-    locales: !ref <new_locales>
-    d_prompt: !ref <d_prompt>
-
 modules:
     whisper: !ref <whisper>
-    prompt_pool: !ref <prompt_pool>
 
 # Optimizers
 opt_class: !name:torch.optim.AdamW
@@ -109,7 +105,6 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
     checkpoints_dir: !ref <save_folder>
     recoverables:
         model: !ref <whisper>
-        prompt_pool: !ref <prompt_pool>
         scheduler: !ref <lr_annealing>
         counter: !ref <epoch_counter>
 

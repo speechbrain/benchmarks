@@ -70,6 +70,15 @@ class ASR(sb.Brain):
                 self.hparams.replay_buffer, len(ids),
             )
 
+            tmp = []
+            for sample in selected_samples:
+                data = self._pipeline(sample[0])
+                wav = data["sig"]
+                bos_tokens = data["tokens_bos"]
+                logits = sample[1]
+                tmp.append((wav, bos_tokens, logits))
+            selected_samples = tmp
+
             # Retrieve wavs
             replay_wavs = [x[0] for x in selected_samples]
             max_len = max(len(x) for x in replay_wavs)
@@ -187,6 +196,11 @@ class ASR(sb.Brain):
             )
             with open(self.hparams.wer_file, "w", encoding="utf-8") as w:
                 self.wer_metric.write_stats(w)
+
+    def _fit_train(self, train_set, epoch, enable):
+        # Training stage
+        self._pipeline = train_set.dataset.pipeline
+        return super()._fit_train(train_set, epoch, enable)
 
 
 def dataio_prepare(hparams, tokenizer):
@@ -467,9 +481,8 @@ def train(hparams, run_opts):
                     _, logits, _ = hparams["whisper"](
                         wavs[None], bos_tokens[None]
                     )
-                replay_buffer.append(
-                    (wavs.cpu(), bos_tokens.cpu(), logits[0].cpu())
-                )
+                raw = old_train_data.data[old_train_data[idx]["id"]]
+                replay_buffer.append((raw, logits[0].cpu()))
 
         # Add a new random embedding for the new language token
         hparams["whisper"].model.resize_token_embeddings(len(tokenizer))

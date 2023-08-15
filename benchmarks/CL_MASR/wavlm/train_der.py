@@ -68,6 +68,14 @@ class ASR(sb.Brain):
                 self.hparams.replay_buffer, len(ids),
             )
 
+            tmp = []
+            for sample in selected_samples:
+                data = self._pipeline(sample[0])
+                wav = data["sig"]
+                logits = sample[1]
+                tmp.append((wav, logits))
+            selected_samples = tmp
+
             # Retrieve wavs
             replay_wavs = [x[0] for x in selected_samples]
             replay_wav_lens = [len(x) for x in replay_wavs]
@@ -157,6 +165,11 @@ class ASR(sb.Brain):
             )
             with open(self.hparams.wer_file, "w", encoding="utf-8") as w:
                 self.wer_metric.write_stats(w)
+
+    def _fit_train(self, train_set, epoch, enable):
+        # Training stage
+        self._pipeline = train_set.dataset.pipeline
+        return super()._fit_train(train_set, epoch, enable)
 
 
 def dataio_prepare(hparams, tokenizer):
@@ -406,7 +419,8 @@ def train(hparams, run_opts):
                 wavs = old_train_data[idx]["sig"].to(run_opts["device"])
                 with torch.no_grad():
                     logits = hparams["wavlm"](wavs[None])
-                replay_buffer.append((wavs.cpu(), logits[0].cpu()))
+                raw = old_train_data.data[old_train_data[idx]["id"]]
+                replay_buffer.append((raw, logits[0].cpu()))
 
         # Trainer initialization
         checkpoint_folder = os.path.join(hparams["save_folder"], locale)

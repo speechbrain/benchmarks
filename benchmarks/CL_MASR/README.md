@@ -12,10 +12,13 @@ leveraging shared knowledge from new tasks).
 The following algorithms have been implemented so far:
 - [Experience Replay (ER)](https://arxiv.org/abs/1811.11682)
 - [Averaged Gradient Episodic Memory (A-GEM)](https://arxiv.org/abs/1812.00420)
+- [Dark Experience Replay (DER)](https://arxiv.org/abs/2004.07211) (task-incremental variant)
 - [Progressive Neural Networks (PNN)](https://arxiv.org/abs/1606.04671)
 - [Piggyback (PB)](https://arxiv.org/abs/1801.06519)
-- [Elastic Weight Consolidation (EWC)](https://arxiv.org/abs/1612.00796)
-- [Learning without Forgetting (LwF)](https://arxiv.org/abs/1606.09282)
+- [Elastic Weight Consolidation (EWC)](https://arxiv.org/abs/1612.00796) (online variant)
+- [Learning without Forgetting (LwF)](https://arxiv.org/abs/1606.09282) (online variant)
+- [Memory Aware Synapses (MAS)](https://arxiv.org/abs/1711.09601)
+- [Learning to Prompt (L2P)](https://arxiv.org/abs/2112.08654) (task-aware variant)
 
 ---------------------------------------------------------------------------------------------------------
 

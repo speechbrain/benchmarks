@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 """Recipe for fine-tuning a Whisper-based ASR system on Common Voice in a continual
-learning fashion via (online) Elastic Weight Consolidation (https://arxiv.org/abs/1612.00796).
+learning fashion via Memory Aware Synapses (https://arxiv.org/abs/1711.09601).
 
 To run this recipe, do the following:
-> python train_ewc.py hparams/train_ewc.yaml
+> python train_mas.py hparams/train_mas.yaml
 
 Authors
  * Luca Della Libera 2023
- * Pooneh Mousavi 2023
 """
 
 import logging
@@ -64,29 +63,23 @@ class ASR(sb.Brain):
             logits.flatten(end_dim=-2), tokens_eos.flatten()
         )
 
-        if stage == sb.Stage.TRAIN and hasattr(self.hparams, "ewc_params"):
+        if stage == sb.Stage.TRAIN and hasattr(self.hparams, "mas_params"):
             for name, param in self.modules.whisper.named_parameters():
                 if not param.requires_grad or param.grad is None:
                     continue
-                old_param, fisher = self.hparams.ewc_params
+                old_param, importance = self.hparams.mas_params
                 if "embed_tokens.weight" in name:
                     diff = param.shape[0] - old_param[name].shape[0]
                     old_param[name] = torch.nn.functional.pad(
                         old_param[name], [0, 0, 0, diff]
                     )
-                    fisher[name] = torch.nn.functional.pad(
-                        fisher[name], [0, 0, 0, diff]
+                    importance[name] = torch.nn.functional.pad(
+                        importance[name], [0, 0, 0, diff]
                     )
                 loss += (
-                    (
-                        fisher[name]
-                        * (old_param[name] - param.to(fisher[name].device)) ** 2
-                    )
-                    .sum()
-                    .to(self.device)
-                    * 0.5
-                    * self.hparams.ewc_lambda
-                )
+                    importance[name]
+                    * (old_param[name] - param.to(importance[name].device)) ** 2
+                ).sum().to(self.device) * self.hparams.mas_lambda
 
         if stage != sb.Stage.TRAIN:
             target_words = batch.target_wrd
@@ -150,11 +143,20 @@ class ASR(sb.Brain):
                 self.wer_metric.write_stats(w)
 
 
-class EWCParamsComputer(ASR):
+class MASParamsComputer(ASR):
     def on_fit_start(self):
         """Gets called at the beginning of ``fit()``."""
-        self.params, self.fisher = {}, {}
+        self.params, self.importance = {}, {}
         self.num_samples = 0
+
+    def compute_objectives(self, predictions, batch, stage):
+        """Computes the loss given predictions and targets."""
+        logits, _ = predictions
+
+        # Squared L2 norm of the learned function output
+        loss = (logits.flatten(end_dim=-2) ** 2).sum(dim=-1).mean()
+
+        return loss
 
     def fit_batch(self, batch):
         """Fit one batch."""
@@ -169,10 +171,10 @@ class EWCParamsComputer(ASR):
                     continue
                 if name not in self.params:
                     self.params[name] = param.clone().cpu()
-                if name not in self.fisher:
-                    self.fisher[name] = (param.grad.clone() ** 2).cpu()
+                if name not in self.importance:
+                    self.importance[name] = param.grad.clone().abs().cpu()
                 else:
-                    self.fisher[name] += (param.grad.clone() ** 2).cpu()
+                    self.importance[name] += param.grad.clone().abs().cpu()
 
         self.modules.whisper.zero_grad()
         self.num_samples += 1
@@ -181,12 +183,12 @@ class EWCParamsComputer(ASR):
 
     def on_stage_end(self, stage, stage_loss, epoch=None):
         """Gets called at the end of a stage."""
-        for name in self.fisher:
-            self.fisher[name] /= self.num_samples
+        for name in self.importance:
+            self.importance[name] /= self.num_samples
 
 
-def compute_ewc_params(hparams, run_opts, locales):
-    """Compute EWC parameters (current parameter values + Fisher information matrix)
+def compute_mas_params(hparams, run_opts, locales):
+    """Compute MAS parameters (current parameter values + weight importance matrix)
     for the given locales.
 
     Arguments
@@ -223,7 +225,7 @@ def compute_ewc_params(hparams, run_opts, locales):
     train_data, _, _ = dataio_prepare(hparams, tokenizer)
 
     # Trainer initialization
-    asr_brain = EWCParamsComputer(
+    asr_brain = MASParamsComputer(
         modules=hparams["modules"], hparams=hparams, run_opts=run_opts,
     )
 
@@ -238,14 +240,14 @@ def compute_ewc_params(hparams, run_opts, locales):
         train_loader_kwargs=hparams["train_dataloader_kwargs"],
     )
 
-    params, fisher = asr_brain.params, asr_brain.fisher
+    params, importance = asr_brain.params, asr_brain.importance
 
     hparams["train_dataloader_kwargs"]["batch_size"] = batch_size
     hparams["max_grad_norm"] = max_grad_norm
     hparams["auto_mix_prec"] = auto_mix_prec
     hparams["grad_accumulation_factor"] = grad_accumulation_factor
 
-    return params, fisher
+    return params, importance
 
 
 def dataio_prepare(hparams, tokenizer):
@@ -459,30 +461,32 @@ def train(hparams, run_opts):
 
     # Train on new locales
     for i, locale in enumerate(hparams["new_locales"]):
-        # Remove old EWC parameters
-        old_ewc_params = hparams.pop("ewc_params", None)
+        # Remove old MAS parameters
+        old_mas_params = hparams.pop("mas_params", None)
 
-        # Compute new EWC parameters
-        if not hparams["skip_ewc"]:
+        # Compute new MAS parameters
+        if not hparams["skip_mas"]:
             if i == 0:
-                ewc_params = compute_ewc_params(
+                mas_params = compute_mas_params(
                     hparams, run_opts, hparams["base_locales"]
                 )
             else:
-                ewc_params = compute_ewc_params(
+                mas_params = compute_mas_params(
                     hparams, run_opts, [hparams["new_locales"][i - 1]]
                 )
-                for name, fisher in ewc_params[1].items():
-                    if name in old_ewc_params[1]:
-                        old_fisher = old_ewc_params[1][name]
+                for name, importance in mas_params[1].items():
+                    if name in old_mas_params[1]:
+                        old_importance = old_mas_params[1][name]
                         if "embed_tokens.weight" in name:
-                            diff = fisher.shape[0] - old_fisher.shape[0]
-                            old_fisher = torch.nn.functional.pad(
-                                old_fisher, [0, 0, 0, diff]
+                            diff = importance.shape[0] - old_importance.shape[0]
+                            old_importance = torch.nn.functional.pad(
+                                old_importance, [0, 0, 0, diff]
                             )
-                        ewc_params[1][name] *= 1 - hparams["ewc_alpha"]
-                        ewc_params[1][name] += hparams["ewc_alpha"] * old_fisher
-            hparams["ewc_params"] = ewc_params
+                        mas_params[1][name] *= 1 - hparams["mas_alpha"]
+                        mas_params[1][name] += (
+                            hparams["mas_alpha"] * old_importance
+                        )
+            hparams["mas_params"] = mas_params
 
         # Multi-gpu (ddp) save data preparation
         run_on_main(

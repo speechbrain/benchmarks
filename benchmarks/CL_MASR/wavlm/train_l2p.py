@@ -303,6 +303,9 @@ def test(hparams, run_opts, locales, wer_file="wer_test.txt"):
         # Define tokenizer
         tokenizer = hparams["wavlm"].tokenizer
 
+        # Set forced decoder locale
+        hparams["forced_decoder_locale"] = locale
+
         # Create datasets, tokenization and encoding
         _, _, test_data = dataio_prepare(hparams, tokenizer)
 

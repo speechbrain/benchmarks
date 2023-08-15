@@ -75,7 +75,7 @@ class ASR(sb.Brain):
                 data = self._pipeline(sample[0])
                 wav = data["sig"]
                 bos_tokens = data["tokens_bos"]
-                logits = sample[1]
+                logits = torch.load(sample[1])
                 tmp.append((wav, bos_tokens, logits))
             selected_samples = tmp
 
@@ -481,8 +481,14 @@ def train(hparams, run_opts):
                     _, logits, _ = hparams["whisper"](
                         wavs[None], bos_tokens[None]
                     )
-                raw = old_train_data.data[old_train_data[idx]["id"]]
-                replay_buffer.append((raw, logits[0].cpu()))
+                ID = old_train_data[idx]["id"]
+                save_path = os.path.join(
+                    hparams["save_folder"], "buffer", old_locale, f"{ID}.pt"
+                )
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                torch.save(logits[0].cpu(), save_path)
+                raw = old_train_data.data[ID]
+                replay_buffer.append((raw, save_path))
 
         # Add a new random embedding for the new language token
         hparams["whisper"].model.resize_token_embeddings(len(tokenizer))

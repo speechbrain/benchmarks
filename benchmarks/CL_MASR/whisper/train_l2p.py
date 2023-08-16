@@ -6,6 +6,8 @@ learning fashion via (task-aware) Learning to Prompt (https://arxiv.org/abs/2112
 To run this recipe, do the following:
 > python train_l2p.py hparams/train_l2p.yaml
 
+NOTE: since there is no forgetting by design, only the current locale is tested.
+
 Authors
  * Luca Della Libera 2023
 """
@@ -13,7 +15,6 @@ Authors
 import logging
 import os
 import pathlib
-import random
 import sys
 import time
 
@@ -470,9 +471,27 @@ def train(hparams, run_opts):
         test(
             hparams,
             run_opts,
-            hparams["base_locales"] + hparams["new_locales"][: i + 1],
+            [locale],
+            # hparams["base_locales"] + hparams["new_locales"][: i + 1],
             f"wer_test_after_{locale}.txt",
         )
+
+        # Copy previous lines (no forgetting by design)
+        if not hparams["skip_test"]:
+            save_file = asr_brain.hparams.train_logger.save_file
+            with open(save_file, encoding="utf-8") as f:
+                lines = f.readlines()
+            previous_lines = []
+            count = 0
+            for line in lines[::-1]:
+                if line.startswith("Epoch loaded:"):
+                    previous_lines.append(line)
+                    count += 1
+                if count == len(hparams["base_locales"]) + i + 1:
+                    break
+            previous_lines = previous_lines[::-1]
+            with open(save_file, "w", encoding="utf-8") as f:
+                f.writelines(lines[:-1] + previous_lines)
 
 
 def profile(hparams, run_opts):
@@ -542,7 +561,6 @@ if __name__ == "__main__":
         ".txt",
         f"_base={','.join(hparams['base_locales'])}_new={','.join(hparams['new_locales'])}.txt",
     )
-    random.seed(hparams["seed"])
 
     # Create experiment directory
     sb.create_experiment_directory(

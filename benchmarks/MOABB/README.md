@@ -35,13 +35,13 @@ Users can easily integrate their own PyTorch models into our benchmark by follow
 To set up the benchmark, follow these steps:
 
 1. Install SpeechBrain:
-   
+
    ```shell
    pip install speechbrain
    ```
 
 **Note:** Before the release of SpeechBrain v1.0, you'll need to clone and install the SpeechBrain repository as follows:
-    
+
     ```shell
     git clone https://github.com/speechbrain/speechbrain/
     cd speechbrain
@@ -140,7 +140,7 @@ epoch: 3, lr: 6.11e-05 - train loss: 1.25 - valid loss: 1.39, valid f1: 3.13e-01
  [4 9 1 0]
  [4 4 6 0]
  [9 4 1 0]]
- 
+
 ...
 
 epoch loaded: 862 - test loss: 5.94e-02, test f1: 8.57e-01, test acc: 8.57e-01, test cm: [[13  1  0  0]
@@ -179,7 +179,16 @@ The results of each experiment are saved in the specified output folder. To view
 
 The `aggregated_performance.txt` file should look like this:
 
-By default, the hyperparameters in the yaml files are those determined during hyperparameter tuning (as shown below). 
+[add file example]
+```
+
+```
+
+The output folder is structured as follows:
+
+[add description]
+
+By default, the hyperparameters in the yaml files are those determined during hyperparameter tuning (as shown below).
 
 In this case, you should expect the values to closely resemble those reported in the results [table below](#results) (specifically, check the line corresponding to /MotorImagery/BNCI2014001/EEGNet.yaml).
 

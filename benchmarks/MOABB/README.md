@@ -6,9 +6,8 @@ For detailed information, please refer to [The link to the official paper will b
 
 ## ⚡ Datasets and Recipes
 
-The benchmark leverages datasets supported by [MOABB](https://neurotechx.github.io/moabb/datasets.html). Specifically, it comes with recipes for the following datasets:
+The benchmark leverages datasets supported by [MOABB](https://neurotechx.github.io/moabb/datasets.html). Specifically, it comes with recipes for the following [datasets](#dataset-table):
 
-[Link Text](#dataset-table)
 
 | Dataset ID | Task | nsbj | nsess |
 |------------|-------------|-----|-----|
@@ -36,11 +35,13 @@ Users can easily integrate their own PyTorch models into our benchmark by follow
 To set up the benchmark, follow these steps:
 
 1. Install SpeechBrain:
+   
    ```shell
    pip install speechbrain
    ```
 
 **Note:** Before the release of SpeechBrain v1.0, you'll need to clone and install the SpeechBrain repository as follows:
+    
     ```shell
     git clone https://github.com/speechbrain/speechbrain/
     cd speechbrain
@@ -111,7 +112,7 @@ Normally, two common strategies are used during the training phase: *Leave-One-S
 Let's now dive into how to train a model using data from a single subject and session. Follow the steps below to run this experiment:
 
 ```bash
-python train.py hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder=eeg_data --cached_data_folder=eeg_pickled_data --target_subject_idx=0 --target_session_idx=1 --data_iterator_name=leave-one-session-out
+python train.py hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder=eeg_data --cached_data_folder=eeg_pickled_data --output_folder=results/MotorImagery/BNCI2014001/ --target_subject_idx=0 --target_session_idx=1 --data_iterator_name=leave-one-session-out
 ```
 
 In this example, we will train EEGNET for Motor Imagery using the BNCI2014001 dataset. Specifically, we will train the model using data from *subject 0*. The  data recorded in *session 1* of  *subject 0* will be used for testing, while all the other sessions will be used for training.
@@ -120,7 +121,38 @@ The data will be automatically downloaded to the specified `data_folder`, and a 
 
 Ensure that your local machine has internet access. If it does not, you can download the data in advance and store it in the specified data_folder.
 
-The results, including training logs and checkpoints, will be available in the output folder specified in the hparam file.
+The results, including training logs and checkpoints, will be available in the output folder specified in the hyperparameter (hparam) file.
+
+In the example above, the output folder contains the models trained for sessions 'T' and 'E'. Within each subfolder, you can find a variety of files generated during model training.
+
+For instance, the train_log.txt file appears as follows:
+
+```
+epoch: 1, lr: 1.95e-05 - train loss: 1.39 - valid loss: 1.39, valid f1: 1.84e-01, valid acc: 2.14e-01, valid cm: [[4 0 6 4]
+ [6 0 6 2]
+ [3 0 5 6]
+ [4 1 6 3]]
+epoch: 2, lr: 4.03e-05 - train loss: 1.33 - valid loss: 1.39, valid f1: 2.51e-01, valid acc: 3.04e-01, valid cm: [[ 1  1 11  1]
+ [ 0  4 10  0]
+ [ 1  1 11  1]
+ [ 0  1 12  1]]
+epoch: 3, lr: 6.11e-05 - train loss: 1.25 - valid loss: 1.39, valid f1: 3.13e-01, valid acc: 3.57e-01, valid cm: [[5 7 2 0]
+ [4 9 1 0]
+ [4 4 6 0]
+ [9 4 1 0]]
+ 
+...
+
+epoch loaded: 862 - test loss: 5.94e-02, test f1: 8.57e-01, test acc: 8.57e-01, test cm: [[13  1  0  0]
+ [ 3 11  0  0]
+ [ 0  0 12  2]
+ [ 0  0  2 12]]
+
+```
+
+This log file reports various training metrics for each epoch, including train/validation losses, accuracies, and a confusion matrix that provides insights into misclassified classes.
+
+Additionally, you can find detailed performance metrics for both validation and testing in files named `valid_metrics.pkl` and `test_metrics.pkl`."
 
 
 ### Run a Training Experiment on a Given Dataset
@@ -130,7 +162,7 @@ To train models using either the *Leave-One-Subject-Out* or *Leave-One-Session-O
 To run a training experiment, use the following command:
 
 ```bash
-./run_experiments.sh --hparams hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder eeg_data --output_folder results/MotorImagery/BNCI2014001/EEGNet --nsbj 9 --nsess 2 --nruns 10 --train_mode leave-one-session-out --number_of_epochs 250 --device=cpu
+./run_experiments.sh --hparams hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder eeg_data --output_folder results/MotorImagery/BNCI2014001/EEGNet --nsbj 9 --nsess 2 --nruns 10 --train_mode leave-one-session-out --device=cuda
 ```
 
 This command will execute the `leave_one_session_out` training on the BNCI2014001 dataset for Motor Imagery using the EEGNet.yaml configuration.
@@ -139,9 +171,17 @@ The script will loop over 9 subjects and 2 sessions, running the experiment 10 t
 
 Running multiple experiments with varied seeds and averaging their performance is a recommended practice to improve result significance.
 
+Please note that due to the thorough evaluation process we employ, running an experiment may require some time. In particular, it may take approximately 8 hours when executed on an NVIDIA V100 GPU.
+
 The evaluation metric is accuracy, and the validation metrics are stored in `valid_metrics.pkl`.
 
 The results of each experiment are saved in the specified output folder. To view the final aggregated performance, refer to the `aggregated_performance.txt` file.
+
+The `aggregated_performance.txt` file should look like this:
+
+By default, the hyperparameters in the yaml files are those determined during hyperparameter tuning (as shown below). 
+
+In this case, you should expect the values to closely resemble those reported in the results [table below](#results) (specifically, check the line corresponding to /MotorImagery/BNCI2014001/EEGNet.yaml).
 
 
 **Default Values:**
@@ -288,8 +328,7 @@ Let's bow assume you've designed a neural network in PyTorch and wish to integra
 
 
 
-## Incorporating Your Model
-[Link Text](#incorporating-your-model)
+## [Incorporating Your Model](#incorporating-your-model)
 
 Let's now assume that you designed your fancy neural network in pytorch and you would like to plug it in our benchmark.
 You're in luck because we've made this step as simple as possible for you!
@@ -307,7 +346,7 @@ Here are the steps you should follow:
 
 
 
-## 📈️ Results
+## 📈️ [Results](#results)
 
 Here are some results obtained with a leave-one-session-out strategy.
 

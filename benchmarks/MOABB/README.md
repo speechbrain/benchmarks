@@ -183,13 +183,13 @@ The `aggregated_performance.txt` file should look like this:
 ```
 ---- leave-one-session-out ----
 
-session_E acc [0.728400 0.722600 0.727200 0.735000 0.727200 0.728400 0.733400 0.724500 0.734600 0.726900] avg: 0.728820 ± 0.003990 
-session_T acc [0.727600 0.736500 0.729900 0.736900 0.737300 0.736500 0.748500 0.734200 0.739200 0.737700] avg: 0.736430 ± 0.005306 
+session_E acc [0.728400 0.722600 0.727200 0.735000 0.727200 0.728400 0.733400 0.724500 0.734600 0.726900] avg: 0.728820 ± 0.003990
+session_T acc [0.727600 0.736500 0.729900 0.736900 0.737300 0.736500 0.748500 0.734200 0.739200 0.737700] avg: 0.736430 ± 0.005306
 
 
 Aggregated results
 
-acc [0.728009 0.729552 0.728588 0.735918 0.732253 0.732446 0.740934 0.729360 0.736883 0.732253] avg: 0.732620 ± 0.003950 
+acc [0.728009 0.729552 0.728588 0.735918 0.732253 0.732446 0.740934 0.729360 0.736883 0.732253] avg: 0.732620 ± 0.003950
 [{'name': 'objective', 'type': 'objective', 'value': 0.26738040123456785}]
 
 ```
@@ -198,7 +198,13 @@ The system's performance should closely match the values reported in the first r
 
 Please be aware that there may be slight variability each time the experiment is run, primarily due to different seeds being used in each run. For example, you may observe accuracy values like `0.732620` in the current run, while the original table reports `0.731559`. We conduct 10 runs and average the results to minimize this variability and provide a more accurate performance estimate.
 
-The output folder is structured as follows:
+In addition to the `aggregated_performance.txt` file, the output folder includes further information:
+
+- Each run's performance details are reported in individual files, such as `run1_results.txt`.
+- For each run, a dedicated folder (e.g., `run1`) contains the models trained for each subject, complete with logging information.
+
+Feel free to explore the output folder and become familiar with the provided output.
+
 
 [add description]
 

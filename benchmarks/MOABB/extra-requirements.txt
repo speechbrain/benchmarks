@@ -1,5 +1,5 @@
-mne==0.24.1
-moabb
-orion[profet]
+mne
+orion
 scikit-learn
 torchinfo
+MOABB

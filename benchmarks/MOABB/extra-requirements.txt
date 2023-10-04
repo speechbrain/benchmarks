@@ -1,5 +1,5 @@
 mne
+MOABB
 orion
 scikit-learn
 torchinfo
-MOABB

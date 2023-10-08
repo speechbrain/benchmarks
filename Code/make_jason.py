@@ -1,35 +1,32 @@
 import json 
-
-def create_json(json_file, audiolist):
+import os
+from scipy.io import loadmat,savemat
+def create_json(json_file, Data_address,json_path):
   json_dict = {}
-  for audiofile in audiolist:
+  for roots, d_names, f_names in os.walk(Data_address):
+
+    for f_name in f_names:
+        print(roots,f_name)
+        loaded_mat_dict = loadmat(os.path.join(roots,f_name))
+        rf_data_path = os.path.join(roots,f_name)
+        attenuation = loaded_mat_dict['my_att']
+
+            # Create entry for this utterance
+        json_dict[f_name] = {
+                "rf_data": rf_data_path,
+                "attenuation": float(attenuation[0][0]),
+        }
     
-    # Getting info
-    audioinfo = torchaudio.info(audiofile)# Your code here
-
-    # Compute the duration in seconds.
-    # This is the number of samples divided by the sampling frequency
-    duration = audioinfo.num_frames / audioinfo.sample_rate # Your code here
-
-    # Get digit Label by manipulating the audio path
-    digit = audiofile.split('/')[-1][0] # Your code here (aim for 1 line)_
-
-    # Get a unique utterance id
-    uttid = audiofile.split('/')[-1] # Your code here (aim for 1 line)
-
-    # Create entry for this utterance
-    json_dict[uttid] = {
-            "wav": audiofile,
-            "length": duration,
-            "digit": digit,
-    }
-
+    print (json_dict)
     # Writing the dictionary to the json file
-    with open(json_file, mode="w") as json_f:
-      json.dump(json_dict, json_f, indent=2)
+    with open(os.path.join(json_path,json_file), mode="w") as json_f:
+      json.dump(json_dict,json_f , indent=2)
 
 
-
-create_json('train.json', train_files)
-create_json('valid.json', valid_files)
-create_json('test.json', test_files)       
+if __name__ == "__main__":
+  create_json('train.json', '../DataSet/train','./json_folder')
+  create_json('valid.json', '../DataSet/valid','./json_folder')
+  create_json('test.json', '../DataSet/test','./json_folder')
+#create_json('train.json', train_files)
+#create_json('valid.json', valid_files)
+#create_json('test.json', test_files)       

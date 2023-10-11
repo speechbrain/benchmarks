@@ -7,8 +7,12 @@ from speechbrain.utils.distributed import run_on_main
 from hyperpyyaml import load_hyperpyyaml
 from pathlib import Path
 import torchaudio
+from scipy.io import loadmat
 from speechbrain.utils.parameter_transfer import Pretrainer
 logger = logging.getLogger(__name__)
+
+
+
 
 
 
@@ -51,63 +55,42 @@ def dataio_prepare(hparams):
 
 
     datasets = [train_data, valid_data, test_data]
-    print('Train Data', train_data)
-    # # We get the tokenizer as we need it to encode the labels when creating
-    # # mini-batches.
-    # tokenizer_sem = hparams["tokenizer_semantics"]
-    # tokenizer_tr = hparams["tokenizer_transcription"]
-    # # 2. Define audio pipeline:
-    # @sb.utils.data_pipeline.takes("semantics")
-    # @sb.utils.data_pipeline.provides("semantics", "tokens_list_sm",
-    #                                  "tokens_bos_sm", "tokens_eos_sm", "tokens_sm")
-    # def in_text_pipeline(semantics):
-    #     yield semantics
-    #     tokens_list_sm = tokenizer_sem.encode_as_ids(semantics)
-    #     yield tokens_list_sm
-    #     tokens_bos_sm = torch.LongTensor([hparams["bos_index"]] + (tokens_list_sm))
-    #     yield tokens_bos_sm
-    #     tokens_eos_sm = torch.LongTensor(tokens_list_sm + [hparams["eos_index"]])
-    #     yield tokens_eos_sm
-    #     tokens_sm = torch.LongTensor(tokens_list_sm)
-    #     yield tokens_sm
+    #print('Train Data', train_data)
 
-    # sb.dataio.dataset.add_dynamic_item(datasets, in_text_pipeline)
-    # #import sentencepiece
+    def load_ultrasound(ULTRA_PATH):
+        dic = {}
+        data_dic = loadmat(ULTRA_PATH)
+        try:
+            dic['rf_data'] = data_dic['rf_data'].reshape((-1,))
+            dic['rf_env'] = data_dic['rf_env'].reshape((-1,))
+            dic['my_att'] = data_dic['my_att'][0][0]
+        except:
+            dic['rf_data'] = data_dic['rf_data'].reshape((-1,))
+            dic['my_att'] = data_dic['my_att'].item()
+            dic['rf_env'] = 0
+        return dic['rf_data'] , dic['rf_env'], dic['my_att']
 
-    # # 3. Define text pipeline:
-    # @sb.utils.data_pipeline.takes("transcription")
-    # @sb.utils.data_pipeline.provides(
-    #     "transcription", "tokens_list", "tokens_bos", "tokens_eos", "tokens"
-    # )
-    # def text_pipeline(transcription):
-    #     #tokenizer = sentencepiece.SentencePieceProcessor(
-    #     #    model_file=hparams['tokenizer'])
-        
-    #     yield transcription
-    #     tokens_list = tokenizer_tr.encode_as_ids(transcription)
-    #     yield tokens_list
-    #     tokens_bos = torch.LongTensor([hparams["bos_index"]] + (tokens_list))
-    #     yield tokens_bos
-    #     tokens_eos = torch.LongTensor(tokens_list + [hparams["eos_index"]])
-    #     yield tokens_eos
-    #     tokens = torch.LongTensor(tokens_list)
-    #     yield tokens
 
-    # sb.dataio.dataset.add_dynamic_item(datasets, text_pipeline)
+    # 2. Define Ultrasound pipeline:
+    @sb.utils.data_pipeline.takes("rf_data")
+    @sb.utils.data_pipeline.provides("sig","att")
+    def ultrasound_pipeline(rf_data):
+        sig, _, att = load_ultrasound(rf_data)
+        yield sig
+        yield att
 
-    # # 4. Set output:
-    # sb.dataio.dataset.set_output_keys(
-    #     datasets, ["id", "semantics", "transcription",
-    #                "tokens_bos", "tokens_eos", "tokens",
-    #                "tokens_list_sm", "tokens_bos_sm",
-    #                "tokens_eos_sm", "tokens_sm"],
-    # )
+    sb.dataio.dataset.add_dynamic_item(datasets, ultrasound_pipeline)
 
-    # return (
-    #     train_data,
-    #     valid_data,
-    #     test_data,
-    # )
+    sb.dataio.dataset.set_output_keys(
+        datasets, ["sig", "att",],)
+
+    print(valid_data[0])
+    
+    return (
+        train_data,
+        valid_data,
+        test_data,
+    )
 
 
 

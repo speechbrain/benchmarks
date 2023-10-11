@@ -1,14 +1,24 @@
+#Some Hyper Params
 base_channels: 32
 kernel_size: 11
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 LR: 0.001
 
+#Initial Settings
 
 seed: 12345
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
-padding: !ref <kernel_size> // 2
+#padding: !ref <kernel_size> // 2
+
+# Data files
+train_json: train.json
+valid_json: valid.json
+test_json: test.json
+
+
+# CNN Neural Network
 
 layer1: !new:torch.nn.Conv1d
   in_channels: 1

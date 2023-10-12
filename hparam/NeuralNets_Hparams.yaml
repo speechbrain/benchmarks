@@ -142,6 +142,8 @@ Dropout_1d: !new:torch.nn.Dropout1d
 LayerNorm: !new:torch.nn.LayerNorm
   normalized_shape: !ref <DIM_CNN_MLP>
 
+flatten_L: !new:torch.nn.Flatten
+
 MLP_L1: !new:torch.nn.Linear
   in_features: !ref <DIM_CNN_MLP>
   out_features: 16
@@ -170,10 +172,9 @@ scheduler: !name:torch.optim.lr_scheduler.LinearLR
 
 loss: !new:torch.nn.MSELoss
 
-# Model
+#Modules
 
-
-model: !new:torch.nn.Sequential
+CnnBlock: !new:torch.nn.Sequential
   - !ref <layer1>
   - !ref <Relue>
   - !ref <layer2>
@@ -190,9 +191,54 @@ model: !new:torch.nn.Sequential
   - !ref <layer5>
   - !ref <LeakyRelue>
   - !ref <LayerNorm>
-  - !new:torch.nn.Flatten
+
+MLPBlock: !new:torch.nn.Sequential
   - !ref <MLP_L1>
   - !ref <LeakyRelue>
   - !ref <MLP_L2>
   - !ref <LeakyRelue>
   - !ref <MLP_L3>
+
+modules:
+  CnnBlock: !ref <CnnBlock>
+  flatten_L: !ref <flatten_L>
+  MLPBlock: !ref <MLPBlock>
+
+
+# Model
+
+
+
+
+# model: !new:torch.nn.Sequential
+#   - !ref <layer1>
+#   - !ref <Relue>
+#   - !ref <layer2>
+#   - !ref <Batch_norm_1d_layer_2>
+#   - !ref <LeakyRelue>
+#   - !ref <layer3>
+#   - !ref <Batch_norm_1d_layer_3>
+#   - !ref <Relue>
+#   - !ref <layer4>
+#   - !ref <Batch_norm_1d_layer_4>
+#   - !ref <Relue>
+#   - !ref <Avg_pooling_1d>
+#   - !ref <Dropout_1d>
+#   - !ref <layer5>
+#   - !ref <LeakyRelue>
+#   - !ref <LayerNorm>
+#   - !new:torch.nn.Flatten
+#   - !ref <MLP_L1>
+#   - !ref <LeakyRelue>
+#   - !ref <MLP_L2>
+#   - !ref <LeakyRelue>
+#   - !ref <MLP_L3>
+
+
+model1: !new:torch.nn.ModuleList
+- [!ref <CnnBlock>, !ref <flatten_L> , !ref <MLPBlock>]
+
+#  model: !new:torch.nn.Sequential
+#    - !ref <CnnBlock>
+#    - !ref <flatten_L>
+#    - !ref <MLPBlock>

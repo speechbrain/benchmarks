@@ -12,7 +12,18 @@ from speechbrain.utils.parameter_transfer import Pretrainer
 logger = logging.getLogger(__name__)
 
 
+class Ultra_Brain(sb.Brain):
+    def compute_forward(self, batch, stage):
+        print('START')
+        batch = batch.to(self.device)
+        rf = batch.sig
+        a = modules.CnnBlock(rf)
+        a = modules.flattenL(a)
+        out = modules.MLPBlock(a)
+        
+        print('OUT',out)
 
+        return out 
 
 
 
@@ -113,3 +124,4 @@ if __name__ == "__main__":
     )
 
     train_data,  valid_data, test_data = dataio_prepare(hparams)
+    

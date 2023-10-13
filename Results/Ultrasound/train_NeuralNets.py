@@ -13,19 +13,19 @@ logger = logging.getLogger(__name__)
 
 
 class Ultra_Brain(sb.Brain):
-    def compute_forward(self, batch, stage):
+    def compute_forward(self, batch):
         print('START')
         batch = batch.to(self.device)
         rf = batch.sig
-        a = modules.CnnBlock(rf)
-        a = modules.flattenL(a)
-        out = modules.MLPBlock(a)
+        a = self.modules.CnnBlock(rf)
+        logits = self.modules.MLPBlock(a)
         
-        print('OUT',out)
+        print('OUT',logits)
 
-        return out 
+        return logits 
 
-
+    def compute_objectives(self, predictions, batch):
+        return sb.nnet.losses.mse_loss(predictions, batch.att)
 
 def dataio_prepare(hparams):
     """This function prepares the datasets to be used in the brain class.
@@ -95,7 +95,7 @@ def dataio_prepare(hparams):
     sb.dataio.dataset.set_output_keys(
         datasets, ["sig", "att",],)
 
-    print(valid_data[0])
+    #print(valid_data[0])
     
     return (
         train_data,
@@ -125,3 +125,18 @@ if __name__ == "__main__":
 
     train_data,  valid_data, test_data = dataio_prepare(hparams)
     
+    Ultra_brain = Ultra_Brain(
+    modules=hparams["modules"],
+    opt_class=hparams["optim"],
+    hparams=hparams,
+    run_opts=run_opts,
+    checkpointer=hparams["checkpointer"],
+    )
+
+    Ultra_brain.fit(
+    Ultra_brain.hparams.epoch_counter,
+    train_data,
+    valid_data,
+    train_loader_kwargs=hparams["train_dataloader_opts"],
+    valid_loader_kwargs=hparams["valid_dataloader_opts"],
+    )

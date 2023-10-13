@@ -5,7 +5,7 @@ CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 LR: 0.001
 batch_size: 16
-
+number_of_epochs: 100
 #Initial Settings
 
 seed: 12345
@@ -76,6 +76,10 @@ test_dataloader_opts:
 #   stride: 1
 #   #padding: 0
 #   bias: False
+
+
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <number_of_epochs>
 
 layer1: !new:torch.nn.Conv1d
   in_channels: 1
@@ -191,6 +195,7 @@ CnnBlock: !new:torch.nn.Sequential
   - !ref <layer5>
   - !ref <LeakyRelue>
   - !ref <LayerNorm>
+  - !ref <flatten_L> 
 
 MLPBlock: !new:torch.nn.Sequential
   - !ref <MLP_L1>
@@ -201,7 +206,7 @@ MLPBlock: !new:torch.nn.Sequential
 
 modules:
   CnnBlock: !ref <CnnBlock>
-  flatten_L: !ref <flatten_L>
+  #flatten_L: !ref <flatten_L>
   MLPBlock: !ref <MLPBlock>
 
 
@@ -235,10 +240,24 @@ modules:
 #   - !ref <MLP_L3>
 
 
-model1: !new:torch.nn.ModuleList
-- [!ref <CnnBlock>, !ref <flatten_L> , !ref <MLPBlock>]
+model: !new:torch.nn.ModuleList
+- [!ref <CnnBlock>, !ref <MLPBlock>]
 
 #  model: !new:torch.nn.Sequential
 #    - !ref <CnnBlock>
 #    - !ref <flatten_L>
 #    - !ref <MLPBlock>
+
+
+
+
+
+
+
+###### Check pointing
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        model: !ref <model>
+        counter: !ref <epoch_counter>

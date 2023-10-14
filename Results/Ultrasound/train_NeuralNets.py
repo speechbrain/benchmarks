@@ -57,8 +57,8 @@ class Ultra_Brain(sb.Brain):
         return loss.detach()
 
     def evaluate_batch(self, batch,stage):
-        if stage == sb.Stage.TEST:
-            print('BATCH shape',batch.sig.data.shape)
+        # if stage == sb.Stage.TEST:
+        #     print('BATCH shape',batch.sig.data.shape)
         if stage == sb.Stage.VALID or stage == sb.Stage.TEST:
             predictions = self.compute_forward(batch)
             with torch.no_grad():

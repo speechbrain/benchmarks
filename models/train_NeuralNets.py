@@ -19,6 +19,16 @@ class Ultra_Brain(sb.Brain):
         batch = batch.to(self.device)
         rf = batch.sig.data # removing the the length flag of the PaddedData type
         rf = rf.type(torch.cuda.FloatTensor)
+        
+        
+        ### Normalization of input
+        batch_size, height = rf.shape
+        rf = rf.view(X.size(0), -1)
+        rf -= rf.min(1, keepdim=True)[0]
+        rf /= rf.max(1, keepdim=True)[0]
+        rf = rf.view(batch_size, height)
+        
+        
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)
         #print('RF SIGNASL',rf.shape)
@@ -47,11 +57,12 @@ class Ultra_Brain(sb.Brain):
 
         return loss.detach()
 
-    def evaluate_batch(self, batch):
-        predictions = self.compute_forward(batch)
-        with torch.no_grad():
-            loss = self.compute_objectives(predictions, batch)
-        return loss.detach()
+    def evaluate_batch(self, batch,stage):
+        if stage == sb.Stage.VALID:
+            predictions = self.compute_forward(batch)
+            with torch.no_grad():
+                loss = self.compute_objectives(predictions, batch)
+            return loss.detach()
 
 def dataio_prepare(hparams):
     """This function prepares the datasets to be used in the brain class.
@@ -176,4 +187,9 @@ if __name__ == "__main__":
     valid_data,
     train_loader_kwargs=hparams["train_dataloader_opts"],
     valid_loader_kwargs=hparams["valid_dataloader_opts"],
+    )
+
+    test_stats = Ultra_brain.evaluate(
+        test_set=test_data,
+        test_loader_kwargs=hparams["test_dataloader_opts"],
     )

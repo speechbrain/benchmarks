@@ -8,7 +8,7 @@ CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 LR: 0.001
 batch_size: 2
-number_of_epochs: 100
+number_of_epochs: 1
 #Initial Settings
 
 seed: 12345
@@ -82,7 +82,7 @@ test_dataloader_opts:
 
 
 epoch_counter: &id022 !new:speechbrain.utils.epoch_loop.EpochCounter
-  limit: 100
+  limit: 1
 
 layer1: &id002 !new:torch.nn.Conv1d
   in_channels: 1

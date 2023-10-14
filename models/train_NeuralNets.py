@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import sys
 import torch
 import logging
@@ -105,7 +106,17 @@ def dataio_prepare(hparams):
     @sb.utils.data_pipeline.takes("rf_data")
     @sb.utils.data_pipeline.provides("sig","att")
     def ultrasound_pipeline(rf_data):
-        sig, _, att = load_ultrasound(rf_data)
+        rf_data, _, att = load_ultrasound(rf_data)
+        len_wav = rf_data.shape[0]
+        pddd = 4500#4000
+
+        if len_wav < pddd:
+            pad = np.zeros(pddd - len_wav)
+            f_data = np.hstack([rf_data, pad])
+        elif len_wav > pddd:
+            rf_data = rf_data[:pddd]
+
+        sig = rf_data
         #print('SIGNAL CALLINg from ultrasound pipline ',sig, att)
         yield sig
         yield att

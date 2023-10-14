@@ -5,7 +5,7 @@
 base_channels: 32
 kernel_size: 11
 CHANNEL_NUM: 256
-DIM_CNN_MLP: 599
+DIM_CNN_MLP: 277
 LR: 0.001
 batch_size: 2
 number_of_epochs: 100
@@ -147,12 +147,12 @@ Dropout_1d: &id012 !new:torch.nn.Dropout1d
   p: 0.5
 
 LayerNorm: &id014 !new:torch.nn.LayerNorm
-  normalized_shape: 599
+  normalized_shape: 277
 
 flatten_L: &id015 !new:torch.nn.Flatten
 
 MLP_L1: &id016 !new:torch.nn.Linear
-  in_features: 599
+  in_features: 277
   out_features: 16
 
 MLP_L2: &id017 !new:torch.nn.Linear

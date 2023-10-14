@@ -1,13 +1,13 @@
-# Generated 2023-10-13 from:
+# Generated 2023-10-14 from:
 # /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam/NeuralNets_Hparams.yaml
 # yamllint disable
 #Some Hyper Params
 base_channels: 32
 kernel_size: 11
 CHANNEL_NUM: 256
-DIM_CNN_MLP: 277
+DIM_CNN_MLP: 599
 LR: 0.001
-batch_size: 16
+batch_size: 2
 number_of_epochs: 100
 #Initial Settings
 
@@ -30,14 +30,14 @@ sorting: ascending
 
 
 train_dataloader_opts:
-  batch_size: 16
+  batch_size: 2
   shuffle: true
 
 valid_dataloader_opts:
-  batch_size: 16
+  batch_size: 2
 
 test_dataloader_opts:
-  batch_size: 16
+  batch_size: 2
 
 # # CNN Neural Network
 
@@ -147,12 +147,12 @@ Dropout_1d: &id012 !new:torch.nn.Dropout1d
   p: 0.5
 
 LayerNorm: &id014 !new:torch.nn.LayerNorm
-  normalized_shape: 277
+  normalized_shape: 599
 
 flatten_L: &id015 !new:torch.nn.Flatten
 
 MLP_L1: &id016 !new:torch.nn.Linear
-  in_features: 277
+  in_features: 599
   out_features: 16
 
 MLP_L2: &id017 !new:torch.nn.Linear

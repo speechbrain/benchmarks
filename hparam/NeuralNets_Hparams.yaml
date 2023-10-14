@@ -2,9 +2,9 @@
 base_channels: 32
 kernel_size: 11
 CHANNEL_NUM: 256
-DIM_CNN_MLP: 277
+DIM_CNN_MLP: 599
 LR: 0.001
-batch_size: 16
+batch_size: 2
 number_of_epochs: 100
 #Initial Settings
 

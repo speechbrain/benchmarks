@@ -16,16 +16,35 @@ class Ultra_Brain(sb.Brain):
     def compute_forward(self, batch):
         print('START')
         batch = batch.to(self.device)
-        rf = batch.sig
+        rf = batch.sig.data # removing the the length flag of the PaddedData type
+        rf = rf.type(torch.cuda.FloatTensor)
+        #print('RF SIGNASL BEFOR',rf.shape)
+        rf = rf.unsqueeze(dim=1)
+        print('RF SIGNASL',rf.shape)
         a = self.modules.CnnBlock(rf)
         logits = self.modules.MLPBlock(a)
         
-        print('OUT',logits)
+        #print('OUT',logits)
 
         return logits 
 
     def compute_objectives(self, predictions, batch):
-        return sb.nnet.losses.mse_loss(predictions, batch.att)
+        print('PREDICTION', predictions.shape, batch.att.shape )
+        attenuation = batch.att
+        attenuation = attenuation.type(torch.cuda.FloatTensor)
+        return sb.nnet.losses.mse_loss(predictions, attenuation.unsqueeze(1))
+    
+    def fit_batch(self, batch):
+        predictions = self.compute_forward(batch)
+        #predictions = predictions.squeeze()
+        #print('PREDICTION', predictions.shape, batch.att.shape )
+        loss = self.compute_objectives(predictions, batch)
+        loss.backward()
+        if self.check_gradients(loss):
+            self.optimizer.step()
+        self.optimizer.zero_grad()
+
+        return loss.detach()
 
 def dataio_prepare(hparams):
     """This function prepares the datasets to be used in the brain class.
@@ -87,6 +106,7 @@ def dataio_prepare(hparams):
     @sb.utils.data_pipeline.provides("sig","att")
     def ultrasound_pipeline(rf_data):
         sig, _, att = load_ultrasound(rf_data)
+        #print('SIGNAL CALLINg from ultrasound pipline ',sig, att)
         yield sig
         yield att
 

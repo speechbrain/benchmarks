@@ -2488,3 +2488,5940 @@ Traceback (most recent call last):
   File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 981, in fit_batch
     outputs = self.compute_forward(batch, Stage.TRAIN)
 TypeError: Ultra_Brain.compute_forward() takes 2 positional arguments but 3 were given
+2023-10-13 13:24:15,677 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:24:15,677 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:24:15,981 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:24:15,983 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:24:17,173 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:24:17,174 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:24:17,174 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:24:17,179 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 136, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 981, in fit_batch
+    outputs = self.compute_forward(batch, Stage.TRAIN)
+TypeError: Ultra_Brain.compute_forward() takes 2 positional arguments but 3 were given
+2023-10-13 13:24:57,741 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:24:57,741 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:24:58,042 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:24:58,044 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:24:59,229 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:24:59,230 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:24:59,230 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:24:59,237 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 136, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 981, in fit_batch
+    outputs = self.compute_forward(batch, Stage.TRAIN)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 20, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:27:02,017 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:27:02,017 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:27:02,334 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:27:02,336 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:27:03,551 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:27:03,551 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:27:03,551 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:27:03,557 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 146, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 31, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 20, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:30:22,196 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:30:22,196 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:30:22,494 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:30:22,496 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:30:23,670 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:30:23,670 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:30:23,670 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:30:23,693 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 147, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:31:11,632 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:31:11,632 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:31:11,935 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:31:11,937 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:31:13,115 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:31:13,116 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:31:13,116 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:31:13,121 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 147, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 20, in compute_forward
+    print('RF SIGNASL',rf.shape)
+AttributeError: 'PaddedData' object has no attribute 'shape'
+2023-10-13 13:32:38,036 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:32:38,036 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:32:38,336 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:32:38,338 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:32:39,507 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:32:39,507 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:32:39,507 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:32:39,515 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 147, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:35:38,520 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:35:38,520 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:35:38,817 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:35:38,819 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:35:39,987 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:35:39,988 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:35:39,988 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:35:39,993 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 147, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:35:56,056 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:35:56,056 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:35:56,349 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:35:56,351 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:35:57,522 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:35:57,523 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:35:57,523 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:35:57,531 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 147, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:36:34,424 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:36:34,424 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:36:34,725 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:36:34,727 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:36:35,911 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:36:35,912 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:36:35,912 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:36:35,919 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 147, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:36:48,227 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:36:48,227 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:36:48,529 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:36:48,531 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:36:49,700 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:36:49,700 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:36:49,700 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:36:49,706 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 147, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:37:16,776 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:37:16,776 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:37:17,077 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:37:17,079 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:37:18,257 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:37:18,257 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:37:18,258 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:37:18,263 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 147, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:38:31,763 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:38:31,763 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:38:32,056 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:38:32,058 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:38:33,233 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:38:33,233 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:38:33,233 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:38:33,269 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 147, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+RuntimeError: Given groups=1, weight of size [256, 1, 4], expected input[1, 16, 10465] to have 1 channels, but got 16 channels instead
+2023-10-13 13:39:19,895 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:39:19,895 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:39:20,191 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:39:20,193 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:39:21,368 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:39:21,369 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:39:21,369 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:39:21,377 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 147, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:42:20,671 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:42:20,671 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:42:20,971 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:42:20,973 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:42:22,176 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:42:22,176 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:42:22,177 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:42:22,186 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 148, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:43:05,744 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:43:05,745 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:43:06,044 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:43:06,046 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:43:07,236 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:43:07,237 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:43:07,237 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:43:07,247 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 148, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:45:40,626 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:45:40,627 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:45:40,931 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:45:40,932 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:45:42,114 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:45:42,114 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:45:42,115 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:45:42,122 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 148, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:46:48,441 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:46:48,441 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:46:48,737 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:46:48,739 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:46:49,927 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:46:49,927 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:46:49,928 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:46:49,934 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 148, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-13 13:47:08,739 - speechbrain.core - INFO - Beginning experiment!
+2023-10-13 13:47:08,740 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-13 13:47:09,039 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-13 13:47:09,041 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-13 13:47:10,219 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-13 13:47:10,219 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-13 13:47:10,219 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-13 13:47:10,225 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 148, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+TypeError: conv1d() received an invalid combination of arguments - got (PaddedData, Parameter, Parameter, tuple, tuple, tuple, int), but expected one of:
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, tuple of ints padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+ * (Tensor input, Tensor weight, Tensor bias, tuple of ints stride, str padding, tuple of ints dilation, int groups)
+      didn't match because some of the arguments have invalid types: ([31;1mPaddedData of (Tensor, Tensor)[0m, [31;1mParameter[0m, [31;1mParameter[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [31;1mtuple of (int,)[0m, [32;1mint[0m)
+
+2023-10-14 13:35:39,993 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 13:35:39,993 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 13:35:40,295 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 13:35:40,297 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 13:35:41,471 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-14 13:35:41,471 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 13:35:41,471 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 13:35:41,485 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 148, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+RuntimeError: Given groups=1, weight of size [256, 1, 4], expected input[1, 16, 10465] to have 1 channels, but got 16 channels instead
+2023-10-14 13:40:31,298 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 13:40:31,298 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 13:40:31,594 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 13:40:31,596 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 13:40:32,781 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-14 13:40:32,781 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 13:40:32,781 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 13:40:32,798 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 149, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 33, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 20, in compute_forward
+    rf = rf.view(2,1,3)
+RuntimeError: shape '[2, 1, 3]' is invalid for input of size 167440
+2023-10-14 13:41:13,620 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 13:41:13,620 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 13:41:13,918 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 13:41:13,920 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 13:41:15,110 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-14 13:41:15,110 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 13:41:15,110 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 13:41:15,116 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 150, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 34, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    rf = rf.view(2,1,3)
+RuntimeError: shape '[2, 1, 3]' is invalid for input of size 167440
+2023-10-14 13:42:30,638 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 13:42:30,638 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 13:42:30,937 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 13:42:30,939 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 13:42:32,122 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-14 13:42:32,122 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 13:42:32,122 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 13:42:32,135 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 150, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 34, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 23, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+RuntimeError: Given groups=1, weight of size [256, 1, 4], expected input[1, 16, 10465] to have 1 channels, but got 16 channels instead
+2023-10-14 13:47:22,418 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 13:47:22,418 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 13:47:22,716 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 13:47:22,718 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 13:47:23,897 - speechbrain.core - INFO - 184.2k trainable parameters in Ultra_Brain
+2023-10-14 13:47:23,898 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 13:47:23,898 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 13:47:23,911 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 150, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 34, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 23, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+RuntimeError: Given groups=1, weight of size [256, 8, 4], expected input[1, 16, 10465] to have 8 channels, but got 16 channels instead
+2023-10-14 13:50:41,177 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 13:50:41,178 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 13:50:41,475 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 13:50:41,477 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 13:50:42,663 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-14 13:50:42,663 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 13:50:42,664 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 13:50:42,669 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 150, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 34, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 21, in compute_forward
+    rf = rf.view([2,1,3])
+RuntimeError: shape '[2, 1, 3]' is invalid for input of size 167440
+2023-10-14 13:52:33,072 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 13:52:33,073 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 13:52:33,369 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 13:52:33,371 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 13:52:34,531 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-14 13:52:34,532 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 13:52:34,532 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 13:52:34,545 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 150, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 34, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 23, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+RuntimeError: Input type (torch.cuda.DoubleTensor) and weight type (torch.cuda.FloatTensor) should be the same
+2023-10-14 13:54:59,930 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 13:54:59,931 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 13:55:00,234 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 13:55:00,236 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 13:55:01,392 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-14 13:55:01,393 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 13:55:01,393 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 13:55:01,408 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 151, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 35, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 24, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 313, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/conv.py", line 309, in _conv_forward
+    return F.conv1d(input, weight, bias, self.stride,
+RuntimeError: Input type (torch.FloatTensor) and weight type (torch.cuda.FloatTensor) should be the same or input should be a MKLDNN tensor and weight is a dense tensor
+2023-10-14 13:55:52,229 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 13:55:52,229 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 13:55:52,526 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 13:55:52,528 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 13:55:53,706 - speechbrain.core - INFO - 177.0k trainable parameters in Ultra_Brain
+2023-10-14 13:55:53,707 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 13:55:53,707 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 13:55:56,633 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 151, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 35, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 24, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/normalization.py", line 190, in forward
+    return F.layer_norm(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/functional.py", line 2515, in layer_norm
+    return torch.layer_norm(input, normalized_shape, weight, bias, eps, torch.backends.cudnn.enabled)
+RuntimeError: Given normalized_shape=[277], expected input with shape [*, 277], but got input of size[16, 1, 650]
+2023-10-14 13:57:14,661 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 13:57:14,662 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 13:57:14,965 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 13:57:14,967 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 13:57:16,151 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 13:57:16,152 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 13:57:16,152 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 13:57:16,871 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 151, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 36, in fit_batch
+    loss = self.compute_objectives(predictions, batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in compute_objectives
+    return sb.nnet.losses.mse_loss(predictions, batch.att)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 356, in mse_loss
+    predictions, targets = truncate(predictions, targets, allowed_len_diff)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 609, in truncate
+    len_diff = predictions.shape[1] - targets.shape[1]
+IndexError: tuple index out of range
+2023-10-14 14:00:29,981 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:00:29,981 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:00:30,278 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:00:30,280 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:00:31,467 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:00:31,467 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:00:31,467 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:00:32,187 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 152, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 37, in fit_batch
+    loss = self.compute_objectives(predictions, batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in compute_objectives
+    return sb.nnet.losses.mse_loss(predictions, batch.att)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 356, in mse_loss
+    predictions, targets = truncate(predictions, targets, allowed_len_diff)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 609, in truncate
+    len_diff = predictions.shape[1] - targets.shape[1]
+IndexError: tuple index out of range
+2023-10-14 14:01:27,177 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:01:27,177 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:01:27,476 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:01:27,478 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:01:28,664 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:01:28,665 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:01:28,665 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:01:29,374 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 152, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 37, in fit_batch
+    loss = self.compute_objectives(predictions, batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in compute_objectives
+    return sb.nnet.losses.mse_loss(predictions, batch.att)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 356, in mse_loss
+    predictions, targets = truncate(predictions, targets, allowed_len_diff)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 609, in truncate
+    len_diff = predictions.shape[1] - targets.shape[1]
+IndexError: tuple index out of range
+2023-10-14 14:02:24,844 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:02:24,844 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:02:25,162 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:02:25,164 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:02:26,401 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:02:26,401 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:02:26,401 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:02:27,163 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 152, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 37, in fit_batch
+    loss = self.compute_objectives(predictions, batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in compute_objectives
+    return sb.nnet.losses.mse_loss(predictions, batch.att)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 356, in mse_loss
+    predictions, targets = truncate(predictions, targets, allowed_len_diff)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 609, in truncate
+    len_diff = predictions.shape[1] - targets.shape[1]
+IndexError: tuple index out of range
+2023-10-14 14:05:30,753 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:05:30,753 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:05:31,062 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:05:31,064 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:05:32,255 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:05:32,255 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:05:32,256 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:05:32,999 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 153, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 38, in fit_batch
+    loss = self.compute_objectives(predictions, batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in compute_objectives
+    return sb.nnet.losses.mse_loss(predictions, batch.att)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 356, in mse_loss
+    predictions, targets = truncate(predictions, targets, allowed_len_diff)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 609, in truncate
+    len_diff = predictions.shape[1] - targets.shape[1]
+IndexError: tuple index out of range
+2023-10-14 14:05:47,402 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:05:47,403 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:05:47,703 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:05:47,705 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:05:48,921 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:05:48,921 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:05:48,921 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:05:49,651 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 153, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 38, in fit_batch
+    loss = self.compute_objectives(predictions, batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in compute_objectives
+    return sb.nnet.losses.mse_loss(predictions, batch.att)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 356, in mse_loss
+    predictions, targets = truncate(predictions, targets, allowed_len_diff)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 609, in truncate
+    len_diff = predictions.shape[1] - targets.shape[1]
+IndexError: tuple index out of range
+2023-10-14 14:06:16,763 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:06:16,763 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:06:17,064 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:06:17,066 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:06:18,266 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:06:18,267 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:06:18,267 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:06:18,997 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 153, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 38, in fit_batch
+    loss = self.compute_objectives(predictions, batch.att)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in compute_objectives
+    return sb.nnet.losses.mse_loss(predictions, batch.att)
+AttributeError: 'Tensor' object has no attribute 'att'
+2023-10-14 14:08:06,357 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:08:06,358 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:08:06,659 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:08:06,661 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:08:07,851 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:08:07,851 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:08:07,851 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:08:08,573 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 153, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 38, in fit_batch
+    loss = self.compute_objectives(predictions, batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 32, in compute_objectives
+    return sb.nnet.losses.mse_loss(predictions, batch.att)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 356, in mse_loss
+    predictions, targets = truncate(predictions, targets, allowed_len_diff)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 609, in truncate
+    len_diff = predictions.shape[1] - targets.shape[1]
+IndexError: tuple index out of range
+2023-10-14 14:08:49,727 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:08:49,727 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:08:50,025 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:08:50,026 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:08:51,199 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:08:51,199 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:08:51,199 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:08:51,917 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 154, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 39, in fit_batch
+    loss = self.compute_objectives(predictions, batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 33, in compute_objectives
+    return sb.nnet.losses.mse_loss(predictions, batch.att)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 356, in mse_loss
+    predictions, targets = truncate(predictions, targets, allowed_len_diff)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 609, in truncate
+    len_diff = predictions.shape[1] - targets.shape[1]
+IndexError: tuple index out of range
+2023-10-14 14:11:05,816 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:11:05,816 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:11:06,111 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:11:06,112 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:11:07,299 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:11:07,300 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:11:07,300 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:11:08,004 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 154, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 39, in fit_batch
+    loss = self.compute_objectives(predictions, batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 33, in compute_objectives
+    return sb.nnet.losses.mse_loss(predictions, batch.att.unsqueeze(0))
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 356, in mse_loss
+    predictions, targets = truncate(predictions, targets, allowed_len_diff)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/nnet/losses.py", line 613, in truncate
+    raise ValueError(
+ValueError: Predictions and targets should be same length, but got 1 and 16 respectively.
+2023-10-14 14:11:26,010 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:11:26,011 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:11:26,368 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:11:26,370 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:11:27,621 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:11:27,621 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:11:27,621 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:11:28,410 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 154, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 40, in fit_batch
+    loss.backward()
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/_tensor.py", line 487, in backward
+    torch.autograd.backward(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/autograd/__init__.py", line 200, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: Found dtype Double but expected Float
+2023-10-14 14:14:06,692 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:14:06,692 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:14:06,995 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:14:06,997 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:14:08,200 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:14:08,201 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:14:08,201 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:14:09,292 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 156, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 38, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 24, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/normalization.py", line 190, in forward
+    return F.layer_norm(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/functional.py", line 2515, in layer_norm
+    return torch.layer_norm(input, normalized_shape, weight, bias, eps, torch.backends.cudnn.enabled)
+RuntimeError: Given normalized_shape=[650], expected input with shape [*, 650], but got input of size[16, 1, 647]
+2023-10-14 14:15:53,243 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:15:53,243 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:15:53,546 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:15:53,548 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:15:54,758 - speechbrain.core - INFO - 183.7k trainable parameters in Ultra_Brain
+2023-10-14 14:15:54,758 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:15:54,758 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:15:55,482 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 156, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 38, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 24, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/normalization.py", line 190, in forward
+    return F.layer_norm(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/functional.py", line 2515, in layer_norm
+    return torch.layer_norm(input, normalized_shape, weight, bias, eps, torch.backends.cudnn.enabled)
+RuntimeError: Given normalized_shape=[650], expected input with shape [*, 650], but got input of size[2, 1, 599]
+2023-10-14 14:16:17,945 - speechbrain.core - INFO - Beginning experiment!
+2023-10-14 14:16:17,945 - speechbrain.core - INFO - Experiment folder: Results/Ultrasound
+2023-10-14 14:16:18,249 - speechbrain.utils.superpowers - DEBUG - appdirs==1.4.4
+audioread==3.0.0
+beautifulsoup4==4.12.2
+bs4==0.0.1
+certifi @ file:///croot/certifi_1690232220950/work/certifi
+cffi==1.15.1
+charset-normalizer==3.2.0
+cloudpickle==2.2.1
+cmake==3.27.5
+contourpy==1.1.1
+cssselect==1.2.0
+cycler==0.11.0
+Cython==3.0.2
+decorator==5.1.1
+dnspython==2.4.2
+exceptiongroup==1.1.3
+fake-useragent==1.2.1
+falcon==3.1.1
+falcon-cors==1.1.7
+filelock==3.12.4
+fonttools==4.42.1
+fsspec==2023.9.2
+gitdb==4.0.10
+GitPython==3.1.36
+GPy==1.10.0
+gunicorn==21.2.0
+huggingface-hub==0.17.3
+HyperPyYAML==1.2.2
+idna==3.4
+importlib-metadata==6.8.0
+iniconfig==2.0.0
+Jinja2==3.1.2
+joblib==1.3.2
+kaleido==0.2.1
+kiwisolver==1.4.5
+lazy_loader==0.3
+librosa==0.10.1
+lit==16.0.6
+llvmlite==0.41.0
+lxml==4.9.3
+MarkupSafe==2.1.3
+matplotlib==3.8.0
+mpmath==1.3.0
+msgpack==1.0.6
+networkx==3.1
+numba==0.58.0
+numpy==1.25.2
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+orion==0.2.7
+packaging==23.1
+pandas==2.1.1
+paramz==0.9.5
+parse==1.19.1
+Pillow==10.0.1
+platformdirs==3.10.0
+plotly==5.17.0
+pluggy==1.3.0
+pooch==1.7.0
+profet==0.0.1
+psutil==5.9.5
+pyaml==23.9.6
+pycparser==2.21
+pyee==8.2.2
+pymongo==4.5.0
+pyparsing==3.1.1
+pypdb==2.3
+pyppeteer==1.0.2
+pyquery==2.0.0
+pytest==7.4.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+PyYAML==6.0.1
+requests==2.31.0
+requests-html==0.10.0
+ruamel.yaml==0.17.35
+ruamel.yaml.clib==0.2.8
+scikit-learn==1.3.1
+scikit-optimize==0.9.0
+scipy==1.11.2
+seaborn==0.12.2
+sentencepiece==0.1.99
+six==1.16.0
+smmap==5.0.1
+soundfile==0.12.1
+soupsieve==2.5
+soxr==0.3.6
+speechbrain==0.5.15
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+threadpoolctl==3.2.0
+tomli==2.0.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tqdm==4.66.1
+triton==2.0.0
+typing_extensions==4.8.0
+tzdata==2023.3
+urllib3==1.26.16
+w3lib==2.1.2
+websockets==10.4
+zipp==3.17.0
+
+
+2023-10-14 14:16:18,251 - speechbrain.utils.superpowers - DEBUG - 170abbc
+
+
+2023-10-14 14:16:19,446 - speechbrain.core - INFO - 182.8k trainable parameters in Ultra_Brain
+2023-10-14 14:16:19,447 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
+2023-10-14 14:16:19,447 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-14 14:16:20,252 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 156, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 38, in fit_batch
+    predictions = self.compute_forward(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_NeuralNets.py", line 24, in compute_forward
+    a = self.modules.CnnBlock(rf)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/modules/normalization.py", line 190, in forward
+    return F.layer_norm(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/torch/nn/functional.py", line 2515, in layer_norm
+    return torch.layer_norm(input, normalized_shape, weight, bias, eps, torch.backends.cudnn.enabled)
+RuntimeError: Given normalized_shape=[599], expected input with shape [*, 599], but got input of size[2, 1, 649]

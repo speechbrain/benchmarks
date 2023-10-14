@@ -1,0 +1,2 @@
+epoch: 1, lr: 1.00e-02 - train loss: 3.39e-04 - valid loss: 1.25
+Epoch loaded: 1 - test loss: 1.81

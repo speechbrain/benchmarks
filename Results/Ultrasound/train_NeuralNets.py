@@ -65,6 +65,58 @@ class Ultra_Brain(sb.Brain):
                 loss = self.compute_objectives(predictions, batch)
                 #print("EVALUATE BATCH loss", loss)
             return loss.detach()
+        
+    def on_stage_end(self, stage, stage_loss, epoch):
+        """Gets called at the end of an epoch.
+
+        Arguments
+        ---------
+        stage : sb.Stage
+            One of sb.Stage.TRAIN, sb.Stage.VALID, sb.Stage.TEST
+        stage_loss : float
+            The average loss for all of the data processed in this stage.
+        epoch : int
+            The currently-starting epoch. This is passed
+            `None` during the test stage.
+        """
+
+        # Store the train loss until the validation stage.
+        stage_stats = {"loss": stage_loss}
+        if stage == sb.Stage.TRAIN:
+            self.train_stats = stage_stats
+
+
+        # Perform end-of-iteration things, like annealing, logging, etc.
+        elif stage == sb.Stage.VALID:
+            
+
+            # Update learning rate
+            old_lr, new_lr = self.hparams.lr_annealing(epoch)
+            sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr)
+
+            # The train_logger writes a summary to stdout and to the logfile.
+            self.hparams.train_logger.log_stats(
+                stats_meta={"epoch": epoch, "lr": old_lr},
+                train_stats=self.train_stats,
+                valid_stats={
+                    "loss": stage_loss,
+                },
+            )
+            # Save the current checkpoint and delete previous checkpoints.
+            self.checkpointer.save_and_keep_only(
+                meta={"loss": stage_stats["loss"]}, min_keys=["loss"],
+            )
+
+        # We also write statistics about test data to stdout and to the logfile.
+        elif stage == sb.Stage.TEST:
+            
+            self.hparams.train_logger.log_stats(
+                stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
+                test_stats={
+                    "loss": stage_loss,
+                },
+            )
+                
 
 def dataio_prepare(hparams):
     """This function prepares the datasets to be used in the brain class.

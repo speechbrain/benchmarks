@@ -3,7 +3,8 @@ base_channels: 32
 kernel_size: 11
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
-LR: 0.001
+lr: 0.01
+lr_final: 0.001
 batch_size: 2
 number_of_epochs: 1
 #Initial Settings
@@ -14,6 +15,10 @@ output_folder: !ref Results/Ultrasound/
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 json_folder: !ref ./json_folder
+
+
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <train_log>
 
 #padding: !ref <kernel_size> // 2
 
@@ -80,6 +85,11 @@ test_dataloader_opts:
 
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
     limit: !ref <number_of_epochs>
+
+lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
+    initial_value: !ref <lr>
+    final_value: !ref <lr_final>
+    epoch_count: !ref <number_of_epochs>
 
 layer1: !new:torch.nn.Conv1d
   in_channels: 1
@@ -163,7 +173,7 @@ MLP_L3: !new:torch.nn.Linear
 
 # Optimizer
 optim: !name:torch.optim.Adam
-  lr: !ref <LR>
+  lr: !ref <lr>
 
 scheduler: !name:torch.optim.lr_scheduler.LinearLR
   optimizer: !ref <optim>
@@ -247,9 +257,6 @@ model: !new:torch.nn.ModuleList
 #    - !ref <CnnBlock>
 #    - !ref <flatten_L>
 #    - !ref <MLPBlock>
-
-
-
 
 
 

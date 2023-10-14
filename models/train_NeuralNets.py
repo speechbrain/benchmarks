@@ -15,13 +15,13 @@ logger = logging.getLogger(__name__)
 
 class Ultra_Brain(sb.Brain):
     def compute_forward(self, batch):
-        print('START')
+        #print('START')
         batch = batch.to(self.device)
         rf = batch.sig.data # removing the the length flag of the PaddedData type
         rf = rf.type(torch.cuda.FloatTensor)
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)
-        print('RF SIGNASL',rf.shape)
+        #print('RF SIGNASL',rf.shape)
         a = self.modules.CnnBlock(rf)
         logits = self.modules.MLPBlock(a)
         
@@ -30,7 +30,7 @@ class Ultra_Brain(sb.Brain):
         return logits 
 
     def compute_objectives(self, predictions, batch):
-        print('PREDICTION', predictions.shape, batch.att.shape )
+        #print('PREDICTION', predictions.shape, batch.att.shape )
         attenuation = batch.att
         attenuation = attenuation.type(torch.cuda.FloatTensor)
         return sb.nnet.losses.mse_loss(predictions, attenuation.unsqueeze(1))

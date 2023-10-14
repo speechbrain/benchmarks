@@ -57,6 +57,8 @@ class Ultra_Brain(sb.Brain):
         return loss.detach()
 
     def evaluate_batch(self, batch,stage):
+        # if stage == sb.Stage.TEST:
+        #     print('BATCH shape',batch.sig.data.shape)
         if stage == sb.Stage.VALID or stage == sb.Stage.TEST:
             predictions = self.compute_forward(batch)
             with torch.no_grad():
@@ -129,7 +131,7 @@ def dataio_prepare(hparams):
 
         if len_wav < pddd:
             pad = np.zeros(pddd - len_wav)
-            f_data = np.hstack([rf_data, pad])
+            rf_data = np.hstack([rf_data, pad])
         elif len_wav > pddd:
             rf_data = rf_data[:pddd]
 

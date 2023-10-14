@@ -47,6 +47,12 @@ class Ultra_Brain(sb.Brain):
 
         return loss.detach()
 
+    def evaluate_batch(self, batch):
+        predictions = self.compute_forward(batch)
+        with torch.no_grad():
+            loss = self.compute_objectives(predictions, batch)
+        return loss.detach()
+
 def dataio_prepare(hparams):
     """This function prepares the datasets to be used in the brain class.
     It also defines the data processing pipeline through user-defined functions."""

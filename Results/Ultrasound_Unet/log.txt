@@ -403,3 +403,20 @@ zipp==3.17.0
 2023-10-15 14:29:32,694 - speechbrain.core - INFO - 208.2k trainable parameters in Ultra_Brain
 2023-10-15 14:29:32,695 - speechbrain.utils.checkpoints - INFO - Would load a checkpoint here, but none found yet.
 2023-10-15 14:29:32,695 - speechbrain.utils.epoch_loop - INFO - Going into epoch 1
+2023-10-15 14:33:33,168 - speechbrain.nnet.schedulers - INFO - Changing lr from 0.01 to 0.0099
+2023-10-15 14:33:33,168 - speechbrain.utils.train_logger - INFO - epoch: 1, lr: 1.00e-02 - train loss: 3.37e-01 - valid loss: 3.39e-01
+2023-10-15 14:33:33,174 - speechbrain.utils.checkpoints - INFO - Saved an end-of-epoch checkpoint in Results/Ultrasound_Unet/save/CKPT+2023-10-15+14-33-33+00
+2023-10-15 14:33:33,178 - speechbrain.utils.epoch_loop - INFO - Going into epoch 2
+2023-10-15 14:37:02,647 - speechbrain.core - ERROR - Exception:
+Traceback (most recent call last):
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_Unet.py", line 157, in <module>
+    Ultra_brain.fit(
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1264, in fit
+    self._fit_train(train_set=train_set, epoch=epoch, enable=enable)
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1116, in _fit_train
+    loss = self.fit_batch(batch)
+  File "/home/arian/PycharmProjects/SpeechBrain_Ultra/./models/train_Unet.py", line 59, in fit_batch
+    if self.check_gradients(loss):
+  File "/home/arian/anaconda3/envs/StableV4/lib/python3.10/site-packages/speechbrain/core.py", line 1032, in check_gradients
+    if not torch.isfinite(loss):
+KeyboardInterrupt

@@ -16013,3 +16013,18 @@ zipp==3.17.0
 2023-10-15 14:30:08,020 - speechbrain.utils.train_logger - INFO - epoch: 42, lr: 6.27e-03 - train loss: 4.84e-03 - valid loss: 4.40e-03
 2023-10-15 14:30:08,029 - speechbrain.utils.checkpoints - INFO - Saved an end-of-epoch checkpoint in Results/Ultrasound/save/CKPT+2023-10-15+14-30-08+00
 2023-10-15 14:30:08,094 - speechbrain.utils.epoch_loop - INFO - Going into epoch 43
+2023-10-15 14:33:11,321 - speechbrain.nnet.schedulers - INFO - Changing lr from 0.0062 to 0.0061
+2023-10-15 14:33:11,322 - speechbrain.utils.train_logger - INFO - epoch: 43, lr: 6.18e-03 - train loss: 4.90e-03 - valid loss: 5.67e-03
+2023-10-15 14:33:11,329 - speechbrain.utils.checkpoints - INFO - Saved an end-of-epoch checkpoint in Results/Ultrasound/save/CKPT+2023-10-15+14-33-11+00
+2023-10-15 14:33:11,424 - speechbrain.utils.checkpoints - INFO - Deleted checkpoint in Results/Ultrasound/save/CKPT+2023-10-15+14-30-08+00
+2023-10-15 14:33:11,424 - speechbrain.utils.epoch_loop - INFO - Going into epoch 44
+2023-10-15 14:36:13,876 - speechbrain.nnet.schedulers - INFO - Changing lr from 0.0061 to 0.006
+2023-10-15 14:36:13,876 - speechbrain.utils.train_logger - INFO - epoch: 44, lr: 6.09e-03 - train loss: 4.66e-03 - valid loss: 2.50e-02
+2023-10-15 14:36:13,884 - speechbrain.utils.checkpoints - INFO - Saved an end-of-epoch checkpoint in Results/Ultrasound/save/CKPT+2023-10-15+14-36-13+00
+2023-10-15 14:36:13,979 - speechbrain.utils.checkpoints - INFO - Deleted checkpoint in Results/Ultrasound/save/CKPT+2023-10-15+14-33-11+00
+2023-10-15 14:36:13,979 - speechbrain.utils.epoch_loop - INFO - Going into epoch 45
+2023-10-15 14:37:57,048 - speechbrain.nnet.schedulers - INFO - Changing lr from 0.006 to 0.0059
+2023-10-15 14:37:57,048 - speechbrain.utils.train_logger - INFO - epoch: 45, lr: 6.00e-03 - train loss: 4.77e-03 - valid loss: 5.37e-03
+2023-10-15 14:37:57,056 - speechbrain.utils.checkpoints - INFO - Saved an end-of-epoch checkpoint in Results/Ultrasound/save/CKPT+2023-10-15+14-37-57+00
+2023-10-15 14:37:57,160 - speechbrain.utils.checkpoints - INFO - Deleted checkpoint in Results/Ultrasound/save/CKPT+2023-10-15+14-36-13+00
+2023-10-15 14:37:57,161 - speechbrain.utils.epoch_loop - INFO - Going into epoch 46

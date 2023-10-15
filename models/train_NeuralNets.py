@@ -11,7 +11,8 @@ from pathlib import Path
 import torchaudio
 from scipy.io import loadmat
 from speechbrain.utils.parameter_transfer import Pretrainer
-from SharedFuncs
+from SharedFuncs import *
+
 logger = logging.getLogger(__name__)
 
 
@@ -164,3 +165,15 @@ if __name__ == "__main__":
         test_loader_kwargs=hparams["test_dataloader_opts"],
         progressbar = True
     )
+
+    training_losses , validation_losses = get_losses(hparams["train_log"])
+
+    plt.plot(validation_losses, label='CNN_validation')
+    plt.plot(training_losses, label='CNN_training')
+    plt.ylabel('Loss')
+    plt.xlabel('# Epochs')
+    plt.legend()
+    plt.savefig(os.path.join(hparams['loss_image_folder'],'CNN_epoch_'+ str(hparams['number_of_epochs'])+
+                 '_batchsize_'+str(hparams['batch_size'])+
+                 '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+'.png'))
+    #plt.show()

@@ -11,6 +11,7 @@ from pathlib import Path
 import torchaudio
 from scipy.io import loadmat
 from speechbrain.utils.parameter_transfer import Pretrainer
+import matplotlib.pyplot as plt
 
 def dataio_prepare(hparams):
     """This function prepares the datasets to be used in the brain class.
@@ -98,3 +99,22 @@ def dataio_prepare(hparams):
         valid_data,
         test_data,
     )
+
+
+def get_losses(log_file):
+  """This function takes in input a path of a log-file and outputs the train and
+  valid losses in lists of float numbers"""
+  with open(log_file) as f:
+      train_losses = []
+      valid_losses =[]
+      for line in f:
+          if 'train loss' in line:
+            train_loss = float(line.split('train loss: ')[1].split(' ')[0])
+            train_losses.append(train_loss)
+          if 'valid loss' in line:
+            valid_loss = float(line.split('valid loss: ')[1])
+            valid_losses.append(valid_loss)
+      return train_losses, valid_losses
+  
+
+

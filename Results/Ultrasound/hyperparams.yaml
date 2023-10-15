@@ -1,4 +1,4 @@
-# Generated 2023-10-14 from:
+# Generated 2023-10-15 from:
 # /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam/NeuralNets_Hparams.yaml
 # yamllint disable
 #Some Hyper Params
@@ -16,6 +16,7 @@ seed: 12345
 __set_seed: !apply:torch.manual_seed [12345]
 output_folder: Results/Ultrasound
 save_folder: Results/Ultrasound/save
+loss_image_folder: Results/Ultrasound/LossImages
 train_log: Results/Ultrasound/train_log.txt
 json_folder: ./json_folder
 

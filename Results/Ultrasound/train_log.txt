@@ -100,3 +100,8 @@ epoch: 98, lr: 1.18e-03 - train loss: 3.92e-03 - valid loss: 1.25
 epoch: 99, lr: 1.09e-03 - train loss: 5.33e-03 - valid loss: 1.26
 epoch: 100, lr: 1.00e-03 - train loss: 4.78e-03 - valid loss: 1.25
 Epoch loaded: 100 - test loss: 1.80
+Epoch loaded: 100 - test loss: 1.80
+Epoch loaded: 100 - test loss: 1.80
+Epoch loaded: 100 - test loss: 1.80
+Epoch loaded: 100 - test loss: 1.80
+Epoch loaded: 100 - test loss: 1.80

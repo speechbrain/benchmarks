@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import sys
-sys.path.append('Code/')
 import torch
 import logging
 import speechbrain as sb
@@ -175,5 +174,6 @@ if __name__ == "__main__":
     plt.legend()
     plt.savefig(os.path.join(hparams['loss_image_folder'],'CNN_epoch_'+ str(hparams['number_of_epochs'])+
                  '_batchsize_'+str(hparams['batch_size'])+
-                 '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+'.png'))
+                 '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
+                 '_Shufelling_'+str(hparams['sorting'])+'.png'))
     #plt.show()

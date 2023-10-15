@@ -34,7 +34,10 @@ class Ultra_Brain(sb.Brain):
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)
         #print('RF SIGNASL',rf.shape)
-        a = self.modules.CnnBlock(rf)
+        a1 = self.modules.mainPipe(rf)
+        a2 = self.modules.UPipe(rf)
+        a = torch.cat((a1, a2), 2)
+        a = self.modules.RestPipe(a)
         logits = self.modules.MLPBlock(a)
         
         #print('OUT',logits)

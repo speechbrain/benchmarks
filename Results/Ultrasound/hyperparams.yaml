@@ -32,7 +32,8 @@ valid_json: ./json_folder/valid.json
 test_json: ./json_folder/test.json
 
 
-sorting: ascending
+#sorting: ascending
+sorting: random
 
 
 train_dataloader_opts:
@@ -44,47 +45,6 @@ valid_dataloader_opts:
 
 test_dataloader_opts:
   batch_size: 6
-
-# # CNN Neural Network
-
-# layer1: !new:speechbrain.nnet.CNN.Conv1d #!new:torch.nn.Conv1d
-#   in_channels: 1
-#   out_channels: !ref <CHANNEL_NUM>
-#   kernel_size: 4
-#   stride: 2
-#   #padding: 1
-
-# layer2: !new:speechbrain.nnet.CNN.Conv1d #!new:torch.nn.Conv1d
-#   in_channels: !ref <CHANNEL_NUM>
-#   out_channels: !ref <CHANNEL_NUM>//2
-#   kernel_size: 4
-#   stride: 2
-#   #padding: 1
-#   bias: False
-
-# layer3: !new:speechbrain.nnet.CNN.Conv1d #!new:torch.nn.Conv1d
-#   in_channels: !ref <CHANNEL_NUM>//2
-#   out_channels: !ref <CHANNEL_NUM>//4
-#   kernel_size: 4
-#   stride: 2
-#   #padding: 1
-#   bias: False
-
-# layer4: !new:speechbrain.nnet.CNN.Conv1d #!new:torch.nn.Conv1d
-#   in_channels: !ref <CHANNEL_NUM>//4
-#   out_channels: !ref <CHANNEL_NUM>//8
-#   kernel_size: 3
-#   stride: 1
-#   #padding: 1
-#   bias: False
-
-# layer5: !new:speechbrain.nnet.CNN.Conv1d #!new:torch.nn.Conv1d
-#   in_channels: !ref <CHANNEL_NUM>//8
-#   out_channels: 1
-#   kernel_size: 4
-#   stride: 1
-#   #padding: 0
-#   bias: False
 
 
 epoch_counter: &id022 !new:speechbrain.utils.epoch_loop.EpochCounter
@@ -193,7 +153,6 @@ loss: !new:torch.nn.MSELoss
 #Modules
 
 CnnBlock: &id019 !new:torch.nn.Sequential
-  #flatten_L: !ref <flatten_L>
 - *id002
 - *id003
 - *id004
@@ -213,35 +172,6 @@ CnnBlock: &id019 !new:torch.nn.Sequential
 - *id015
 MLPBlock: &id020 !new:torch.nn.Sequential
 
-
-# Model
-
-
-
-
-# model: !new:torch.nn.Sequential
-#   - !ref <layer1>
-#   - !ref <Relue>
-#   - !ref <layer2>
-#   - !ref <Batch_norm_1d_layer_2>
-#   - !ref <LeakyRelue>
-#   - !ref <layer3>
-#   - !ref <Batch_norm_1d_layer_3>
-#   - !ref <Relue>
-#   - !ref <layer4>
-#   - !ref <Batch_norm_1d_layer_4>
-#   - !ref <Relue>
-#   - !ref <Avg_pooling_1d>
-#   - !ref <Dropout_1d>
-#   - !ref <layer5>
-#   - !ref <LeakyRelue>
-#   - !ref <LayerNorm>
-#   - !new:torch.nn.Flatten
-#   - !ref <MLP_L1>
-#   - !ref <LeakyRelue>
-#   - !ref <MLP_L2>
-#   - !ref <LeakyRelue>
-#   - !ref <MLP_L3>
 
 
 - *id016

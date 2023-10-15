@@ -137,3 +137,17 @@ epoch: 25, lr: 7.82e-03 - train loss: 7.92e-03 - valid loss: 1.33e-01
 epoch: 26, lr: 7.73e-03 - train loss: 1.24e-02 - valid loss: 6.27e-02
 epoch: 27, lr: 7.64e-03 - train loss: 7.36e-03 - valid loss: 7.56e-03
 epoch: 28, lr: 7.55e-03 - train loss: 6.10e-03 - valid loss: 3.76e-02
+epoch: 29, lr: 7.45e-03 - train loss: 7.82e-03 - valid loss: 4.28e-02
+epoch: 30, lr: 7.36e-03 - train loss: 5.44e-03 - valid loss: 1.12e-02
+epoch: 31, lr: 7.27e-03 - train loss: 5.50e-03 - valid loss: 8.62e-03
+epoch: 32, lr: 7.18e-03 - train loss: 5.49e-03 - valid loss: 2.03
+epoch: 33, lr: 7.09e-03 - train loss: 5.63e-03 - valid loss: 1.32e-01
+epoch: 34, lr: 7.00e-03 - train loss: 6.05e-03 - valid loss: 3.23e-02
+epoch: 35, lr: 6.91e-03 - train loss: 5.33e-03 - valid loss: 2.23e-02
+epoch: 36, lr: 6.82e-03 - train loss: 6.20e-03 - valid loss: 1.43e-02
+epoch: 37, lr: 6.73e-03 - train loss: 5.36e-03 - valid loss: 4.49e-03
+epoch: 38, lr: 6.64e-03 - train loss: 5.09e-03 - valid loss: 4.08e-03
+epoch: 39, lr: 6.55e-03 - train loss: 5.07e-03 - valid loss: 1.16e-02
+epoch: 40, lr: 6.45e-03 - train loss: 4.91e-03 - valid loss: 4.35e-03
+epoch: 41, lr: 6.36e-03 - train loss: 4.72e-03 - valid loss: 3.97e-03
+epoch: 42, lr: 6.27e-03 - train loss: 4.84e-03 - valid loss: 4.40e-03

@@ -1,0 +1,153 @@
+# Generated 2023-10-15 from:
+# /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam/Unet_Hparams.yaml
+# yamllint disable
+#Some Hyper Params
+base_channels: 32
+kernel_size: 11
+CHANNEL_NUM: 256
+DIM_CNN_MLP: 8994
+lr: 0.01
+lr_final: 0.001
+batch_size: 6
+number_of_epochs: 100
+#Initial Settings
+
+seed: 12345
+__set_seed: !apply:torch.manual_seed [12345]
+output_folder: Results/Ultrasound_Unet
+save_folder: Results/Ultrasound_Unet/save
+loss_image_folder: Results/Ultrasound_Unet/LossImages
+train_log: Results/Ultrasound_Unet/train_log.txt
+json_folder: ./json_folder
+
+
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+  save_file: Results/Ultrasound_Unet/train_log.txt
+
+
+# Data files
+train_json: ./json_folder/train.json
+valid_json: ./json_folder/valid.json
+test_json: ./json_folder/test.json
+
+
+#sorting: ascending
+sorting: random
+
+
+train_dataloader_opts:
+  batch_size: 6
+  shuffle: true
+
+valid_dataloader_opts:
+  batch_size: 6
+
+test_dataloader_opts:
+  batch_size: 6
+
+
+epoch_counter: &id016 !new:speechbrain.utils.epoch_loop.EpochCounter
+  limit: 100
+
+lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
+  initial_value: 0.01
+  final_value: 0.001
+  epoch_count: 100
+
+layer1: &id002 !new:torch.nn.Conv1d
+  in_channels: 1
+  out_channels: 256
+  kernel_size: 3
+
+layer2: &id004 !new:torch.nn.Conv1d
+  in_channels: 1
+  out_channels: 256
+  kernel_size: 3
+
+
+layer3: &id007 !new:torch.nn.Conv1d
+  in_channels: 256
+  out_channels: 256
+  kernel_size: 3
+
+layer4: &id008 !new:torch.nn.Conv1d
+  in_channels: 256
+  out_channels: 1
+  kernel_size: 1
+
+
+
+Relue: &id003 !new:torch.nn.ReLU
+  inplace: true
+
+LeakyRelue: !new:torch.nn.LeakyReLU
+  inplace: true
+
+
+Avg_pooling_1d: !new:torch.nn.AvgPool1d
+  kernel_size: 3
+  stride: 2
+
+MAX_pooling_1d: &id005 !new:torch.nn.MaxPool1d
+  kernel_size: 2
+
+Up_sample: &id006 !new:torch.nn.Upsample
+  scale_factor: 2
+
+
+flatten_L: &id009 !new:torch.nn.Flatten
+
+MLP_L1: &id010 !new:torch.nn.Linear
+  in_features: 8994
+  out_features: 1
+
+
+
+# Optimizer
+optim: &id001 !name:torch.optim.Adam
+  lr: 0.01
+
+scheduler: !name:torch.optim.lr_scheduler.LinearLR
+  optimizer: *id001
+  start_factor: 1.0
+  end_factor: 0.5
+  total_iters: 30
+
+
+# Loss function
+
+loss: !new:torch.nn.MSELoss
+
+#Modules
+
+mainPipe: &id011 !new:torch.nn.Sequential
+- *id002
+- *id003
+UPipe: &id012 !new:torch.nn.Sequential
+- *id004
+- *id003
+- *id005
+- *id006
+RestPipe: &id013 !new:torch.nn.Sequential
+- *id007
+- *id003
+- *id008
+- *id003
+- *id009
+MLPBlock: &id014 !new:torch.nn.Sequential
+
+
+
+- *id010
+modules:
+  mainPipe: *id011
+  UPipe: *id012
+  RestPipe: *id013
+  MLPBlock: *id014
+model: &id015 !new:torch.nn.ModuleList
+- [*id011, *id012, *id013, *id014]
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+  checkpoints_dir: Results/Ultrasound_Unet/save
+  recoverables:
+    model: *id015
+    counter: *id016

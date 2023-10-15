@@ -29,7 +29,8 @@ valid_json: !ref <json_folder>/valid.json
 test_json: !ref <json_folder>/test.json
 
 
-sorting: ascending
+#sorting: ascending
+sorting: random
 
 
 train_dataloader_opts:

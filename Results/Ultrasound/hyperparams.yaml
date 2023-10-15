@@ -8,8 +8,8 @@ CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 lr: 0.01
 lr_final: 0.001
-batch_size: 2
-number_of_epochs: 1
+batch_size: 6
+number_of_epochs: 100
 #Initial Settings
 
 seed: 12345
@@ -35,14 +35,14 @@ sorting: ascending
 
 
 train_dataloader_opts:
-  batch_size: 2
+  batch_size: 6
   shuffle: true
 
 valid_dataloader_opts:
-  batch_size: 2
+  batch_size: 6
 
 test_dataloader_opts:
-  batch_size: 2
+  batch_size: 6
 
 # # CNN Neural Network
 
@@ -87,12 +87,12 @@ test_dataloader_opts:
 
 
 epoch_counter: &id022 !new:speechbrain.utils.epoch_loop.EpochCounter
-  limit: 1
+  limit: 100
 
 lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
   initial_value: 0.01
   final_value: 0.001
-  epoch_count: 1
+  epoch_count: 100
 
 layer1: &id002 !new:torch.nn.Conv1d
   in_channels: 1

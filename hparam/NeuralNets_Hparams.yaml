@@ -5,8 +5,8 @@ CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 lr: 0.01
 lr_final: 0.001
-batch_size: 2
-number_of_epochs: 1
+batch_size: 6
+number_of_epochs: 100
 #Initial Settings
 
 seed: 12345

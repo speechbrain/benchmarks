@@ -108,18 +108,6 @@ class Ultra_Brain(sb.Brain):
                 },
             )
 
-
-            ## for saving epoch losses for test data on each epoch
-
-            self.hparams.train_epoch_test_log.log_stats(
-                stats_meta={"epoch": epoch, "lr": old_lr},
-                train_stats=self.train_stats,
-                valid_stats={
-                    "loss": stage_loss,
-                },
-            )
-
-
             # Save the current checkpoint and delete previous checkpoints.
             self.checkpointer.save_and_keep_only(
                 meta={"loss": stage_stats["loss"]}, min_keys=["loss"],

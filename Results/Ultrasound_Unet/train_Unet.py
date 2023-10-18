@@ -170,12 +170,12 @@ if __name__ == "__main__":
 
     training_losses , validation_losses = get_losses(hparams["train_log"])
 
-    plt.plot(validation_losses, label='CNN_validation')
-    plt.plot(training_losses, label='CNN_training')
+    plt.plot(validation_losses, label='Unet_validation')
+    plt.plot(training_losses, label='Unet_training')
     plt.ylabel('Loss')
     plt.xlabel('# Epochs')
     plt.legend()
-    plt.savefig(os.path.join(hparams['loss_image_folder'],'CNN_epoch_'+ str(hparams['number_of_epochs'])+
+    plt.savefig(os.path.join(hparams['loss_image_folder'],'Unet_epoch_'+ str(hparams['number_of_epochs'])+
                  '_batchsize_'+str(hparams['batch_size'])+
                  '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
                  '_Shufelling_'+str(hparams['sorting'])+'.png'))

@@ -1,6 +1,6 @@
 #Some Hyper Params
 base_channels: 32
-kernel_size: 11
+kernel_size_sinc: 256
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 8994
 lr: 0.0001
@@ -11,7 +11,7 @@ number_of_epochs: 100
 
 seed: 12345
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref Results/Ultrasound_Unet/
+output_folder: !ref Results/Ultrasound_Unet_sinc/
 save_folder: !ref <output_folder>/save
 loss_image_folder: !ref <output_folder>/LossImages
 train_log: !ref <output_folder>/train_log.txt
@@ -55,10 +55,12 @@ lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
     final_value: !ref <lr_final>
     epoch_count: !ref <number_of_epochs>
 
-layer1: !new:torch.nn.Conv1d
-  in_channels: 1
+layer1: !new:speechbrain.nnet.CNN.SincConv
   out_channels: !ref <CHANNEL_NUM>
-  kernel_size: 3
+  stride: 2
+  padding: 1
+  sample_rate: 100000000
+  kernel_size: !ref <kernel_size_sinc>
 
 layer2: !new:torch.nn.Conv1d
   in_channels: 1

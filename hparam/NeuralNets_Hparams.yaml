@@ -15,7 +15,7 @@ output_folder: !ref Results/Ultrasound/
 save_folder: !ref <output_folder>/save
 loss_image_folder: !ref <output_folder>/LossImages
 train_log: !ref <output_folder>/train_log.txt
-train_epoch_test_log: !ref <output_folder>/train_epoch_test_log.txt
+#train_epoch_test_log: !ref <output_folder>/train_epoch_test_log.txt
 json_folder: !ref ./json_folder
 
 

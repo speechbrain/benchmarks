@@ -1,6 +1,6 @@
 #Some Hyper Params
 base_channels: 32
-kernel_size_sinc: 256
+kernel_size_sinc: 125
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 lr: 0.0001
@@ -15,7 +15,7 @@ output_folder: !ref Results/Ultrasound_sinc/
 save_folder: !ref <output_folder>/save
 loss_image_folder: !ref <output_folder>/LossImages
 train_log: !ref <output_folder>/train_log.txt
-train_epoch_test_log: !ref <output_folder>/train_epoch_test_log.txt
+#train_epoch_test_log: !ref <output_folder>/train_epoch_test_log.txt
 json_folder: !ref ./json_folder
 
 
@@ -59,9 +59,9 @@ lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
     epoch_count: !ref <number_of_epochs>
 
 layer1: !new:speechbrain.nnet.CNN.SincConv
+  in_channels: 1
   out_channels: !ref <CHANNEL_NUM>
   stride: 2
-  padding: 1
   sample_rate: 100000000
   kernel_size: !ref <kernel_size_sinc>
 
@@ -155,9 +155,11 @@ loss: !new:torch.nn.MSELoss
 
 #Modules
 
-CnnBlock: !new:torch.nn.Sequential
+SincBlock: !new:torch.nn.Sequential
   - !ref <layer1>
   - !ref <Relue>
+
+CnnBlock: !new:torch.nn.Sequential
   - !ref <layer2>
   - !ref <Batch_norm_1d_layer_2>
   - !ref <LeakyRelue>
@@ -182,13 +184,14 @@ MLPBlock: !new:torch.nn.Sequential
   - !ref <MLP_L3>
 
 modules:
+  SincBlock: !ref <SincBlock>
   CnnBlock: !ref <CnnBlock>
   MLPBlock: !ref <MLPBlock>
 
 
 
 model: !new:torch.nn.ModuleList
-- [!ref <CnnBlock>, !ref <MLPBlock>]
+- [!ref <SincBlock>, !ref <CnnBlock>, !ref <MLPBlock>]
 
 
 

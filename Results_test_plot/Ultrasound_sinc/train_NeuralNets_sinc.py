@@ -154,9 +154,9 @@ if __name__ == "__main__":
     Ultra_brain.fit(
     Ultra_brain.hparams.epoch_counter,
     train_data,
-    valid_data,
+    test_data,
     train_loader_kwargs=hparams["train_dataloader_opts"],
-    valid_loader_kwargs=hparams["valid_dataloader_opts"],
+    valid_loader_kwargs=hparams["test_dataloader_opts"],
     )
 
     test_stats = Ultra_brain.evaluate(
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     training_losses , validation_losses = get_losses(hparams["train_log"])
 
-    plt.plot(validation_losses, label='sinc_CNN_validation')
+    plt.plot(validation_losses, label='sinc_CNN_testing')
     plt.plot(training_losses, label='sinc_CNN_training')
     plt.ylabel('Loss')
     plt.xlabel('# Epochs')

@@ -1,7 +1,7 @@
 #Some Hyper Params
 base_channels: 32
 kernel_size_sinc: 125
-CHANNEL_NUM: 256
+CHANNEL_NUM: 1024
 DIM_CNN_MLP: 6746
 lr: 0.0001
 lr_final: 0.000001

@@ -1,0 +1,1 @@
+epoch: 1, lr: 1.00e-04 - train loss: 1.11e-01 - valid loss: 2.34e-01

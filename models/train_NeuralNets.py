@@ -19,17 +19,21 @@ class Ultra_Brain(sb.Brain):
     def compute_forward(self, batch):
         #print('START')
         batch = batch.to(self.device)
-        rf = batch.sig.data # removing the the length flag of the PaddedData type
+        # rf = batch.sig.data # removing the the length flag of the PaddedData type
+        # rf = rf.type(torch.cuda.FloatTensor)
+        
+        
+        # # ### Normalization of input
+        # # batch_size, height = rf.shape
+        # # rf = rf.view(rf.size(0), -1)
+        # # rf -= rf.min(1, keepdim=True)[0]
+        # # rf /= rf.max(1, keepdim=True)[0]
+        # # rf = rf.view(batch_size, height)
+
+        ## Mean Normalization
+        norm = sb.processing.features.InputNormalization()
+        rf = features = norm(batch.sig.data,batch.sig.lengths)
         rf = rf.type(torch.cuda.FloatTensor)
-        
-        
-        ### Normalization of input
-        batch_size, height = rf.shape
-        rf = rf.view(rf.size(0), -1)
-        rf -= rf.min(1, keepdim=True)[0]
-        rf /= rf.max(1, keepdim=True)[0]
-        rf = rf.view(batch_size, height)
-        
         
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)

@@ -1,15 +1,15 @@
 # Generated 2023-10-20 from:
-# /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam/NeuralNets_sinc_Hparams.yaml
+# /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam/NeuralNets_Hparams.yaml
 # yamllint disable
 #Some Hyper Params
 base_channels: 32
-kernel_size_sinc: 125
+kernel_size: 11
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
-lr: 0.0001
-lr_final: 0.000001
+lr: 0.001
+lr_final: 0.0001
 batch_size: 6
-number_of_epochs: 100
+number_of_epochs: 20 #100
 #Initial Settings
 
 seed: 12345
@@ -53,20 +53,20 @@ test_dataloader_opts:
   batch_size: 6
 
 
-epoch_counter: &id024 !new:speechbrain.utils.epoch_loop.EpochCounter
-  limit: 100
+epoch_counter: &id023 !new:speechbrain.utils.epoch_loop.EpochCounter
+  limit: 20
 
 lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
-  initial_value: 0.0001
-  final_value: 0.000001
-  epoch_count: 100
+  initial_value: 0.001
+  final_value: 0.0001
+  epoch_count: 20
 
-layer1: &id003 !new:speechbrain.nnet.CNN.SincConv
+layer1: &id003 !new:torch.nn.Conv1d
   in_channels: 1
   out_channels: 256
+  kernel_size: 4
   stride: 2
-  sample_rate: 100000000
-  kernel_size: 125
+  padding: 1
 
 layer2: &id005 !new:torch.nn.Conv1d
   in_channels: 256
@@ -143,7 +143,7 @@ MLP_L3: &id019 !new:torch.nn.Linear
 
 # Optimizer
 optim: &id002 !name:torch.optim.Adam
-  lr: 0.0001
+  lr: 0.001
 
 scheduler: !name:torch.optim.lr_scheduler.LinearLR
   optimizer: *id002
@@ -158,10 +158,9 @@ loss: !new:torch.nn.MSELoss
 
 #Modules
 
-SincBlock: &id020 !new:torch.nn.Sequential
+CnnBlock: &id020 !new:torch.nn.Sequential
 - *id003
 - *id004
-CnnBlock: &id021 !new:torch.nn.Sequential
 - *id005
 - *id006
 - *id007
@@ -177,7 +176,7 @@ CnnBlock: &id021 !new:torch.nn.Sequential
 - *id007
 - *id015
 - *id016
-MLPBlock: &id022 !new:torch.nn.Sequential
+MLPBlock: &id021 !new:torch.nn.Sequential
 
 
 
@@ -187,13 +186,12 @@ MLPBlock: &id022 !new:torch.nn.Sequential
 - *id007
 - *id019
 modules:
-  SincBlock: *id020
-  CnnBlock: *id021
-  MLPBlock: *id022
-model: &id023 !new:torch.nn.ModuleList
-- [*id020, *id021, *id022]
+  CnnBlock: *id020
+  MLPBlock: *id021
+model: &id022 !new:torch.nn.ModuleList
+- [*id020, *id021]
 checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
   checkpoints_dir: Results/Ultrasound/save
   recoverables:
-    model: *id023
-    counter: *id024
+    model: *id022
+    counter: *id023

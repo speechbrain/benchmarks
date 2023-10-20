@@ -174,8 +174,8 @@ if __name__ == "__main__":
 
     training_losses , validation_losses = get_losses(hparams["train_log"])
 
-    plt.plot(validation_losses, label='sinc_CNN_validation')
-    plt.plot(training_losses, label='sinc_CNN_training')
+    plt.plot(range(1,len(validation_losses)+1), validation_losses, label='sinc_CNN_validation')
+    plt.plot(range(1,len(training_losses)+1),training_losses, label='sinc_CNN_training')
     plt.ylabel('Loss')
     plt.xlabel('# Epochs')
     plt.legend()

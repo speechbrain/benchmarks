@@ -3,10 +3,10 @@ base_channels: 32
 kernel_size: 11
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
-lr: 0.0001
-lr_final: 0.000001
+lr: 0.001
+lr_final: 0.0001
 batch_size: 6
-number_of_epochs: 100
+number_of_epochs: 20 #100
 #Initial Settings
 
 seed: 12345

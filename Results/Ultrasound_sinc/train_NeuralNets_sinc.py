@@ -19,16 +19,16 @@ class Ultra_Brain(sb.Brain):
     def compute_forward(self, batch):
         #print('START')
         batch = batch.to(self.device)
-        rf = batch.sig.data # removing the the length flag of the PaddedData type
+        # rf = batch.sig.data # removing the the length flag of the PaddedData type
         
         
         
-        # ### Normalization of input (Max _MIn normalization)
-        # batch_size, height = rf.shape
-        # rf = rf.view(rf.size(0), -1)
-        # rf -= rf.min(1, keepdim=True)[0]
-        # rf /= rf.max(1, keepdim=True)[0]
-        # rf = rf.view(batch_size, height)
+        # # ### Normalization of input (Max _MIn normalization)
+        # # batch_size, height = rf.shape
+        # # rf = rf.view(rf.size(0), -1)
+        # # rf -= rf.min(1, keepdim=True)[0]
+        # # rf /= rf.max(1, keepdim=True)[0]
+        # # rf = rf.view(batch_size, height)
 
         ## Mean Normalization
 

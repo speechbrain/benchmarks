@@ -2,3 +2,20 @@ epoch: 1, lr: 1.00e-04 - train loss: 1.01e-01 - valid loss: 5.77e-01
 epoch: 2, lr: 9.90e-05 - train loss: 8.77e-03 - valid loss: 4.59e-01
 epoch: 3, lr: 9.80e-05 - train loss: 5.70e-03 - valid loss: 6.47e-01
 epoch: 4, lr: 9.70e-05 - train loss: 5.21e-03 - valid loss: 5.64e-02
+epoch: 5, lr: 9.60e-05 - train loss: 5.59e-03 - valid loss: 5.30e-01
+epoch: 6, lr: 7.39e-05 - train loss: 5.31e-03 - valid loss: 3.64e-01
+epoch: 7, lr: 6.87e-05 - train loss: 4.58e-03 - valid loss: 3.99e-01
+epoch: 8, lr: 6.35e-05 - train loss: 4.41e-03 - valid loss: 2.64e-01
+epoch: 9, lr: 5.83e-05 - train loss: 4.19e-03 - valid loss: 1.27e-01
+epoch: 10, lr: 5.31e-05 - train loss: 4.00e-03 - valid loss: 3.37e-01
+epoch: 11, lr: 4.79e-05 - train loss: 3.84e-03 - valid loss: 3.20e-01
+epoch: 12, lr: 4.27e-05 - train loss: 3.76e-03 - valid loss: 2.98e-02
+epoch: 13, lr: 3.75e-05 - train loss: 3.63e-03 - valid loss: 2.83e-01
+epoch: 14, lr: 3.23e-05 - train loss: 3.66e-03 - valid loss: 1.99e-01
+epoch: 15, lr: 2.71e-05 - train loss: 3.63e-03 - valid loss: 2.89e-03
+epoch: 16, lr: 2.18e-05 - train loss: 3.59e-03 - valid loss: 2.64e-01
+epoch: 17, lr: 1.66e-05 - train loss: 3.61e-03 - valid loss: 6.11e-02
+epoch: 18, lr: 1.14e-05 - train loss: 3.54e-03 - valid loss: 2.44e-01
+epoch: 19, lr: 6.21e-06 - train loss: 3.52e-03 - valid loss: 2.23e-02
+epoch: 20, lr: 1.00e-06 - train loss: 3.49e-03 - valid loss: 4.09e-03
+Epoch loaded: 20 - test loss: 2.68

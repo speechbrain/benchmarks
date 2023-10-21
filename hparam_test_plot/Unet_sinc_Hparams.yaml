@@ -6,7 +6,7 @@ DIM_CNN_MLP: 6746
 lr: 0.0001
 lr_final: 0.000001
 batch_size: 6
-number_of_epochs: 100
+number_of_epochs: 50
 #Initial Settings
 
 seed: 12345

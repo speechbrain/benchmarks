@@ -20,7 +20,7 @@ class Ultra_Brain(sb.Brain):
         #print('START')
         batch = batch.to(self.device)
         rf = batch.sig.data # removing the the length flag of the PaddedData type
-        rf = rf.type(torch.cuda.FloatTensor)
+        
         
         
         # ### Normalization of input
@@ -34,7 +34,7 @@ class Ultra_Brain(sb.Brain):
         # Mean Normalization
         norm = sb.processing.features.InputNormalization()
         rf = features = norm(batch.sig.data,batch.sig.lengths)
-        
+        rf = rf.type(torch.cuda.FloatTensor)
         rf_unsqueeze = rf.unsqueeze(dim=1)
 
         ## SincConv Does not neet Extra channel!!

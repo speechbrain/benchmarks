@@ -20,17 +20,20 @@ class Ultra_Brain(sb.Brain):
         #print('START')
         batch = batch.to(self.device)
         rf = batch.sig.data # removing the the length flag of the PaddedData type
+        
+        
+        
+        # ### Normalization of input
+        # batch_size, height = rf.shape
+        # rf = rf.view(rf.size(0), -1)
+        # rf -= rf.min(1, keepdim=True)[0]
+        # rf /= rf.max(1, keepdim=True)[0]
+        # rf = rf.view(batch_size, height)
+        
+        # Mean Normalization
+        norm = sb.processing.features.InputNormalization()
+        rf = features = norm(batch.sig.data,batch.sig.lengths)
         rf = rf.type(torch.cuda.FloatTensor)
-        
-        
-        ### Normalization of input
-        batch_size, height = rf.shape
-        rf = rf.view(rf.size(0), -1)
-        rf -= rf.min(1, keepdim=True)[0]
-        rf /= rf.max(1, keepdim=True)[0]
-        rf = rf.view(batch_size, height)
-        
-        
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)
         #print('RF SIGNASL',rf.shape)
@@ -107,6 +110,7 @@ class Ultra_Brain(sb.Brain):
                     "loss": stage_loss,
                 },
             )
+
             # Save the current checkpoint and delete previous checkpoints.
             self.checkpointer.save_and_keep_only(
                 meta={"loss": stage_stats["loss"]}, min_keys=["loss"],
@@ -175,6 +179,7 @@ if __name__ == "__main__":
     plt.ylabel('Loss')
     plt.xlabel('# Epochs')
     plt.legend()
+    plt.xticks(range(1,len(validation_losses)+1))
     plt.savefig(os.path.join(hparams['loss_image_folder'],'Unet_epoch_'+ str(hparams['number_of_epochs'])+
                  '_batchsize_'+str(hparams['batch_size'])+
                  '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+

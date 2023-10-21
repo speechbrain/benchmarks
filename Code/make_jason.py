@@ -24,9 +24,14 @@ def create_json(json_file, Data_address,json_path):
 
 
 if __name__ == "__main__":
-  create_json('train.json', '../DataSet/train','./json_folder')
-  create_json('valid.json', '../DataSet/valid','./json_folder')
-  create_json('test.json', '../DataSet/test','./json_folder')
+  ## for Large Scatt.
+  #create_json('train.json', '../DataSet/train','./json_folder')
+  #create_json('valid.json', '../DataSet/valid','./json_folder')
+  #create_json('test.json', '../DataSet/test','./json_folder')
+  ## for small Scatt
+  create_json('train.json', '../DataSet/train','./json_folder_small_Scatt')
+  create_json('valid.json', '../DataSet/valid','./json_folder_small_Scatt')
+  create_json('test.json', '../DataSet/test_small_Scatt','./json_folder_small_Scatt')
 #create_json('train.json', train_files)
 #create_json('valid.json', valid_files)
 #create_json('test.json', test_files)       

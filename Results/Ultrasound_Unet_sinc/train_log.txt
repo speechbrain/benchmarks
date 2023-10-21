@@ -99,3 +99,12 @@ epoch: 98, lr: 3.00e-06 - train loss: 3.33e-01 - valid loss: 3.33e-01
 epoch: 99, lr: 2.00e-06 - train loss: 3.33e-01 - valid loss: 3.33e-01
 epoch: 100, lr: 1.00e-06 - train loss: 3.33e-01 - valid loss: 3.33e-01
 Epoch loaded: 100 - test loss: 1.52e-01
+epoch: 1, lr: 1.00e-04 - train loss: 3.39e-01 - valid loss: 3.44e-01
+epoch: 2, lr: 9.90e-05 - train loss: 3.36e-01 - valid loss: 3.35e-01
+epoch: 3, lr: 9.80e-05 - train loss: 3.35e-01 - valid loss: 3.35e-01
+epoch: 4, lr: 9.70e-05 - train loss: 3.36e-01 - valid loss: 3.35e-01
+epoch: 5, lr: 9.60e-05 - train loss: 3.35e-01 - valid loss: 3.38e-01
+epoch: 6, lr: 9.50e-05 - train loss: 3.35e-01 - valid loss: 3.37e-01
+epoch: 7, lr: 9.40e-05 - train loss: 3.35e-01 - valid loss: 3.34e-01
+epoch: 8, lr: 9.30e-05 - train loss: 3.35e-01 - valid loss: 3.34e-01
+epoch: 9, lr: 9.20e-05 - train loss: 3.34e-01 - valid loss: 3.36e-01

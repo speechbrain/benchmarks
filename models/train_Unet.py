@@ -23,14 +23,17 @@ class Ultra_Brain(sb.Brain):
         rf = rf.type(torch.cuda.FloatTensor)
         
         
-        ### Normalization of input
-        batch_size, height = rf.shape
-        rf = rf.view(rf.size(0), -1)
-        rf -= rf.min(1, keepdim=True)[0]
-        rf /= rf.max(1, keepdim=True)[0]
-        rf = rf.view(batch_size, height)
+        # ### Normalization of input
+        # batch_size, height = rf.shape
+        # rf = rf.view(rf.size(0), -1)
+        # rf -= rf.min(1, keepdim=True)[0]
+        # rf /= rf.max(1, keepdim=True)[0]
+        # rf = rf.view(batch_size, height)
         
-        
+        # Mean Normalization
+        norm = sb.processing.features.InputNormalization()
+        rf = features = norm(batch.sig.data,batch.sig.lengths)
+
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)
         #print('RF SIGNASL',rf.shape)

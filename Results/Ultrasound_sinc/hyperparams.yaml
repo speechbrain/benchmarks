@@ -7,7 +7,7 @@ kernel_size_sinc: 125
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 lr: 0.0001
-lr_final: 0.000001
+lr_final: 0.00001
 batch_size: 6
 number_of_epochs: 20 #100
 #Initial Settings
@@ -58,7 +58,7 @@ epoch_counter: &id024 !new:speechbrain.utils.epoch_loop.EpochCounter
 
 lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
   initial_value: 0.0001
-  final_value: 0.000001
+  final_value: 0.00001
   epoch_count: 20
 
 layer1: &id003 !new:speechbrain.nnet.CNN.SincConv

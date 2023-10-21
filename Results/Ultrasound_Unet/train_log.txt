@@ -6,3 +6,4 @@ epoch: 5, lr: 9.60e-05 - train loss: 3.33e-01 - valid loss: 3.33e-01
 epoch: 6, lr: 9.50e-05 - train loss: 3.33e-01 - valid loss: 3.33e-01
 epoch: 7, lr: 9.40e-05 - train loss: 3.33e-01 - valid loss: 3.33e-01
 epoch: 8, lr: 9.30e-05 - train loss: 3.33e-01 - valid loss: 3.33e-01
+epoch: 9, lr: 9.20e-05 - train loss: 3.33e-01 - valid loss: 3.33e-01

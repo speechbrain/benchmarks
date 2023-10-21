@@ -108,3 +108,4 @@ epoch: 6, lr: 9.50e-05 - train loss: 3.35e-01 - valid loss: 3.37e-01
 epoch: 7, lr: 9.40e-05 - train loss: 3.35e-01 - valid loss: 3.34e-01
 epoch: 8, lr: 9.30e-05 - train loss: 3.35e-01 - valid loss: 3.34e-01
 epoch: 9, lr: 9.20e-05 - train loss: 3.34e-01 - valid loss: 3.36e-01
+epoch: 10, lr: 9.10e-05 - train loss: 3.34e-01 - valid loss: 3.41e-01

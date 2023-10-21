@@ -3402,3 +3402,8 @@ zipp==3.17.0
 2023-10-21 14:02:58,678 - speechbrain.utils.checkpoints - INFO - Saved an end-of-epoch checkpoint in Results/Ultrasound_Unet/save/CKPT+2023-10-21+14-02-58+00
 2023-10-21 14:02:58,699 - speechbrain.utils.checkpoints - INFO - Deleted checkpoint in Results/Ultrasound_Unet/save/CKPT+2023-10-21+13-57-22+00
 2023-10-21 14:02:58,699 - speechbrain.utils.epoch_loop - INFO - Going into epoch 9
+2023-10-21 14:08:33,921 - speechbrain.nnet.schedulers - INFO - Changing lr from 9.2e-05 to 9.1e-05
+2023-10-21 14:08:33,921 - speechbrain.utils.train_logger - INFO - epoch: 9, lr: 9.20e-05 - train loss: 3.33e-01 - valid loss: 3.33e-01
+2023-10-21 14:08:33,928 - speechbrain.utils.checkpoints - INFO - Saved an end-of-epoch checkpoint in Results/Ultrasound_Unet/save/CKPT+2023-10-21+14-08-33+00
+2023-10-21 14:08:33,956 - speechbrain.utils.checkpoints - INFO - Deleted checkpoint in Results/Ultrasound_Unet/save/CKPT+2023-10-21+14-02-58+00
+2023-10-21 14:08:33,956 - speechbrain.utils.epoch_loop - INFO - Going into epoch 10

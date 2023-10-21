@@ -23,16 +23,21 @@ class Ultra_Brain(sb.Brain):
         rf = rf.type(torch.cuda.FloatTensor)
         
         
-        ### Normalization of input
-        batch_size, height = rf.shape # shape [batch,timeseries]
-        rf = rf.view(rf.size(0), -1)
-        rf -= rf.min(1, keepdim=True)[0]
-        rf /= rf.max(1, keepdim=True)[0]
-        rf = rf.view(batch_size, height)
+        # ### Normalization of input
+        # batch_size, height = rf.shape # shape [batch,timeseries]
+        # rf = rf.view(rf.size(0), -1)
+        # rf -= rf.min(1, keepdim=True)[0]
+        # rf /= rf.max(1, keepdim=True)[0]
+        # rf = rf.view(batch_size, height)
+
+
+        # Mean Normalization
+        norm = sb.processing.features.InputNormalization()
+        rf = features = norm(batch.sig.data,batch.sig.lengths)
         
         rf_unsqueeze = rf.unsqueeze(dim=1)
 
-        ## SincConv Does not neet Extra channel adding!!
+        ## SincConv Does not neet Extra channel!!
         a1 = self.modules.SincBlock(rf)
         a1 = torch.transpose(a1, 1, 2)
         #print('A1 Size', a1.shape)
@@ -177,6 +182,7 @@ if __name__ == "__main__":
     plt.ylabel('Loss')
     plt.xlabel('# Epochs')
     plt.legend()
+    plt.xticks(range(1,len(validation_losses)+1))
     plt.savefig(os.path.join(hparams['loss_image_folder'],'sinc_Unet_epoch_'+ str(hparams['number_of_epochs'])+
                  '_batchsize_'+str(hparams['batch_size'])+
                  '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+

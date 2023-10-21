@@ -19,17 +19,21 @@ class Ultra_Brain(sb.Brain):
     def compute_forward(self, batch):
         #print('START')
         batch = batch.to(self.device)
-        rf = batch.sig.data # removing the the length flag of the PaddedData type
+        # rf = batch.sig.data # removing the the length flag of the PaddedData type
+        # rf = rf.type(torch.cuda.FloatTensor)
+        
+        
+        # # ### Normalization of input
+        # # batch_size, height = rf.shape
+        # # rf = rf.view(rf.size(0), -1)
+        # # rf -= rf.min(1, keepdim=True)[0]
+        # # rf /= rf.max(1, keepdim=True)[0]
+        # # rf = rf.view(batch_size, height)
+
+        ## Mean Normalization
+        norm = sb.processing.features.InputNormalization()
+        rf = features = norm(batch.sig.data,batch.sig.lengths)
         rf = rf.type(torch.cuda.FloatTensor)
-        
-        
-        ### Normalization of input
-        batch_size, height = rf.shape
-        rf = rf.view(rf.size(0), -1)
-        rf -= rf.min(1, keepdim=True)[0]
-        rf /= rf.max(1, keepdim=True)[0]
-        rf = rf.view(batch_size, height)
-        
         
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)
@@ -168,11 +172,12 @@ if __name__ == "__main__":
 
     training_losses , validation_losses = get_losses(hparams["train_log"])
 
-    plt.plot(validation_losses, label='CNN_testing')
-    plt.plot(training_losses, label='CNN_training')
+    plt.plot(range(1,len(validation_losses)+1), validation_losses, label='CNN_testing',marker = 'o')
+    plt.plot(range(1,len(training_losses)+1),training_losses, label='CNN_training',marker = 'o')
     plt.ylabel('Loss')
     plt.xlabel('# Epochs')
     plt.legend()
+    plt.xticks(range(1,len(validation_losses)+1))
     plt.savefig(os.path.join(hparams['loss_image_folder'],'CNN_epoch_'+ str(hparams['number_of_epochs'])+
                  '_batchsize_'+str(hparams['batch_size'])+
                  '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+

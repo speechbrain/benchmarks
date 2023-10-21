@@ -40,9 +40,11 @@ class Ultra_Brain(sb.Brain):
         ## SincConv Does not neet Extra channel!!
         a1 = self.modules.SincBlock(rf)
         a1 = torch.transpose(a1, 1, 2)
-        #print('A1 Size', a1.shape)
+        print('A1 Size', a1.shape)
+
         a2 = self.modules.UPipe(rf_unsqueeze)
         a = torch.cat((a1, a2), 2)
+        print('a SHAPE', a.shape)
         a = self.modules.RestPipe(a)
         logits = self.modules.MLPBlock(a)
         

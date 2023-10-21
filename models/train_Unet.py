@@ -174,8 +174,8 @@ if __name__ == "__main__":
 
     training_losses , validation_losses = get_losses(hparams["train_log"])
 
-    plt.plot(validation_losses, label='Unet_validation')
-    plt.plot(training_losses, label='Unet_training')
+    plt.plot(validation_losses, label='Unet_validation',marker = 'o')
+    plt.plot(training_losses, label='Unet_training',marker = 'o')
     plt.ylabel('Loss')
     plt.xlabel('# Epochs')
     plt.legend()

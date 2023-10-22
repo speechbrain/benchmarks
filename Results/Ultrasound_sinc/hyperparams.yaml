@@ -8,7 +8,7 @@ CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 lr: 0.0001
 lr_final: 0.00001
-batch_size: 6
+batch_size: 16
 number_of_epochs: 50
 #Initial Settings
 
@@ -43,14 +43,14 @@ sorting: random
 
 
 train_dataloader_opts:
-  batch_size: 6
+  batch_size: 16
   shuffle: true
 
 valid_dataloader_opts:
-  batch_size: 6
+  batch_size: 16
 
 test_dataloader_opts:
-  batch_size: 6
+  batch_size: 16
 
 
 epoch_counter: &id024 !new:speechbrain.utils.epoch_loop.EpochCounter

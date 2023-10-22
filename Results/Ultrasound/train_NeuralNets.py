@@ -172,11 +172,12 @@ if __name__ == "__main__":
 
     training_losses , validation_losses = get_losses(hparams["train_log"])
 
-    plt.plot(range(1,len(validation_losses)+1), validation_losses, label='CNN_validation')
-    plt.plot(range(1,len(training_losses)+1),training_losses, label='CNN_training')
+    plt.plot(range(1,len(validation_losses)+1), validation_losses, label='CNN_validation',marker = 'o')
+    plt.plot(range(1,len(training_losses)+1),training_losses, label='CNN_training',marker = 'o')
     plt.ylabel('Loss')
     plt.xlabel('# Epochs')
     plt.legend()
+    plt.xticks(range(1,len(validation_losses)+1))
     plt.savefig(os.path.join(hparams['loss_image_folder'],'CNN_epoch_'+ str(hparams['number_of_epochs'])+
                  '_batchsize_'+str(hparams['batch_size'])+
                  '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+

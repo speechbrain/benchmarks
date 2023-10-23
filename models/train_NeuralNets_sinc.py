@@ -20,7 +20,7 @@ class Ultra_Brain(sb.Brain):
         #print('START')
         batch = batch.to(self.device)
         rf = batch.sig.data # removing the the length flag of the PaddedData type
-        
+        rf = rf.type(torch.cuda.FloatTensor)
         
         
         # # ### Normalization of input (Max _MIn normalization)

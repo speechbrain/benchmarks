@@ -1,0 +1,171 @@
+#Some Hyper Params
+base_channels: 32
+kernel_size: 11
+CHANNEL_NUM: 256
+DIM_CNN_MLP: 8994
+lr: 0.01
+lr_final: 0.0001
+batch_size: 16
+number_of_epochs: 50
+#Initial Settings
+
+seed: 12345
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+output_folder: !ref Results/Ultrasound_Unet/
+save_folder: !ref <output_folder>/save
+loss_image_folder: !ref <output_folder>/LossImages
+train_log: !ref <output_folder>/train_log.txt
+#train_epoch_test_log: !ref <output_folder>/train_epoch_test_log.txt
+json_folder: !ref ./json_folder
+
+
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <train_log>
+
+train_epoch_test_log: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <train_epoch_test_log>
+
+
+# Data files
+train_json: !ref <json_folder>/train.json
+valid_json: !ref <json_folder>/valid.json
+test_json: !ref <json_folder>/test.json
+
+
+#sorting: ascending
+sorting: random
+
+
+train_dataloader_opts:
+    batch_size: !ref <batch_size>
+    shuffle: True
+    
+valid_dataloader_opts:
+   batch_size: !ref <batch_size>
+
+test_dataloader_opts:
+   batch_size: !ref <batch_size>
+
+
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <number_of_epochs>
+
+lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
+    initial_value: !ref <lr>
+    final_value: !ref <lr_final>
+    epoch_count: !ref <number_of_epochs>
+
+layer1: !new:torch.nn.Conv1d
+  in_channels: 1
+  out_channels: !ref <CHANNEL_NUM>
+  kernel_size: 3
+
+layer2: !new:torch.nn.Conv1d
+  in_channels: 1
+  out_channels: !ref <CHANNEL_NUM>
+  kernel_size: 3
+
+
+layer3: !new:torch.nn.Conv1d
+  in_channels: !ref <CHANNEL_NUM>
+  out_channels: !ref <CHANNEL_NUM>
+  kernel_size: 3
+
+layer4: !new:torch.nn.Conv1d
+  in_channels: !ref <CHANNEL_NUM>
+  out_channels: 1
+  kernel_size: 1
+
+
+
+Relue: !new:torch.nn.ReLU
+  inplace: True
+
+LeakyRelue: !new:torch.nn.LeakyReLU
+  inplace: True
+
+
+Avg_pooling_1d: !new:torch.nn.AvgPool1d
+  kernel_size: 3
+  stride: 2
+
+MAX_pooling_1d: !new:torch.nn.MaxPool1d
+  kernel_size: 2
+
+Up_sample: !new:torch.nn.Upsample
+  scale_factor: 2
+
+
+flatten_L: !new:torch.nn.Flatten
+
+MLP_L1: !new:torch.nn.Linear
+  in_features: !ref <DIM_CNN_MLP>
+  out_features: 1
+
+
+
+# Optimizer
+optim: !name:torch.optim.Adam
+  lr: !ref <lr>
+
+scheduler: !name:torch.optim.lr_scheduler.LinearLR
+  optimizer: !ref <optim>
+  start_factor: 1.0
+  end_factor: 0.5
+  total_iters: 30
+
+
+# Loss function
+
+loss: !new:torch.nn.MSELoss
+
+#Modules
+
+mainPipe: !new:torch.nn.Sequential
+  - !ref <layer1>
+  - !ref <Relue>
+
+
+UPipe: !new:torch.nn.Sequential
+  - !ref <layer2>
+  - !ref <Relue>
+  - !ref <MAX_pooling_1d>
+  - !ref <Up_sample>
+
+
+RestPipe: !new:torch.nn.Sequential
+  - !ref <layer3>
+  - !ref <Relue>
+  - !ref <layer4>
+  - !ref <Relue>
+  - !ref <flatten_L>
+
+
+
+
+MLPBlock: !new:torch.nn.Sequential
+  - !ref <MLP_L1>
+
+
+modules:
+  mainPipe: !ref <mainPipe>
+  UPipe: !ref <UPipe>
+  RestPipe: !ref <RestPipe>
+  MLPBlock: !ref <MLPBlock>
+
+
+
+model: !new:torch.nn.ModuleList
+- [!ref <mainPipe>, !ref <UPipe>,!ref <RestPipe>,!ref <MLPBlock>]
+
+
+
+
+
+###### Check pointing
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        model: !ref <model>
+        counter: !ref <epoch_counter>

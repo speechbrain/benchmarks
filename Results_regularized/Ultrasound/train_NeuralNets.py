@@ -20,20 +20,20 @@ class Ultra_Brain(sb.Brain):
         #print('START')
         batch = batch.to(self.device)
         rf = batch.sig.data # removing the the length flag of the PaddedData type
-        rf = rf.type(torch.cuda.FloatTensor)
+        #rf = rf.type(torch.cuda.FloatTensor)
         
         
         ### Normalization of input
-        batch_size, height = rf.shape
-        rf = rf.view(rf.size(0), -1)
-        rf -= rf.min(1, keepdim=True)[0]
-        rf /= rf.max(1, keepdim=True)[0]
-        rf = rf.view(batch_size, height)
+        # batch_size, height = rf.shape
+        # rf = rf.view(rf.size(0), -1)
+        # rf -= rf.min(1, keepdim=True)[0]
+        # rf /= rf.max(1, keepdim=True)[0]
+        # rf = rf.view(batch_size, height)
 
         ## Mean Normalization
-        # norm = sb.processing.features.InputNormalization()
-        # rf = features = norm(batch.sig.data,batch.sig.lengths)
-        # rf = rf.type(torch.cuda.FloatTensor)
+        norm = sb.processing.features.InputNormalization()
+        rf = features = norm(batch.sig.data,batch.sig.lengths)
+        rf = rf.type(torch.cuda.FloatTensor)
         
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)
@@ -49,6 +49,8 @@ class Ultra_Brain(sb.Brain):
         #print('PREDICTION', predictions.shape, batch.att.shape )
         attenuation = batch.att
         attenuation = attenuation.type(torch.cuda.FloatTensor)
+        attenuation  = (attenuation - attenuation.mean(0)) / attenuation.std(0)
+        print(attenuation)
         return sb.nnet.losses.mse_loss(predictions, attenuation.unsqueeze(1))
     
     def fit_batch(self, batch):

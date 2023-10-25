@@ -163,9 +163,11 @@ CnnBlock: !new:torch.nn.Sequential
   - !ref <layer2>
   - !ref <Batch_norm_1d_layer_2>
   - !ref <LeakyRelue>
+  - !ref <Dropout_1d>
   - !ref <layer3>
   - !ref <Batch_norm_1d_layer_3>
   - !ref <Relue>
+  - !ref <Dropout_1d>
   - !ref <layer4>
   - !ref <Batch_norm_1d_layer_4>
   - !ref <Relue>
@@ -174,13 +176,16 @@ CnnBlock: !new:torch.nn.Sequential
   - !ref <layer5>
   - !ref <LeakyRelue>
   - !ref <LayerNorm>
+  - !ref <Dropout_1d>
   - !ref <flatten_L> 
 
 MLPBlock: !new:torch.nn.Sequential
   - !ref <MLP_L1>
   - !ref <LeakyRelue>
+  - !ref <Dropout_1d>
   - !ref <MLP_L2>
   - !ref <LeakyRelue>
+  - !ref <Dropout_1d>
   - !ref <MLP_L3>
 
 modules:

@@ -24,15 +24,15 @@ class Ultra_Brain(sb.Brain):
         
         
         ### Normalization of input
-        batch_size, height = rf.shape
-        rf = rf.view(rf.size(0), -1)
-        rf -= rf.min(1, keepdim=True)[0]
-        rf /= rf.max(1, keepdim=True)[0]
-        rf = rf.view(batch_size, height)
+        # batch_size, height = rf.shape
+        # rf = rf.view(rf.size(0), -1)
+        # rf -= rf.min(1, keepdim=True)[0]
+        # rf /= rf.max(1, keepdim=True)[0]
+        # rf = rf.view(batch_size, height)
 
         ## Mean Normalization
-        # norm = sb.processing.features.InputNormalization()
-        # rf = features = norm(batch.sig.data,batch.sig.lengths)
+        norm = sb.processing.features.InputNormalization()
+        rf = features = norm(batch.sig.data,batch.sig.lengths)
         # rf = rf.type(torch.cuda.FloatTensor)
         
         #print('RF SIGNASL BEFOR',rf.shape)
@@ -49,6 +49,8 @@ class Ultra_Brain(sb.Brain):
         #print('PREDICTION', predictions.shape, batch.att.shape )
         attenuation = batch.att
         attenuation = attenuation.type(torch.cuda.FloatTensor)
+        norm = sb.processing.features.InputNormalization()
+        attenuation = norm(attenuation)
         return sb.nnet.losses.mse_loss(predictions, attenuation.unsqueeze(1))
     
     def fit_batch(self, batch):

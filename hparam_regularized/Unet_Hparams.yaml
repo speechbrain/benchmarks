@@ -11,7 +11,7 @@ number_of_epochs: 50
 
 seed: 12345
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref Results/Ultrasound_Unet/
+output_folder: !ref Results_regularized/Ultrasound_Unet/
 save_folder: !ref <output_folder>/save
 loss_image_folder: !ref <output_folder>/LossImages
 train_log: !ref <output_folder>/train_log.txt

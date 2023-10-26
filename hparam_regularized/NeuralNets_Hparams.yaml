@@ -4,8 +4,8 @@ kernel_size: 11
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 lr: 0.001
-lr_final: 0.0001
-batch_size: 50
+lr_final: 0.000001
+batch_size: 16
 number_of_epochs: 50
 #Initial Settings
 
@@ -33,6 +33,18 @@ train_epoch_test_log: !new:speechbrain.utils.train_logger.FileTrainLogger
 train_json: !ref <json_folder>/train.json
 valid_json: !ref <json_folder>/valid.json
 test_json: !ref <json_folder>/test.json
+
+
+
+# injection of gaussian white noise
+snr_white_low: 15.0
+snr_white_delta: 19.1
+snr_white_high: !ref <snr_white_low> + <snr_white_delta>
+add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
+    snr_low: !ref <snr_white_low>
+    snr_high: !ref <snr_white_high>
+    noise_sample_rate: 100000000
+    clean_sample_rate: 100000000
 
 
 #sorting: ascending

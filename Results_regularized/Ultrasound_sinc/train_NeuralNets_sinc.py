@@ -18,34 +18,29 @@ logger = logging.getLogger(__name__)
 class Ultra_Brain(sb.Brain):
     def compute_forward(self, batch):
         #print('START')
-        noisifier = self.hparams.add_noise_white
         batch = batch.to(self.device)
         rf = batch.sig.data # removing the the length flag of the PaddedData type
-        #rf = rf.type(torch.cuda.FloatTensor)
+        # rf = rf.type(torch.cuda.FloatTensor)
         
         
-        ### Normalization of input
+        # # ### Normalization of input (Max _MIn normalization)
         # batch_size, height = rf.shape
         # rf = rf.view(rf.size(0), -1)
         # rf -= rf.min(1, keepdim=True)[0]
         # rf /= rf.max(1, keepdim=True)[0]
         # rf = rf.view(batch_size, height)
 
-        
-        
         ## Mean Normalization
+
         norm = sb.processing.features.InputNormalization()
         rf = features = norm(batch.sig.data,batch.sig.lengths)
         rf = rf.type(torch.cuda.FloatTensor)
-        
-        ## adding noise
 
-        rf = noisifier(rf, batch.sig.lengths)
-
-        #print('RF SIGNASL BEFOR',rf.shape)
-        rf = rf.unsqueeze(dim=1)
-        #print('RF SIGNASL',rf.shape)
-        a = self.modules.CnnBlock(rf)
+        #print('Features SIZES',  features)
+        ## SincConv Does not neet Extra channel adding!!
+        a = self.modules.SincBlock(rf)
+        a = torch.transpose(a, 1, 2)
+        a = self.modules.CnnBlock(a)
         logits = self.modules.MLPBlock(a)
         
         #print('OUT',logits)
@@ -56,8 +51,7 @@ class Ultra_Brain(sb.Brain):
         #print('PREDICTION', predictions.shape, batch.att.shape )
         attenuation = batch.att
         attenuation = attenuation.type(torch.cuda.FloatTensor)
-        attenuation  = (attenuation - attenuation.mean(0)) / attenuation.std(0)
-        #print(attenuation)
+        attenuation = (attenuation - attenuation.mean(0)) / attenuation.std(0)
         return sb.nnet.losses.mse_loss(predictions, attenuation.unsqueeze(1))
     
     def fit_batch(self, batch):
@@ -181,13 +175,13 @@ if __name__ == "__main__":
 
     training_losses , validation_losses = get_losses(hparams["train_log"])
 
-    plt.plot(range(1,len(validation_losses)+1), validation_losses, label='CNN_validation',marker = 'o')
-    plt.plot(range(1,len(training_losses)+1),training_losses, label='CNN_training',marker = 'o')
+    plt.plot(range(1,len(validation_losses)+1), validation_losses, label='sinc_CNN_validation',marker = 'o')
+    plt.plot(range(1,len(training_losses)+1),training_losses, label='sinc_CNN_training',marker = 'o')
     plt.ylabel('Loss')
     plt.xlabel('# Epochs')
     plt.legend()
     #plt.xticks(range(1,len(validation_losses)+1))
-    plt.savefig(os.path.join(hparams['loss_image_folder'],'CNN_epoch_'+ str(hparams['number_of_epochs'])+
+    plt.savefig(os.path.join(hparams['loss_image_folder'],'sinc_CNN_epoch_'+ str(hparams['number_of_epochs'])+
                  '_batchsize_'+str(hparams['batch_size'])+
                  '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
                  '_Shufelling_'+str(hparams['sorting'])+'.png'))

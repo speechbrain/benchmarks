@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class Ultra_Brain(sb.Brain):
     def compute_forward(self, batch):
         #print('START')
-        noisifier = self.hparams.add_noise_white
+        
         batch = batch.to(self.device)
         rf = batch.sig.data # removing the the length flag of the PaddedData type
         #rf = rf.type(torch.cuda.FloatTensor)
@@ -39,8 +39,8 @@ class Ultra_Brain(sb.Brain):
         rf = rf.type(torch.cuda.FloatTensor)
         
         ## adding noise
-
-        rf = noisifier(rf, batch.sig.lengths)
+        #noisifier = self.hparams.add_noise_white
+        #rf = noisifier(rf, batch.sig.lengths)
 
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)
@@ -56,7 +56,7 @@ class Ultra_Brain(sb.Brain):
         #print('PREDICTION', predictions.shape, batch.att.shape )
         attenuation = batch.att
         attenuation = attenuation.type(torch.cuda.FloatTensor)
-        attenuation  = (attenuation - attenuation.mean(0)) / attenuation.std(0)
+        #attenuation  = (attenuation - attenuation.mean(0)) / attenuation.std(0)
         #print(attenuation)
         return sb.nnet.losses.mse_loss(predictions, attenuation.unsqueeze(1))
     

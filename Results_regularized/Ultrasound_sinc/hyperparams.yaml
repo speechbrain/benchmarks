@@ -1,4 +1,4 @@
-# Generated 2023-10-25 from:
+# Generated 2023-10-26 from:
 # /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam_regularized/NeuralNets_sinc_Hparams.yaml
 # yamllint disable
 #Some Hyper Params
@@ -6,8 +6,8 @@ base_channels: 32
 kernel_size_sinc: 125
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
-lr: 0.0001
-lr_final: 0.00001
+lr: 0.001
+lr_final: 0.0001
 batch_size: 16
 number_of_epochs: 50
 #Initial Settings
@@ -57,9 +57,21 @@ epoch_counter: &id024 !new:speechbrain.utils.epoch_loop.EpochCounter
   limit: 50
 
 lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
-  initial_value: 0.0001
-  final_value: 0.00001
+  initial_value: 0.001
+  final_value: 0.0001
   epoch_count: 50
+
+
+
+snr_white_low: 19.0
+snr_white_delta: 19.1
+snr_white_high: 38.1
+add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
+  snr_low: 19.0
+  snr_high: 38.1
+  noise_sample_rate: 100000000
+  clean_sample_rate: 100000000
+
 
 layer1: &id003 !new:speechbrain.nnet.CNN.SincConv
   in_channels: 1
@@ -143,7 +155,7 @@ MLP_L3: &id019 !new:torch.nn.Linear
 
 # Optimizer
 optim: &id002 !name:torch.optim.Adam
-  lr: 0.0001
+  lr: 0.001
 
 scheduler: !name:torch.optim.lr_scheduler.LinearLR
   optimizer: *id002

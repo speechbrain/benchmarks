@@ -34,7 +34,13 @@ class Ultra_Brain(sb.Brain):
 
         norm = sb.processing.features.InputNormalization()
         rf = features = norm(batch.sig.data,batch.sig.lengths)
+
+
+
+        #noisifier = self.hparams.add_noise_white
+        #rf = noisifier(rf, batch.sig.lengths)
         rf = rf.type(torch.cuda.FloatTensor)
+
 
         #print('Features SIZES',  features)
         ## SincConv Does not neet Extra channel adding!!
@@ -51,7 +57,7 @@ class Ultra_Brain(sb.Brain):
         #print('PREDICTION', predictions.shape, batch.att.shape )
         attenuation = batch.att
         attenuation = attenuation.type(torch.cuda.FloatTensor)
-        attenuation = (attenuation - attenuation.mean(0)) / attenuation.std(0)
+        #attenuation = (attenuation - attenuation.mean(0)) / attenuation.std(0)
         return sb.nnet.losses.mse_loss(predictions, attenuation.unsqueeze(1))
     
     def fit_batch(self, batch):

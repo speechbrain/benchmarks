@@ -13,6 +13,7 @@
 #                             --output_folder results/MotorImagery/BNCI2014001/EEGNet/hopt \
 #                             --data_folder eeg_data/ \
 #                             --hparams hparams/MotorImagery/BNCI2014001/EEGNet.yaml \
+#                             --nsbj_hpsearch 9 --nsess_hpsearch 2 \
 #                             --nsbj 9 --nsess 2 \
 #                             --nruns 1 --nruns_eval 10 \
 #                             --eval_metric acc \
@@ -54,6 +55,8 @@ cached_data_folder=""
 hparams=""
 nsbj=""
 nsess=""
+nsbj_hpsearch=""
+nsess_hpsearch=""
 nruns=""
 nruns_eval=10
 eval_metric="acc"
@@ -76,6 +79,8 @@ print_argument_descriptions() {
     echo "  --data_folder data_path               Folder were the data are stored. If not available, they will be downloaded there."
     echo "  --cached_data_folder path [Optional]  Folder were the data in pkl format will be cached."
     echo "  --hparms hparam_file                  YAML file containing the hparam to optimize. The hyperparameters decorated with @orion_step1 or @orion_step1 in the YAML file will be used"
+    echo "  --nsbj_hpsearch num_subjects          Number of subjects to be used during hparams optimization"
+    echo "  --nsess_hpsearch num_sessions         Number of sessions to be used during hparams optimization"
     echo "  --nsbj num_subjects                   Number of subjects"
     echo "  --nsess num_sessions                  Number of sessions"
     echo "  --nruns num_runs                      Number of runs for each hparam selection."
@@ -136,6 +141,18 @@ while [[ $# -gt 0 ]]; do
 
     --nsess)
       nsess="$2"
+      shift
+      shift
+      ;;
+
+    --nsbj_hpsearch)
+      nsbj_hpsearch="$2"
+      shift
+      shift
+      ;;
+
+    --nsess_hpsearch)
+      nsess_hpsearch="$2"
       shift
       shift
       ;;
@@ -263,6 +280,8 @@ echo "Cached Data Folder: $cached_data_folder"
 echo "Hparam File: $hparams"
 echo "Number of Subjects: $nsbj"
 echo "Number of Sessions: $nsess"
+echo "Number of Subjects during hparams optimization: $nsbj_hpsearch"
+echo "Number of Sessions during hparams optimization: $nsess_hpsearch"
 echo "Number of Runs: $nruns"
 echo "Number of Eval Runs: $nruns_eval"
 echo "Eval Metric: $eval_metric"
@@ -363,7 +382,7 @@ while [ -n "$opt_flags" ]; do
     # Setting up orion command
     orion_hunt_command="orion hunt -n $exp_name_step -c $config_file --exp-max-trials $exp_max_trials \
     	./run_experiments.sh --hparams $hparams_step --data_folder $data_folder --seed $seed \
-    	--output_folder $output_folder_step/exp  --nsbj $nsbj --nsess $nsess --nruns $nruns \
+    	--output_folder $output_folder_step/exp  --nsbj $nsbj_hpsearch --nsess $nsess_hpsearch --nruns $nruns \
     	--eval_metric $eval_metric --eval_set dev --train_mode $train_mode --rnd_dir $store_all $additional_flags"
 
 

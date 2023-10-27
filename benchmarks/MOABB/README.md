@@ -1,4 +1,4 @@
-# SpeechBrain-MOABB: A User-Friendly Benchmark for Neural EEG Tasks
+# SpeechBrain-MOABB: A User-Friendly Benchmark for EEG decoding tasks
 
 This repository provides a set of recipes for processing electroencephalographic (EEG) signals based on the popular [Mother of all BCI Benchmarks (MOABB)](https://github.com/NeuroTechX/moabb), seamlessly integrated with SpeechBrain. The benchmark facilitates the integration of new models and their evaluation on all supported tasks. It not only offers an interface for easy model integration and testing but also proposes a fair and robust method for comparing different architectures.
 
@@ -14,7 +14,6 @@ The benchmark leverages datasets supported by [MOABB](https://neurotechx.github.
 |[BNCI2014001](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2014001.html#moabb.datasets.BNCI2014001) | Motor Imagery | 9 | 2 |
 |[BNCI2014004](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2014004.html#moabb.datasets.BNCI2014004) | Motor Imagery | 9 | 5 |
 |[BNCI2015001](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2015001.html#moabb.datasets.BNCI2015001) | Motor Imagery | 12 | 2 |
-|[BNCI2015004](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2015004.html#moabb.datasets.BNCI2015004) | Motor Imagery | 9 | 2 |
 |[Lee2019_MI](https://neurotechx.github.io/moabb/generated/moabb.datasets.Lee2019_MI.html#moabb.datasets.Lee2019_MI) | Motor Imagery | 54 | 2 |
 |[Zhou2016](https://neurotechx.github.io/moabb/generated/moabb.datasets.Zhou2016.html#moabb.datasets.Zhou2016) | Motor Imagery | 4 | 3 |
 |[BNCI2014009](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2014009.html#moabb.datasets.BNCI2014009) | P300 | 10 | 3 |
@@ -284,6 +283,7 @@ You can conduct hyperparameter optimization with commands similar to the followi
                              --data_folder eeg_data/ \
                              --hparams hparams/MotorImagery/BNCI2014001/EEGNet.yaml \
                              --nsbj 9 --nsess 2 \
+                             --nsbj_hpsearch 9 --nsess_hpsearch 2 \
                              --nruns 1 \
                              --nruns_eval 10 \
                              --eval_metric acc \
@@ -291,7 +291,10 @@ You can conduct hyperparameter optimization with commands similar to the followi
                              --exp_max_trials 50
 ```
 
-Note that hyperparameter tuning may take several hours (or days) depending on the model complexity and dataset.
+Note that hyperparameter tuning may take several hours (or days) depending on the model complexity and dataset. 
+To speed up hyper-parameter tuning you can consider to reduce the number of subjects and sessions used during hyper-parameter tuning, by setting the `--nsbj_hpsearch ` and `--nsess_hpsearch` flags.
+As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 1` to run hyper-parameter tuning only on a subset of subjects / sessions. 
+Of course, final evaluation will be performed on the entire dataset (on all subjects and sessions).
 
 As evident from the example, you need to configure the hyperparameter file, specify the number of subjects (nsbj), and set the number of sessions (nsess).
 
@@ -330,7 +333,7 @@ For further details on arguments and customization options, consult `./run_hpara
 
 #### **Additional Notes:**
 
-- The quantities of subjects (`--nsbj`) and sessions (`--nsess`) are dataset-dependent. Please consult the [table above](#link-to-dataset-table) for this information. When conducting a hyperparameter optimization experiment using an alternative dataset or model, kindly adjust both the hparam file and the subject/session counts accordingly.
+- The quantities of subjects (`--nsbj`, `--nsbj_hpsearch`) and of sessions (`--nsess`, `--nsess_hpsearch`) are dataset-dependent. Please consult the [table above](#link-to-dataset-table) for this information. When conducting a hyperparameter optimization experiment using an alternative dataset or model, kindly adjust both the hparam file and the subject/session counts accordingly.
 
 - If you intend to perform multiple repetitions of the same hparam optimization, it is necessary to modify the `--exp_name`.
 
@@ -379,7 +382,7 @@ Here are the steps you should follow:
 
 Here are some results obtained with a leave-one-session-out strategy.
 
-Performance metrics were computed on each held-out session (stored in the metrics.pkl file) and reported averaged across sessions and subjects as an average value ± standard deviation across 10 random seeds.
+Performance metrics were computed on each held-out session (stored in the metrics.pkl file) and reported here averaged across sessions and subjects, displaying the average value ± standard deviation across 10 random seeds.
 
 To ensure transparency and reproducibility, we release the output folder containing model checkpoints and training logs [here](add_link).
 
@@ -390,12 +393,10 @@ To ensure transparency and reproducibility, we release the output folder contain
 | 23-10-02 | Motor imagery | /MotorImagery/BNCI2014001/EEGConformer.yaml | leave-one-session-out |  'acc'| 0.675810±0.006926 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | Motor imagery | /MotorImagery/BNCI2014004/EEGNet.yaml | leave-one-session-out |  'acc'| 0.812062±0.001888 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | Motor imagery | /MotorImagery/BNCI2014004/ShallowConvNet.yaml | leave-one-session-out |  'acc'| 0.784813±0.003038 | 1xNVIDIA V100 (16 GB) |
+| 27-10-02 | Motor imagery | /MotorImagery/BNCI2014004/EEGConformer.yaml | leave-one-session-out |  'acc'| 0.799148 ± 0.002082  | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | Motor imagery | /MotorImagery/BNCI2015001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.810646±0.002113 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | Motor imagery | /MotorImagery/BNCI2015001/ShallowConvNet.yaml | leave-one-session-out |  'acc'| 0.828646±0.003781 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | Motor imagery | /MotorImagery/BNCI2015001/EEGConformer.yaml | leave-one-session-out |  'acc'| 0.751688±0.009589 | 1xNVIDIA V100 (16 GB) |
-| 23-10-02 | Motor imagery | /MotorImagery/BNCI2015004/EEGNet.yaml | leave-one-session-out |  'acc'| 0.591925±0.011688 | 1xNVIDIA V100 (16 GB) |
-| 23-10-02 | Motor imagery | /MotorImagery/BNCI2015004/ShallowConvNet.yaml | leave-one-session-out |  'acc'| 0.523690±0.012165 | 1xNVIDIA V100 (16 GB) |
-| 23-10-02 | Motor imagery | /MotorImagery/BNCI2015004/EEGConformer.yaml | leave-one-session-out |  'acc'| 0.597778±0.008762 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | Motor imagery | /MotorImagery/Lee2019_MI/EEGNet.yaml | leave-one-session-out |  'acc'| 0.694278±0.003121 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | Motor imagery | /MotorImagery/Lee2019_MI/ShallowConvNet.yaml | leave-one-session-out |  'acc'| 0.657500±0.004488 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | Motor imagery | /MotorImagery/Lee2019_MI/EEGConformer.yaml | leave-one-session-out |  'acc'| 0.651333±0.008495 | 1xNVIDIA V100 (16 GB) |
@@ -404,6 +405,7 @@ To ensure transparency and reproducibility, we release the output folder contain
 | 23-10-02 | Motor imagery | /MotorImagery/Zhou2016/EEGConformer.yaml | leave-one-session-out |  'acc'| 0.839601±0.005769 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | P300 | /P300/EPFLP300/EEGNet.yaml | leave-one-session-out |  'f1'| 0.634613±0.003840 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | P300 | /P300/BNCI2014009/EEGNet.yaml | leave-one-session-out |  'f1'| 0.754958±0.001643 | 1xNVIDIA V100 (16 GB) |
+| 27-10-02 | P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.723952±0.002445 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.916148±0.002436 | 1xNVIDIA V100 (16 GB) |
 
 Note that the experiments run with any GPU with memory >= 12 GB.

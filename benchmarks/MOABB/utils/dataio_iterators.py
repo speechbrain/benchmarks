@@ -5,6 +5,10 @@ This module provides various data iterators tailored for MOABB datasets and para
 Different training strategies have been implemented as distinct data iterators, including:
 - Leave-One-Session-Out
 - Leave-One-Subject-Out
+
+Author
+------
+Davide Borra, 2021
 """
 
 import numpy as np

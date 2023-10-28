@@ -3,10 +3,10 @@ base_channels: 32
 kernel_size_sinc: 125
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 6746
-lr: 0.0001
-lr_final: 0.000001
+lr: 0.001
+lr_final: 0.0000001
 batch_size: 16
-number_of_epochs: 50
+number_of_epochs: 300
 #Initial Settings
 
 seed: 12345
@@ -32,8 +32,9 @@ valid_json: !ref <json_folder>/valid.json
 test_json: !ref <json_folder>/test.json
 
 
-#sorting: ascending
-sorting: random
+sorting: ascending
+#sorting: random
+#sorting: descending
 
 
 train_dataloader_opts:

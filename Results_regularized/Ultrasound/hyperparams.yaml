@@ -1,4 +1,4 @@
-# Generated 2023-10-27 from:
+# Generated 2023-10-28 from:
 # /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam_regularized/NeuralNets_Hparams.yaml
 # yamllint disable
 #Some Hyper Params
@@ -9,7 +9,7 @@ DIM_CNN_MLP: 277
 lr: 0.001
 lr_final: 0.00001
 batch_size: 16
-number_of_epochs: 50
+number_of_epochs: 61
 #Initial Settings
 
 seed: 12345
@@ -50,8 +50,9 @@ add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
   clean_sample_rate: 100000000
 
 
-sorting: ascending
-#sorting: random
+#sorting: ascending
+sorting: random
+#sorting: descending
 
 
 train_dataloader_opts:
@@ -66,12 +67,12 @@ test_dataloader_opts:
 
 
 epoch_counter: &id023 !new:speechbrain.utils.epoch_loop.EpochCounter
-  limit: 50
+  limit: 61
 
 lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
   initial_value: 0.001
   final_value: 0.00001
-  epoch_count: 50
+  epoch_count: 61
 
 layer1: &id003 !new:torch.nn.Conv1d
   in_channels: 1

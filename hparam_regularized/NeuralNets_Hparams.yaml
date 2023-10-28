@@ -6,7 +6,7 @@ DIM_CNN_MLP: 277
 lr: 0.001
 lr_final: 0.00001
 batch_size: 16
-number_of_epochs: 50
+number_of_epochs: 61
 #Initial Settings
 
 seed: 12345
@@ -47,8 +47,9 @@ add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
     clean_sample_rate: 100000000
 
 
-sorting: ascending
-#sorting: random
+#sorting: ascending
+sorting: random
+#sorting: descending
 
 
 train_dataloader_opts:

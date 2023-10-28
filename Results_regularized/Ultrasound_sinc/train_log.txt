@@ -48,4 +48,4 @@ epoch: 47, lr: 1.55e-04 - train loss: 3.33e-01 - valid loss: 3.34e-01
 epoch: 48, lr: 1.37e-04 - train loss: 3.33e-01 - valid loss: 3.34e-01
 epoch: 49, lr: 1.18e-04 - train loss: 3.33e-01 - valid loss: 3.34e-01
 epoch: 50, lr: 1.00e-04 - train loss: 3.33e-01 - valid loss: 3.34e-01
-Epoch loaded: 50 - test loss: 1.57e-01
+Epoch loaded: 50 - test loss: 1.46e-01

@@ -9,7 +9,7 @@ DIM_CNN_MLP: 277
 lr: 0.001
 lr_final: 0.00001
 batch_size: 16
-number_of_epochs: 61
+number_of_epochs: 60
 #Initial Settings
 
 seed: 12345
@@ -67,12 +67,12 @@ test_dataloader_opts:
 
 
 epoch_counter: &id023 !new:speechbrain.utils.epoch_loop.EpochCounter
-  limit: 61
+  limit: 60
 
 lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
   initial_value: 0.001
   final_value: 0.00001
-  epoch_count: 61
+  epoch_count: 60
 
 layer1: &id003 !new:torch.nn.Conv1d
   in_channels: 1

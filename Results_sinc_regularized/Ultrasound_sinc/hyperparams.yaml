@@ -1,29 +1,29 @@
 # Generated 2023-10-30 from:
-# /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam_regularized/NeuralNets_Hparams.yaml
+# /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam_regularized/NeuralNets_sinc_Hparams.yaml
 # yamllint disable
 #Some Hyper Params
 base_channels: 32
-kernel_size: 11
+kernel_size_sinc: 125
 CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 lr: 0.001
-lr_final: 0.00001
+lr_final: 0.0001
 batch_size: 16
 number_of_epochs: 60
 #Initial Settings
 
 seed: 12345
 __set_seed: !apply:torch.manual_seed [12345]
-output_folder: Results_regularized/Ultrasound
-save_folder: Results_regularized/Ultrasound/save
-loss_image_folder: Results_regularized/Ultrasound/LossImages
-train_log: Results_regularized/Ultrasound/train_log.txt
+output_folder: Results_sinc_regularized/Ultrasound_sinc
+save_folder: Results_sinc_regularized/Ultrasound_sinc/save
+loss_image_folder: Results_sinc_regularized/Ultrasound_sinc/LossImages
+train_log: Results_sinc_regularized/Ultrasound_sinc/train_log.txt
 #train_epoch_test_log: !ref <output_folder>/train_epoch_test_log.txt
 json_folder: ./json_folder
 
 
 train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
-  save_file: Results_regularized/Ultrasound/train_log.txt
+  save_file: Results_sinc_regularized/Ultrasound_sinc/train_log.txt
 
 
 train_epoch_test_log: &id001 !new:speechbrain.utils.train_logger.FileTrainLogger
@@ -38,21 +38,8 @@ valid_json: ./json_folder/valid.json
 test_json: ./json_folder/test.json
 
 
-
-# injection of gaussian white noise
-snr_white_low: 0 #19.0
-snr_white_delta: 20 #19.1
-snr_white_high: 20
-add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
-  snr_low: 0
-  snr_high: 20
-  noise_sample_rate: 100000000
-  clean_sample_rate: 100000000
-
-
 #sorting: ascending
 sorting: random
-#sorting: descending
 
 
 train_dataloader_opts:
@@ -66,22 +53,34 @@ test_dataloader_opts:
   batch_size: 16
 
 
-epoch_counter: &id023 !new:speechbrain.utils.epoch_loop.EpochCounter
+epoch_counter: &id024 !new:speechbrain.utils.epoch_loop.EpochCounter
   limit: 60
 
 lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
   initial_value: 0.001
-  final_value: 0.00001
+  final_value: 0.0001
   epoch_count: 60
 
-layer1: &id003 !new:torch.nn.Conv1d
+
+
+snr_white_low: 19.0
+snr_white_delta: 19.1
+snr_white_high: 38.1
+add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
+  snr_low: 19.0
+  snr_high: 38.1
+  noise_sample_rate: 100000000
+  clean_sample_rate: 100000000
+
+
+layer1: &id003 !new:speechbrain.nnet.CNN.SincConv
   in_channels: 1
   out_channels: 256
-  kernel_size: 4
   stride: 2
-  padding: 1
+  sample_rate: 100000000
+  kernel_size: 125
 
-layer2: &id006 !new:torch.nn.Conv1d
+layer2: &id005 !new:torch.nn.Conv1d
   in_channels: 256
   out_channels: 128
   kernel_size: 4
@@ -117,10 +116,10 @@ layer5: &id014 !new:torch.nn.Conv1d
 Relue: &id004 !new:torch.nn.ReLU
   inplace: true
 
-LeakyRelue: &id008 !new:torch.nn.LeakyReLU
+LeakyRelue: &id007 !new:torch.nn.LeakyReLU
   inplace: true
 
-Batch_norm_1d_layer_2: &id007 !new:torch.nn.BatchNorm1d
+Batch_norm_1d_layer_2: &id006 !new:torch.nn.BatchNorm1d
   num_features: 128
 
 Batch_norm_1d_layer_3: &id010 !new:torch.nn.BatchNorm1d
@@ -133,7 +132,7 @@ Avg_pooling_1d: &id013 !new:torch.nn.AvgPool1d
   kernel_size: 3
   stride: 2
 
-Dropout_1d: &id005 !new:torch.nn.Dropout1d
+Dropout_1d: &id008 !new:torch.nn.Dropout1d
   p: 0.5
 
 LayerNorm: &id015 !new:torch.nn.LayerNorm
@@ -171,45 +170,47 @@ loss: !new:torch.nn.MSELoss
 
 #Modules
 
-CnnBlock: &id020 !new:torch.nn.Sequential
+SincBlock: &id020 !new:torch.nn.Sequential
 - *id003
 - *id004
+CnnBlock: &id021 !new:torch.nn.Sequential
 - *id005
 - *id006
 - *id007
 - *id008
-- *id005
 - *id009
 - *id010
 - *id004
-- *id005
+- *id008
 - *id011
 - *id012
 - *id004
 - *id013
-- *id005
-- *id014
 - *id008
+- *id014
+- *id007
 - *id015
+- *id008
 - *id016
-MLPBlock: &id021 !new:torch.nn.Sequential
+MLPBlock: &id022 !new:torch.nn.Sequential
 
 
 
 - *id017
+- *id007
 - *id008
-- *id005
 - *id018
+- *id007
 - *id008
-- *id005
 - *id019
 modules:
-  CnnBlock: *id020
-  MLPBlock: *id021
-model: &id022 !new:torch.nn.ModuleList
-- [*id020, *id021]
+  SincBlock: *id020
+  CnnBlock: *id021
+  MLPBlock: *id022
+model: &id023 !new:torch.nn.ModuleList
+- [*id020, *id021, *id022]
 checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
-  checkpoints_dir: Results_regularized/Ultrasound/save
+  checkpoints_dir: Results_sinc_regularized/Ultrasound_sinc/save
   recoverables:
-    model: *id022
-    counter: *id023
+    model: *id023
+    counter: *id024

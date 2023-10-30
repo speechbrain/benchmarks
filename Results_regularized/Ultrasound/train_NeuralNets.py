@@ -36,12 +36,17 @@ class Ultra_Brain(sb.Brain):
         ## Mean Normalization
         norm = sb.processing.features.InputNormalization()
         rf = features = norm(batch.sig.data,batch.sig.lengths)
-        rf = rf.type(torch.cuda.FloatTensor)
+        rf = rf.type(torch.cuda.FloatTensor) # [batch , time]
         
         ## adding noise
-        noisifier = self.hparams.add_noise_white
-        rf = noisifier(rf, batch.sig.lengths)
 
+        print('BEFOR adding Noise',rf)
+
+        noisifier = self.hparams.add_noise_white
+        rf = noisifier(rf, batch.sig.lengths) # [natch , time , channel]
+
+        print('AFTER adding Noise',rf)
+        
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)
         #print('RF SIGNASL',rf.shape)

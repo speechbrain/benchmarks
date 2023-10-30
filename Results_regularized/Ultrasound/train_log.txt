@@ -58,4 +58,4 @@ epoch: 57, lr: 6.03e-05 - train loss: 3.33e-01 - valid loss: 3.34e-01
 epoch: 58, lr: 4.36e-05 - train loss: 3.33e-01 - valid loss: 3.34e-01
 epoch: 59, lr: 2.68e-05 - train loss: 3.33e-01 - valid loss: 3.34e-01
 epoch: 60, lr: 1.00e-05 - train loss: 3.33e-01 - valid loss: 3.34e-01
-Epoch loaded: 60 - test loss: 1.54e-01
+Epoch loaded: 60 - test loss: 1.52e-01

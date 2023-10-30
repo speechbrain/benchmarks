@@ -37,8 +37,8 @@ test_json: !ref <json_folder>/test.json
 
 
 # injection of gaussian white noise
-snr_white_low: 19.0
-snr_white_delta: 19.1
+snr_white_low: 0 #19.0
+snr_white_delta: 20 #19.1
 snr_white_high: !ref <snr_white_low> + <snr_white_delta>
 add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
     snr_low: !ref <snr_white_low>

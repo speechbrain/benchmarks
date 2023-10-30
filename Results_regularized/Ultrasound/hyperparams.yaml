@@ -8,7 +8,7 @@ CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 lr: 0.001
 lr_final: 0.00001
-batch_size: 1
+batch_size: 16
 number_of_epochs: 60
 #Initial Settings
 
@@ -41,11 +41,11 @@ test_json: ./json_folder/test.json
 
 # injection of gaussian white noise
 snr_white_low: 0 #19.0
-snr_white_delta: 20 #19.1
-snr_white_high: 20
+snr_white_delta: 10 #19.1
+snr_white_high: 10
 add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
   snr_low: 0
-  snr_high: 20
+  snr_high: 10
   noise_sample_rate: 100000000
   clean_sample_rate: 100000000
 
@@ -56,14 +56,14 @@ sorting: random
 
 
 train_dataloader_opts:
-  batch_size: 1
+  batch_size: 16
   shuffle: true
 
 valid_dataloader_opts:
-  batch_size: 1
+  batch_size: 16
 
 test_dataloader_opts:
-  batch_size: 1
+  batch_size: 16
 
 
 epoch_counter: &id023 !new:speechbrain.utils.epoch_loop.EpochCounter

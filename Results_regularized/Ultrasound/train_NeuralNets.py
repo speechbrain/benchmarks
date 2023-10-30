@@ -11,6 +11,7 @@ import torchaudio
 from scipy.io import loadmat
 from speechbrain.utils.parameter_transfer import Pretrainer
 from SharedFuncs import *
+import matplotlib
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,8 @@ class Ultra_Brain(sb.Brain):
         ## adding noise and plotting them
 
         print('BEFOR adding Noise',rf)
-        plt.plot(batch.sig.data[0].to('cpu'), label='noise free',marker = 'o')
+        #plt.figure(0)
+        plt.plot(rf[0].to('cpu'), label='noise free')
         plt.ylabel('Amplitude')
         plt.xlabel('time stamp')
         plt.legend()
@@ -51,8 +53,8 @@ class Ultra_Brain(sb.Brain):
                  '_Shufelling_'+str(hparams['sorting'])+'.png'))
         noisifier = self.hparams.add_noise_white
         rf = noisifier(rf, batch.sig.lengths) # [natch , time , channel]
-
-        plt.plot( batch.sig.data[0].to('cpu'), label='noise free',marker = 'o')
+        #plt.figure(2)
+        plt.plot( rf[0].to('cpu'), label='noisy')
         plt.ylabel('Amplitude')
         plt.xlabel('time stamp')
         plt.legend()

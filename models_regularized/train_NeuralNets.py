@@ -38,12 +38,23 @@ class Ultra_Brain(sb.Brain):
         rf = features = norm(batch.sig.data,batch.sig.lengths)
         rf = rf.type(torch.cuda.FloatTensor) # [batch , time]
         
-        ## adding noise
+        ## adding noise and plotting them
 
         print('BEFOR adding Noise',rf)
+        plt.plot(range(1,len(validation_losses)+1), validation_losses, label='CNN_validation',marker = 'o')
+        plt.plot(range(1,len(training_losses)+1),training_losses, label='CNN_training',marker = 'o')
+        plt.ylabel('Loss')
+        plt.xlabel('# Epochs')
+        plt.legend()
 
         noisifier = self.hparams.add_noise_white
         rf = noisifier(rf, batch.sig.lengths) # [natch , time , channel]
+
+        plt.plot(range(1,len(validation_losses)+1), validation_losses, label='CNN_validation',marker = 'o')
+        plt.plot(range(1,len(training_losses)+1),training_losses, label='CNN_training',marker = 'o')
+        plt.ylabel('Loss')
+        plt.xlabel('# Epochs')
+        plt.legend()
 
         print('AFTER adding Noise',rf)
         
@@ -162,6 +173,9 @@ if __name__ == "__main__":
 
     train_data,  valid_data, test_data = dataio_prepare(hparams)
     
+
+
+
     Ultra_brain = Ultra_Brain(
     modules=hparams["modules"],
     opt_class=hparams["optim"],

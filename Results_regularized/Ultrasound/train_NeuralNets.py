@@ -162,6 +162,10 @@ if __name__ == "__main__":
 
     train_data,  valid_data, test_data = dataio_prepare(hparams)
     
+    print('TEST DATA', test_data)
+
+
+
     Ultra_brain = Ultra_Brain(
     modules=hparams["modules"],
     opt_class=hparams["optim"],

@@ -37,8 +37,8 @@ class Ultra_Brain(sb.Brain):
 
 
 
-        noisifier = self.hparams.add_noise_white
-        rf = noisifier(rf, batch.sig.lengths)
+        # noisifier = self.hparams.add_noise_white
+        # rf = noisifier(rf, batch.sig.lengths)
         rf = rf.type(torch.cuda.FloatTensor)
 
 

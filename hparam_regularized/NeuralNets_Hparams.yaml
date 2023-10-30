@@ -5,7 +5,7 @@ CHANNEL_NUM: 256
 DIM_CNN_MLP: 277
 lr: 0.001
 lr_final: 0.00001
-batch_size: 16
+batch_size: 1
 number_of_epochs: 60
 #Initial Settings
 

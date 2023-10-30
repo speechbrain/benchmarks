@@ -291,9 +291,9 @@ You can conduct hyperparameter optimization with commands similar to the followi
                              --exp_max_trials 50
 ```
 
-Note that hyperparameter tuning may take several hours (or days) depending on the model complexity and dataset. 
+Note that hyperparameter tuning may take several hours (or days) depending on the model complexity and dataset.
 To speed up hyper-parameter tuning you can consider to reduce the number of subjects and sessions used during hyper-parameter tuning, by setting the `--nsbj_hpsearch ` and `--nsess_hpsearch` flags.
-As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 1` to run hyper-parameter tuning only on a subset of subjects / sessions. 
+As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 1` to run hyper-parameter tuning only on a subset of subjects / sessions.
 Of course, final evaluation will be performed on the entire dataset (on all subjects and sessions).
 
 As evident from the example, you need to configure the hyperparameter file, specify the number of subjects (nsbj), and set the number of sessions (nsess).

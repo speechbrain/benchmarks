@@ -38,12 +38,28 @@ class Ultra_Brain(sb.Brain):
         rf = features = norm(batch.sig.data,batch.sig.lengths)
         rf = rf.type(torch.cuda.FloatTensor) # [batch , time]
         
-        ## adding noise
+        ## adding noise and plotting them
 
         print('BEFOR adding Noise',rf)
-
+        plt.plot(batch.sig.data[0].to('cpu'), label='noise free',marker = 'o')
+        plt.ylabel('Amplitude')
+        plt.xlabel('time stamp')
+        plt.legend()
+        plt.savefig(os.path.join(hparams['loss_image_folder'],'NoiseFree_epoch_'+ str(hparams['number_of_epochs'])+
+                 '_batchsize_'+str(hparams['batch_size'])+
+                 '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
+                 '_Shufelling_'+str(hparams['sorting'])+'.png'))
         noisifier = self.hparams.add_noise_white
         rf = noisifier(rf, batch.sig.lengths) # [natch , time , channel]
+
+        plt.plot( batch.sig.data[0].to('cpu'), label='noise free',marker = 'o')
+        plt.ylabel('Amplitude')
+        plt.xlabel('time stamp')
+        plt.legend()
+        plt.savefig(os.path.join(hparams['loss_image_folder'],'Noisy_epoch_'+ str(hparams['number_of_epochs'])+
+                 '_batchsize_'+str(hparams['batch_size'])+
+                 '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
+                 '_Shufelling_'+str(hparams['sorting'])+'.png'))
 
         print('AFTER adding Noise',rf)
         
@@ -162,7 +178,6 @@ if __name__ == "__main__":
 
     train_data,  valid_data, test_data = dataio_prepare(hparams)
     
-    print('TEST DATA', test_data)
 
 
 

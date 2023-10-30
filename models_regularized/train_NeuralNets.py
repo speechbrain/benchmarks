@@ -41,20 +41,25 @@ class Ultra_Brain(sb.Brain):
         ## adding noise and plotting them
 
         print('BEFOR adding Noise',rf)
-        plt.plot(range(1,len(validation_losses)+1), validation_losses, label='CNN_validation',marker = 'o')
-        plt.plot(range(1,len(training_losses)+1),training_losses, label='CNN_training',marker = 'o')
-        plt.ylabel('Loss')
-        plt.xlabel('# Epochs')
+        plt.plot(batch.sig.data[0].to('cpu'), label='noise free',marker = 'o')
+        plt.ylabel('Amplitude')
+        plt.xlabel('time stamp')
         plt.legend()
-
+        plt.savefig(os.path.join(hparams['loss_image_folder'],'NoiseFree_epoch_'+ str(hparams['number_of_epochs'])+
+                 '_batchsize_'+str(hparams['batch_size'])+
+                 '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
+                 '_Shufelling_'+str(hparams['sorting'])+'.png'))
         noisifier = self.hparams.add_noise_white
         rf = noisifier(rf, batch.sig.lengths) # [natch , time , channel]
 
-        plt.plot(range(1,len(validation_losses)+1), validation_losses, label='CNN_validation',marker = 'o')
-        plt.plot(range(1,len(training_losses)+1),training_losses, label='CNN_training',marker = 'o')
-        plt.ylabel('Loss')
-        plt.xlabel('# Epochs')
+        plt.plot( batch.sig.data[0].to('cpu'), label='noise free',marker = 'o')
+        plt.ylabel('Amplitude')
+        plt.xlabel('time stamp')
         plt.legend()
+        plt.savefig(os.path.join(hparams['loss_image_folder'],'Noisy_epoch_'+ str(hparams['number_of_epochs'])+
+                 '_batchsize_'+str(hparams['batch_size'])+
+                 '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
+                 '_Shufelling_'+str(hparams['sorting'])+'.png'))
 
         print('AFTER adding Noise',rf)
         

@@ -408,7 +408,8 @@ To ensure transparency and reproducibility, we release the output folder contain
 | 27-10-02 | P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.723952±0.002445 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.916148±0.002436 | 1xNVIDIA V100 (16 GB) |
 
-Note:
+Notes:
+- You can access **checkpoints** for each model and dataset, complete with hyperparameter tuning [here](https://www.dropbox.com/sh/ux0i0suljojonmb/AABsTBpEKCTmVE784yQw-WGMa?dl=0).
 - The experiments can be conducted on any GPU with a memory capacity of 12 GB or higher.
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
 

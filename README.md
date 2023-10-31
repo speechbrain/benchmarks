@@ -19,6 +19,8 @@ The SpeechBrain Benchmarks currently include the following:
 
 - [MP3S](https://github.com/speechbrain/benchmarks/tree/main/benchmarks/MP3S) - A benchmark created to facilitate the fair assessment of self-supervised speech representations.
 
+- [MOABB](https://github.com/speechbrain/benchmarks/tree/main/benchmarks/MOABB) - A benchmark designed for evaluating neural models in well-known EEG tasks like motor imagery, P300, and SSVEP.
+
 
 Our benchmarks align with speechbrain's commitment to transparent and replicable research by providing standardized tools and resources for studying specific topics.
 

@@ -20,33 +20,32 @@ class Ultra_Brain(sb.Brain):
         #print('START')
         batch = batch.to(self.device)
         rf = batch.sig.data # removing the the length flag of the PaddedData type
-        # rf = rf.type(torch.cuda.FloatTensor)
         
         
-        # # ### Normalization of input (Max _MIn normalization)
-        # batch_size, height = rf.shape
+        
+        # ### Normalization of input
+        # batch_size, height = rf.shape # shape [batch,timeseries]
         # rf = rf.view(rf.size(0), -1)
         # rf -= rf.min(1, keepdim=True)[0]
         # rf /= rf.max(1, keepdim=True)[0]
         # rf = rf.view(batch_size, height)
 
-        ## Mean Normalization
 
+        # Mean Normalization
         norm = sb.processing.features.InputNormalization()
         rf = features = norm(batch.sig.data,batch.sig.lengths)
-
-
-
-        # noisifier = self.hparams.add_noise_white
-        # rf = noisifier(rf, batch.sig.lengths)
         rf = rf.type(torch.cuda.FloatTensor)
+        rf_unsqueeze = rf.unsqueeze(dim=1)
 
+        ## SincConv Does not neet Extra channel!!
+        a1 = self.modules.SincBlock(rf)
+        a1 = torch.transpose(a1, 1, 2)
+        #print('A1 Size', a1.shape)
 
-        #print('Features SIZES',  features)
-        ## SincConv Does not neet Extra channel adding!!
-        a = self.modules.SincBlock(rf)
-        a = torch.transpose(a, 1, 2)
-        a = self.modules.CnnBlock(a)
+        a2 = self.modules.UPipe(rf_unsqueeze)
+        a = torch.cat((a1, a2), 2)
+        #print('a SHAPE', a.shape)
+        a = self.modules.RestPipe(a)
         logits = self.modules.MLPBlock(a)
         
         #print('OUT',logits)
@@ -57,7 +56,6 @@ class Ultra_Brain(sb.Brain):
         #print('PREDICTION', predictions.shape, batch.att.shape )
         attenuation = batch.att
         attenuation = attenuation.type(torch.cuda.FloatTensor)
-        #attenuation = (attenuation - attenuation.mean(0)) / attenuation.std(0)
         return sb.nnet.losses.mse_loss(predictions, attenuation.unsqueeze(1))
     
     def fit_batch(self, batch):
@@ -168,7 +166,7 @@ if __name__ == "__main__":
     Ultra_brain.fit(
     Ultra_brain.hparams.epoch_counter,
     train_data,
-    valid_data,
+    test_data,
     train_loader_kwargs=hparams["train_dataloader_opts"],
     valid_loader_kwargs=hparams["valid_dataloader_opts"],
     )
@@ -181,13 +179,13 @@ if __name__ == "__main__":
 
     training_losses , validation_losses = get_losses(hparams["train_log"])
 
-    plt.plot(range(1,len(validation_losses)+1), validation_losses, label='sinc_CNN_validation',marker = 'o')
-    plt.plot(range(1,len(training_losses)+1),training_losses, label='sinc_CNN_training',marker = 'o')
+    plt.plot(validation_losses, label='sinc_Unet_testing',marker = 'o')
+    plt.plot(training_losses, label='sinc_Unet_training',marker = 'o')
     plt.ylabel('Loss')
     plt.xlabel('# Epochs')
     plt.legend()
     #plt.xticks(range(1,len(validation_losses)+1))
-    plt.savefig(os.path.join(hparams['loss_image_folder'],'sinc_CNN_epoch_'+ str(hparams['number_of_epochs'])+
+    plt.savefig(os.path.join(hparams['loss_image_folder'],'sinc_Unet_epoch_'+ str(hparams['number_of_epochs'])+
                  '_batchsize_'+str(hparams['batch_size'])+
                  '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
                  '_Shufelling_'+str(hparams['sorting'])+'.png'))

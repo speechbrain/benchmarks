@@ -131,7 +131,7 @@ Avg_pooling_1d: !new:torch.nn.AvgPool1d
   stride: 2
 
 Dropout_1d: !new:torch.nn.Dropout1d
-  p: 0.5
+  p: 0.9 #0.5
 
 LayerNorm: !new:torch.nn.LayerNorm
   normalized_shape: !ref <DIM_CNN_MLP>

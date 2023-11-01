@@ -60,8 +60,8 @@ lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
 
 
 
-snr_white_low: 19.0
-snr_white_delta: 19.1
+snr_white_low: 0 #19.0
+snr_white_delta: 10 #19.1
 snr_white_high: !ref <snr_white_low> + <snr_white_delta>
 add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
     snr_low: !ref <snr_white_low>
@@ -130,7 +130,7 @@ Avg_pooling_1d: !new:torch.nn.AvgPool1d
   stride: 2
 
 Dropout_1d: !new:torch.nn.Dropout1d
-  p: 0.5
+  p: 0.9 #0.5
 
 LayerNorm: !new:torch.nn.LayerNorm
   normalized_shape: !ref <DIM_CNN_MLP>

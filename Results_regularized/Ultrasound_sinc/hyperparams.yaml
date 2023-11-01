@@ -1,4 +1,4 @@
-# Generated 2023-10-30 from:
+# Generated 2023-11-01 from:
 # /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam_regularized/NeuralNets_sinc_Hparams.yaml
 # yamllint disable
 #Some Hyper Params
@@ -63,12 +63,12 @@ lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
 
 
 
-snr_white_low: 19.0
-snr_white_delta: 19.1
-snr_white_high: 38.1
+snr_white_low: 0 #19.0
+snr_white_delta: 10 #19.1
+snr_white_high: 10
 add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
-  snr_low: 19.0
-  snr_high: 38.1
+  snr_low: 0
+  snr_high: 10
   noise_sample_rate: 100000000
   clean_sample_rate: 100000000
 
@@ -133,7 +133,7 @@ Avg_pooling_1d: &id013 !new:torch.nn.AvgPool1d
   stride: 2
 
 Dropout_1d: &id008 !new:torch.nn.Dropout1d
-  p: 0.5
+  p: 0.9 #0.5
 
 LayerNorm: &id015 !new:torch.nn.LayerNorm
   normalized_shape: 277

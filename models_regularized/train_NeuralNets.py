@@ -41,29 +41,29 @@ class Ultra_Brain(sb.Brain):
         
         ## adding noise and plotting them
 
-        print('BEFOR adding Noise',rf)
-        #plt.figure(0)
-        plt.plot(rf[0].to('cpu'), label='noise free')
-        plt.ylabel('Amplitude')
-        plt.xlabel('time stamp')
-        plt.legend()
-        plt.savefig(os.path.join(hparams['loss_image_folder'],'NoiseFree_epoch_'+ str(hparams['number_of_epochs'])+
-                 '_batchsize_'+str(hparams['batch_size'])+
-                 '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
-                 '_Shufelling_'+str(hparams['sorting'])+'.png'))
+        # print('BEFOR adding Noise',rf)
+        # #plt.figure(0)
+        # plt.plot(rf[0].to('cpu'), label='noise free')
+        # plt.ylabel('Amplitude')
+        # plt.xlabel('time stamp')
+        # plt.legend()
+        # plt.savefig(os.path.join(hparams['loss_image_folder'],'NoiseFree_epoch_'+ str(hparams['number_of_epochs'])+
+        #          '_batchsize_'+str(hparams['batch_size'])+
+        #          '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
+        #          '_Shufelling_'+str(hparams['sorting'])+'.png'))
         noisifier = self.hparams.add_noise_white
         rf = noisifier(rf, batch.sig.lengths) # [natch , time , channel]
-        #plt.figure(2)
-        plt.plot( rf[0].to('cpu'), label='noisy')
-        plt.ylabel('Amplitude')
-        plt.xlabel('time stamp')
-        plt.legend()
-        plt.savefig(os.path.join(hparams['loss_image_folder'],'Noisy_epoch_'+ str(hparams['number_of_epochs'])+
-                 '_batchsize_'+str(hparams['batch_size'])+
-                 '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
-                 '_Shufelling_'+str(hparams['sorting'])+'.png'))
+        # #plt.figure(2)
+        # plt.plot( rf[0].to('cpu'), label='noisy')
+        # plt.ylabel('Amplitude')
+        # plt.xlabel('time stamp')
+        # plt.legend()
+        # plt.savefig(os.path.join(hparams['loss_image_folder'],'Noisy_epoch_'+ str(hparams['number_of_epochs'])+
+        #          '_batchsize_'+str(hparams['batch_size'])+
+        #          '_ChanellNum_'+str(hparams['CHANNEL_NUM'])+
+        #          '_Shufelling_'+str(hparams['sorting'])+'.png'))
 
-        print('AFTER adding Noise',rf)
+        # print('AFTER adding Noise',rf)
         
         #print('RF SIGNASL BEFOR',rf.shape)
         rf = rf.unsqueeze(dim=1)

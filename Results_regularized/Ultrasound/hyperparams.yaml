@@ -1,0 +1,215 @@
+# Generated 2023-11-01 from:
+# /home/arian/PycharmProjects/SpeechBrain_Ultra/hparam_regularized/NeuralNets_Hparams.yaml
+# yamllint disable
+#Some Hyper Params
+base_channels: 32
+kernel_size: 11
+CHANNEL_NUM: 256
+DIM_CNN_MLP: 277
+lr: 0.001
+lr_final: 0.00001
+batch_size: 16
+number_of_epochs: 60
+#Initial Settings
+
+seed: 12345
+__set_seed: !apply:torch.manual_seed [12345]
+output_folder: Results_regularized/Ultrasound
+save_folder: Results_regularized/Ultrasound/save
+loss_image_folder: Results_regularized/Ultrasound/LossImages
+train_log: Results_regularized/Ultrasound/train_log.txt
+#train_epoch_test_log: !ref <output_folder>/train_epoch_test_log.txt
+json_folder: ./json_folder
+
+
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+  save_file: Results_regularized/Ultrasound/train_log.txt
+
+
+train_epoch_test_log: &id001 !new:speechbrain.utils.train_logger.FileTrainLogger
+
+
+#padding: !ref <kernel_size> // 2
+
+# Data files
+  save_file: *id001
+train_json: ./json_folder/train.json
+valid_json: ./json_folder/valid.json
+test_json: ./json_folder/test.json
+
+
+
+# injection of gaussian white noise
+snr_white_low: 0 #19.0
+snr_white_delta: 10 #19.1
+snr_white_high: 10
+add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
+  snr_low: 0
+  snr_high: 10
+  noise_sample_rate: 100000000
+  clean_sample_rate: 100000000
+
+
+#sorting: ascending
+sorting: random
+#sorting: descending
+
+
+train_dataloader_opts:
+  batch_size: 16
+  shuffle: true
+
+valid_dataloader_opts:
+  batch_size: 16
+
+test_dataloader_opts:
+  batch_size: 16
+
+
+epoch_counter: &id023 !new:speechbrain.utils.epoch_loop.EpochCounter
+  limit: 60
+
+lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
+  initial_value: 0.001
+  final_value: 0.00001
+  epoch_count: 60
+
+layer1: &id003 !new:torch.nn.Conv1d
+  in_channels: 1
+  out_channels: 256
+  kernel_size: 4
+  stride: 2
+  padding: 1
+
+layer2: &id006 !new:torch.nn.Conv1d
+  in_channels: 256
+  out_channels: 128
+  kernel_size: 4
+  stride: 2
+  padding: 1
+  bias: false
+
+layer3: &id009 !new:torch.nn.Conv1d
+  in_channels: 128
+  out_channels: 64
+  kernel_size: 4
+  stride: 2
+  padding: 1
+  bias: false
+
+layer4: &id011 !new:torch.nn.Conv1d
+  in_channels: 64
+  out_channels: 32
+  kernel_size: 3
+  stride: 1
+  padding: 1
+  bias: false
+
+layer5: &id014 !new:torch.nn.Conv1d
+  in_channels: 32
+  out_channels: 1
+  kernel_size: 4
+  stride: 1
+  padding: 0
+  bias: false
+
+
+Relue: &id004 !new:torch.nn.ReLU
+  inplace: true
+
+LeakyRelue: &id008 !new:torch.nn.LeakyReLU
+  inplace: true
+
+Batch_norm_1d_layer_2: &id007 !new:torch.nn.BatchNorm1d
+  num_features: 128
+
+Batch_norm_1d_layer_3: &id010 !new:torch.nn.BatchNorm1d
+  num_features: 64
+
+Batch_norm_1d_layer_4: &id012 !new:torch.nn.BatchNorm1d
+  num_features: 32
+
+Avg_pooling_1d: &id013 !new:torch.nn.AvgPool1d
+  kernel_size: 3
+  stride: 2
+
+Dropout_1d: &id005 !new:torch.nn.Dropout1d
+  p: 0.9 #0.5
+
+LayerNorm: &id015 !new:torch.nn.LayerNorm
+  normalized_shape: 277
+
+flatten_L: &id016 !new:torch.nn.Flatten
+
+MLP_L1: &id017 !new:torch.nn.Linear
+  in_features: 277
+  out_features: 16
+
+MLP_L2: &id018 !new:torch.nn.Linear
+  in_features: 16
+  out_features: 8
+
+MLP_L3: &id019 !new:torch.nn.Linear
+  in_features: 8
+  out_features: 1
+
+
+# Optimizer
+optim: &id002 !name:torch.optim.Adam
+  lr: 0.001
+
+scheduler: !name:torch.optim.lr_scheduler.LinearLR
+  optimizer: *id002
+  start_factor: 1.0
+  end_factor: 0.5
+  total_iters: 30
+
+
+# Loss function
+
+loss: !new:torch.nn.MSELoss
+
+#Modules
+
+CnnBlock: &id020 !new:torch.nn.Sequential
+- *id003
+- *id004
+- *id005
+- *id006
+- *id007
+- *id008
+- *id005
+- *id009
+- *id010
+- *id004
+- *id005
+- *id011
+- *id012
+- *id004
+- *id013
+- *id005
+- *id014
+- *id008
+- *id015
+- *id016
+MLPBlock: &id021 !new:torch.nn.Sequential
+
+
+
+- *id017
+- *id008
+- *id005
+- *id018
+- *id008
+- *id005
+- *id019
+modules:
+  CnnBlock: *id020
+  MLPBlock: *id021
+model: &id022 !new:torch.nn.ModuleList
+- [*id020, *id021]
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+  checkpoints_dir: Results_regularized/Ultrasound/save
+  recoverables:
+    model: *id022
+    counter: *id023

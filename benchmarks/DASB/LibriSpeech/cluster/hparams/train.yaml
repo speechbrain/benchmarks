@@ -1,0 +1,53 @@
+# ################################
+# Recipe for training an SSL-based ctc ASR system with librispeech.
+# Decoding is performed with ctc greedy or LM-rescored decoder.
+#
+# Authors
+# * Salah Zaiem 2023
+# * Youcef Kemiche 2023
+# ################################
+
+# Seed needs to be set at top of yaml, before objects with parameters are made
+seed: 1986
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+output_folder: !ref results/LibriSpeech/cluster/<seed>
+save_folder: !ref <output_folder>/save
+
+
+# Data files
+data_folder: data/LibriSpeech # e,g./path/to/LibriSpeech
+# noise/ris dataset will automatically be downloaded
+# data_folder_rirs: !ref <data_folder>
+train_splits: ["train-clean-100"]
+dev_splits: ["dev-clean"]
+test_splits: ["test-clean"]
+skip_prep: False
+ckpt_interval_minutes: 25 # save checkpoint every N min
+train_csv: !ref <output_folder>/train-clean-100.csv
+valid_csv: !ref <output_folder>/dev-clean.csv
+test_csv:
+   - !ref <output_folder>/test-clean.csv
+
+
+ssl_hub: facebook/hubert-base-ls960
+freeze_feature_extractor: True
+freeze_ssl: True
+ssl_folder: !ref <save_folder>/hubert_checkpoint
+ssl_layer_num: 3
+encoder_dim: 768
+
+sorting: ascending
+batch_size: 128
+n_clusters : 10
+
+# Dataloader options
+train_dataloader_opts:
+   batch_size: !ref <batch_size>
+
+ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
+  source: !ref <ssl_hub>
+  output_norm: True
+  freeze: !ref <freeze_ssl>
+  freeze_feature_extractor: !ref <freeze_feature_extractor>
+  output_all_hiddens: False
+  save_path: !ref <ssl_folder>

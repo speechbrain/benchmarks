@@ -1,6 +1,7 @@
 #!/usr/bin/env/python3
-"""Recipe for training an SSL-based ctc ASR system with librispeech.
- Decoding is performed with ctc greedy or LM-rescored decoder.
+"""Recipe for training kmeans clustring with SSL outputs for  librispeech.
+Authors
+ * Pooneh Mousavi 2023
 """
 
 import os

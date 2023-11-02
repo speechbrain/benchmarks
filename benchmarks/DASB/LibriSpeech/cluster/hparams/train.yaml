@@ -1,10 +1,9 @@
 # ################################
-# Recipe for training an SSL-based ctc ASR system with librispeech.
-# Decoding is performed with ctc greedy or LM-rescored decoder.
+# Recipe for training kmeans clustring with SSL for  librispeech.
 #
 # Authors
-# * Salah Zaiem 2023
-# * Youcef Kemiche 2023
+# * Pooneh Mousavi 2023
+
 # ################################
 
 # Seed needs to be set at top of yaml, before objects with parameters are made

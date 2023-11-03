@@ -1,0 +1,2 @@
+-r lint-requirements.txt
+speechbrain>=0.5.14

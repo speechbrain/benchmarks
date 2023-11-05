@@ -1,5 +1,8 @@
 # DASB - Discrete Audio and Speech Benchmark
 
+Work in progress
+Please, install unstable-v0.6 version of SpeechBrain
+
 This repository provides scripts for benchmarking discrete audio representations on various downstream tasks, including ASR, speaker verification, emotion recognition, and TTS.
 
 Large Language Models are revolutionizing the field of artificial intelligence, advancing us towards artificial general intelligence. The dominant technology behind them is based on autoregressive transformer-based models that predict the next token (e.g. a character or a subword unit), based on the preceding ones. Language models use text data that are inherently discrete in nature.  Conversely, the domain of audio and speech processing predominantly relies on continuous representations, such as mel-spectrograms or popular self-supervised features like wav2vec2, wavLM, and Hubert. Interestingly, a notable trend towards discrete audio representations is gaining momentum, leading to the emergence of discrete audio tokens similar to those employed in language models. Leveraging audio tokens offers the potential to facilitate the creation of multimodal language models capable of processing not only text but also audio inputs.

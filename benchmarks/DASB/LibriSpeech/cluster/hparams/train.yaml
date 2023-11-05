@@ -1,10 +1,11 @@
-# ################################
-# Recipe for training kmeans clustring with SSL for  librispeech.
+################################
+# Recipe for Training K-Means Clustering on LibriSpeech Data
+# Using Self-Supervised Model-Based Representations
 #
-# Authors
-# * Pooneh Mousavi 2023
-
-# ################################
+# It is used for creating discrete audio representations from LibriSpeech data.
+#
+# Author: Pooneh Mousavi (2023)
+################################
 
 # Seed needs to be set at top of yaml, before objects with parameters are made
 seed: 1986
@@ -12,11 +13,8 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 output_folder: !ref results/LibriSpeech/cluster/<seed>
 save_folder: !ref <output_folder>/save
 
-
 # Data files
 data_folder: data/LibriSpeech # e,g./path/to/LibriSpeech
-# noise/ris dataset will automatically be downloaded
-# data_folder_rirs: !ref <data_folder>
 train_splits: ["train-clean-100"]
 dev_splits: ["dev-clean"]
 test_splits: ["test-clean"]

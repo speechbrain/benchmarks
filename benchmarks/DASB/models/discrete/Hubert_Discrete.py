@@ -1,10 +1,3 @@
-"""
-This lobe enables the integration of pretrained Q-Hubert.
-Reference: HubBERT (https://arxiv.org/pdf/2106.07447.pdf).
-Authors
- * 
-"""
-
 """This lobe enables the integration of pretrained discrete Hubert.
 
 Reference: https://arxiv.org/abs/2006.11477
@@ -17,11 +10,9 @@ Authors
  * Pooneh Mousavi 2023
 
 """
-
 import logging
 import torch
 from speechbrain.lobes.models.huggingface_transformers.hubert import HuBERT
-from sklearn.cluster import MiniBatchKMeans
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +88,7 @@ class DiscreteHuBERT(HuBERT):
         )
 
         self.kmean = kmeans
-    
+
     def forward(self, wav, wav_lens=None):
         """Takes an input waveform and return its corresponding wav2vec encoding.
 
@@ -113,11 +104,9 @@ class DiscreteHuBERT(HuBERT):
         feats = None
         if self.freeze:
             with torch.no_grad():
-               feats = self.extract_features(wav, wav_lens)
+                feats = self.extract_features(wav, wav_lens)
 
         feats = self.extract_features(wav, wav_lens)
 
         x = self.kmeans.predict(feats.squeeze().cpu().numpy())
         return torch.tensor(x, dtype=torch.long, device=wav.device)
-
-        

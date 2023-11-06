@@ -21,7 +21,7 @@ output_folder: !ref results/<whisper_variant>/<experiment_name>/<seed>
 save_folder: !ref <output_folder>/save
 
 # Training parameters
-train_batch_size: 12
+train_batch_size: 8
 valid_batch_size: 16
 train_num_workers: 6
 valid_num_workers: 6
@@ -33,7 +33,7 @@ avoid_if_longer_than: 10  # Remove utterances longer than 10s (open microphones)
 ignore_index: -100  # For cross-entropy loss
 label_smoothing: 0
 
-num_epochs: 10
+num_epochs: 2
 lr: 0.0001
 improvement_threshold: 0.0025
 annealing_factor: 0.8

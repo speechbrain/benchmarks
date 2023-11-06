@@ -477,6 +477,7 @@ def train(hparams, run_opts):
                 bos_tokens = old_train_data[idx]["tokens_bos"].to(
                     run_opts["device"]
                 )
+                hparams["whisper"].eval()
                 with torch.no_grad():
                     _, logits, _ = hparams["whisper"](
                         wavs[None], bos_tokens[None]

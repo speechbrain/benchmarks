@@ -1,8 +1,10 @@
 # CL-MASR: A Continual Learning Benchmark for Multilingual ASR
 
-This recipe includes scripts to train [Whisper](https://cdn.openai.com/papers/whisper.pdf) and
-[WavLM](https://arxiv.org/abs/2110.13900)-based ASR systems on a subset of 20 languages selected from [Common Voice 13](https://commonvoice.mozilla.org/en/datasets)
-in a continual learning fashion using a handful of methods including rehearsal-based, architecture-based, and regularization-based approaches.
+This is the official benchmark platform accompanying the paper [CL-MASR: A Continual Learning Benchmark for Multilingual ASR](https://arxiv.org/abs/2310.16931).
+
+It includes scripts to train [Whisper](https://cdn.openai.com/papers/whisper.pdf) and [WavLM](https://arxiv.org/abs/2110.13900)-based ASR systems
+on a subset of 20 languages selected from [Common Voice 13](https://commonvoice.mozilla.org/en/datasets) in a continual learning fashion using a
+handful of methods including rehearsal-based, architecture-based, and regularization-based approaches.
 
 The goal is to continually learn new languages while limiting forgetting the previously learned ones.
 An ideal method should achieve both positive forward transfer (i.e. improve performance on new tasks leveraging
@@ -10,15 +12,21 @@ shared knowledge from previous tasks) and positive backward transfer (i.e. impro
 leveraging shared knowledge from new tasks).
 
 The following algorithms have been implemented so far:
-- [Experience Replay (ER)](https://arxiv.org/abs/1811.11682)
-- [Averaged Gradient Episodic Memory (A-GEM)](https://arxiv.org/abs/1812.00420)
-- [Dark Experience Replay (DER)](https://arxiv.org/abs/2004.07211) (task-incremental variant)
-- [Progressive Neural Networks (PNN)](https://arxiv.org/abs/1606.04671)
-- [Piggyback (PB)](https://arxiv.org/abs/1801.06519)
-- [Elastic Weight Consolidation (EWC)](https://arxiv.org/abs/1612.00796) (online variant)
-- [Learning without Forgetting (LwF)](https://arxiv.org/abs/1606.09282) (online variant)
-- [Memory Aware Synapses (MAS)](https://arxiv.org/abs/1711.09601)
-- [Learning to Prompt (L2P)](https://arxiv.org/abs/2112.08654) (task-aware variant)
+
+- **Rehearsal-based**
+  - [Experience Replay (ER)](https://arxiv.org/abs/1811.11682)
+  - [Averaged Gradient Episodic Memory (A-GEM)](https://arxiv.org/abs/1812.00420)
+  - [Dark Experience Replay (DER)](https://arxiv.org/abs/2004.07211) (task-incremental variant)
+
+- **Architecture-based**
+  - [Progressive Neural Networks (PNN)](https://arxiv.org/abs/1606.04671)
+  - [Piggyback (PB)](https://arxiv.org/abs/1801.06519)
+  - [Learning to Prompt (L2P)](https://arxiv.org/abs/2112.08654) (task-aware variant)
+
+- **Regularization-based**
+  - [Elastic Weight Consolidation (EWC)](https://arxiv.org/abs/1612.00796) (online variant)
+  - [Learning without Forgetting (LwF)](https://arxiv.org/abs/1606.09282) (online variant)
+  - [Memory Aware Synapses (MAS)](https://arxiv.org/abs/1711.09601)
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -112,11 +120,39 @@ We do not include the checkpoints due to storage limits (each experiment with Wh
 
 Analyses generated via `analyze_logs.py` are available [here](https://www.dropbox.com/sh/0ndrp570vlsh893/AAC2WSZQu00ZducN80Ff5dWla?dl=0).
 
-All the experiments were run on five CentOS Linux 7 machines with an Intel(R) Xeon(R) Silver 4216 Cascade Lake CPU
+All the experiments were run on 5 CentOS Linux machines with an Intel(R) Xeon(R) Silver 4216 Cascade Lake CPU
 with 32 cores @ 2.10 GHz, 64 GB RAM and an NVIDIA Tesla V100 SXM2 @ 32 GB with CUDA Toolkit 11.4.
-With the specified hardware configuration, approximately one week is necessary to complete all the experiments.
+With the specified hardware configuration, approximately 10 days are necessary to complete all the experiments.
 
 **NOTE**: the checkpoint for WavLM large pretrained on the base languages is available [here](https://www.dropbox.com/sh/3h4k8ccn465bv48/AABM7fCNOU9tTQPD0vCT8-K4a?dl=0).
+
+---------------------------------------------------------------------------------------------------------
+
+## @ Citing
+
+If you use the CL-MASR benchmark, please cite:
+
+```bibtex
+@article{dellalibera2023clmasr,
+  author = {Luca Della Libera, Pooneh Mousavi, Salah Zaiem, Cem Subakan, Mirco Ravanelli},
+  title = {{CL-MASR}: A Continual Learning Benchmark for Multilingual {ASR}},
+  journal = {arXiv preprint arXiv:2310.16931},
+  year = {2023},
+  url = {https://arxiv.org/abs/2310.16931},
+}
+```
+
+If you use SpeechBrain, please cite:
+
+```bibtex
+@article{ravanelli2021speechbrain,
+  author = {Mirco Ravanelli and Titouan Parcollet and Peter Plantinga and Aku Rouhe and Samuele Cornell and Loren Lugosch and Cem Subakan and Nauman Dawalatabad and Abdelwahab Heba and Jianyuan Zhong and Ju-Chieh Chou and Sung-Lin Yeh and Szu-Wei Fu and Chien-Feng Liao and Elena Rastorgueva and François Grondin and William Aris and Hwidong Na and Yan Gao and Renato De Mori and Yoshua Bengio},
+  title = {{SpeechBrain}: A General-Purpose Speech Toolkit},
+  journal = {arXiv preprint arXiv:2106.04624},
+  year = {2021},
+  url = {https://arxiv.org/abs/2106.04624},
+}
+```
 
 ---------------------------------------------------------------------------------------------------------
 

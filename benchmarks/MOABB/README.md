@@ -63,6 +63,7 @@ To set up the benchmark, follow these steps:
    ```
 
    These commands will install the necessary dependencies for the benchmark, including both the base requirements and the additional requirements.
+   Please, make sure to have installed MOABB==0.4.6.
 
 ### Notes on MNE
 

@@ -1,5 +1,5 @@
 mne
-MOABB
+MOABB==0.4.6
 orion
 scikit-learn
 torchinfo

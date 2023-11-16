@@ -1,0 +1,204 @@
+# ############################################################################
+# Model: Transformer encoder-decoder with EnCodec audio representations (see https://arxiv.org/abs/2210.13438)
+# Authors: Luca Della Libera 2023
+# ############################################################################
+
+# Adapted from:
+# https://github.com/speechbrain/speechbrain/blob/unstable-v0.6/recipes/LibriSpeech/ASR/transformer/hparams/transformer.yaml
+
+experiment_name: !ref encodec
+
+# Seed needs to be set at top of YAML
+seed: 0
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+
+# Data preparation
+data_folder: !PLACEHOLDER
+train_csv: !ref <save_folder>/wsj0_<num_speakers>mix_tr.csv
+valid_csv: !ref <save_folder>/wsj0_<num_speakers>mix_cv.csv
+test_csv: !ref <save_folder>/wsj0_<num_speakers>mix_tt.csv
+num_speakers: 2
+version: wav8k/min
+
+# Output folders
+output_folder: !ref results/<experiment_name>/<seed>
+save_folder: !ref <output_folder>/save
+
+# Preprocessing parameters
+train_remove_if_longer: 60.0  # Seconds
+valid_remove_if_longer: 60.0  # Seconds
+test_remove_if_longer: 60.0  # Seconds
+sorting: ascending
+
+# Training parameters
+num_epochs: 100
+grad_accumulation_factor: 1
+dynamic_batching: False
+train_batch_size: 1
+valid_batch_size: 1
+test_batch_size: 1
+train_max_batch_length: 20.0  # Seconds
+valid_max_batch_length: 20.0  # Seconds
+test_max_batch_length: 20.0  # Seconds
+num_buckets: 80
+max_batch_size: 128
+dataloader_workers: 4
+nonfinite_patience: 10
+max_grad_norm: 5.0
+auto_mix_prec: True
+ckpt_interval_minutes: 600
+keep_checkpoints: 5
+augment: False
+
+# Special tokens
+pad_index: 0  # NOTE: must be 0 to comply with SpeechBrain padding convention
+bos_index: 1
+eos_index: 2
+sot_index: 3  # To separate sources in serialized output training
+token_shift: 4  # NOTE: must be equal to the number of defined special tokens
+
+# Optimizer parameters
+lr: 0.0001
+weight_decay: 0.01
+warmup_steps: 10000
+enable_scheduler: True
+
+# Codec parameters
+sample_rate: 24000  # NOTE: must match the codec's sample rate
+vocab_size: !ref 1024 + <token_shift>  # NOTE: must match the codec's codebook size + the number of special tokens
+bandwidth: 1.5  # The larger the bandwidth, the larger the sequence length
+
+# Encoder/decoder parameters
+embedding_dim: 256  # NOTE: must match the codec embedding size times the number of codebooks
+dropout: 0.1
+activation: !name:torch.nn.GELU
+d_model: 256
+nhead: 4
+encoder_layers: 6
+decoder_layers: 6
+d_ffn: 2048
+max_length: 5000
+
+# Search parameters
+valid_search_freq: 1
+beam_size: 4
+min_decode_ratio: 0.0
+max_decode_ratio: 1.0
+temperature: 1.15
+
+# Pretrained model (to load as initial checkpoint)
+model_path: null
+
+# Modules
+# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec) (applied during data loading on CPU)
+codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
+    source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
+    save_path: !ref <save_folder>
+    sample_rate: !ref <sample_rate>
+    bandwidth: !ref <bandwidth>
+    flat_embeddings: True
+    freeze: True
+    renorm_embeddings: True
+
+# Augmentation (applied during data loading on CPU)
+augmentation: !new:speechbrain.lobes.augment.TimeDomainSpecAugment
+    perturb_prob: 1.0
+    drop_freq_prob: 0.0
+    drop_chunk_prob: 0.0
+    sample_rate: !ref <sample_rate>
+    speeds: [95, 100, 105]
+
+encoder_embedding: !new:torch.nn.Embedding
+    num_embeddings: !ref <vocab_size>
+    embedding_dim: !ref <embedding_dim>
+    padding_idx: !ref <pad_index>
+
+transformer: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
+    input_size: !ref <embedding_dim>
+    tgt_vocab: !ref <vocab_size>
+    d_model: !ref <d_model>
+    nhead: !ref <nhead>
+    num_encoder_layers: !ref <encoder_layers>
+    num_decoder_layers: !ref <decoder_layers>
+    d_ffn: !ref <d_ffn>
+    dropout: !ref <dropout>
+    activation: !ref <activation>
+    max_length: !ref <max_length>
+    encoder_module: transformer
+    attention_type: regularMHA
+    normalize_before: True
+    causal: False
+
+ce_head: !new:speechbrain.nnet.linear.Linear
+    input_size: !ref <d_model>
+    n_neurons: !ref <vocab_size>
+
+modules:
+    #encoder_embedding: !ref <encoder_embedding>
+    transformer: !ref <transformer>
+    ce_head: !ref <ce_head>
+
+model: !new:torch.nn.ModuleList
+    [[#!ref <encoder_embedding>,
+      !ref <transformer>,
+      !ref <ce_head>]]
+
+# Loss functions
+ce_loss: !new:torch.nn.CrossEntropyLoss
+    ignore_index: !ref <pad_index>
+
+# Optimizers
+opt_class: !name:torch.optim.AdamW
+    lr: !ref <lr>
+    betas: (0.9, 0.98)
+    eps: 1.e-8
+    weight_decay: !ref <weight_decay>
+
+scheduler: !new:speechbrain.nnet.schedulers.NoamScheduler
+    lr_initial: !ref <lr>
+    n_warmup_steps: !ref <warmup_steps>
+
+# Searchers
+greedy_searcher: !new:speechbrain.decoders.S2STransformerBeamSearcher
+    modules: [!ref <transformer>, !ref <ce_head>]
+    bos_index: !ref <bos_index>
+    eos_index: !ref <eos_index>
+    min_decode_ratio: !ref <min_decode_ratio>
+    max_decode_ratio: !ref <max_decode_ratio>
+    beam_size: 1
+
+beam_searcher: !new:speechbrain.decoders.S2STransformerBeamSearcher
+    modules: [!ref <transformer>, !ref <ce_head>]
+    bos_index: !ref <bos_index>
+    eos_index: !ref <eos_index>
+    min_decode_ratio: !ref <min_decode_ratio>
+    max_decode_ratio: !ref <max_decode_ratio>
+    beam_size: !ref <beam_size>
+    temperature: !ref <temperature>
+
+# Performance metrics
+ter_computer: !name:speechbrain.utils.metric_stats.ErrorRateStats
+
+# Counters, checkpointers, loggers, etc.
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <num_epochs>
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        model: !ref <model>
+        scheduler: !ref <scheduler>
+        counter: !ref <epoch_counter>
+
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <output_folder>/train_log.txt
+
+# Pretrainer
+pretrainer: !new:speechbrain.utils.parameter_transfer.Pretrainer
+    collect_in: !ref <save_folder>
+    loadables:
+        model: !ref <model>
+    paths:
+        model: !ref <model_path>
+    conditions:
+        model: !ref <model_path>

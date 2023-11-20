@@ -33,7 +33,7 @@ class Enhancement(sb.Brain):
 
         batch = batch.to(self.device)
         in_tokens, in_tokens_lens = batch.in_tokens
-        out_tokens_bos, out_tokens_bos_lens = batch.out_tokens_bos
+        out_tokens_bos, _ = batch.out_tokens_bos
 
         if "encoder_embedding" in self.modules:
             # Forward encoder embedding layer
@@ -194,7 +194,7 @@ def dataio_prepare(hparams, codec):
         "out_tokens_eos",
     ]
 
-    def audio_pipeline(noisy_wav, clean_wav, training=True):
+    def audio_pipeline(noisy_wav, clean_wav, is_training=True):
         # Noisy signal
         noisy_sig, sample_rate = torchaudio.load(noisy_wav)
         noisy_sig = noisy_sig[None]  # [B=1, C=1, T]
@@ -203,7 +203,7 @@ def dataio_prepare(hparams, codec):
         )
 
         # Augment if specified
-        if training and hparams["augment"] and "augmentation" in hparams:
+        if is_training and hparams["augment"] and "augmentation" in hparams:
             noisy_sig = hparams["augmentation"](
                 noisy_sig.movedim(-1, -2), torch.LongTensor([1]),
             ).movedim(-1, -2)
@@ -250,7 +250,9 @@ def dataio_prepare(hparams, codec):
     )
     sb.dataio.dataset.add_dynamic_item(
         [valid_data, test_data],
-        lambda *args, **kwargs: audio_pipeline(*args, **kwargs, training=False),
+        lambda *args, **kwargs: audio_pipeline(
+            *args, **kwargs, is_training=False
+        ),
         takes,
         provides,
     )

@@ -6,7 +6,7 @@
 # Adapted from:
 # https://github.com/speechbrain/speechbrain/blob/unstable-v0.6/recipes/LibriSpeech/ASR/seq2seq/hparams/train_BPE_1000.yaml
 
-experiment_name: !ref encodec
+experiment_name: encodec
 
 # Seed needs to be set at top of YAML
 seed: 0

@@ -13,9 +13,10 @@ Authors
 # Adapted from:
 # https://github.com/speechbrain/speechbrain/blob/unstable-v0.6/recipes/LibriSpeech/ASR/transformer/train.py
 
-# TODO: permutation invariant loss
 # TODO: vocoding and related metrics (SI-SNR, etc.)
 
+import itertools
+import math
 import os
 import sys
 
@@ -34,7 +35,17 @@ class Separation(sb.Brain):
 
         batch = batch.to(self.device)
         in_tokens, in_tokens_lens = batch.in_tokens
-        out_tokens_bos, out_tokens_bos_lens = batch.out_tokens_bos
+        all_out_tokens_bos = []
+        num_perms = 0
+        while True:
+            try:
+                out_tokens_bos, _ = batch[f"out_tokens_bos_{num_perms}"]
+                all_out_tokens_bos.append(out_tokens_bos)
+                num_perms += 1
+            except KeyError:
+                break
+        # Shape of out_tokens_bos: [num_perms, B, T]
+        out_tokens_bos = torch.stack(all_out_tokens_bos)
 
         if "encoder_embedding" in self.modules:
             # Forward encoder embedding layer
@@ -43,6 +54,11 @@ class Separation(sb.Brain):
             # If there is no encoder embedding layer, use the codec's embeddings
             enc_embs, enc_embs_lens = batch.in_embs
             assert (in_tokens_lens == enc_embs_lens).all()
+
+        # Expand and reshape as [num_perms * B, ...]
+        enc_embs = enc_embs.expand(num_perms, -1, -1, -1).flatten(end_dim=1)
+        out_tokens_bos = out_tokens_bos.flatten(end_dim=1)
+        in_tokens_lens = in_tokens_lens.expand(num_perms, -1).flatten()
 
         # Forward transformer
         enc_out, dec_out = self.modules.transformer(
@@ -76,15 +92,37 @@ class Separation(sb.Brain):
 
         IDs = batch.id
         _, in_tokens_lens = batch.in_tokens
-        out_tokens_eos, _ = batch.out_tokens_eos
-        out_tokens_list = batch.out_tokens_list
+        out_tokens_lists = batch.out_tokens_lists
+        all_out_tokens_eos, all_out_tokens_eos_lens = [], []
+        num_perms = 0
+        while True:
+            try:
+                out_tokens_eos, out_tokens_eos_lens = batch[
+                    f"out_tokens_eos_{num_perms}"
+                ]
+                all_out_tokens_eos.append(out_tokens_eos)
+                all_out_tokens_eos_lens.append(out_tokens_eos_lens)
+                num_perms += 1
+            except KeyError:
+                break
+        # Shape of out_tokens_eos: [num_perms, B, T]
+        out_tokens_eos = torch.stack(all_out_tokens_eos)
+        out_tokens_eos_lens = torch.stack(all_out_tokens_eos_lens)
 
-        # CE loss
+        # CE loss for each permutation
         loss = self.hparams.ce_loss(
-            logits.flatten(end_dim=-2), out_tokens_eos.flatten()
-        )
+            logits.flatten(end_dim=-2), out_tokens_eos.flatten(),
+        ).reshape_as(out_tokens_eos)
+        loss = loss.sum(dim=-1) / out_tokens_eos_lens
+        loss, idxes = loss.min(dim=0)
+        loss = loss.mean()
 
         if hyps is not None:
+            out_tokens_list = [
+                x[idx] for x, idx in zip(out_tokens_lists, idxes)
+            ]
+            hyps = [hyps[i + idx] for i, idx in enumerate(idxes)]
+
             assert len(hyps) == len(out_tokens_list)
 
             # Compute TER
@@ -184,18 +222,21 @@ def dataio_prepare(hparams, codec):
     datasets = [train_data, valid_data, test_data]
 
     # 2. Define audio pipeline
+    num_perms = (
+        math.factorial(hparams["num_speakers"]) if hparams["use_pit"] else 1
+    )
     takes = ["mix_wav"] + [
         f"src{i}_wav" for i in range(1, hparams["num_speakers"] + 1)
     ]
     provides = [
         "in_tokens",
         "in_embs",
-        "out_tokens_list",
-        "out_tokens_bos",
-        "out_tokens_eos",
+        "out_tokens_lists",
+        *[f"out_tokens_bos_{i}" for i in range(num_perms)],
+        *[f"out_tokens_eos_{i}" for i in range(num_perms)],
     ]
 
-    def audio_pipeline(mix_wav, *src_wavs, training=True):
+    def audio_pipeline(mix_wav, *src_wavs, is_training=True):
         # Mixed signal
         mix_sig, sample_rate = torchaudio.load(mix_wav)
         mix_sig = mix_sig[None]  # [B=1, C=1, T]
@@ -204,7 +245,7 @@ def dataio_prepare(hparams, codec):
         )
 
         # Augment if specified
-        if training and hparams["augment"] and "augmentation" in hparams:
+        if is_training and hparams["augment"] and "augmentation" in hparams:
             mix_sig = hparams["augmentation"](
                 mix_sig.movedim(-1, -2), torch.LongTensor([1]),
             ).movedim(-1, -2)
@@ -222,7 +263,7 @@ def dataio_prepare(hparams, codec):
         # Original signals
         src_sigs_list = []
         src_tokens_list = []
-        out_tokens_list = []
+        out_tokens_lists = []
         for wav in src_wavs:
             src_sig, sample_rate = torchaudio.load(wav)
             src_sig = src_sig[None]  # [B=1, C=1, T]
@@ -237,27 +278,44 @@ def dataio_prepare(hparams, codec):
                 "token_shift"
             ]  # Shift by `token_shift` to account for special tokens
             src_tokens = src_tokens.tolist()
-            out_tokens_list += src_tokens
-            out_tokens_list += [hparams["sot_index"]]  # Add separator token
+            out_tokens_lists.append(src_tokens)
 
-        yield out_tokens_list
-
-        out_tokens_bos = torch.LongTensor(
-            [hparams["bos_index"]] + out_tokens_list
+        # If permutation invariant training is enabled, build all possible permutations
+        perms = (
+            itertools.permutations(out_tokens_lists)
+            if hparams["use_pit"]
+            else [out_tokens_lists]
         )
-        yield out_tokens_bos
+        out_tokens_lists = []
+        for perm in perms:
+            out_tokens_list = []
+            for src_tokens_list in perm:
+                out_tokens_list += src_tokens_list
+                out_tokens_list += [hparams["sot_index"]]  # Add separator token
+            out_tokens_lists.append(out_tokens_list)
 
-        out_tokens_eos = torch.LongTensor(
-            out_tokens_list + [hparams["eos_index"]]
-        )
-        yield out_tokens_eos
+        yield out_tokens_lists  # One list of output tokens for each permutation
+
+        for out_tokens_list in out_tokens_lists:
+            out_tokens_bos = torch.LongTensor(
+                [hparams["bos_index"]] + out_tokens_list
+            )
+            yield out_tokens_bos
+
+        for out_tokens_list in out_tokens_lists:
+            out_tokens_eos = torch.LongTensor(
+                out_tokens_list + [hparams["eos_index"]]
+            )
+            yield out_tokens_eos
 
     sb.dataio.dataset.add_dynamic_item(
         [train_data], audio_pipeline, takes, provides
     )
     sb.dataio.dataset.add_dynamic_item(
         [valid_data, test_data],
-        lambda *args, **kwargs: audio_pipeline(*args, **kwargs, training=False),
+        lambda *args, **kwargs: audio_pipeline(
+            *args, **kwargs, is_training=False
+        ),
         takes,
         provides,
     )

@@ -6,7 +6,7 @@
 # Adapted from:
 # https://github.com/speechbrain/speechbrain/blob/unstable-v0.6/recipes/LibriSpeech/ASR/transformer/hparams/transformer.yaml
 
-experiment_name: !ref encodec
+experiment_name: encodec
 
 # Seed needs to be set at top of YAML
 seed: 0
@@ -50,6 +50,7 @@ auto_mix_prec: True
 ckpt_interval_minutes: 600
 keep_checkpoints: 5
 augment: False
+use_pit: False  # Set to True to use permutation invariant training loss
 
 # Special tokens
 pad_index: 0  # NOTE: must be 0 to comply with SpeechBrain padding convention
@@ -147,6 +148,7 @@ model: !new:torch.nn.ModuleList
 # Loss functions
 ce_loss: !new:torch.nn.CrossEntropyLoss
     ignore_index: !ref <pad_index>
+    reduction: none
 
 # Optimizers
 opt_class: !name:torch.optim.AdamW

@@ -39,17 +39,6 @@ To set up the benchmark, follow these steps:
    pip install speechbrain
    ```
 
-**Note:** Before the release of SpeechBrain v1.0, you'll need to clone and install the SpeechBrain repository as follows:
-
-    ```shell
-    git clone https://github.com/speechbrain/speechbrain/
-    cd speechbrain
-    pip install -r requirements.txt
-    pip install -e .
-    cd ..
-    ```
-
-
 2. Clone the benchmark repository:
    ```shell
    git clone https://github.com/speechbrain/benchmarks/

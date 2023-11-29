@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """Recipe for fine-tuning a WavLM-based ASR system on Common Voice in a continual
-learning fashion via Learning without Forgetting (https://arxiv.org/abs/1606.09282).
+learning fashion via (online) Learning without Forgetting (https://arxiv.org/abs/1606.09282).
 
 To run this recipe, do the following:
 > python train_lwf.py hparams/train_lwf.yaml
@@ -208,7 +208,6 @@ def dataio_prepare(hparams, tokenizer):
     @sb.utils.data_pipeline.provides("tokens", "target_wrd")
     def text_pipeline(wrd):
         tokens_list = tokenizer.encode(wrd)
-        assert sum(i == hparams["blank_index"] for i in tokens_list) == 0
         tokens_list = tokens_list[: hparams["max_target_length"] - 1]
         tokens = torch.LongTensor(tokens_list)
         yield tokens

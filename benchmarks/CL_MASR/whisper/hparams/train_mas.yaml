@@ -1,15 +1,15 @@
 # ############################################################################
 # Model: Whisper (encoder-decoder) + cross-entropy loss
-# Authors: Luca Della Libera 2023, Pooneh Mousavi 2023
+# Authors: Luca Della Libera 2023
 # ############################################################################
 
-experiment_name: EWC
+experiment_name: MAS
 
 seed: 0
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 skip_test: False
-skip_ewc: False
+skip_mas: False
 
 # Data preparation
 base_locales: [en, zh-CN, de, es, ru, fr, pt, ja, tr, pl]
@@ -38,8 +38,8 @@ num_epochs: 2
 lr: 0.0001
 improvement_threshold: 0.0025
 annealing_factor: 0.8
-ewc_lambda: 5.0
-ewc_alpha: 0.5
+mas_lambda: 1.0
+mas_alpha: 0.5
 
 whisper_variant: whisper-large-v2
 encoder_only: False

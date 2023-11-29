@@ -87,7 +87,6 @@ discrete_model: !new:speechbrain.lobes.models.huggingface_transformers.encodec.E
    bandwidth: 12
    sample_rate: 24000
    save_path: !ref <output_folder>/voila
-   
 
 enc: !new:speechbrain.nnet.RNN.LSTM
    input_shape: [Null, Null, !ref <encoder_dim>]

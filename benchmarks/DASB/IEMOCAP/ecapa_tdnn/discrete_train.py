@@ -15,6 +15,7 @@ from hyperpyyaml import load_hyperpyyaml
 import torchaudio
 import torch
 
+
 class EmoIdBrain(sb.Brain):
     def compute_forward(self, batch, stage):
         """Computation pipeline based on a encoder + emotion classifier."""
@@ -22,7 +23,7 @@ class EmoIdBrain(sb.Brain):
         wavs, wav_lens = batch.sig
         wavs, wav_lens = wavs.to(self.device), wav_lens.to(self.device)
         tokens, feats = self.modules.discrete_model(wavs, wav_lens)
-        feats =torch.reshape(feats, (feats.shape[0], feats.shape[1], -1))
+        feats = torch.reshape(feats, (feats.shape[0], feats.shape[1], -1))
         embeddings = self.modules.embedding_model(feats, wav_lens)
         outputs = self.modules.classifier(embeddings)
         outputs = self.hparams.log_softmax(outputs)
@@ -99,7 +100,6 @@ class EmoIdBrain(sb.Brain):
                 self.model_optimizer, new_lr
             )
 
-
             # The train_logger writes a summary to stdout and to the logfile.
             self.hparams.train_logger.log_stats(
                 {"Epoch": epoch, "lr": old_lr},
@@ -128,7 +128,7 @@ class EmoIdBrain(sb.Brain):
 
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)
-        
+
 
 def dataio_prep(hparams):
     """This function prepares the datasets to be used in the brain class.

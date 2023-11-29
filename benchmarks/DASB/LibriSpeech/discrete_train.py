@@ -25,7 +25,7 @@ class ASR(sb.Brain):
         wavs, wav_lens = wavs.to(self.device), wav_lens.to(self.device)
         # Forward pass
         tokens, feats = self.modules.discrete_model(wavs, wav_lens)
-        feats =torch.reshape(feats, (feats.shape[0], feats.shape[1], -1))
+        feats = torch.reshape(feats, (feats.shape[0], feats.shape[1], -1))
         y = self.modules.enc(feats)
         y = y[0]  # As it is an RNN output
         # Compute outputs
@@ -141,6 +141,7 @@ class ASR(sb.Brain):
         # Initializing the weights
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)
+
 
 def dataio_prepare(hparams):
     """This function prepares the datasets to be used in the brain class.

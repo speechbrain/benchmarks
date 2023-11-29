@@ -71,11 +71,11 @@ test_dataloader_opts:
 
 
 discrete_model: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec # yamllint disable-line rule:line-length
-   source: /gpfsscratch/rech/nou/uzn19yk/encodec_24khz/
-   bandwidth: 12
-   sample_rate: 24000
-   save_path: !ref <output_folder>/voila
- 
+    source: /gpfsscratch/rech/nou/uzn19yk/encodec_24khz/
+    bandwidth: 12
+    sample_rate: 24000
+    save_path: !ref <output_folder>/voila
+
 embedding_model: !new:speechbrain.lobes.models.ECAPA_TDNN.ECAPA_TDNN
     input_size: !ref <encoder_dim>
     channels: [512, 512, 512, 512, 1536]

@@ -19,9 +19,7 @@ __all__ = [
 ]
 
 
-_TOKENIZER_URL = (
-    "https://www.dropbox.com/sh/tbjuwi9yo1fv2ez/AADRL8BIRX-K-aaMyIwrRovEa/tokenizer?dl=1"
-)
+_TOKENIZER_URL = "https://www.dropbox.com/sh/tbjuwi9yo1fv2ez/AADRL8BIRX-K-aaMyIwrRovEa/tokenizer?dl=1"
 
 _TOKENIZER_PATH = os.path.join(os.path.dirname(__file__), "tokenizer")
 

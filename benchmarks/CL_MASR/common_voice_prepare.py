@@ -40,9 +40,7 @@ _SPLITS = ["train", "dev", "test"]
 
 # Random indices are not generated on the fly but statically read from a predefined
 # file to avoid reproducibility issues on different platforms and/or Python versions
-_RANDOM_IDXES_URL = (
-    "https://www.dropbox.com/sh/vfxrb7z0p79vhqt/AABHTNviie2xobwMOHfpPdy_a/random_idxes.txt?dl=1"
-)
+_RANDOM_IDXES_URL = "https://www.dropbox.com/sh/vfxrb7z0p79vhqt/AABHTNviie2xobwMOHfpPdy_a/random_idxes.txt?dl=1"
 
 _RANDOM_IDXES_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "random_idxes.txt"

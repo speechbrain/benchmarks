@@ -37,38 +37,37 @@ dynamic_batching: False
 train_batch_size: 8
 valid_batch_size: 8
 test_batch_size: 8
-train_max_batch_length: 30.0  # Seconds
-valid_max_batch_length: 30.0  # Seconds
-test_max_batch_length: 30.0  # Seconds
+train_max_batch_length: 40.0  # Seconds
+valid_max_batch_length: 40.0  # Seconds
+test_max_batch_length: 40.0  # Seconds
 num_buckets: 40
 max_batch_size: 128
-dataloader_workers: 8
+dataloader_workers: 4
 nonfinite_patience: 10
-max_grad_norm: 1.0
+max_grad_norm: 5.0
 precision: fp16
 ckpt_interval_minutes: 600
 keep_checkpoints: 2
-augment: False
-
-# Special tokens
-pad_index: 0  # NOTE: must be 0 to comply with SpeechBrain padding convention
-token_shift: 1  # NOTE: must be equal to the number of defined special tokens
+augment: True
 
 # Optimizer parameters
-lr: 0.0001
+lr: 0.0005
 weight_decay: 0.01
 improvement_threshold: 0.0025
 annealing_factor: 0.9
 patient: 0
 enable_scheduler: True
 
-# Codec parameters
-sample_rate: 24000  # NOTE: must match the codec's sample rate
-vocab_size: !ref 1024 + <token_shift>  # NOTE: must match the codec's codebook size + the number of special tokens
-bandwidth: 1.5  # The larger the bandwidth, the larger the sequence length
+# EnCodec parameters
+sample_rate: 24000  # NOTE: must match EnCodec's sample rate
+vocab_size: 1024  # NOTE: must match EnCodec's codebook size
+bandwidth: 1.5  # [1.5, 3.0, 6.0, 12.0, 24.0]
+num_codebooks: 2  # NOTE: must match EnCodec's number of codebooks at the given bandwidth [2, 4, 8, 16, 32]
 
 # Encoder parameters
-embedding_dim: 256  # NOTE: must match the codec embedding size times the number of codebooks
+embedding_dim: 128  # NOTE: if using pretrained embeddings, must match EnCodec's embedding size
+freeze_embeddings: False
+use_pretrained_embeddings: False
 dropout: 0.1
 activation: !name:torch.nn.GELU
 d_model: 256
@@ -80,10 +79,7 @@ max_length: 5000
 # Search parameters
 valid_search_freq: 1
 
-# Pretrained model (to load as initial checkpoint)
-model_path: null
-
-# Augmentations (applied during data loading on CPU)
+# Augmentation
 drop_freq: !new:speechbrain.augment.time_domain.DropFreq
     drop_freq_low: 0  # Min frequency band dropout probability
     drop_freq_high: 1  # Max frequency band dropout probability
@@ -107,23 +103,29 @@ augmentation: !new:speechbrain.augment.augmenter.Augmenter
     augment_prob: 0.5
     augmentations: [!ref <drop_freq>, !ref <drop_chunk>]
 
-# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec) (applied during data loading on CPU)
+# Modules
+# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
 codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
     source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
     save_path: !ref <save_folder>
     sample_rate: !ref <sample_rate>
     bandwidth: !ref <bandwidth>
-    flat_embeddings: True
+    flat_embeddings: False
     freeze: True
-    renorm_embeddings: True
+    renorm_embeddings: False
 
-# Modules
-embedding: !new:torch.nn.Embedding
+embedding1: !new:torch.nn.Embedding
     num_embeddings: !ref <vocab_size>
     embedding_dim: !ref <embedding_dim>
-    padding_idx: !ref <pad_index>
 
-transformer: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
+embedding2: !new:torch.nn.Embedding
+    num_embeddings: !ref <vocab_size>
+    embedding_dim: !ref <embedding_dim>
+
+embeddings: !new:torch.nn.ModuleList
+    modules: [!ref <embedding1>, !ref <embedding2>]
+
+encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
     input_size: !ref <embedding_dim>
     tgt_vocab: !ref <vocab_size>
     d_model: !ref <d_model>
@@ -138,19 +140,28 @@ transformer: !new:speechbrain.lobes.models.transformer.TransformerASR.Transforme
     normalize_before: True
     causal: False
 
-ce_head: !new:speechbrain.nnet.linear.Linear
+ce_head1: !new:speechbrain.nnet.linear.Linear
     input_size: !ref <d_model>
     n_neurons: !ref <vocab_size>
 
+ce_head2: !new:speechbrain.nnet.linear.Linear
+    input_size: !ref <d_model>
+    n_neurons: !ref <vocab_size>
+
+ce_heads: !new:torch.nn.ModuleList
+    modules: [!ref <ce_head1>, !ref <ce_head2>]
+
 modules:
-    embedding: !ref <embedding>
-    transformer: !ref <transformer>
-    ce_head: !ref <ce_head>
+    codec: !ref <codec>
+    embeddings: !ref <embeddings>
+    encoder: !ref <encoder>
+    ce_heads: !ref <ce_heads>
 
 model: !new:torch.nn.ModuleList
-    [[!ref <embedding>,
-      !ref <transformer>,
-      !ref <ce_head>]]
+    [[!ref <codec>,
+      !ref <embeddings>,
+      !ref <encoder>,
+      !ref <ce_heads>]]
 
 # Loss functions
 ce_loss: !name:speechbrain.nnet.losses.nll_loss
@@ -188,13 +199,3 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
 
 train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
     save_file: !ref <output_folder>/train_log.txt
-
-# Pretrainer
-pretrainer: !new:speechbrain.utils.parameter_transfer.Pretrainer
-    collect_in: !ref <save_folder>
-    loadables:
-        model: !ref <model>
-    paths:
-        model: !ref <model_path>
-    conditions:
-        model: !ref <model_path>

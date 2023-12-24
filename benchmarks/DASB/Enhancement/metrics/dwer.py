@@ -70,10 +70,10 @@ class ComputeScore:
         self.wer_computer.append(["ID"], hyp_text, ref_text)
         dwer = self.wer_computer.summarize("WER")
         self.wer_computer.clear()
-        return dwer
+        return dwer, " ".join(hyp_text[0]), " ".join(ref_text[0])
 
 
 root_folder = os.path.dirname(os.path.realpath(__file__))
 save_path = os.path.join(root_folder, "save")
 
-DWER = ComputeScore("openai/whisper-tiny", save_path, SAMPLING_RATE)
+DWER = ComputeScore("openai/whisper-small", save_path, SAMPLING_RATE)

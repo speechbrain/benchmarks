@@ -31,7 +31,7 @@ test_remove_if_longer: 60.0  # Seconds
 sorting: ascending
 
 # Training parameters
-num_epochs: 20
+num_epochs: 100
 grad_accumulation_factor: 1
 dynamic_batching: False
 train_batch_size: 8

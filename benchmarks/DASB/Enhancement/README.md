@@ -1,7 +1,7 @@
-# Speech Enhancement with Discrete Speech Representations
+# Speech Enhancement with Discrete Audio Representations
 
 This [SpeechBrain](https://speechbrain.github.io) recipe includes scripts to train speech enhancement systems
-based on discrete speech representations.
+based on discrete audio representations.
 
 ---------------------------------------------------------------------------------------------------------
 

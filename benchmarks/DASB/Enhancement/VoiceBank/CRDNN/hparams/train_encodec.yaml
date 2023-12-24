@@ -1,10 +1,7 @@
 # ############################################################################
-# Model: RNN encoder-decoder with EnCodec audio representations (see https://arxiv.org/abs/2210.13438)
+# Model: CRDNN with EnCodec audio representations (see https://arxiv.org/abs/2210.13438)
 # Authors: Luca Della Libera 2023
 # ############################################################################
-
-# Adapted from:
-# https://github.com/speechbrain/speechbrain/blob/unstable-v0.6/recipes/LibriSpeech/ASR/seq2seq/hparams/train_BPE_1000.yaml
 
 experiment_name: encodec
 
@@ -23,6 +20,10 @@ num_valid_speakers: 2
 output_folder: !ref results/<experiment_name>/<seed>
 save_folder: !ref <output_folder>/save
 
+# Save options
+vocode: True
+save_audios: True
+
 # Preprocessing parameters
 train_remove_if_longer: 60.0  # Seconds
 valid_remove_if_longer: 60.0  # Seconds
@@ -30,36 +31,34 @@ test_remove_if_longer: 60.0  # Seconds
 sorting: ascending
 
 # Training parameters
-num_epochs: 100
+num_epochs: 20
 grad_accumulation_factor: 1
 dynamic_batching: False
-train_batch_size: 1
-valid_batch_size: 1
-test_batch_size: 1
-train_max_batch_length: 20.0  # Seconds
-valid_max_batch_length: 20.0  # Seconds
-test_max_batch_length: 20.0  # Seconds
-num_buckets: 80
+train_batch_size: 8
+valid_batch_size: 8
+test_batch_size: 8
+train_max_batch_length: 30.0  # Seconds
+valid_max_batch_length: 30.0  # Seconds
+test_max_batch_length: 30.0  # Seconds
+num_buckets: 40
 max_batch_size: 128
-dataloader_workers: 4
+dataloader_workers: 8
 nonfinite_patience: 10
-max_grad_norm: 5.0
-auto_mix_prec: True
+max_grad_norm: 1.0
+precision: fp16
 ckpt_interval_minutes: 600
-keep_checkpoints: 5
+keep_checkpoints: 2
 augment: False
 
 # Special tokens
 pad_index: 0  # NOTE: must be 0 to comply with SpeechBrain padding convention
-bos_index: 1
-eos_index: 2
-token_shift: 3  # NOTE: must be equal to the number of defined special tokens
+token_shift: 1  # NOTE: must be equal to the number of defined special tokens
 
 # Optimizer parameters
 lr: 0.0001
 weight_decay: 0.01
 improvement_threshold: 0.0025
-annealing_factor: 0.8
+annealing_factor: 0.9
 patient: 0
 enable_scheduler: True
 
@@ -68,36 +67,52 @@ sample_rate: 24000  # NOTE: must match the codec's sample rate
 vocab_size: !ref 1024 + <token_shift>  # NOTE: must match the codec's codebook size + the number of special tokens
 bandwidth: 1.5  # The larger the bandwidth, the larger the sequence length
 
-# Encoder/decoder parameters
+# Encoder parameters
 embedding_dim: 256  # NOTE: must match the codec embedding size times the number of codebooks
 dropout: 0.1
 activation: !name:torch.nn.LeakyReLU
-encoder_rnn_class: !name:speechbrain.nnet.RNN.LSTM
-encoder_rnn_layers: 8
-encoder_time_pooling_size: 4
-encoder_rnn_bidirectional: True
-encoder_rnn_neurons: 256
-encoder_dnn_blocks: 2
-encoder_dnn_neurons: 256
-decoder_rnn_type: lstm
-decoder_rnn_layers: 6
-decoder_neurons: 256
-decoder_attn_type: location
-decoder_attn_dim: 1024
-decoder_attn_channels: 10
-decoder_attn_kernel_size: 100
+rnn_class: !name:speechbrain.nnet.RNN.LSTM
+rnn_layers: 5
+time_pooling_size: 1
+rnn_bidirectional: True
+rnn_neurons: 256
+dnn_blocks: 2
+dnn_neurons: 256
+cnn_blocks: 2
+cnn_channels: (64, 64)
+inter_layer_pooling_size: (2, 2)
+cnn_kernelsize: (3, 3)
 
 # Search parameters
 valid_search_freq: 1
-beam_size: 4
-min_decode_ratio: 0.0
-max_decode_ratio: 1.0
-temperature: 1.15
 
 # Pretrained model (to load as initial checkpoint)
 model_path: null
 
-# Modules
+# Augmentations (applied during data loading on CPU)
+drop_freq: !new:speechbrain.augment.time_domain.DropFreq
+    drop_freq_low: 0  # Min frequency band dropout probability
+    drop_freq_high: 1  # Max frequency band dropout probability
+    drop_freq_count_low: 1  # Min number of frequency bands to drop
+    drop_freq_count_high: 3  # Max number of frequency bands to drop
+    drop_freq_width: 0.05  # Width of frequency bands to drop
+
+drop_chunk: !new:speechbrain.augment.time_domain.DropChunk
+    drop_length_low: 1  # Min number of audio chunks to drop
+    drop_length_high: 5  # Max number of audio chunks to drop
+    drop_count_low: 1000  # Min length of audio chunks to drop
+    drop_count_high: 2000  # Max length of audio chunks to drop
+
+augmentation: !new:speechbrain.augment.augmenter.Augmenter
+    parallel_augment: False
+    concat_original: False
+    repeat_augment: 1
+    shuffle_augmentations: False
+    min_augmentations: 2
+    max_augmentations: 2
+    augment_prob: 0.5
+    augmentations: [!ref <drop_freq>, !ref <drop_chunk>]
+
 # EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec) (applied during data loading on CPU)
 codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
     source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
@@ -108,75 +123,51 @@ codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
     freeze: True
     renorm_embeddings: True
 
-# Augmentation (applied during data loading on CPU)
-augmentation: !new:speechbrain.lobes.augment.TimeDomainSpecAugment
-    perturb_prob: 1.0
-    drop_freq_prob: 0.0
-    drop_chunk_prob: 0.0
-    sample_rate: !ref <sample_rate>
-    speeds: [95, 100, 105]
-
-encoder_embedding: !new:torch.nn.Embedding
+# Modules
+embedding: !new:torch.nn.Embedding
     num_embeddings: !ref <vocab_size>
     embedding_dim: !ref <embedding_dim>
     padding_idx: !ref <pad_index>
 
-encoder: !new:speechbrain.lobes.models.CRDNN.CRDNN
+crdnn: !new:speechbrain.lobes.models.CRDNN.CRDNN
     input_shape: [null, null, !ref <embedding_dim>]
     activation: !ref <activation>
     dropout: !ref <dropout>
-    cnn_blocks: 0
+    cnn_blocks: !ref <cnn_blocks>
+    cnn_channels: !ref <cnn_channels>
+    cnn_kernelsize: !ref <cnn_kernelsize>
+    inter_layer_pooling_size: !ref <inter_layer_pooling_size>
     time_pooling: True
     using_2d_pooling: False
-    time_pooling_size: !ref <encoder_time_pooling_size>
-    rnn_class: !ref <encoder_rnn_class>
-    rnn_layers: !ref <encoder_rnn_layers>
-    rnn_neurons: !ref <encoder_rnn_neurons>
-    rnn_bidirectional: !ref <encoder_rnn_bidirectional>
-    dnn_blocks: !ref <encoder_dnn_blocks>
-    dnn_neurons: !ref <encoder_dnn_neurons>
+    time_pooling_size: !ref <time_pooling_size>
+    rnn_class: !ref <rnn_class>
+    rnn_layers: !ref <rnn_layers>
+    rnn_neurons: !ref <rnn_neurons>
+    rnn_bidirectional: !ref <rnn_bidirectional>
+    dnn_blocks: !ref <dnn_blocks>
+    dnn_neurons: !ref <dnn_neurons>
     rnn_re_init: True
     use_rnnp: False
 
-decoder_embedding: !new:torch.nn.Embedding
-    num_embeddings: !ref <vocab_size>
-    embedding_dim: !ref <embedding_dim>
-    padding_idx: !ref <pad_index>
-
-decoder: !new:speechbrain.nnet.RNN.AttentionalRNNDecoder
-    enc_dim: !ref <encoder_dnn_neurons>
-    input_size: !ref <embedding_dim>
-    rnn_type: !ref <decoder_rnn_type>
-    hidden_size: !ref <decoder_neurons>
-    dropout: !ref <dropout>
-    num_layers: !ref <decoder_rnn_layers>
-    attn_type: !ref <decoder_attn_type>
-    attn_dim: !ref <decoder_attn_dim>
-    channels: !ref <decoder_attn_channels>
-    kernel_size: !ref <decoder_attn_kernel_size>
-    re_init: True
-
 ce_head: !new:speechbrain.nnet.linear.Linear
-    input_size: !ref <decoder_neurons>
+    input_size: !ref <dnn_neurons>
     n_neurons: !ref <vocab_size>
 
 modules:
-    #encoder_embedding: !ref <encoder_embedding>
-    encoder: !ref <encoder>
-    decoder_embedding: !ref <decoder_embedding>
-    decoder: !ref <decoder>
+    embedding: !ref <embedding>
+    crdnn: !ref <crdnn>
     ce_head: !ref <ce_head>
 
 model: !new:torch.nn.ModuleList
-    [[#!ref <encoder_embedding>,
-      !ref <encoder>,
-      !ref <decoder_embedding>,
-      !ref <decoder>,
+    [[!ref <embedding>,
+      !ref <crdnn>,
       !ref <ce_head>]]
 
 # Loss functions
-ce_loss: !new:torch.nn.CrossEntropyLoss
-    ignore_index: !ref <pad_index>
+ce_loss: !name:speechbrain.nnet.losses.nll_loss
+    label_smoothing: 0.0
+    allowed_len_diff: 0
+    reduction: mean
 
 # Optimizers
 opt_class: !name:torch.optim.AdamW
@@ -185,33 +176,12 @@ opt_class: !name:torch.optim.AdamW
     eps: 1.e-8
     weight_decay: !ref <weight_decay>
 
+# Schedulers
 scheduler: !new:speechbrain.nnet.schedulers.NewBobScheduler
     initial_value: !ref <lr>
     improvement_threshold: !ref <improvement_threshold>
     annealing_factor: !ref <annealing_factor>
     patient: !ref <patient>
-
-# Searchers
-greedy_searcher: !new:speechbrain.decoders.S2SRNNBeamSearcher
-    embedding: !ref <decoder_embedding>
-    decoder: !ref <decoder>
-    linear: !ref <ce_head>
-    bos_index: !ref <bos_index>
-    eos_index: !ref <eos_index>
-    min_decode_ratio: !ref <min_decode_ratio>
-    max_decode_ratio: !ref <max_decode_ratio>
-    beam_size: 1
-
-beam_searcher: !new:speechbrain.decoders.S2SRNNBeamSearcher
-    embedding: !ref <decoder_embedding>
-    decoder: !ref <decoder>
-    linear: !ref <ce_head>
-    bos_index: !ref <bos_index>
-    eos_index: !ref <eos_index>
-    min_decode_ratio: !ref <min_decode_ratio>
-    max_decode_ratio: !ref <max_decode_ratio>
-    beam_size: !ref <beam_size>
-    temperature: !ref <temperature>
 
 # Performance metrics
 ter_computer: !name:speechbrain.utils.metric_stats.ErrorRateStats

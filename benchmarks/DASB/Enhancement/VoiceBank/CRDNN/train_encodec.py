@@ -1,7 +1,10 @@
 #!/usr/bin/env/python
 
-"""Recipe for training an encoder-decoder RNN-based speech enhancement
-system using discrete audio representations.
+"""Recipe for training an encoder-only CRDNN-based speech enhancement system using
+discrete audio representations (see https://arxiv.org/abs/2312.09747).
+
+The model is trained via cross-entropy loss applied to each timestep using EnCodec audio
+representations (see https://arxiv.org/abs/2210.13438).
 
 To run this recipe:
 > python train_encodec.py hparams/train_encodec.yaml
@@ -10,11 +13,7 @@ Authors
  * Luca Della Libera 2023
 """
 
-# Adapted from:
-# https://github.com/speechbrain/speechbrain/blob/unstable-v0.6/recipes/LibriSpeech/ASR/seq2seq/train.py
-
-# TODO: vocoding and related metrics (SI-SNR, etc.)
-
+import csv
 import os
 import sys
 
@@ -33,55 +32,52 @@ class Enhancement(sb.Brain):
 
         batch = batch.to(self.device)
         in_tokens, in_tokens_lens = batch.in_tokens
-        out_tokens_bos, _ = batch.out_tokens_bos
 
-        if "encoder_embedding" in self.modules:
+        if "embedding" in self.modules:
             # Forward encoder embedding layer
-            enc_embs = self.modules.encoder_embedding(in_tokens)
+            in_embs = self.modules.embedding(in_tokens)
         else:
             # If there is no encoder embedding layer, use the codec's embeddings
-            enc_embs, enc_embs_lens = batch.in_embs
-            assert (in_tokens_lens == enc_embs_lens).all()
+            in_embs, in_embs_lens = batch.in_embs
+            assert (in_tokens_lens == in_embs_lens).all()
 
         # Forward encoder
-        enc_out = self.modules.encoder(enc_embs)
+        enc_out = self.modules.crdnn(in_embs)
 
-        # Forward decoder embedding layer
-        dec_embs = self.modules.decoder_embedding(out_tokens_bos)
-
-        # Forward decoder
-        dec_out, _ = self.modules.decoder(dec_embs, enc_out, in_tokens_lens)
-
-        # Compute CE logits
-        logits = self.modules.ce_head(dec_out)
+        # Compute cross-entropy logits
+        ce_logits = self.modules.ce_head(enc_out)
 
         # Compute outputs
         hyps = None
-
-        if stage == sb.Stage.VALID:
+        if (
+            stage == sb.Stage.TEST
             # During validation, run decoding only every valid_search_freq epochs to speed up training
-            if current_epoch % self.hparams.valid_search_freq == 0:
-                hyps, _, _, _ = self.hparams.greedy_searcher(
-                    enc_out, in_tokens_lens
-                )
+            or (
+                stage == sb.Stage.VALID
+                and current_epoch % self.hparams.valid_search_freq == 0
+            )
+        ):
+            hyps = ce_logits.argmax(dim=-1).tolist()
+            # Remove padding (output length is equal to input length)
+            hyps = [
+                hyp[: len(in_token)] for hyp, in_token in zip(hyps, in_tokens)
+            ]
 
-        elif stage == sb.Stage.TEST:
-            hyps, _, _, _ = self.hparams.beam_searcher(enc_out, in_tokens_lens)
-
-        return logits, hyps
+        return ce_logits, hyps
 
     def compute_objectives(self, predictions, batch, stage):
         """Computes the objectives."""
-        logits, hyps = predictions
+        ce_logits, hyps = predictions
 
         IDs = batch.id
         _, in_tokens_lens = batch.in_tokens
-        out_tokens_eos, _ = batch.out_tokens_eos
+        out_tokens, out_tokens_lens = batch.out_tokens
         out_tokens_list = batch.out_tokens_list
 
         # CE loss
+        assert (in_tokens_lens == out_tokens_lens).all()
         loss = self.hparams.ce_loss(
-            logits.flatten(end_dim=-2), out_tokens_eos.flatten()
+            ce_logits.log_softmax(dim=-1), out_tokens, length=out_tokens_lens
         )
 
         if hyps is not None:
@@ -140,20 +136,124 @@ class Enhancement(sb.Brain):
                 stats_meta={"Epoch loaded": current_epoch},
                 test_stats=stage_stats,
             )
-            if if_main_process():
-                with open(self.hparams.ter_file, "w") as w:
-                    self.ter_metric.write_stats(w)
+
+            if not if_main_process():
+                return
+
+            # Save TER
+            with open(self.hparams.ter_file, "w") as w:
+                self.ter_metric.write_stats(w)
+
+            # Vocode
+            if self.hparams.vocode:
+                from dnsmos import DNSMOS
+                from dwer import DWER
+
+                IDs = []
+                dnsmoses = []
+                ref_dnsmoses = []
+                dwers = []
+                for score in self.ter_metric.scores:
+                    ID, hyp_tokens, ref_tokens = (
+                        score["key"],
+                        score["hyp_tokens"],
+                        score["ref_tokens"],
+                    )
+                    num_codebooks = 2 ** (
+                        self.hparams.codec.config.target_bandwidths.index(
+                            self.hparams.bandwidth
+                        )
+                        + 1
+                    )
+                    hyp_tokens = torch.as_tensor(hyp_tokens).reshape(
+                        -1, num_codebooks
+                    )
+                    ref_tokens = torch.as_tensor(ref_tokens).reshape(
+                        -1, num_codebooks
+                    )
+
+                    # Undo shift by `token_shift` to account for special tokens
+                    hyp_tokens -= self.hparams.token_shift
+                    assert (hyp_tokens >= 0).all()
+                    ref_tokens -= self.hparams.token_shift
+                    assert (ref_tokens >= 0).all()
+
+                    # Decode
+                    hyp_sig = self.hparams.codec.decode(
+                        hyp_tokens[None], torch.as_tensor([1.0])
+                    )[0, 0]
+                    ref_sig = self.hparams.codec.decode(
+                        ref_tokens[None], torch.as_tensor([1.0])
+                    )[0, 0]
+
+                    if self.hparams.save_audios:
+                        save_folder = os.path.join(
+                            self.hparams.output_folder, "audios"
+                        )
+                        os.makedirs(save_folder, exist_ok=True)
+                        torchaudio.save(
+                            os.path.join(save_folder, f"{ID}_hyp.wav"),
+                            hyp_sig[None],
+                            self.hparams.sample_rate,
+                        )
+                        torchaudio.save(
+                            os.path.join(save_folder, f"{ID}_ref.wav"),
+                            ref_sig[None],
+                            self.hparams.sample_rate,
+                        )
+
+                    # Compute metrics
+                    dnsmos = DNSMOS(hyp_sig, self.hparams.sample_rate)
+                    ref_dnsmos = DNSMOS(ref_sig, self.hparams.sample_rate)
+                    dwer = DWER(hyp_sig, ref_sig, self.hparams.sample_rate)
+
+                    IDs.append(ID)
+                    dnsmoses.append(dnsmos)
+                    ref_dnsmoses.append(ref_dnsmos)
+                    dwers.append(dwer)
+
+                headers = ["ID", "DNSMOS", "RefDNSMOS", "DWER"]
+                with open(
+                    os.path.join(self.hparams.output_folder, "metrics.csv"),
+                    "w",
+                    encoding="utf-8",
+                ) as f:
+                    csv_writer = csv.DictWriter(f, fieldnames=headers)
+                    csv_writer.writeheader()
+
+                    for ID, dnsmos, ref_dnsmos, dwer in zip(
+                        IDs, dnsmoses, ref_dnsmoses, dwers
+                    ):
+                        entry = dict(
+                            zip(headers, [ID, dnsmos, ref_dnsmos, dwer])
+                        )
+                        csv_writer.writerow(entry)
+
+                    entry = dict(
+                        zip(
+                            headers,
+                            [
+                                "Average",
+                                sum(dnsmoses) / len(dnsmoses),
+                                sum(ref_dnsmoses) / len(ref_dnsmoses),
+                                sum(dwers) / len(dwers),
+                            ],
+                        )
+                    )
+                    csv_writer.writerow(entry)
 
 
 def dataio_prepare(hparams, codec):
     """This function prepares the datasets to be used in the brain class.
-    It also defines the data processing pipeline through user-defined functions."""
+    It also defines the data processing pipeline through user-defined functions.
+    """
 
     # 1. Define datasets
     data_folder = hparams["data_folder"]
 
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["train_csv"], replacements={"DATA_ROOT": data_folder},
+        csv_path=hparams["train_csv"],
+        replacements={"DATA_ROOT": data_folder},
     )
     # Sort training data to speed up training
     train_data = train_data.filtered_sorted(
@@ -163,7 +263,8 @@ def dataio_prepare(hparams, codec):
     )
 
     valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["valid_csv"], replacements={"DATA_ROOT": data_folder},
+        csv_path=hparams["valid_csv"],
+        replacements={"DATA_ROOT": data_folder},
     )
     # Sort validation data to speed up validation
     valid_data = valid_data.filtered_sorted(
@@ -173,7 +274,8 @@ def dataio_prepare(hparams, codec):
     )
 
     test_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["test_csv"], replacements={"DATA_ROOT": data_folder},
+        csv_path=hparams["test_csv"],
+        replacements={"DATA_ROOT": data_folder},
     )
     # Sort the test data to speed up testing
     test_data = test_data.filtered_sorted(
@@ -190,8 +292,7 @@ def dataio_prepare(hparams, codec):
         "in_tokens",
         "in_embs",
         "out_tokens_list",
-        "out_tokens_bos",
-        "out_tokens_eos",
+        "out_tokens",
     ]
 
     def audio_pipeline(noisy_wav, clean_wav, is_training=True):
@@ -199,14 +300,17 @@ def dataio_prepare(hparams, codec):
         noisy_sig, sample_rate = torchaudio.load(noisy_wav)
         noisy_sig = noisy_sig[None]  # [B=1, C=1, T]
         noisy_sig = torchaudio.functional.resample(
-            noisy_sig, sample_rate, hparams["sample_rate"],
+            noisy_sig,
+            sample_rate,
+            hparams["sample_rate"],
         )
 
         # Augment if specified
         if is_training and hparams["augment"] and "augmentation" in hparams:
             noisy_sig = hparams["augmentation"](
-                noisy_sig.movedim(-1, -2), torch.LongTensor([1]),
-            ).movedim(-1, -2)
+                noisy_sig.movedim(-1, -2),
+                torch.as_tensor([1.0]),
+            )[0].reshape_as(noisy_sig)
 
         in_tokens, in_embs = codec.encode(
             noisy_sig[:, 0], torch.as_tensor([1.0])
@@ -224,7 +328,9 @@ def dataio_prepare(hparams, codec):
         clean_sig, sample_rate = torchaudio.load(clean_wav)
         clean_sig = clean_sig[None]  # [B=1, C=1, T]
         clean_sig = torchaudio.functional.resample(
-            clean_sig, sample_rate, hparams["sample_rate"],
+            clean_sig,
+            sample_rate,
+            hparams["sample_rate"],
         )
         out_tokens, _ = codec.encode(clean_sig[:, 0], torch.as_tensor([1.0]))
         out_tokens = out_tokens.flatten()
@@ -235,15 +341,8 @@ def dataio_prepare(hparams, codec):
         out_tokens_list = out_tokens.tolist()
         yield out_tokens_list
 
-        out_tokens_bos = torch.LongTensor(
-            [hparams["bos_index"]] + out_tokens_list
-        )
-        yield out_tokens_bos
-
-        out_tokens_eos = torch.LongTensor(
-            out_tokens_list + [hparams["eos_index"]]
-        )
-        yield out_tokens_eos
+        out_tokens = torch.LongTensor(out_tokens_list)
+        yield out_tokens
 
     sb.dataio.dataset.add_dynamic_item(
         [train_data], audio_pipeline, takes, provides
@@ -389,9 +488,6 @@ if __name__ == "__main__":
 
     # Test
     brain.hparams.ter_file = os.path.join(hparams["output_folder"], "ter.txt")
-    brain.hparams.separation_file = os.path.join(
-        hparams["output_folder"], "separation.csv"
-    )
     brain.evaluate(
         test_data,
         min_key="TER",

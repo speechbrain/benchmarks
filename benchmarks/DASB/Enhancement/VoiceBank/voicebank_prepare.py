@@ -23,6 +23,7 @@ logging.basicConfig(
 _LOGGER = logging.getLogger(__name__)
 
 _TRAIN_SPEAKER_IDS = [
+    "p232",  # Uncomment for local debugging
     "p226",
     "p287",
     "p227",

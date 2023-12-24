@@ -1,4 +1,4 @@
-# ############################################################################
+﻿# ############################################################################
 # Model: CRDNN with EnCodec audio representations (see https://arxiv.org/abs/2210.13438)
 # Authors: Luca Della Libera 2023
 # ############################################################################
@@ -106,7 +106,7 @@ augmentation: !new:speechbrain.augment.augmenter.Augmenter
     shuffle_augmentations: False
     min_augmentations: 2
     max_augmentations: 2
-    augment_prob: 0.5
+    augment_prob: 0.75
     augmentations: [!ref <drop_freq>, !ref <drop_chunk>]
 
 # Modules
@@ -120,16 +120,10 @@ codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
     freeze: True
     renorm_embeddings: False
 
-embedding1: !new:torch.nn.Embedding
+embedding: !new:modules.MultiHeadEmbedding
+    num_heads: !ref <num_codebooks>
     num_embeddings: !ref <vocab_size>
     embedding_dim: !ref <embedding_dim>
-
-embedding2: !new:torch.nn.Embedding
-    num_embeddings: !ref <vocab_size>
-    embedding_dim: !ref <embedding_dim>
-
-embeddings: !new:torch.nn.ModuleList
-    modules: [!ref <embedding1>, !ref <embedding2>]
 
 encoder: !new:speechbrain.lobes.models.CRDNN.CRDNN
     input_shape: [null, null, !ref <embedding_dim>]
@@ -151,28 +145,22 @@ encoder: !new:speechbrain.lobes.models.CRDNN.CRDNN
     rnn_re_init: True
     use_rnnp: False
 
-ce_head1: !new:speechbrain.nnet.linear.Linear
-    input_size: !ref <dnn_neurons>
-    n_neurons: !ref <vocab_size>
-
-ce_head2: !new:speechbrain.nnet.linear.Linear
-    input_size: !ref <dnn_neurons>
-    n_neurons: !ref <vocab_size>
-
-ce_heads: !new:torch.nn.ModuleList
-    modules: [!ref <ce_head1>, !ref <ce_head2>]
+ce_head: !new:modules.MultiHeadLinear
+    num_heads: !ref <num_codebooks>
+    in_features: !ref <dnn_neurons>
+    out_features: !ref <vocab_size>
 
 modules:
     codec: !ref <codec>
-    embeddings: !ref <embeddings>
+    embedding: !ref <embedding>
     encoder: !ref <encoder>
-    ce_heads: !ref <ce_heads>
+    ce_head: !ref <ce_head>
 
 model: !new:torch.nn.ModuleList
     [[!ref <codec>,
-      !ref <embeddings>,
+      !ref <embedding>,
       !ref <encoder>,
-      !ref <ce_heads>]]
+      !ref <ce_head>]]
 
 # Loss functions
 ce_loss: !name:speechbrain.nnet.losses.nll_loss

@@ -1,13 +1,13 @@
 #!/usr/bin/env/python
 
-"""Recipe for training an encoder-only CRDNN-based speech enhancement system using
+"""Recipe for training an autoregressive encoder-only transformer-based speech enhancement system using
 discrete audio representations (see https://arxiv.org/abs/2312.09747).
 
 The model is trained via cross-entropy loss applied to each timestep using EnCodec audio
 representations (see https://arxiv.org/abs/2210.13438).
 
 To run this recipe:
-> python train_encodec.py hparams/train_encodec.yaml
+> python train_encodec_ar.py hparams/train_encodec_ar.yaml
 
 Authors
  * Luca Della Libera 2023
@@ -51,10 +51,33 @@ class Enhancement(sb.Brain):
         in_embs = self.modules.embedding(in_tokens)
 
         # Forward encoder
-        enc_out = self.modules.encoder(in_embs)
+        enc_out = self.modules.encoder.encode(in_embs, in_sig_lens)
+        enc_out = self.modules.encoder_proj(enc_out)
+
+        # Forward decoder/predictor
+        out_tokens, out_tokens_bos_lens = batch.out_tokens
+        out_tokens_bos = torch.cat(
+            [
+                torch.full(
+                    (len(out_tokens), 1, 2),
+                    self.hparams.bos_index,
+                    device=self.device,
+                ),
+                out_tokens[:, :-1],
+            ],
+            dim=-2,
+        )
+        out_embs_bos = self.modules.embedding(out_tokens_bos)
+        dec_out, _ = self.modules.decoder(
+            out_embs_bos, lengths=out_tokens_bos_lens
+        )
+        dec_out = self.modules.decoder_proj(dec_out)
+
+        # Forward joiner
+        joiner_out = enc_out + dec_out
 
         # Compute cross-entropy logits
-        ce_logits = self.modules.ce_head(enc_out)
+        ce_logits = self.modules.ce_head(joiner_out)
 
         # Compute outputs
         hyps = None

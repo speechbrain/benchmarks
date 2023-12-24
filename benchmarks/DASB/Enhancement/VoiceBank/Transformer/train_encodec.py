@@ -32,27 +32,29 @@ class Enhancement(sb.Brain):
 
         batch = batch.to(self.device)
         in_sig, in_sig_lens = batch.in_sig
+        out_sig, out_sig_lens = batch.out_sig
 
         # Augment if specified
         if stage == sb.Stage.TRAIN and self.hparams.augment:
             in_sig, in_sig_lens = self.hparams.augmentation(in_sig, in_sig_lens)
 
         # Extract audio tokens
-        in_tokens, _ = self.modules.codec.encode(in_sig, in_sig_lens)
+        assert (in_sig_lens == out_sig_lens).all()
+        sig, lens = torch.cat([in_sig, out_sig]), torch.cat(
+            [in_sig_lens, out_sig_lens]
+        )
+        tokens, _ = self.modules.codec.encode(sig, lens)
+        in_tokens = tokens[: len(tokens) // 2]
+        batch.out_tokens = tokens[len(tokens) // 2 :], out_sig_lens
 
         # Forward embedding layer
-        in_embs = [
-            embedding(in_tokens[..., k])
-            for k, embedding in enumerate(self.modules.embeddings)
-        ]
-        in_embs = torch.stack(in_embs).sum(dim=0)
+        in_embs = self.modules.embedding(in_tokens)
 
         # Forward encoder
         enc_out = self.modules.encoder.encode(in_embs, in_sig_lens)
 
         # Compute cross-entropy logits
-        ce_logits = [ce_head(enc_out) for ce_head in self.modules.ce_heads]
-        ce_logits = torch.stack(ce_logits).movedim(0, -2)
+        ce_logits = self.modules.ce_head(enc_out)
 
         # Compute outputs
         hyps = None
@@ -82,18 +84,13 @@ class Enhancement(sb.Brain):
         ce_logits, hyps = predictions
 
         IDs = batch.id
-        _, in_sig_lens = batch.in_sig
-        out_sig, out_sig_lens = batch.out_sig
-
-        # Extract audio tokens
-        out_tokens, _ = self.modules.codec.encode(out_sig, out_sig_lens)
+        out_tokens, out_tokens_lens = batch.out_tokens
 
         # CE loss
-        assert (in_sig_lens == out_sig_lens).all()
         loss = self.hparams.ce_loss(
             ce_logits.log_softmax(dim=-1).flatten(start_dim=-3, end_dim=-2),
             out_tokens.flatten(start_dim=-2),
-            length=out_sig_lens,
+            length=out_tokens_lens,
         )
 
         if hyps is not None:
@@ -105,7 +102,7 @@ class Enhancement(sb.Brain):
                     : self.hparams.num_codebooks
                     * int(len(target) * rel_length / self.hparams.num_codebooks)
                 ]
-                for target, rel_length in zip(targets, out_sig_lens)
+                for target, rel_length in zip(targets, out_tokens_lens)
             ]
 
             # Compute TER
@@ -262,7 +259,7 @@ class Enhancement(sb.Brain):
             csv_writer = csv.DictWriter(f, fieldnames=headers)
             csv_writer.writeheader()
 
-            for ID, dnsmos, rec_dnsmos, ref_dnsmos, dwer, text, ref_text in zip(
+            for entry in zip(
                 IDs,
                 dnsmoses,
                 rec_dnsmoses,
@@ -271,20 +268,7 @@ class Enhancement(sb.Brain):
                 texts,
                 ref_texts,
             ):
-                entry = dict(
-                    zip(
-                        headers,
-                        [
-                            ID,
-                            dnsmos,
-                            rec_dnsmos,
-                            ref_dnsmos,
-                            dwer,
-                            text,
-                            ref_text,
-                        ],
-                    )
-                )
+                entry = dict(zip(headers, entry))
                 csv_writer.writerow(entry)
 
             entry = dict(
@@ -353,20 +337,20 @@ def dataio_prepare(hparams):
 
     def audio_pipeline(noisy_wav, clean_wav):
         # Noisy signal
-        in_sig, sample_rate = torchaudio.load(noisy_wav)
-        in_sig = in_sig[0]  # [T]
+        noisy_sig, sample_rate = torchaudio.load(noisy_wav)
+        noisy_sig = noisy_sig[0]  # [T]
         in_sig = torchaudio.functional.resample(
-            in_sig,
+            noisy_sig,
             sample_rate,
             hparams["sample_rate"],
         )
         yield in_sig
 
         # Clean signal
-        out_sig, sample_rate = torchaudio.load(clean_wav)
-        out_sig = out_sig[0]  # [T]
+        clean_sig, sample_rate = torchaudio.load(clean_wav)
+        clean_sig = clean_sig[0]  # [T]
         out_sig = torchaudio.functional.resample(
-            out_sig,
+            clean_sig,
             sample_rate,
             hparams["sample_rate"],
         )
@@ -422,15 +406,14 @@ if __name__ == "__main__":
 
     # Use pretrained embeddings
     if hparams["use_pretrained_embeddings"]:
-        for embedding, pretrained_weight in zip(
-            hparams["embeddings"], hparams["codec"].vocabulary
+        for head, pretrained_weight in zip(
+            hparams["embedding"].heads, hparams["codec"].vocabulary
         ):
-            embedding.weight.data.copy_(pretrained_weight)
+            head.weight.data.copy_(pretrained_weight)
 
     # Freeze embeddings
     if hparams["freeze_embeddings"]:
-        for embedding in hparams["embeddings"]:
-            embedding.requires_grad_(False)
+        hparams["embeddings"].requires_grad_(False)
 
     # Create the datasets objects and tokenization
     train_data, valid_data, test_data = dataio_prepare(hparams)

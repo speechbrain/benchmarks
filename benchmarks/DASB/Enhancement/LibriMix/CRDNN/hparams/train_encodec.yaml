@@ -1,5 +1,5 @@
 ﻿# ############################################################################
-# Model: Transformer with EnCodec audio representations (see https://arxiv.org/abs/2210.13438)
+# Model: CRDNN with EnCodec audio representations (see https://arxiv.org/abs/2210.13438)
 # Authors: Luca Della Libera 2023
 # ############################################################################
 
@@ -11,10 +11,10 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # Data preparation
 data_folder: !PLACEHOLDER
-train_csv: !ref <save_folder>/voicebank_trainset_28spk_wav.csv
-valid_csv: !ref <save_folder>/voicebank_validset_wav.csv
-test_csv: !ref <save_folder>/voicebank_testset_wav.csv
-num_valid_speakers: 2
+train_csv: !ref <save_folder>/librimix_1mix_train-360.csv
+valid_csv: !ref <save_folder>/librimix_1mix_dev.csv
+test_csv: !ref <save_folder>/librimix_1mix_test.csv
+version: wav16k/min
 
 # Output folders
 output_folder: !ref results/<experiment_name>/<seed>
@@ -49,6 +49,7 @@ precision: fp16
 ckpt_interval_minutes: 600
 keep_checkpoints: 2
 augment: True
+snr: 5  # dB
 
 # Optimizer parameters
 lr: 0.0005
@@ -69,12 +70,18 @@ embedding_dim: 128  # NOTE: if using pretrained embeddings, must match EnCodec's
 freeze_embeddings: False
 use_pretrained_embeddings: False
 dropout: 0.1
-activation: !name:torch.nn.GELU
-d_model: 256
-nhead: 8
-num_layers: 6
-d_ffn: 2048
-max_length: 5000
+activation: !name:torch.nn.LeakyReLU
+rnn_class: !name:speechbrain.nnet.RNN.LSTM
+rnn_layers: 8
+time_pooling_size: 1
+rnn_bidirectional: True
+rnn_neurons: 256
+dnn_blocks: 2
+dnn_neurons: 256
+cnn_blocks: 2
+cnn_channels: (64, 64)
+inter_layer_pooling_size: (2, 2)
+cnn_kernelsize: (3, 3)
 
 # Search parameters
 valid_search_freq: 1
@@ -119,24 +126,29 @@ embedding: !new:modules.MultiHeadEmbedding
     num_embeddings: !ref <vocab_size>
     embedding_dim: !ref <embedding_dim>
 
-encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
-    input_size: !ref <embedding_dim>
-    tgt_vocab: !ref <vocab_size>
-    d_model: !ref <d_model>
-    nhead: !ref <nhead>
-    num_encoder_layers: !ref <num_layers>
-    num_decoder_layers: 0
-    d_ffn: !ref <d_ffn>
-    dropout: !ref <dropout>
+encoder: !new:speechbrain.lobes.models.CRDNN.CRDNN
+    input_shape: [null, null, !ref <embedding_dim>]
     activation: !ref <activation>
-    max_length: !ref <max_length>
-    encoder_module: conformer
-    normalize_before: True
-    causal: False
+    dropout: !ref <dropout>
+    cnn_blocks: !ref <cnn_blocks>
+    cnn_channels: !ref <cnn_channels>
+    cnn_kernelsize: !ref <cnn_kernelsize>
+    inter_layer_pooling_size: !ref <inter_layer_pooling_size>
+    time_pooling: True
+    using_2d_pooling: False
+    time_pooling_size: !ref <time_pooling_size>
+    rnn_class: !ref <rnn_class>
+    rnn_layers: !ref <rnn_layers>
+    rnn_neurons: !ref <rnn_neurons>
+    rnn_bidirectional: !ref <rnn_bidirectional>
+    dnn_blocks: !ref <dnn_blocks>
+    dnn_neurons: !ref <dnn_neurons>
+    rnn_re_init: True
+    use_rnnp: False
 
 ce_head: !new:modules.MultiHeadLinear
     num_heads: !ref <num_codebooks>
-    in_features: !ref <d_model>
+    in_features: !ref <dnn_neurons>
     out_features: !ref <vocab_size>
 
 modules:

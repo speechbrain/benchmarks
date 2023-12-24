@@ -1,6 +1,6 @@
 #!/usr/bin/env/python
 
-"""Recipe for training an encoder-only CRDNN-based speech enhancement system using
+"""Recipe for training an encoder-only transformer-based speech enhancement system using
 discrete audio representations (see https://arxiv.org/abs/2312.09747).
 
 The model is trained via cross-entropy loss applied to each timestep using EnCodec audio
@@ -51,7 +51,7 @@ class Enhancement(sb.Brain):
         in_embs = self.modules.embedding(in_tokens)
 
         # Forward encoder
-        enc_out = self.modules.encoder(in_embs)
+        enc_out = self.modules.encoder.encode(in_embs, in_sig_lens)
 
         # Compute cross-entropy logits
         ce_logits = self.modules.ce_head(enc_out)
@@ -332,13 +332,30 @@ def dataio_prepare(hparams):
     datasets = [train_data, valid_data, test_data]
 
     # 2. Define audio pipeline
-    takes = ["noisy_wav", "clean_wav"]
+    takes = ["src1_wav", "noise_wav"]
     provides = ["in_sig", "out_sig"]
 
-    def audio_pipeline(noisy_wav, clean_wav):
-        # Noisy signal
-        noisy_sig, sample_rate = torchaudio.load(noisy_wav)
-        noisy_sig = noisy_sig[0]  # [T]
+    def audio_pipeline(src1_wav, noise_wav):
+        # Clean signal
+        clean_sig, sample_rate = torchaudio.load(src1_wav)
+        clean_sig = clean_sig[0]  # [T]
+
+        # Noise signal
+        noise_sig, sample_rate = torchaudio.load(noise_wav)
+        noise_sig = noise_sig[0]  # [T]
+
+        # Mixing with given noise gain
+        noise_gain = -hparams["snr"]
+        clean_sig_power = (clean_sig**2).mean()
+        ratio = 10 ** (
+            noise_gain / 10
+        )  # ratio = noise_sig_power / clean_sig_power
+        desired_noise_sig_power = ratio * clean_sig_power
+        noise_sig_power = (noise_sig**2).mean()
+        gain = (desired_noise_sig_power / noise_sig_power).sqrt()
+        noise_sig *= gain
+        noisy_sig = clean_sig + noise_sig
+
         in_sig = torchaudio.functional.resample(
             noisy_sig,
             sample_rate,
@@ -346,9 +363,6 @@ def dataio_prepare(hparams):
         )
         yield in_sig
 
-        # Clean signal
-        clean_sig, sample_rate = torchaudio.load(clean_wav)
-        clean_sig = clean_sig[0]  # [T]
         out_sig = torchaudio.functional.resample(
             clean_sig,
             sample_rate,
@@ -392,7 +406,7 @@ if __name__ == "__main__":
     )
 
     # Dataset preparation
-    from voicebank_prepare import prepare_voicebank as prepare_data  # noqa
+    from librimix_prepare import prepare_librimix as prepare_data  # noqa
 
     # Due to DDP, do the preparation ONLY on the main Python process
     run_on_main(
@@ -400,7 +414,9 @@ if __name__ == "__main__":
         kwargs={
             "data_folder": hparams["data_folder"],
             "save_folder": hparams["save_folder"],
-            "num_valid_speakers": hparams["num_valid_speakers"],
+            "num_speakers": 1,
+            "add_noise": True,
+            "version": hparams["version"],
         },
     )
 

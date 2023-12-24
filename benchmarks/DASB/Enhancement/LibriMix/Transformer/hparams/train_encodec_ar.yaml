@@ -1,9 +1,9 @@
 ﻿# ############################################################################
-# Model: Transformer with EnCodec audio representations (see https://arxiv.org/abs/2210.13438)
+# Model: Autoregressive transformer with EnCodec audio representations (see https://arxiv.org/abs/2210.13438)
 # Authors: Luca Della Libera 2023
 # ############################################################################
 
-experiment_name: encodec
+experiment_name: encodec_ar
 
 # Seed needs to be set at top of YAML
 seed: 0
@@ -11,10 +11,10 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # Data preparation
 data_folder: !PLACEHOLDER
-train_csv: !ref <save_folder>/voicebank_trainset_28spk_wav.csv
-valid_csv: !ref <save_folder>/voicebank_validset_wav.csv
-test_csv: !ref <save_folder>/voicebank_testset_wav.csv
-num_valid_speakers: 2
+train_csv: !ref <save_folder>/librimix_1mix_train-360.csv
+valid_csv: !ref <save_folder>/librimix_1mix_dev.csv
+test_csv: !ref <save_folder>/librimix_1mix_test.csv
+version: wav16k/min
 
 # Output folders
 output_folder: !ref results/<experiment_name>/<seed>
@@ -49,6 +49,10 @@ precision: fp16
 ckpt_interval_minutes: 600
 keep_checkpoints: 2
 augment: True
+snr: 5  # dB
+
+# Special tokens
+bos_index: 1024
 
 # Optimizer parameters
 lr: 0.0005
@@ -75,6 +79,13 @@ nhead: 8
 num_layers: 6
 d_ffn: 2048
 max_length: 5000
+
+# Decoder parameters
+rnn_neurons: 512
+rnn_num_layers: 2
+
+# Joiner parameters
+joint_dim: 640
 
 # Search parameters
 valid_search_freq: 1
@@ -116,7 +127,7 @@ codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
 
 embedding: !new:modules.MultiHeadEmbedding
     num_heads: !ref <num_codebooks>
-    num_embeddings: !ref <vocab_size>
+    num_embeddings: !ref <vocab_size> + 1
     embedding_dim: !ref <embedding_dim>
 
 encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
@@ -134,21 +145,40 @@ encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
     normalize_before: True
     causal: False
 
+encoder_proj: !new:torch.nn.Linear
+    in_features: !ref <d_model>
+    out_features: !ref <joint_dim>
+
+decoder: !new:speechbrain.nnet.RNN.LSTM
+    input_shape: [null, null, !ref <embedding_dim>]
+    hidden_size: !ref <rnn_neurons>
+    num_layers: !ref <rnn_num_layers>
+
+decoder_proj: !new:torch.nn.Linear
+    in_features: !ref <rnn_neurons>
+    out_features: !ref <joint_dim>
+
 ce_head: !new:modules.MultiHeadLinear
     num_heads: !ref <num_codebooks>
-    in_features: !ref <d_model>
+    in_features: !ref <joint_dim>
     out_features: !ref <vocab_size>
 
 modules:
     codec: !ref <codec>
     embedding: !ref <embedding>
     encoder: !ref <encoder>
+    encoder_proj: !ref <encoder_proj>
+    decoder: !ref <decoder>
+    decoder_proj: !ref <decoder_proj>
     ce_head: !ref <ce_head>
 
 model: !new:torch.nn.ModuleList
     [[!ref <codec>,
       !ref <embedding>,
       !ref <encoder>,
+      !ref <encoder_proj>,
+      !ref <decoder>,
+      !ref <decoder_proj>,
       !ref <ce_head>]]
 
 # Loss functions

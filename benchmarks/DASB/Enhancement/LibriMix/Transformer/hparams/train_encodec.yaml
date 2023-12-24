@@ -11,10 +11,10 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # Data preparation
 data_folder: !PLACEHOLDER
-train_csv: !ref <save_folder>/voicebank_trainset_28spk_wav.csv
-valid_csv: !ref <save_folder>/voicebank_validset_wav.csv
-test_csv: !ref <save_folder>/voicebank_testset_wav.csv
-num_valid_speakers: 2
+train_csv: !ref <save_folder>/librimix_1mix_train-360.csv
+valid_csv: !ref <save_folder>/librimix_1mix_dev.csv
+test_csv: !ref <save_folder>/librimix_1mix_test.csv
+version: wav16k/min
 
 # Output folders
 output_folder: !ref results/<experiment_name>/<seed>
@@ -49,6 +49,7 @@ precision: fp16
 ckpt_interval_minutes: 600
 keep_checkpoints: 2
 augment: True
+snr: 5  # dB
 
 # Optimizer parameters
 lr: 0.0005

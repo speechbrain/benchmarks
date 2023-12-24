@@ -1,13 +1,13 @@
 #!/usr/bin/env/python
 
-"""Recipe for training an encoder-only CRDNN-based speech enhancement system using
+"""Recipe for training an autoregressive encoder-only transformer-based speech enhancement system using
 discrete audio representations (see https://arxiv.org/abs/2312.09747).
 
 The model is trained via cross-entropy loss applied to each timestep using EnCodec audio
 representations (see https://arxiv.org/abs/2210.13438).
 
 To run this recipe:
-> python train_encodec.py hparams/train_encodec.yaml
+> python train_encodec_ar.py hparams/train_encodec_ar.yaml
 
 Authors
  * Luca Della Libera 2023
@@ -51,10 +51,33 @@ class Enhancement(sb.Brain):
         in_embs = self.modules.embedding(in_tokens)
 
         # Forward encoder
-        enc_out = self.modules.encoder(in_embs)
+        enc_out = self.modules.encoder.encode(in_embs, in_sig_lens)
+        enc_out = self.modules.encoder_proj(enc_out)
+
+        # Forward decoder/predictor
+        out_tokens, out_tokens_bos_lens = batch.out_tokens
+        out_tokens_bos = torch.cat(
+            [
+                torch.full(
+                    (len(out_tokens), 1, 2),
+                    self.hparams.bos_index,
+                    device=self.device,
+                ),
+                out_tokens[:, :-1],
+            ],
+            dim=-2,
+        )
+        out_embs_bos = self.modules.embedding(out_tokens_bos)
+        dec_out, _ = self.modules.decoder(
+            out_embs_bos, lengths=out_tokens_bos_lens
+        )
+        dec_out = self.modules.decoder_proj(dec_out)
+
+        # Forward joiner
+        joiner_out = enc_out + dec_out
 
         # Compute cross-entropy logits
-        ce_logits = self.modules.ce_head(enc_out)
+        ce_logits = self.modules.ce_head(joiner_out)
 
         # Compute outputs
         hyps = None
@@ -332,13 +355,30 @@ def dataio_prepare(hparams):
     datasets = [train_data, valid_data, test_data]
 
     # 2. Define audio pipeline
-    takes = ["noisy_wav", "clean_wav"]
+    takes = ["src1_wav", "noise_wav"]
     provides = ["in_sig", "out_sig"]
 
-    def audio_pipeline(noisy_wav, clean_wav):
-        # Noisy signal
-        noisy_sig, sample_rate = torchaudio.load(noisy_wav)
-        noisy_sig = noisy_sig[0]  # [T]
+    def audio_pipeline(src1_wav, noise_wav):
+        # Clean signal
+        clean_sig, sample_rate = torchaudio.load(src1_wav)
+        clean_sig = clean_sig[0]  # [T]
+
+        # Noise signal
+        noise_sig, sample_rate = torchaudio.load(noise_wav)
+        noise_sig = noise_sig[0]  # [T]
+
+        # Mixing with given noise gain
+        noise_gain = -hparams["snr"]
+        clean_sig_power = (clean_sig**2).mean()
+        ratio = 10 ** (
+            noise_gain / 10
+        )  # ratio = noise_sig_power / clean_sig_power
+        desired_noise_sig_power = ratio * clean_sig_power
+        noise_sig_power = (noise_sig**2).mean()
+        gain = (desired_noise_sig_power / noise_sig_power).sqrt()
+        noise_sig *= gain
+        noisy_sig = clean_sig + noise_sig
+
         in_sig = torchaudio.functional.resample(
             noisy_sig,
             sample_rate,
@@ -346,9 +386,6 @@ def dataio_prepare(hparams):
         )
         yield in_sig
 
-        # Clean signal
-        clean_sig, sample_rate = torchaudio.load(clean_wav)
-        clean_sig = clean_sig[0]  # [T]
         out_sig = torchaudio.functional.resample(
             clean_sig,
             sample_rate,
@@ -392,7 +429,7 @@ if __name__ == "__main__":
     )
 
     # Dataset preparation
-    from voicebank_prepare import prepare_voicebank as prepare_data  # noqa
+    from librimix_prepare import prepare_librimix as prepare_data  # noqa
 
     # Due to DDP, do the preparation ONLY on the main Python process
     run_on_main(
@@ -400,7 +437,9 @@ if __name__ == "__main__":
         kwargs={
             "data_folder": hparams["data_folder"],
             "save_folder": hparams["save_folder"],
-            "num_valid_speakers": hparams["num_valid_speakers"],
+            "num_speakers": 1,
+            "add_noise": True,
+            "version": hparams["version"],
         },
     )
 

@@ -173,10 +173,12 @@ class Enhancement(sb.Brain):
                     self.vocode()
 
     def vocode(self):
+        from speechbrain.nnet.loss.si_snr_loss import si_snr_loss
         from dnsmos import DNSMOS
         from dwer import DWER
 
         IDs = []
+        sisnrs = []
         dnsmoses = []
         rec_dnsmoses = []
         ref_dnsmoses = []
@@ -184,28 +186,28 @@ class Enhancement(sb.Brain):
         texts = []
         ref_texts = []
         self.modules.codec.cpu()
-        for score in self.ter_metric.scores:
+        for i, score in enumerate(self.ter_metric.scores):
             ID, hyp_tokens, rec_tokens = (
                 score["key"],
                 score["hyp_tokens"],
                 score["ref_tokens"],
             )
 
+            # Decode
             hyp_tokens = torch.as_tensor(hyp_tokens).reshape(
                 -1, self.hparams.num_codebooks
             )
             rec_tokens = torch.as_tensor(rec_tokens).reshape(
                 -1, self.hparams.num_codebooks
             )
-
-            # Decode
-            hyp_sig = self.modules.codec.decode(
-                hyp_tokens[None], torch.as_tensor([1.0])
-            )[0, 0]
-            rec_sig = self.modules.codec.decode(
-                rec_tokens[None], torch.as_tensor([1.0])
-            )[0, 0]
-            ref_sig = self.test_set[self.test_set.data_ids.index(ID)]["out_sig"]
+            # Warmup to avoid problems on Compute Canada...
+            if i == 0:
+                for _ in range(20):
+                    hyp_sig = self.modules.codec.decode(hyp_tokens[None])[0, 0]
+            rec_sig = self.modules.codec.decode(rec_tokens[None])[0, 0]
+            ref_sig = self.test_set[self.test_set.data_ids.index(ID)][
+                "out_sig"
+            ]  # Original signal (resampled)
 
             if self.hparams.save_audios:
                 save_folder = os.path.join(self.hparams.output_folder, "audios")
@@ -227,6 +229,12 @@ class Enhancement(sb.Brain):
                 )
 
             # Compute metrics
+            min_length = min(len(hyp_sig), len(ref_sig))
+            sisnr = -si_snr_loss(
+                hyp_sig[None, :min_length],
+                ref_sig[None, :min_length],
+                torch.as_tensor([1.0]),
+            ).item()
             dnsmos = DNSMOS(hyp_sig, self.hparams.sample_rate)
             rec_dnsmos = DNSMOS(rec_sig, self.hparams.sample_rate)
             ref_dnsmos = DNSMOS(ref_sig, self.hparams.sample_rate)
@@ -235,6 +243,7 @@ class Enhancement(sb.Brain):
             )
 
             IDs.append(ID)
+            sisnrs.append(sisnr)
             dnsmoses.append(dnsmos)
             rec_dnsmoses.append(rec_dnsmos)
             ref_dnsmoses.append(ref_dnsmos)
@@ -244,10 +253,11 @@ class Enhancement(sb.Brain):
 
         headers = [
             "ID",
+            "SI-SNR",
             "DNSMOS",
             "RecDNSMOS",
             "RefDNSMOS",
-            "DWER",
+            "dWER",
             "text",
             "ref_text",
         ]
@@ -261,6 +271,7 @@ class Enhancement(sb.Brain):
 
             for entry in zip(
                 IDs,
+                sisnrs,
                 dnsmoses,
                 rec_dnsmoses,
                 ref_dnsmoses,
@@ -276,6 +287,7 @@ class Enhancement(sb.Brain):
                     headers,
                     [
                         "Average",
+                        sum(sisnrs) / len(sisnrs),
                         sum(dnsmoses) / len(dnsmoses),
                         sum(rec_dnsmoses) / len(rec_dnsmoses),
                         sum(ref_dnsmoses) / len(ref_dnsmoses),

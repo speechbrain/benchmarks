@@ -7,7 +7,7 @@ Authors
 import csv
 import logging
 import os
-from typing import Optional
+from typing import Optional, Sequence
 
 import torchaudio
 
@@ -23,7 +23,7 @@ logging.basicConfig(
 _LOGGER = logging.getLogger(__name__)
 
 _TRAIN_SPEAKER_IDS = [
-    # "p232",  # Uncomment for local debugging
+    # "p232",  # Uncomment for local debugging using the test set as a training set
     "p226",
     "p287",
     "p227",
@@ -58,6 +58,11 @@ _TRAIN_SPEAKER_IDS = [
 def prepare_voicebank(
     data_folder: "str",
     save_folder: "Optional[str]" = None,
+    splits: "Sequence[str]" = (
+        "trainset_28spk_wav",
+        "validset_wav",
+        "testset_wav",
+    ),
     num_valid_speakers: "int" = 2,
 ) -> "None":
     """Prepare data manifest CSV files for the VoiceBank dataset.
@@ -76,6 +81,8 @@ def prepare_voicebank(
     save_folder:
         The path to the folder where the data manifest CSV files will be stored.
         Default to `data_folder`.
+    splits:
+        The dataset splits to prepare.
     num_valid_speakers:
         The number of speakers in the training set to use for validation
         (these speakers will be removed from the training set).
@@ -103,7 +110,7 @@ def prepare_voicebank(
     # Write output CSV for each split
     valid_noisy_wavs = []
     valid_clean_wavs = []
-    for split in ["trainset_28spk_wav", "validset_wav", "testset_wav"]:
+    for split in splits:
         _LOGGER.info(
             "----------------------------------------------------------------------",
         )
@@ -158,7 +165,7 @@ def prepare_voicebank(
             csv_writer = csv.DictWriter(f, fieldnames=headers)
             csv_writer.writeheader()
             for i in range(len(noisy_wavs)):
-                ID = f"voicebank_{split}_{str(i).zfill(5)}"
+                ID = f"voicebank_{split}_{str(i).zfill(6)}"
                 noisy_wav = noisy_wavs[i]
                 clean_wav = clean_wavs[i]
                 info = torchaudio.info(

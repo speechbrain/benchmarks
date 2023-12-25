@@ -31,7 +31,7 @@ test_remove_if_longer: 60.0  # Seconds
 sorting: ascending
 
 # Training parameters
-num_epochs: 100
+num_epochs: 50
 grad_accumulation_factor: 1
 dynamic_batching: False
 train_batch_size: 8
@@ -49,6 +49,7 @@ precision: fp16
 ckpt_interval_minutes: 600
 keep_checkpoints: 2
 augment: True
+augment_prob: 0.75
 
 # Optimizer parameters
 lr: 0.0005
@@ -100,7 +101,7 @@ augmentation: !new:speechbrain.augment.augmenter.Augmenter
     shuffle_augmentations: False
     min_augmentations: 2
     max_augmentations: 2
-    augment_prob: 0.75
+    augment_prob: !ref <augment_prob>
     augmentations: [!ref <drop_freq>, !ref <drop_chunk>]
 
 # Modules
@@ -114,7 +115,7 @@ codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
     freeze: True
     renorm_embeddings: False
 
-embedding: !new:modules.MultiHeadEmbedding
+embedding: !new:nnet.MultiHeadEmbedding
     num_heads: !ref <num_codebooks>
     num_embeddings: !ref <vocab_size>
     embedding_dim: !ref <embedding_dim>
@@ -134,7 +135,7 @@ encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
     normalize_before: True
     causal: False
 
-ce_head: !new:modules.MultiHeadLinear
+ce_head: !new:nnet.MultiHeadLinear
     num_heads: !ref <num_codebooks>
     in_features: !ref <d_model>
     out_features: !ref <vocab_size>

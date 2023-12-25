@@ -1,4 +1,4 @@
-"""Differential WER (DWER) (see https://arxiv.org/abs/1911.07953).
+"""Differential WER (dWER) (see https://arxiv.org/abs/1911.07953).
 
 Authors
 * Luca Della Libera 2023
@@ -74,6 +74,6 @@ class ComputeScore:
 
 
 root_folder = os.path.dirname(os.path.realpath(__file__))
-save_path = os.path.join(root_folder, "save")
+save_path = os.path.join(root_folder, "huggingface")
 
 DWER = ComputeScore("openai/whisper-small", save_path, SAMPLING_RATE)

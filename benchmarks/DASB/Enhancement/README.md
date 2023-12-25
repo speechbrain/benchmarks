@@ -18,10 +18,6 @@ Download the following files from the [official website](https://datashare.ed.ac
 
 Extract them to a folder of your choice (e.g. `VoiceBank`).
 
-### LibriMix
-
-Follow the instructions from the [official repository](https://github.com/JorisCos/LibriMix).
-
 ---------------------------------------------------------------------------------------------------------
 
 ## 🛠️️ Installation
@@ -47,11 +43,6 @@ python train_<variant>.py hparams/train_<variant>.yaml --data_folder <path-to-da
 ```bash
 cd VoiceBank/Transformer
 python train_encodec.py hparams/train_encodec.yaml --data_folder data/VoiceBank
-```
-
-```bash
-cd LibriMix/CRDNN
-python train_encodec.py hparams/train_encodec.yaml --data_folder data/LibriMix
 ```
 
 ---------------------------------------------------------------------------------------------------------

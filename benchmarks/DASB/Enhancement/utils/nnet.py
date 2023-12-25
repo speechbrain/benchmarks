@@ -1,16 +1,17 @@
-"""Common modules.
+"""Neural network modules.
 
 Authors
  * Luca Della Libera 2023
 """
 
 import torch
+from torch import nn
 
 
 __all__ = ["MultiHeadEmbedding", "MultiHeadLinear"]
 
 
-class MultiHeadEmbedding(torch.nn.Module):
+class MultiHeadEmbedding(nn.Module):
     """Multi-head embedding layer.
 
     Arguments
@@ -27,8 +28,13 @@ class MultiHeadEmbedding(torch.nn.Module):
     >>> import torch
     >>>
     >>>
-    >>> model = MultiHeadEmbedding(num_heads=2, num_embeddings=32, embedding_dim=128)
-    >>> data = torch.randint(32, size=(8, 6))
+    >>> batch_size = 8
+    >>> seq_length = 100
+    >>> num_heads = 2
+    >>> embedding_dim = 128
+    >>> num_classes = 32
+    >>> model = MultiHeadEmbedding(num_heads=num_heads, num_embeddings=num_classes, embedding_dim=embedding_dim)
+    >>> data = torch.randint(num_classes, size=(batch_size, seq_length, num_heads))
     >>> embedding = model(data)
 
     """
@@ -36,8 +42,8 @@ class MultiHeadEmbedding(torch.nn.Module):
     def __init__(self, num_heads, *args, **kwargs):
         super().__init__()
         self.num_heads = num_heads
-        self.heads = torch.nn.ModuleList(
-            [torch.nn.Embedding(*args, **kwargs) for _ in range(num_heads)]
+        self.heads = nn.ModuleList(
+            [nn.Embedding(*args, **kwargs) for _ in range(num_heads)]
         )
 
     def forward(self, input):
@@ -46,11 +52,11 @@ class MultiHeadEmbedding(torch.nn.Module):
         Arguments
         ---------
         input:
-            The input, shape: ``[B, T]``.
+            The input, shape: ``[batch_size, seq_length, num_heads]``.
 
         Returns
         -------
-            The output, shape: ``[B, T, embedding_dim]``.
+            The output, shape: ``[batch_size, seq_length, embedding_dim]``.
 
         """
         outputs = [head(input[..., k]) for k, head in enumerate(self.heads)]
@@ -58,7 +64,7 @@ class MultiHeadEmbedding(torch.nn.Module):
         return output
 
 
-class MultiHeadLinear(torch.nn.Module):
+class MultiHeadLinear(nn.Module):
     """Multi-head linear layer.
 
     Arguments
@@ -75,8 +81,13 @@ class MultiHeadLinear(torch.nn.Module):
     >>> import torch
     >>>
     >>>
-    >>> model = MultiHeadLinear(num_heads=2, in_features=64, out_features=32)
-    >>> data = torch.randn(8, 64)
+    >>> batch_size = 8
+    >>> seq_length = 100
+    >>> num_heads = 2
+    >>> embedding_dim = 128
+    >>> num_classes = 32
+    >>> model = MultiHeadLinear(num_heads=num_heads, in_features=embedding_dim, out_features=num_classes)
+    >>> data = torch.randn(batch_size, seq_length, embedding_dim)
     >>> outputs = model(data)
 
     """
@@ -84,8 +95,8 @@ class MultiHeadLinear(torch.nn.Module):
     def __init__(self, num_heads, *args, **kwargs):
         super().__init__()
         self.num_heads = num_heads
-        self.heads = torch.nn.ModuleList(
-            [torch.nn.Linear(*args, **kwargs) for _ in range(num_heads)]
+        self.heads = nn.ModuleList(
+            [nn.Linear(*args, **kwargs) for _ in range(num_heads)]
         )
 
     def forward(self, input):
@@ -94,11 +105,11 @@ class MultiHeadLinear(torch.nn.Module):
         Arguments
         ---------
         input:
-            The input, shape: ``[B, T, C]``.
+            The input, shape: ``[batch_size, seq_length, in_features]``.
 
         Returns
         -------
-            The output, shape: ``[B, T, num_heads, C]``.
+            The output, shape: ``[batch_size, seq_length, num_heads, out_features]``.
 
         """
         outputs = [head(input) for head in self.heads]

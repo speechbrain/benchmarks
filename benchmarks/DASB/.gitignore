@@ -122,4 +122,6 @@ data/
 
 # Results
 results/
-save/
+
+# Hugging Face local cache
+huggingface/

@@ -119,18 +119,20 @@ def prepare_voicebank(
         if split != "validset_wav":
             # Noisy files
             noisy_folder = f"noisy_{split}"
-            noisy_wavs = os.listdir(os.path.join(data_folder, noisy_folder))
+            noisy_wavs = sorted(
+                os.listdir(os.path.join(data_folder, noisy_folder))
+            )
             noisy_wavs = [
                 os.path.join("$DATA_ROOT", noisy_folder, noisy_wav)
                 for noisy_wav in noisy_wavs
+                if noisy_wav.endswith(".wav")
             ]
 
             # Clean files
             clean_folder = f"clean_{split}"
-            clean_wavs = os.listdir(os.path.join(data_folder, clean_folder))
             clean_wavs = [
-                os.path.join("$DATA_ROOT", clean_folder, clean_wav)
-                for clean_wav in clean_wavs
+                noisy_wav.replace(noisy_folder, clean_folder)
+                for noisy_wav in noisy_wavs
             ]
         else:
             noisy_wavs = valid_noisy_wavs

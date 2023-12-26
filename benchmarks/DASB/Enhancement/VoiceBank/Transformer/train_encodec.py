@@ -43,8 +43,9 @@ class Enhancement(sb.Brain):
 
         # Extract audio tokens
         assert (in_sig_lens == out_sig_lens).all()
-        sig, lens = torch.cat([in_sig, out_sig]), torch.cat(
-            [in_sig_lens, out_sig_lens]
+        sig, lens = (
+            torch.cat([in_sig, out_sig]),
+            torch.cat([in_sig_lens, out_sig_lens]),
         )
         tokens, _ = self.modules.codec.encode(sig, lens)
         in_tokens = tokens[: len(tokens) // 2]
@@ -175,6 +176,8 @@ class Enhancement(sb.Brain):
 
     def vocode(self):
         from speechbrain.nnet.loss.si_snr_loss import si_snr_loss
+        from tqdm import tqdm
+
         from dnsmos import DNSMOS
         from dwer import DWER
 
@@ -186,8 +189,11 @@ class Enhancement(sb.Brain):
         dwers = []
         texts = []
         ref_texts = []
-        self.modules.codec.cpu()
-        for i, score in enumerate(self.ter_metric.scores):
+        for i, score in tqdm(
+            enumerate(self.ter_metric.scores),
+            dynamic_ncols=True,
+            total=len(self.ter_metric.scores),
+        ):
             ID, hyp_tokens, rec_tokens = (
                 score["key"],
                 score["hyp_tokens"],
@@ -195,12 +201,12 @@ class Enhancement(sb.Brain):
             )
 
             # Decode
-            hyp_tokens = torch.as_tensor(hyp_tokens).reshape(
-                -1, self.hparams.num_codebooks
-            )
-            rec_tokens = torch.as_tensor(rec_tokens).reshape(
-                -1, self.hparams.num_codebooks
-            )
+            hyp_tokens = torch.as_tensor(
+                hyp_tokens, device=self.device
+            ).reshape(-1, self.hparams.num_codebooks)
+            rec_tokens = torch.as_tensor(
+                rec_tokens, device=self.device
+            ).reshape(-1, self.hparams.num_codebooks)
             # Warmup to avoid problems (different output for same input) on Compute Canada...
             if i == 0:
                 [self.modules.codec.decode(hyp_tokens[None]) for _ in range(20)]
@@ -208,24 +214,34 @@ class Enhancement(sb.Brain):
             rec_sig = self.modules.codec.decode(rec_tokens[None])[0, 0]
             ref_sig = self.test_set[self.test_set.data_ids.index(ID)][
                 "out_sig"
-            ]  # Original signal (resampled)
+            ].to(
+                self.device
+            )  # Original output signal (resampled)
+            in_sig = self.test_set[self.test_set.data_ids.index(ID)][
+                "in_sig"
+            ]  # Original input signal (resampled)
 
             if self.hparams.save_audios:
                 save_folder = os.path.join(self.hparams.output_folder, "audios")
                 os.makedirs(save_folder, exist_ok=True)
                 torchaudio.save(
                     os.path.join(save_folder, f"{ID}_hyp.wav"),
-                    hyp_sig[None],
+                    hyp_sig[None].cpu(),
                     self.hparams.sample_rate,
                 )
                 torchaudio.save(
                     os.path.join(save_folder, f"{ID}_rec.wav"),
-                    rec_sig[None],
+                    rec_sig[None].cpu(),
                     self.hparams.sample_rate,
                 )
                 torchaudio.save(
                     os.path.join(save_folder, f"{ID}_ref.wav"),
-                    ref_sig[None],
+                    ref_sig[None].cpu(),
+                    self.hparams.sample_rate,
+                )
+                torchaudio.save(
+                    os.path.join(save_folder, f"{ID}_in.wav"),
+                    in_sig[None].cpu(),
                     self.hparams.sample_rate,
                 )
 
@@ -234,7 +250,7 @@ class Enhancement(sb.Brain):
             sisnr = -si_snr_loss(
                 hyp_sig[None, :min_length],
                 ref_sig[None, :min_length],
-                torch.as_tensor([1.0]),
+                torch.as_tensor([1.0], device=self.device),
             ).item()
             dnsmos = DNSMOS(hyp_sig, self.hparams.sample_rate)
             rec_dnsmos = DNSMOS(rec_sig, self.hparams.sample_rate)
@@ -310,8 +326,7 @@ def dataio_prepare(hparams):
     data_folder = hparams["data_folder"]
 
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["train_csv"],
-        replacements={"DATA_ROOT": data_folder},
+        csv_path=hparams["train_csv"], replacements={"DATA_ROOT": data_folder},
     )
     # Sort training data to speed up training
     train_data = train_data.filtered_sorted(
@@ -321,8 +336,7 @@ def dataio_prepare(hparams):
     )
 
     valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["valid_csv"],
-        replacements={"DATA_ROOT": data_folder},
+        csv_path=hparams["valid_csv"], replacements={"DATA_ROOT": data_folder},
     )
     # Sort validation data to speed up validation
     valid_data = valid_data.filtered_sorted(
@@ -332,8 +346,7 @@ def dataio_prepare(hparams):
     )
 
     test_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["test_csv"],
-        replacements={"DATA_ROOT": data_folder},
+        csv_path=hparams["test_csv"], replacements={"DATA_ROOT": data_folder},
     )
     # Sort the test data to speed up testing
     test_data = test_data.filtered_sorted(
@@ -353,9 +366,7 @@ def dataio_prepare(hparams):
         noisy_sig, sample_rate = torchaudio.load(noisy_wav)
         noisy_sig = noisy_sig[0]  # [T]
         in_sig = torchaudio.functional.resample(
-            noisy_sig,
-            sample_rate,
-            hparams["sample_rate"],
+            noisy_sig, sample_rate, hparams["sample_rate"],
         )
         yield in_sig
 
@@ -363,9 +374,7 @@ def dataio_prepare(hparams):
         clean_sig, sample_rate = torchaudio.load(clean_wav)
         clean_sig = clean_sig[0]  # [T]
         out_sig = torchaudio.functional.resample(
-            clean_sig,
-            sample_rate,
-            hparams["sample_rate"],
+            clean_sig, sample_rate, hparams["sample_rate"],
         )
         yield out_sig
 

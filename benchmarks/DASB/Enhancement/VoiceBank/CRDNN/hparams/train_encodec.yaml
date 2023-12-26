@@ -32,12 +32,12 @@ test_remove_if_longer: 60.0  # Seconds
 sorting: ascending
 
 # Training parameters
-num_epochs: 50
+num_epochs: 30
 grad_accumulation_factor: 1
 dynamic_batching: False
-train_batch_size: 8
-valid_batch_size: 8
-test_batch_size: 8
+train_batch_size: 16
+valid_batch_size: 16
+test_batch_size: 16
 train_max_batch_length: 40.0  # Seconds
 valid_max_batch_length: 40.0  # Seconds
 test_max_batch_length: 40.0  # Seconds
@@ -73,14 +73,14 @@ use_pretrained_embeddings: False
 dropout: 0.1
 activation: !name:torch.nn.LeakyReLU
 rnn_class: !name:speechbrain.nnet.RNN.LSTM
-rnn_layers: 8
+rnn_layers: 4
 time_pooling_size: 1
 rnn_bidirectional: True
 rnn_neurons: 256
 dnn_blocks: 2
 dnn_neurons: 256
 cnn_blocks: 2
-cnn_channels: (64, 64)
+cnn_channels: (32, 32)
 inter_layer_pooling_size: (2, 2)
 cnn_kernelsize: (3, 3)
 

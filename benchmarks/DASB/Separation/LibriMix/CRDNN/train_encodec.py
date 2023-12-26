@@ -1,6 +1,6 @@
 #!/usr/bin/env/python
 
-"""Recipe for training an encoder-only transformer-based speech separation system using
+"""Recipe for training an encoder-only CRDNN-based speech separation system using
 discrete audio representations (see https://arxiv.org/abs/2312.09747).
 
 The model is trained via cross-entropy loss applied to each timestep using EnCodec audio
@@ -82,7 +82,7 @@ class Separation(sb.Brain):
         in_embs = self.modules.embedding(in_tokens)
 
         # Forward encoder
-        enc_out = self.modules.encoder.encode(in_embs, in_sig_lens)
+        enc_out = self.modules.encoder(in_embs)
 
         # Compute cross-entropy logits
         ce_logits = self.modules.ce_head(enc_out)

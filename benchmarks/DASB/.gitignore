@@ -122,3 +122,6 @@ data/
 
 # Results
 results/
+
+# Hugging Face local cache
+huggingface/

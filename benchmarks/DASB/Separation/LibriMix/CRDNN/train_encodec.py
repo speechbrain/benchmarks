@@ -115,7 +115,7 @@ class Separation(sb.Brain):
         IDs = batch.id
         out_tokens, out_tokens_lens = batch.out_tokens
 
-        # CE loss
+        # Cross-entropy loss
         loss = self.hparams.ce_loss(
             ce_logits.log_softmax(dim=-1).flatten(start_dim=-3, end_dim=-2),
             out_tokens.flatten(start_dim=-2),
@@ -242,9 +242,7 @@ class Separation(sb.Brain):
                 )
                 .movedim(-1, 0)
             )
-            # Warmup to avoid problems (different output for same input) on Compute Canada...
-            if i == 0:
-                [self.modules.codec.decode(hyp_tokens) for _ in range(20)]
+
             hyp_sig = self.modules.codec.decode(hyp_tokens)[:, 0].flatten()
             rec_sig = self.modules.codec.decode(rec_tokens)[:, 0].flatten()
             ref_sig = self.test_set[self.test_set.data_ids.index(ID)][

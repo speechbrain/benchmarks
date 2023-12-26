@@ -6,6 +6,9 @@ discrete audio representations (see https://arxiv.org/abs/2312.09747).
 The model is trained via cross-entropy loss applied to each timestep using EnCodec audio
 representations (see https://arxiv.org/abs/2210.13438).
 
+The neural network architecture is inspired by:
+https://github.com/facebookresearch/encodec/blob/0e2d0aed29362c8e8f52494baf3e6f99056b214f/encodec/model.py#L27
+
 To run this recipe:
 > python train_encodec.py hparams/train_encodec.yaml
 
@@ -69,11 +72,9 @@ class Enhancement(sb.Brain):
             hyps = ce_logits.argmax(dim=-1).flatten(start_dim=-2).tolist()
 
             # Remove padding (output length is equal to input length)
+            min_length = self.hparams.num_codebooks
             hyps = [
-                hyp[
-                    : self.hparams.num_codebooks
-                    * int(len(hyp) * rel_length / self.hparams.num_codebooks)
-                ]
+                hyp[: min_length * int(len(hyp) * rel_length / min_length)]
                 for hyp, rel_length in zip(hyps, in_sig_lens)
             ]
 
@@ -96,11 +97,11 @@ class Enhancement(sb.Brain):
         if hyps is not None:
             targets = out_tokens.flatten(start_dim=-2).tolist()
 
-            # Remove padding (output length is equal to input length)
+            # Remove padding
+            min_length = self.hparams.num_codebooks
             targets = [
                 target[
-                    : self.hparams.num_codebooks
-                    * int(len(target) * rel_length / self.hparams.num_codebooks)
+                    : min_length * int(len(target) * rel_length / min_length)
                 ]
                 for target, rel_length in zip(targets, out_tokens_lens)
             ]
@@ -200,10 +201,10 @@ class Enhancement(sb.Brain):
             rec_tokens = torch.as_tensor(rec_tokens).reshape(
                 -1, self.hparams.num_codebooks
             )
-            # Warmup to avoid problems on Compute Canada...
+            # Warmup to avoid problems (different output for same input) on Compute Canada...
             if i == 0:
-                for _ in range(20):
-                    hyp_sig = self.modules.codec.decode(hyp_tokens[None])[0, 0]
+                [self.modules.codec.decode(hyp_tokens[None]) for _ in range(20)]
+            hyp_sig = self.modules.codec.decode(hyp_tokens[None])[0, 0]
             rec_sig = self.modules.codec.decode(rec_tokens[None])[0, 0]
             ref_sig = self.test_set[self.test_set.data_ids.index(ID)][
                 "out_sig"
@@ -369,16 +370,7 @@ def dataio_prepare(hparams):
         yield out_sig
 
     sb.dataio.dataset.add_dynamic_item(
-        [train_data], audio_pipeline, takes, provides
-    )
-    sb.dataio.dataset.add_dynamic_item(
-        [valid_data, test_data],
-        lambda *args, **kwargs: audio_pipeline(
-            *args,
-            **kwargs,
-        ),
-        takes,
-        provides,
+        [train_data, valid_data, test_data], audio_pipeline, takes, provides
     )
 
     # 3. Set output
@@ -412,6 +404,7 @@ if __name__ == "__main__":
         kwargs={
             "data_folder": hparams["data_folder"],
             "save_folder": hparams["save_folder"],
+            "splits": hparams["splits"],
             "num_valid_speakers": hparams["num_valid_speakers"],
         },
     )

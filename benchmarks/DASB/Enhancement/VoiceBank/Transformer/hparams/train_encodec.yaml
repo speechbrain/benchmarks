@@ -14,6 +14,7 @@ data_folder: !PLACEHOLDER
 train_csv: !ref <save_folder>/voicebank_trainset_28spk_wav.csv
 valid_csv: !ref <save_folder>/voicebank_validset_wav.csv
 test_csv: !ref <save_folder>/voicebank_testset_wav.csv
+splits: [trainset_28spk_wav, validset_wav, testset_wav]
 num_valid_speakers: 2
 
 # Output folders
@@ -76,6 +77,7 @@ nhead: 8
 num_layers: 6
 d_ffn: 2048
 max_length: 5000
+encoder_module: conformer
 
 # Search parameters
 valid_search_freq: 1
@@ -131,7 +133,7 @@ encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
     dropout: !ref <dropout>
     activation: !ref <activation>
     max_length: !ref <max_length>
-    encoder_module: conformer
+    encoder_module: !ref <encoder_module>
     normalize_before: True
     causal: False
 

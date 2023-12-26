@@ -14,6 +14,7 @@ data_folder: !PLACEHOLDER
 train_csv: !ref <save_folder>/voicebank_trainset_28spk_wav.csv
 valid_csv: !ref <save_folder>/voicebank_validset_wav.csv
 test_csv: !ref <save_folder>/voicebank_testset_wav.csv
+splits: [trainset_28spk_wav, validset_wav, testset_wav]
 num_valid_speakers: 2
 
 # Output folders

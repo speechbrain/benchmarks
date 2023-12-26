@@ -53,7 +53,7 @@ class ComputeScore:
             audio, sampling_rate, self.sampling_rate
         )
 
-        audio = audio.numpy()
+        audio = audio.cpu().numpy()
         fs = self.sampling_rate
 
         len_samples = int(INPUT_LENGTH * fs)

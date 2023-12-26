@@ -52,6 +52,8 @@ class ComputeScore:
         )
 
         # Forward
+        self.model.to(hyp_audio.device)
+        self.model.eval()
         enc_out = self.model.forward_encoder(hyp_audio[None])
         hyp_text, _, _, _ = self.searcher(enc_out, torch.as_tensor([1.0]))
         hyp_text = self.model.tokenizer.batch_decode(

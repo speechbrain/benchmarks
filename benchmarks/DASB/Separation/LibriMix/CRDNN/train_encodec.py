@@ -203,6 +203,8 @@ class Separation(sb.Brain):
 
     def vocode(self):
         from speechbrain.nnet.loss.si_snr_loss import si_snr_loss
+        from tqdm import tqdm
+
         from dnsmos import DNSMOS
         from dwer import DWER
 
@@ -214,8 +216,11 @@ class Separation(sb.Brain):
         dwers = []
         texts = []
         ref_texts = []
-        self.modules.codec.cpu()
-        for i, score in enumerate(self.ter_metric.scores):
+        for i, score in tqdm(
+            enumerate(self.ter_metric.scores),
+            dynamic_ncols=True,
+            total=len(self.ter_metric.scores),
+        ):
             ID, hyp_tokens, rec_tokens = (
                 score["key"],
                 score["hyp_tokens"],
@@ -224,20 +229,16 @@ class Separation(sb.Brain):
 
             # Decode
             hyp_tokens = (
-                torch.as_tensor(hyp_tokens)
+                torch.as_tensor(hyp_tokens, device=self.device)
                 .reshape(
-                    -1,
-                    self.hparams.num_codebooks,
-                    self.hparams.num_speakers,
+                    -1, self.hparams.num_codebooks, self.hparams.num_speakers,
                 )
                 .movedim(-1, 0)
             )
             rec_tokens = (
-                torch.as_tensor(rec_tokens)
+                torch.as_tensor(rec_tokens, device=self.device)
                 .reshape(
-                    -1,
-                    self.hparams.num_codebooks,
-                    self.hparams.num_speakers,
+                    -1, self.hparams.num_codebooks, self.hparams.num_speakers,
                 )
                 .movedim(-1, 0)
             )
@@ -248,24 +249,34 @@ class Separation(sb.Brain):
             rec_sig = self.modules.codec.decode(rec_tokens)[:, 0].flatten()
             ref_sig = self.test_set[self.test_set.data_ids.index(ID)][
                 "out_sig"
-            ]  # Original signal (resampled and flattened)
+            ].to(
+                self.device
+            )  # Original output signal (resampled and flattened)
+            in_sig = self.test_set[self.test_set.data_ids.index(ID)][
+                "in_sig"
+            ]  # Original input signal (resampled)
 
             if self.hparams.save_audios:
                 save_folder = os.path.join(self.hparams.output_folder, "audios")
                 os.makedirs(save_folder, exist_ok=True)
                 torchaudio.save(
                     os.path.join(save_folder, f"{ID}_hyp.wav"),
-                    hyp_sig[None],
+                    hyp_sig[None].cpu(),
                     self.hparams.sample_rate,
                 )
                 torchaudio.save(
                     os.path.join(save_folder, f"{ID}_rec.wav"),
-                    rec_sig[None],
+                    rec_sig[None].cpu(),
                     self.hparams.sample_rate,
                 )
                 torchaudio.save(
                     os.path.join(save_folder, f"{ID}_ref.wav"),
-                    ref_sig[None],
+                    ref_sig[None].cpu(),
+                    self.hparams.sample_rate,
+                )
+                torchaudio.save(
+                    os.path.join(save_folder, f"{ID}_in.wav"),
+                    in_sig[None].cpu(),
                     self.hparams.sample_rate,
                 )
 
@@ -274,7 +285,7 @@ class Separation(sb.Brain):
             sisnr = -si_snr_loss(
                 hyp_sig[None, :min_length],
                 ref_sig[None, :min_length],
-                torch.as_tensor([1.0]),
+                torch.as_tensor([1.0], device=self.device),
             ).item()
             dnsmos = DNSMOS(hyp_sig, self.hparams.sample_rate)
             rec_dnsmos = DNSMOS(rec_sig, self.hparams.sample_rate)
@@ -350,8 +361,7 @@ def dataio_prepare(hparams):
     data_folder = hparams["data_folder"]
 
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["train_csv"],
-        replacements={"DATA_ROOT": data_folder},
+        csv_path=hparams["train_csv"], replacements={"DATA_ROOT": data_folder},
     )
     # Sort training data to speed up training
     train_data = train_data.filtered_sorted(
@@ -361,8 +371,7 @@ def dataio_prepare(hparams):
     )
 
     valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["valid_csv"],
-        replacements={"DATA_ROOT": data_folder},
+        csv_path=hparams["valid_csv"], replacements={"DATA_ROOT": data_folder},
     )
     # Sort validation data to speed up validation
     valid_data = valid_data.filtered_sorted(
@@ -372,8 +381,7 @@ def dataio_prepare(hparams):
     )
 
     test_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["test_csv"],
-        replacements={"DATA_ROOT": data_folder},
+        csv_path=hparams["test_csv"], replacements={"DATA_ROOT": data_folder},
     )
     # Sort the test data to speed up testing
     test_data = test_data.filtered_sorted(
@@ -414,27 +422,23 @@ def dataio_prepare(hparams):
 
             # Mixing with given noise gain
             noise_gain = -hparams["snr"]
-            mix_sig_power = (mix_sig**2).mean()
+            mix_sig_power = (mix_sig ** 2).mean()
             ratio = 10 ** (
                 noise_gain / 10
             )  # ratio = noise_sig_power / mix_sig_power
             desired_noise_sig_power = ratio * mix_sig_power
-            noise_sig_power = (noise_sig**2).mean()
+            noise_sig_power = (noise_sig ** 2).mean()
             gain = (desired_noise_sig_power / noise_sig_power).sqrt()
             noise_sig *= gain
             mix_sig += noise_sig
 
         in_sig = torchaudio.functional.resample(
-            mix_sig,
-            sample_rate,
-            hparams["sample_rate"],
+            mix_sig, sample_rate, hparams["sample_rate"],
         )
         yield in_sig
 
         out_sig = torchaudio.functional.resample(
-            clean_sigs,
-            sample_rate,
-            hparams["sample_rate"],
+            clean_sigs, sample_rate, hparams["sample_rate"],
         )
         # Flatten as SpeechBrain's dataloader does not support multichannel audio
         out_sig = out_sig.flatten()  # [S * T]

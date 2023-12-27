@@ -313,6 +313,9 @@ class Enhancement(sb.Brain):
                 )
             )
             csv_writer.writerow(entry)
+            self.hparams.train_logger.log_stats(
+                stats_meta={k: v for k, v in list(entry.items())[1:-2]},
+            )
 
 
 def dataio_prepare(hparams):

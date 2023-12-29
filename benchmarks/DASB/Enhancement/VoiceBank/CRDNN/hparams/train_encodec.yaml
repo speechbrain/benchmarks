@@ -159,8 +159,7 @@ modules:
     ce_head: !ref <ce_head>
 
 model: !new:torch.nn.ModuleList
-    [[!ref <codec>,
-      !ref <embedding>,
+    [[!ref <embedding>,
       !ref <encoder>,
       !ref <ce_head>]]
 

@@ -122,9 +122,8 @@ codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
     freeze: True
     renorm_embeddings: False
 
-embedding: !new:nnet.MultiHeadEmbedding
-    num_heads: !ref <num_codebooks>
-    num_embeddings: !ref <vocab_size>
+embedding: !new:torch.nn.Embedding
+    num_embeddings: !ref <vocab_size> * <num_codebooks>
     embedding_dim: !ref <embedding_dim>
 
 encoder: !new:speechbrain.lobes.models.CRDNN.CRDNN
@@ -147,10 +146,9 @@ encoder: !new:speechbrain.lobes.models.CRDNN.CRDNN
     rnn_re_init: True
     use_rnnp: False
 
-ce_head: !new:nnet.MultiHeadLinear
-    num_heads: !ref <num_codebooks>
-    in_features: !ref <dnn_neurons>
-    out_features: !ref <vocab_size>
+ce_head: !new:speechbrain.nnet.linear.Linear
+    input_size: !ref <dnn_neurons>
+    n_neurons: !ref <vocab_size> * <num_codebooks>
 
 modules:
     codec: !ref <codec>

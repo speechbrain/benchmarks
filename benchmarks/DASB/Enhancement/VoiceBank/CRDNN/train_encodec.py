@@ -51,14 +51,31 @@ class Enhancement(sb.Brain):
         in_tokens = tokens[: len(tokens) // 2]
         batch.out_tokens = tokens[len(tokens) // 2 :], out_sig_lens
 
-        # Forward embedding layer
-        in_embs = self.modules.embedding(in_tokens)
+        # Forward embedding layer (one for each codebook)
+        in_tokens += torch.arange(
+            0,
+            self.hparams.num_codebooks * self.hparams.vocab_size,
+            self.hparams.vocab_size,
+            device=self.device,
+        )  # Offset to select embeddings from the correct codebook
+        in_embs = (
+            self.modules.embedding(in_tokens)
+            .reshape(
+                len(batch),
+                -1,
+                self.hparams.embedding_dim,
+                self.hparams.num_codebooks,
+            )
+            .sum(dim=-1)
+        )
 
         # Forward encoder
         enc_out = self.modules.encoder(in_embs)
 
-        # Compute cross-entropy logits
-        ce_logits = self.modules.ce_head(enc_out)
+        # Compute cross-entropy logits (one for each codebook)
+        ce_logits = self.modules.ce_head(enc_out).reshape(
+            len(batch), -1, self.hparams.num_codebooks, self.hparams.vocab_size,
+        )
 
         # Compute outputs
         hyps = None
@@ -421,14 +438,14 @@ if __name__ == "__main__":
 
     # Use pretrained embeddings
     if hparams["use_pretrained_embeddings"]:
-        for head, pretrained_weight in zip(
-            hparams["embedding"].heads, hparams["codec"].vocabulary
-        ):
-            head.weight.data.copy_(pretrained_weight)
+        weight = hparams["codec"].vocabulary.reshape(
+            -1, hparams["embedding_dim"]
+        )
+        hparams["embedding"].weight.data[: len(weight)].copy_(weight)
 
     # Freeze embeddings
     if hparams["freeze_embeddings"]:
-        hparams["embeddings"].requires_grad_(False)
+        hparams["embedding"].requires_grad_(False)
 
     # Create the datasets objects and tokenization
     train_data, valid_data, test_data = dataio_prepare(hparams)

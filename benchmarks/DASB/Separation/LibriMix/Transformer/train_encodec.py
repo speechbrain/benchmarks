@@ -78,7 +78,7 @@ class Separation(sb.Brain):
         )  # [B, N, K * S]
         batch.out_tokens = out_tokens, out_sig_lens
 
-        # Forward embedding layer (one for each codebook)
+        # Forward embedding layer (one for each codebook/speaker)
         in_tokens += torch.arange(
             0,
             self.hparams.num_codebooks * self.hparams.vocab_size,
@@ -99,7 +99,7 @@ class Separation(sb.Brain):
         # Forward encoder
         enc_out = self.modules.encoder.encode(in_embs, in_sig_lens)
 
-        # Compute cross-entropy logits (one for each codebook)
+        # Compute cross-entropy logits (one for each codebook/speaker)
         ce_logits = self.modules.ce_head(enc_out).reshape(
             len(batch),
             -1,

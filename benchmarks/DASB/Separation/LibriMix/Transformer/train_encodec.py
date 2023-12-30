@@ -508,9 +508,10 @@ if __name__ == "__main__":
 
     # Use pretrained embeddings
     if hparams["use_pretrained_embeddings"]:
-        hparams["embedding"].weight.data.copy_(
-            hparams["codec"].vocabulary.reshape(-1, hparams["embedding_dim"])
+        weight = hparams["codec"].vocabulary.reshape(
+            -1, hparams["embedding_dim"]
         )
+        hparams["embedding"].weight.data[: len(weight)].copy_(weight)
 
     # Freeze embeddings
     if hparams["freeze_embeddings"]:

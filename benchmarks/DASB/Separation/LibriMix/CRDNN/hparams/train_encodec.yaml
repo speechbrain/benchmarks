@@ -53,6 +53,7 @@ ckpt_interval_minutes: 600
 keep_checkpoints: 2
 augment: True
 augment_prob: 0.75
+use_pit: False  # Set to True to use permutation invariant loss
 snr: 5  # dB
 
 # Optimizer parameters

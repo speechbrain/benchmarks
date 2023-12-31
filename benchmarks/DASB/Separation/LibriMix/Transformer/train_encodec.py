@@ -17,6 +17,7 @@ Authors
 """
 
 import csv
+import itertools
 import os
 import sys
 
@@ -55,9 +56,9 @@ class Separation(sb.Brain):
         lens = torch.cat(
             [
                 in_sig_lens,
-                torch.stack(
-                    [out_sig_lens] * self.hparams.num_speakers
-                ).T.flatten(),
+                out_sig_lens[:, None]
+                .expand(-1, self.hparams.num_speakers)
+                .flatten(),
             ]
         )
         tokens, _ = self.modules.codec.encode(sig, lens)
@@ -135,12 +136,61 @@ class Separation(sb.Brain):
         IDs = batch.id
         out_tokens, out_tokens_lens = batch.out_tokens
 
-        # Cross-entropy loss
-        loss = self.hparams.ce_loss(
-            ce_logits.log_softmax(dim=-1).flatten(start_dim=-3, end_dim=-2),
-            out_tokens.flatten(start_dim=-2),
-            length=out_tokens_lens,
-        )
+        if not self.hparams.use_pit:
+            # Cross-entropy loss
+            loss = self.hparams.ce_loss(
+                ce_logits.log_softmax(dim=-1).flatten(start_dim=-3, end_dim=-2),
+                out_tokens.flatten(start_dim=-2),
+                length=out_tokens_lens,
+            )
+        else:
+            # Batch of permutation matrices (one for each of the factorial(num_speakers) permutations)
+            perms = itertools.permutations(range(self.hparams.num_speakers))
+            perm_matrix = torch.stack(
+                [
+                    torch.eye(self.hparams.num_speakers, device=self.device)[
+                        torch.as_tensor(perm)
+                    ]
+                    for perm in perms
+                ]
+            )
+
+            # Apply permutations
+            batch_size = len(out_tokens)
+            num_perms = len(perm_matrix)
+            num_heads = self.hparams.num_codebooks * self.hparams.num_speakers
+            perm_out_tokens = (
+                (
+                    out_tokens.reshape(-1, self.hparams.num_speakers)
+                    .expand(num_perms, -1, -1)
+                    .type(perm_matrix.dtype)
+                    @ perm_matrix
+                )
+                .reshape(num_perms, batch_size, -1, num_heads,)
+                .long()
+            )
+
+            # Cross-entropy loss
+            ce_logits = ce_logits.expand(num_perms, -1, -1, -1, -1).reshape(
+                num_perms * batch_size, -1, num_heads, self.hparams.vocab_size
+            )
+            perm_out_tokens = perm_out_tokens.reshape(
+                num_perms * batch_size, -1, num_heads
+            )
+            loss = self.hparams.ce_loss(
+                ce_logits.log_softmax(dim=-1).flatten(start_dim=-3, end_dim=-2),
+                perm_out_tokens.flatten(start_dim=-2),
+                length=out_tokens_lens.expand(num_perms, -1).flatten(),
+                reduction="batch",
+            ).reshape(num_perms, batch_size)
+            loss, idxes = loss.min(dim=0)
+            loss = loss.mean()
+
+            # Select tokens corresponding to the permutation with minimum loss
+            out_tokens = perm_out_tokens[
+                idxes * batch_size
+                + torch.arange(0, batch_size, device=self.device)
+            ]
 
         if hyps is not None:
             targets = out_tokens.flatten(start_dim=-2).tolist()

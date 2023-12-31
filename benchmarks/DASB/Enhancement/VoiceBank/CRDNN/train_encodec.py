@@ -206,8 +206,8 @@ class Enhancement(sb.Brain):
         dwers = []
         texts = []
         ref_texts = []
-        for i, score in tqdm(
-            enumerate(self.ter_metric.scores),
+        for score in tqdm(
+            self.ter_metric.scores,
             dynamic_ncols=True,
             total=len(self.ter_metric.scores),
         ):

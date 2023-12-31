@@ -31,7 +31,7 @@ save_audios: True
 train_remove_if_longer: 60.0  # Seconds
 valid_remove_if_longer: 60.0  # Seconds
 test_remove_if_longer: 60.0  # Seconds
-sorting: ascending
+sorting: descending
 
 # Training parameters
 num_epochs: 10
@@ -48,13 +48,13 @@ max_batch_size: 128
 dataloader_workers: 4
 nonfinite_patience: 10
 max_grad_norm: 5.0
-precision: fp16
+precision: fp32
 ckpt_interval_minutes: 600
 keep_checkpoints: 2
 augment: True
 augment_prob: 0.75
 use_pit: False  # Set to True to use permutation invariant loss
-snr: 5  # dB
+snr: 5  # dB  # Used only if `add_noise` is True
 
 # Optimizer parameters
 lr: 0.0005

@@ -286,8 +286,8 @@ class Separation(sb.Brain):
         dwers = []
         texts = []
         ref_texts = []
-        for i, score in tqdm(
-            enumerate(self.ter_metric.scores),
+        for score in tqdm(
+            self.ter_metric.scores,
             dynamic_ncols=True,
             total=len(self.ter_metric.scores),
         ):
@@ -348,19 +348,58 @@ class Separation(sb.Brain):
                     self.hparams.sample_rate,
                 )
 
-            # Compute metrics
-            min_length = min(len(hyp_sig), len(ref_sig))
-            sisnr = -si_snr_loss(
-                hyp_sig[None, :min_length],
-                ref_sig[None, :min_length],
-                torch.as_tensor([1.0], device=self.device),
-            ).item()
-            dnsmos = DNSMOS(hyp_sig, self.hparams.sample_rate)
-            rec_dnsmos = DNSMOS(rec_sig, self.hparams.sample_rate)
-            ref_dnsmos = DNSMOS(ref_sig, self.hparams.sample_rate)
-            dwer, text, ref_text = DWER(
-                hyp_sig, ref_sig, self.hparams.sample_rate
-            )
+            # Compute metrics (average over speakers)
+            spk_sisnrs = []
+            spk_dnsmoses = []
+            spk_rec_dnsmoses = []
+            spk_ref_dnsmoses = []
+            spk_dwers = []
+            spk_texts = []
+            spk_ref_texts = []
+
+            spk_hyp_sig_length = len(hyp_sig) // self.hparams.num_speakers
+            spk_rec_sig_length = len(rec_sig) // self.hparams.num_speakers
+            spk_ref_sig_length = len(ref_sig) // self.hparams.num_speakers
+
+            for i in range(self.hparams.num_speakers):
+                spk_hyp_sig = hyp_sig[
+                    i * spk_hyp_sig_length : (i + 1) * spk_hyp_sig_length
+                ]
+                spk_rec_sig = rec_sig[
+                    i * spk_rec_sig_length : (i + 1) * spk_rec_sig_length
+                ]
+                spk_ref_sig = ref_sig[
+                    i * spk_ref_sig_length : (i + 1) * spk_ref_sig_length
+                ]
+
+                spk_min_length = min(len(spk_hyp_sig), len(spk_ref_sig))
+                spk_sisnr = -si_snr_loss(
+                    spk_hyp_sig[None, :spk_min_length],
+                    spk_ref_sig[None, :spk_min_length],
+                    torch.as_tensor([1.0], device=self.device),
+                ).item()
+                spk_dnsmos = DNSMOS(spk_hyp_sig, self.hparams.sample_rate)
+                spk_rec_dnsmos = DNSMOS(spk_rec_sig, self.hparams.sample_rate)
+                spk_ref_dnsmos = DNSMOS(spk_ref_sig, self.hparams.sample_rate)
+                spk_dwer, spk_text, spk_ref_text = DWER(
+                    spk_hyp_sig, spk_ref_sig, self.hparams.sample_rate
+                )
+
+                spk_sisnrs.append(spk_sisnr)
+                spk_dnsmoses.append(spk_dnsmos)
+                spk_rec_dnsmoses.append(spk_rec_dnsmos)
+                spk_ref_dnsmoses.append(spk_ref_dnsmos)
+                spk_dwers.append(spk_dwer)
+                spk_texts.append(spk_text)
+                spk_ref_texts.append(spk_ref_text)
+
+            sisnr = sum(spk_sisnrs) / len(spk_sisnrs)
+            dnsmos = sum(spk_dnsmoses) / len(spk_dnsmoses)
+            rec_dnsmos = sum(spk_rec_dnsmoses) / len(spk_rec_dnsmoses)
+            ref_dnsmos = sum(spk_ref_dnsmoses) / len(spk_ref_dnsmoses)
+            dwer = sum(spk_dwers) / len(spk_dwers)
+            text = " || ".join(spk_texts)
+            ref_text = " || ".join(spk_ref_texts)
 
             IDs.append(ID)
             sisnrs.append(sisnr)

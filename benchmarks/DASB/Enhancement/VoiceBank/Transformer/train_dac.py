@@ -43,10 +43,7 @@ class Enhancement(sb.Brain):
 
         # Extract audio tokens
         assert (in_sig_lens == out_sig_lens).all()
-        sig, lens = (
-            torch.cat([in_sig, out_sig]),
-            torch.cat([in_sig_lens, out_sig_lens]),
-        )
+        sig = torch.cat([in_sig, out_sig])
         with torch.no_grad():
             self.hparams.codec.to(self.device).eval()
             tokens = self.hparams.codec(

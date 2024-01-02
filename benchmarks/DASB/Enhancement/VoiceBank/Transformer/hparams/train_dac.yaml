@@ -1,9 +1,9 @@
 ﻿# ############################################################################
-# Model: CRDNN with EnCodec audio representations (see https://arxiv.org/abs/2210.13438)
+# Model: Transformer with DAC audio representations (see https://arxiv.org/abs/2306.06546)
 # Authors: Luca Della Libera 2023
 # ############################################################################
 
-experiment_name: encodec
+experiment_name: dac
 
 # Seed needs to be set at top of YAML
 seed: 0
@@ -60,33 +60,28 @@ annealing_factor: 0.9
 patient: 0
 enable_scheduler: True
 
-# EnCodec parameters
-# sample_rate: [24000, 24000, 24000, 24000]
+# DAC parameters
+# model_type: [16khz, 24khz, 44khz, 44khz]
 # vocab_size: [1024, 1024, 1024, 1024]
-# bandwidth: [1.5, 3.0, 6.0, 12.0, 24.0]
-# num_codebooks: [2, 4, 8, 16, 32]
-sample_rate: 24000
+# model_bitrate: [8kbps, 8kbps, 8kbps, 16kbps]
+# max_num_codebooks: [12, 32, 9, 18]
+# embedding_dim: [1024, 1024, 1024, 128]
+sample_rate: 24000  # NOTE: must match DAC's model type
+model_type: 24khz
 vocab_size: 1024
-bandwidth: 1.5
-num_codebooks: 2
+model_bitrate: 8kbps
+num_codebooks: 2  # NOTE: must be smaller than the maximum number of codebooks for the given model type
 
 # Encoder parameters
-embedding_dim: 128  # NOTE: if using pretrained embeddings, must match EnCodec's embedding size
-freeze_embeddings: False
-use_pretrained_embeddings: False
+embedding_dim: 128
 dropout: 0.1
-activation: !name:torch.nn.LeakyReLU
-rnn_class: !name:speechbrain.nnet.RNN.LSTM
-rnn_layers: 4
-time_pooling_size: 1
-rnn_bidirectional: True
-rnn_neurons: 256
-dnn_blocks: 2
-dnn_neurons: 256
-cnn_blocks: 2
-cnn_channels: (32, 32)
-inter_layer_pooling_size: (2, 2)
-cnn_kernelsize: (3, 3)
+activation: !name:torch.nn.GELU
+d_model: 256
+nhead: 8
+num_layers: 6
+d_ffn: 2048
+max_length: 5000
+encoder_module: transformer
 
 # Search parameters
 valid_search_freq: 1
@@ -116,42 +111,34 @@ augmentation: !new:speechbrain.augment.augmenter.Augmenter
     augmentations: [!ref <drop_freq>, !ref <drop_chunk>]
 
 # Modules
-# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
-codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
-    source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
-    save_path: !ref <save_folder>
-    sample_rate: !ref <sample_rate>
-    bandwidth: !ref <bandwidth>
-    flat_embeddings: False
-    freeze: True
-    renorm_embeddings: False
+# DAC model (see https://github.com/descriptinc/descript-audio-codec)
+codec: !new:dac.DAC
+    model_type: !ref <model_type>
+    model_bitrate: !ref <model_bitrate>
+    load_pretrained: True
+    tag: latest
 
 embedding: !new:torch.nn.Embedding
     num_embeddings: !ref <vocab_size> * <num_codebooks>
     embedding_dim: !ref <embedding_dim>
 
-encoder: !new:speechbrain.lobes.models.CRDNN.CRDNN
-    input_shape: [null, null, !ref <embedding_dim>]
-    activation: !ref <activation>
+encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
+    input_size: !ref <embedding_dim>
+    tgt_vocab: !ref <vocab_size>
+    d_model: !ref <d_model>
+    nhead: !ref <nhead>
+    num_encoder_layers: !ref <num_layers>
+    num_decoder_layers: 0
+    d_ffn: !ref <d_ffn>
     dropout: !ref <dropout>
-    cnn_blocks: !ref <cnn_blocks>
-    cnn_channels: !ref <cnn_channels>
-    cnn_kernelsize: !ref <cnn_kernelsize>
-    inter_layer_pooling_size: !ref <inter_layer_pooling_size>
-    time_pooling: True
-    using_2d_pooling: False
-    time_pooling_size: !ref <time_pooling_size>
-    rnn_class: !ref <rnn_class>
-    rnn_layers: !ref <rnn_layers>
-    rnn_neurons: !ref <rnn_neurons>
-    rnn_bidirectional: !ref <rnn_bidirectional>
-    dnn_blocks: !ref <dnn_blocks>
-    dnn_neurons: !ref <dnn_neurons>
-    rnn_re_init: True
-    use_rnnp: False
+    activation: !ref <activation>
+    max_length: !ref <max_length>
+    encoder_module: !ref <encoder_module>
+    normalize_before: True
+    causal: False
 
 ce_head: !new:speechbrain.nnet.linear.Linear
-    input_size: !ref <dnn_neurons>
+    input_size: !ref <d_model>
     n_neurons: !ref <vocab_size> * <num_codebooks>
 
 modules:

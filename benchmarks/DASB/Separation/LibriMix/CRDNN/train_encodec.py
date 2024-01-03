@@ -61,7 +61,9 @@ class Separation(sb.Brain):
                 .flatten(),
             ]
         )
-        tokens, _ = self.modules.codec.encode(sig, lens)
+        with torch.no_grad():
+            self.hparams.codec.to(self.device).eval()
+            tokens = self.hparams.codec.encode(sig, lens)[0]
         in_tokens = tokens[: len(tokens) // (self.hparams.num_speakers + 1)]
         out_tokens = tokens[
             len(tokens) // (self.hparams.num_speakers + 1) :
@@ -313,8 +315,10 @@ class Separation(sb.Brain):
                 .movedim(-1, 0)
             )
 
-            hyp_sig = self.modules.codec.decode(hyp_tokens)[:, 0].flatten()
-            rec_sig = self.modules.codec.decode(rec_tokens)[:, 0].flatten()
+            with torch.no_grad():
+                self.hparams.codec.to(self.device).eval()
+                hyp_sig = self.hparams.codec.decode(hyp_tokens)[:, 0].flatten()
+                rec_sig = self.hparams.codec.decode(rec_tokens)[:, 0].flatten()
             ref_sig = self.test_set[self.test_set.data_ids.index(ID)][
                 "out_sig"
             ].to(

@@ -65,10 +65,14 @@ patient: 0
 enable_scheduler: True
 
 # EnCodec parameters
-sample_rate: 24000  # NOTE: must match EnCodec's sample rate
-vocab_size: 1024  # NOTE: must match EnCodec's codebook size
-bandwidth: 1.5  # [1.5, 3.0, 6.0, 12.0, 24.0]
-num_codebooks: 2  # NOTE: must match EnCodec's number of codebooks at the given bandwidth [2, 4, 8, 16, 32]
+# sample_rate: [24000, 24000, 24000, 24000]
+# vocab_size: [1024, 1024, 1024, 1024]
+# bandwidth: [1.5, 3.0, 6.0, 12.0, 24.0]
+# num_codebooks: [2, 4, 8, 16, 32]
+sample_rate: 24000
+vocab_size: 1024
+bandwidth: 1.5
+num_codebooks: 2
 
 # Encoder parameters
 embedding_dim: 128  # NOTE: if using pretrained embeddings, must match EnCodec's embedding size
@@ -145,7 +149,6 @@ ce_head: !new:speechbrain.nnet.linear.Linear
     n_neurons: !ref <vocab_size> * <num_codebooks> * <num_speakers>
 
 modules:
-    codec: !ref <codec>
     embedding: !ref <embedding>
     encoder: !ref <encoder>
     ce_head: !ref <ce_head>

@@ -67,15 +67,21 @@ class Enhancement(sb.Brain):
                 self.hparams.embedding_dim,
                 self.hparams.num_codebooks,
             )
-            .sum(dim=-1)
+            .movedim(-1, -2)
         )
+        if self.hparams.num_heads >= self.hparams.num_codebooks:
+            in_embs = in_embs.sum(dim=-2)
+        else:
+            in_embs = in_embs.reshape(
+                len(batch), -1, self.hparams.embedding_dim
+            )
 
         # Forward encoder
         enc_out = self.modules.encoder(in_embs)
 
         # Compute cross-entropy logits (one for each codebook)
         ce_logits = self.modules.ce_head(enc_out).reshape(
-            len(batch), -1, self.hparams.num_codebooks, self.hparams.vocab_size,
+            len(batch), -1, self.hparams.num_heads, self.hparams.vocab_size,
         )
 
         # Compute outputs

@@ -71,6 +71,7 @@ bandwidth: 1.5
 num_codebooks: 2
 
 # Encoder parameters
+num_heads: !ref <num_codebooks>
 embedding_dim: 128  # NOTE: if using pretrained embeddings, must match EnCodec's embedding size
 freeze_embeddings: False
 use_pretrained_embeddings: False
@@ -142,7 +143,7 @@ encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
 
 ce_head: !new:speechbrain.nnet.linear.Linear
     input_size: !ref <d_model>
-    n_neurons: !ref <vocab_size> * <num_codebooks>
+    n_neurons: !ref <vocab_size> * <num_heads>
 
 modules:
     embedding: !ref <embedding>

@@ -73,7 +73,6 @@ model_bitrate: 8kbps
 num_codebooks: 2  # NOTE: must be smaller or equal to the maximum number of codebooks for the given model type
 
 # Encoder parameters
-num_heads: !ref <num_codebooks>
 embedding_dim: 128
 dropout: 0.1
 activation: !name:torch.nn.GELU
@@ -140,7 +139,7 @@ encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
 
 ce_head: !new:speechbrain.nnet.linear.Linear
     input_size: !ref <d_model>
-    n_neurons: !ref <vocab_size> * <num_heads>
+    n_neurons: !ref <vocab_size> * <num_codebooks>
 
 modules:
     embedding: !ref <embedding>

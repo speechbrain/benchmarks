@@ -166,6 +166,8 @@ class ASR(sb.Brain):
 
             self.optimizer = self.opt_class(parameters)
 
+            self.optimizers_dict = {"opt_class": self.optimizer}
+
             if self.checkpointer is not None:
                 self.checkpointer.add_recoverable("optimizer", self.optimizer)
 

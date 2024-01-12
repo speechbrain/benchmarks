@@ -53,14 +53,13 @@ To install and set up the benchmark, follow these steps:
    git clone https://github.com/speechbrain/benchmarks/
    ```
 
-3. Navigate to `<path-to-repository>/benchmarks/CL_MASR` in your file system, open a terminal, and run the following commands:
+3. Navigate to `<path-to-repository>/benchmarks/CL_MASR` in your file system, open a terminal, and run the following command:
 
    ```shell
    pip install -r ../../requirements.txt    # Install base dependencies
-   pip install -r extra-requirements.txt    # Install additional dependencies
    ```
 
-   These commands will install the necessary dependencies for the benchmark, including both the base requirements and the additional requirements.
+   This command will install the necessary dependencies for the benchmark.
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -75,6 +74,8 @@ python train_<cl-method>.py hparams/train_<cl-method>.yaml --data_folder <path-t
 ```
 
 **NOTE**: to profile the model (optional), install `ptflops` and `torchinfo` as additional dependencies.
+
+**NOTE**: multi-GPU training is currently not supported.
 
 ### Analyzing the results
 

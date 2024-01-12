@@ -15,7 +15,7 @@ from transformers.models.whisper.tokenization_whisper import (
     WhisperTokenizer,
 )
 
-from speechbrain.lobes.models.huggingface_whisper import HuggingFaceWhisper
+from speechbrain.lobes.models.huggingface_transformers.whisper import Whisper
 
 
 __all__ = [
@@ -88,7 +88,7 @@ class ProgressiveWhisperTokenizer(WhisperTokenizer):
         return bos_sequence
 
 
-class ProgressiveWhisper(HuggingFaceWhisper):
+class ProgressiveWhisper(Whisper):
     """Whisper model that supports decoding with predicted batch of languages,
     implements a more efficient decoding and whose tokenizer's vocabulary can
     be progressively extended by adding new tokens.

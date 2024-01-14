@@ -1,12 +1,18 @@
-# SpeechBrain-MOABB: A User-Friendly Benchmark for EEG decoding tasks
+# SpeechBrain-MOABB: An open-source Python library for EEG decoding with neural networks
 
-This repository provides a set of recipes for processing electroencephalographic (EEG) signals based on the popular [Mother of all BCI Benchmarks (MOABB)](https://github.com/NeuroTechX/moabb), seamlessly integrated with SpeechBrain. The benchmark facilitates the integration of new models and their evaluation on all supported tasks. It not only offers an interface for easy model integration and testing but also proposes a fair and robust method for comparing different architectures.
+This repository provides a set of recipes for processing electroencephalographic (EEG) signals based on the popular [Mother of all BCI Benchmarks (MOABB)](https://github.com/NeuroTechX/moabb), seamlessly integrated with SpeechBrain. 
+This package facilitates the integration of new models and their evaluation on MOABB supported tasks, i.e., motor imagery (MI), P300, and steady-state visual evoked potential (SSVEP). 
+It not only offers an interface for easy model integration and testing but also proposes a fair and robust protocol for comparing different decoding pipelines.
+This code could be used for benchmarking new decoding pipelines (e.g., involving a novel deep learning architecture or a novel data augmentation strategy).
 
 For detailed information, please refer to [The link to the official paper will be available soon].
 
+We also provide tutorials covering the main aspects of SpeechBrain-MOABB, in the `tutorials/` folder.
+
 ## ⚡ Datasets and Recipes
 
-The benchmark leverages datasets supported by [MOABB](https://neurotechx.github.io/moabb/datasets.html). Specifically, it comes with recipes for the following [datasets](#dataset-table):
+This package leverages datasets supported by [MOABB](https://neurotechx.github.io/moabb/datasets.html). 
+Specifically, it comes with recipes for the following [datasets](#dataset-table):
 
 
 | Dataset ID | Task | nsbj | nsess |
@@ -22,8 +28,10 @@ The benchmark leverages datasets supported by [MOABB](https://neurotechx.github.
 |[bi2015a](https://neurotechx.github.io/moabb/generated/moabb.datasets.bi2015a.html#moabb.datasets.bi2015a) | P300 | 43 | 3 |
 |[Lee2019_SSVEP](https://neurotechx.github.io/moabb/generated/moabb.datasets.Lee2019_SSVEP.html#moabb.datasets.Lee2019_SSVEP) | SSVEP | 54 | 2 |
 
-The EEG datasets are automatically downloaded when running the provided recipes. Furthermore, the code is designed to allow easy integration of any other dataset from MOABB, as well as the ability to plug and test various deep neural networks. The benchmark includes recipes for using the datasets mentioned above with popular models such as:
-- [EEGNET](https://arxiv.org/pdf/1611.08024.pdf)
+The EEG datasets are automatically downloaded when running the provided recipes. 
+Furthermore, the code is designed to allow easy integration of any other dataset from MOABB, as well as the ability to plug and test various deep neural networks. 
+The benchmark includes recipes for using the datasets mentioned above with popular models such as:
+- [EEGNet](https://arxiv.org/pdf/1611.08024.pdf)
 - [ShallowConvNet](https://arxiv.org/pdf/1703.05051.pdf)
 - [EEGConformer](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9991178)
 
@@ -66,7 +74,8 @@ To set up the benchmark, follow these steps:
 
 ### Notes on MNE
 
-The benchmark relies on [MNE](https://mne.tools/stable/index.html), which, by default, stores a config file at `$HOME/.mne/mne-python.json` and downloads data to `$HOME/mne-data`. However, in some cases, the home directory may not exist, have storage limitations, or be on a shared filesystem where data operations are restricted by the system admin.
+The code relies on [MNE](https://mne.tools/stable/index.html), which, by default, stores a config file at `$HOME/.mne/mne-python.json` and downloads data to `$HOME/mne-data`. 
+However, in some cases, the home directory may not exist, have storage limitations, or be on a shared filesystem where data operations are restricted by the system admin.
 
 To set up a different folder for MNE, follow these steps:
 
@@ -84,7 +93,7 @@ By following these steps, you can ensure that MNE uses the specified folder for 
 
 
 ## Training Strategies
-EEG recordings involve recording brain activity from a subject using multiple EEG sensors placed on their head, resulting in a multi-channel signal (one for each sensor).
+EEG recordings involve recording the brain activity from a subject using multiple EEG sensors placed on their head, resulting in a multi-channel signal (one for each sensor).
 
 These recordings can be performed while the subject is engaged in specific tasks, such as *motor imagery*, where they are asked to think about a particular movement.
 
@@ -95,16 +104,20 @@ One of the distinctive features of EEG tasks compared to other popular machine l
 Normally, two common strategies are used during the training phase: *Leave-One-Session-Out* and *Leave-One-Subject-Out* cross-validation.
 
 * **Leave-One-Session-Out**:
-  For each subject, we reserve one session as a test set and use the remaining sessions for training neural networks. We thus train different neural networks, each excluding a different session. We repeat this process for all subjects and then average the performance to asses the final performance of our models.
+  For each subject, we reserve one session as a test set and use the remaining sessions for training neural networks. 
+  We thus train different neural networks, each excluding a different session. 
+  We repeat this process for all subjects and then average the performance to asses the final performance of our models.
 
 * **Leave-One-Subject-Out**:
-  In this challenging condition, we reserve one subject as the test set while training using the data from all the other subjects. This approach is challenging because each subject has a unique brain activity pattern, making it difficult to successfully leverage data from other subjects.
+  In this challenging condition, we reserve one subject as the test set while training using the data from all the other subjects. 
+  This approach is challenging because each subject has a unique brain activity pattern, making it difficult to successfully leverage data from other subjects.
 
 
 
 ## ▶️ Quickstart
 
-**Note:** Before proceeding with the experiments, make sure that you have installed the additional dependencies listed in the `extra_requirements.txt` file. Please, read the content above as well.
+**Note:** Before proceeding with the experiments, make sure that you have installed the additional dependencies listed in the `extra_requirements.txt` file. 
+Please, read the content above as well.
 
 ### Training for a Specific Subject and Session
 
@@ -114,7 +127,9 @@ Let's now dive into how to train a model using data from a single subject and se
 python train.py hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder=eeg_data --cached_data_folder=eeg_pickled_data --output_folder=results/MotorImagery/BNCI2014001/ --target_subject_idx=0 --target_session_idx=1 --data_iterator_name=leave-one-session-out
 ```
 
-In this example, we will train EEGNET for Motor Imagery using the BNCI2014001 dataset. Specifically, we will train the model using data from *subject 0*. The  data recorded in *session 1* of  *subject 0* will be used for testing, while all the other sessions will be used for training.
+In this example, we will train EEGNet for Motor Imagery using the BNCI2014001 dataset. 
+Specifically, we will train the model using data from *subject 0*. 
+The data recorded in *session 1* of *subject 0* will be used for testing, while all the other sessions will be used for training.
 
 The data will be automatically downloaded to the specified `data_folder`, and a cached version of the data will be stored in `cached_data_folder` for future reuse.
 
@@ -156,7 +171,8 @@ Additionally, you can find detailed performance metrics for both validation and 
 
 ### Run a Training Experiment on a Given Dataset
 
-To train models using either the *Leave-One-Subject-Out* or *Leave-One-Session-Out* approach and then average their performance, we have developed a convenient bash script called `run_experiment.sh`. This script orchestrates the necessary loops for easy execution.
+To train models using either the *Leave-One-Subject-Out* or *Leave-One-Session-Out* approach and then average their performance, we have developed a convenient bash script called `run_experiment.sh`. 
+This script orchestrates the necessary loops for easy execution.
 
 To run a training experiment, use the following command:
 
@@ -164,7 +180,7 @@ To run a training experiment, use the following command:
 ./run_experiments.sh --hparams hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder eeg_data --output_folder results/MotorImagery/BNCI2014001/EEGNet --nsbj 9 --nsess 2 --nruns 10 --train_mode leave-one-session-out --device=cuda
 ```
 
-This command will execute the `leave_one_session_out` training on the BNCI2014001 dataset for Motor Imagery using the EEGNet.yaml configuration.
+This command will execute the `leave-one-session-out` training on the BNCI2014001 dataset for motor imagery using the EEGNet.yaml configuration.
 
 The script will loop over 9 subjects and 2 sessions, running the experiment 10 times (--nruns 10) with different initialization seeds to ensure robustness.
 
@@ -204,16 +220,11 @@ In addition to the `aggregated_performance.txt` file, the output folder includes
 
 Feel free to explore the output folder and become familiar with the provided output.
 
-
-[add description]
-
 By default, the hyperparameters in the yaml files are those determined during hyperparameter tuning (as shown below).
 
 
-
-
 **Default Values:**
-- By default, the training modality is set to `leave_one_session_out`. If you prefer to use `leave_one_subject_out`, simply add the flag `--train_mode=leave_one_subject_out`.
+- By default, the training modality is set to `leave-one-session-out`. If you prefer to use `leave-one-subject-out`, simply add the flag `--train_mode=leave-one-subject-out`.
 - The default evaluation metric is accuracy (acc). If you wish to use F1 score instead, use the flag `--eval_metric=f1`.
 - By default, the evaluation is conducted on the test set. To use the dev set instead, use the flag `--eval_set=dev`.
 - Without specifying the `--seed flag`, a random seed is used.
@@ -300,7 +311,7 @@ As evident from the example, you need to configure the hyperparameter file, spec
 
 The [table above](#link-to-dataset-table) provides these values for each compatible dataset.
 
-When it comes to training the model utilizing the leave_one_subject_out approach, simply employ the `--train_mode leave-one-subject-out` flag.
+When it comes to training the model utilizing the leave-one-subject-out approach, simply employ the `--train_mode leave-one-subject-out` flag.
 
 By default trainings are performed on gpu. However, in case you do not have any gpu available on your machine, you can train models on cpu by specifying the `--device cpu` flag.
 
@@ -327,13 +338,15 @@ Results are saved within the specified output folder (`--output_folder`):
 
 #### **Model Comparison**
 
-Our protocol ensures a model comparison that is as fair as possible. All reported results reported below are achieved with the same hyperparameter tuning methodology, enabling fair assessments across diverse models.
+Our protocol ensures a model comparison that is as fair as possible. 
+All reported results reported below are achieved with the same hyperparameter tuning methodology, enabling fair assessments across diverse models.
 
 For further details on arguments and customization options, consult `./run_hparam_optimization.sh`.
 
 #### **Additional Notes:**
 
-- The quantities of subjects (`--nsbj`, `--nsbj_hpsearch`) and of sessions (`--nsess`, `--nsess_hpsearch`) are dataset-dependent. Please consult the [table above](#link-to-dataset-table) for this information. When conducting a hyperparameter optimization experiment using an alternative dataset or model, kindly adjust both the hparam file and the subject/session counts accordingly.
+- The quantities of subjects (`--nsbj`, `--nsbj_hpsearch`) and of sessions (`--nsess`, `--nsess_hpsearch`) are dataset-dependent. Please consult the [table above](#link-to-dataset-table) for this information.
+ When conducting a hyperparameter optimization experiment using an alternative dataset or model, kindly adjust both the hparam file and the subject/session counts accordingly.
 
 - If you intend to perform multiple repetitions of the same hparam optimization, it is necessary to modify the `--exp_name`.
 
@@ -362,7 +375,7 @@ Let's bow assume you've designed a neural network in PyTorch and wish to integra
 
 ## [Incorporating Your Model](#incorporating-your-model)
 
-Let's now assume that you designed your fancy neural network in pytorch and you would like to plug it in our benchmark.
+Let's now assume that you designed your fancy neural network in PyTorch and you would like to plug it in our benchmark.
 You're in luck because we've made this step as simple as possible for you!
 
 Here are the steps you should follow:

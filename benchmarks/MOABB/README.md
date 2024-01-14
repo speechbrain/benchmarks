@@ -119,7 +119,7 @@ Normally, two common strategies are used during the training phase: *Leave-One-S
 **Note:** Before proceeding with the experiments, make sure that you have installed the additional dependencies listed in the `extra_requirements.txt` file. 
 Please, read the content above as well.
 
-### Training for a Specific Subject and Session
+### Training and Evaluation for a Specific Subject and Session
 
 Let's now dive into how to train a model using data from a single subject and session. Follow the steps below to run this experiment:
 
@@ -169,7 +169,7 @@ This log file reports various training metrics for each epoch, including train/v
 Additionally, you can find detailed performance metrics for both validation and testing in files named `valid_metrics.pkl` and `test_metrics.pkl`."
 
 
-### Run a Training Experiment on a Given Dataset
+### Run a Complete Experiment on a Given Dataset
 
 To train models using either the *Leave-One-Subject-Out* or *Leave-One-Session-Out* approach and then average their performance, we have developed a convenient bash script called `run_experiment.sh`. 
 This script orchestrates the necessary loops for easy execution and represents the first command-line interface of SpeechBrain-MOABB.
@@ -180,21 +180,16 @@ To run a full training experiment, use the following command:
 ./run_experiments.sh --hparams hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder eeg_data --output_folder results/MotorImagery/BNCI2014001/EEGNet --nsbj 9 --nsess 2 --nruns 10 --train_mode leave-one-session-out --device=cuda
 ```
 
+For further details on arguments and customization options, consult `./run_experiments.sh`.
+
 This command will execute the `leave-one-session-out` training on the BNCI2014001 dataset for motor imagery using the EEGNet.yaml configuration.
-
 The script will loop over 9 subjects and 2 sessions, running the experiment 10 times (--nruns 10) with different initialization seeds to ensure robustness.
-
 Running multiple experiments with varied seeds and averaging their performance is a recommended practice to improve result significance.
 
 Please note that due to the thorough evaluation process we employ, running an experiment may require some time. In particular, it may take approximately 8 hours when executed on an NVIDIA V100 GPU.
-
-The evaluation metric is accuracy, and the validation metrics are stored in `valid_metrics.pkl`.
-
 The results of each experiment are saved in the specified output folder. To view the final aggregated performance, refer to the `aggregated_performance.txt` file.
-
 The `aggregated_performance.txt` file should look like this:
 
-[add file example]
 ```
 ---- leave-one-session-out ----
 
@@ -308,10 +303,15 @@ You can conduct hyperparameter optimization with commands similar to the followi
                              --exp_max_trials 50
 ```
 
+For further details on arguments and customization options, consult `./run_hparam_optimization.sh`.
+
 Note that hyperparameter tuning may take several hours (up to several days) depending on the model complexity and dataset.
 To speed up hyper-parameter tuning you can consider to reduce the number of subjects and sessions used during hyper-parameter tuning, by setting the `--nsbj_hpsearch ` and `--nsess_hpsearch` flags.
 As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 1` to run hyper-parameter tuning only on a subset of subjects / sessions.
 Of course, final evaluation will be performed on the entire dataset (on all subjects and sessions).
+
+Our protocol ensures a model comparison that is as fair as possible. 
+All reported results reported below are achieved with the same hyperparameter tuning methodology, enabling fair assessments across diverse models.
 
 As evident from the example, you need to configure the hyperparameter file, specify the number of subjects (nsbj), and set the number of sessions (nsess).
 
@@ -321,7 +321,7 @@ When it comes to training the model utilizing the leave-one-subject-out approach
 
 By default trainings are performed on gpu. However, in case you do not have any gpu available on your machine, you can train models on cpu by specifying the `--device cpu` flag.
 
-**Note:**
+**Notes:**
 - To monitor the status of the hyperparameter optimization, simply enter the following command: `orion status --all`. Ensure that you have added the necessary variables required by orion to your bash environment. You can achieve this by executing the following code within your terminal:
 
 ```bash
@@ -333,6 +333,14 @@ Please note that the value of the `ORION_DB_ADDRESS` variable will vary dependin
 
 - If needed, you can interrupt the code at any point, and it will resume from the last successfully completed trial.
 
+- The quantities of subjects (`--nsbj`, `--nsbj_hpsearch`) and of sessions (`--nsess`, `--nsess_hpsearch`) are dataset-dependent. Please consult the [table above](#dataset-table) for this information.
+ When conducting a hyperparameter optimization experiment using an alternative dataset or model, kindly adjust both the hparam file and the subject/session counts accordingly.
+
+- If you intend to perform multiple repetitions of the same hparam optimization, it is necessary to modify the `--exp_name`.
+
+- This script is designed for a Linux-based system. In this context, we provide a bash script instead of a Python script due to its natural ability of orchestrating diverse training loops across various subjects and sessions.
+
+
 #### **Output Structure**
 
 Results are saved within the specified output folder (`--output_folder`):
@@ -341,23 +349,6 @@ Results are saved within the specified output folder (`--output_folder`):
 - The outcomes of individual optimization steps are stored within the subfolders `step1` and `step2`. When the `--store_all True` flag is employed, all hyperparameter trials are saved within the `exp` folder, each contained in subfolders with random names.
 - To circumvent the generation of excessive files and folders within the `exp` directory, which can be an issue on certain HPC clusters due to file quantity restrictions, consider activating the `--compress_exp True` option.
 - The "best" subfolder contains performance metrics on test sets using the best hyperparameters. Refer to `aggregated_performance.txt` for averaged results across multiple runs.
-
-#### **Model Comparison**
-
-Our protocol ensures a model comparison that is as fair as possible. 
-All reported results reported below are achieved with the same hyperparameter tuning methodology, enabling fair assessments across diverse models.
-
-For further details on arguments and customization options, consult `./run_hparam_optimization.sh`.
-
-#### **Additional Notes:**
-
-- The quantities of subjects (`--nsbj`, `--nsbj_hpsearch`) and of sessions (`--nsess`, `--nsess_hpsearch`) are dataset-dependent. Please consult the [table above](#dataset-table) for this information.
- When conducting a hyperparameter optimization experiment using an alternative dataset or model, kindly adjust both the hparam file and the subject/session counts accordingly.
-
-- If you intend to perform multiple repetitions of the same hparam optimization, it is necessary to modify the `--exp_name`.
-
-- This script is designed for a Linux-based system. In this context, we provide a bash script instead of a Python script due to its natural ability of orchestrating diverse training loops across various subjects and sessions.
-
 
 ## [Incorporating Your Model](#incorporating-your-model)
 
@@ -381,7 +372,7 @@ Ensure that your model is compatible with the EEG task, considering varying inpu
 
 ## 📈️ [Results](#results)
 
-Here are some results obtained with a leave-one-session-out strategy.
+Here we report some results while benchmarking three popular EEG deep learning-based models for decoding motor imagery, P300, and SSVEP with SpeechBrain-MOABB. 
 
 Performance metrics were computed on each held-out session (stored in the metrics.pkl file) and reported here averaged across sessions and subjects, displaying the average value ± standard deviation across 10 random seeds.
 

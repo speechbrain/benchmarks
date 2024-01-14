@@ -207,7 +207,7 @@ acc [0.728009 0.729552 0.728588 0.735918 0.732253 0.732446 0.740934 0.729360 0.7
 
 ```
 
-The system's performance should closely match the values reported in the first row of the [result table](#results). Specifically, please refer to the line corresponding to `/MotorImagery/BNCI2014001/EEGNet.yaml`.
+The system's performance should closely match the values reported in the first row of the table in [Results](#results) section. Specifically, please refer to the line corresponding to `/MotorImagery/BNCI2014001/EEGNet.yaml`.
 
 Please be aware that there may be slight variability each time the experiment is run, primarily due to different seeds being used in each run. For example, you may observe accuracy values like `0.732620` in the current run, while the original table reports `0.731559`. We conduct 10 runs and average the results to minimize this variability and provide a more accurate performance estimate.
 

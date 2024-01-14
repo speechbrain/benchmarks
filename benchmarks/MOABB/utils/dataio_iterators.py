@@ -12,16 +12,10 @@ Davide Borra, 2021
 """
 
 import numpy as np
-from itertools import islice
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import os
 from utils.prepare import prepare_data
-
-
-def nth(iterable, n, default=None):
-    """This function returns cross-validation train and test indices of the i-th fold."""
-    return next(islice(iterable, n, None), default)
 
 
 def get_idx_train_valid_classbalanced(idx_train, valid_ratio, y):

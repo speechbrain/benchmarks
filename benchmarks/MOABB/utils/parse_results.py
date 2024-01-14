@@ -122,7 +122,7 @@ def parse_one_session_out(
         for key in sorted(
             folder
             for folder in folds[0].iterdir()
-            if folder.is_dir() and folder.name.startswith("session")
+            if folder.is_dir()
         )
     }
 
@@ -131,7 +131,7 @@ def parse_one_session_out(
             [
                 folder
                 for folder in f.iterdir()
-                if folder.is_dir() and folder.name.startswith("session")
+                if folder.is_dir()
             ]
         )
         for sess in child:

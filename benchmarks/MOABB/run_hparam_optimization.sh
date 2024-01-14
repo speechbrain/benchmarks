@@ -48,7 +48,7 @@
 ###########################################################
 
 # Initialize variables
-exp_name=""
+exp_name="hopt"
 output_folder=""
 data_folder=""
 cached_data_folder=""
@@ -249,7 +249,7 @@ done
 
 
 # Check for required arguments
-if [ -z "$exp_name" ] || [ -z "$output_folder" ] || [ -z "$data_folder" ]  || [ -z "$hparams" ] || [ -z "$nsbj" ] || [ -z "$nsess" ] || [ -z "$nruns" ]; then
+if [ -z "$output_folder" ] || [ -z "$data_folder" ]  || [ -z "$hparams" ] || [ -z "$nsbj" ] || [ -z "$nsess" ] || [ -z "$nruns" ]; then
     echo "ERROR: Missing required arguments! Please provide all required options."
     print_argument_descriptions
 fi

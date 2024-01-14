@@ -302,9 +302,9 @@ You can conduct hyperparameter optimization with commands similar to the followi
                              --exp_max_trials 50
 ```
 
-Note that hyperparameter tuning may take several hours (or days) depending on the model complexity and dataset. 
+Note that hyperparameter tuning may take several hours (or days) depending on the model complexity and dataset.
 To speed up hyper-parameter tuning you can consider to reduce the number of subjects and sessions used during hyper-parameter tuning, by setting the `--nsbj_hpsearch ` and `--nsess_hpsearch` flags.
-As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 1` to run hyper-parameter tuning only on a subset of subjects / sessions. 
+As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 1` to run hyper-parameter tuning only on a subset of subjects / sessions.
 Of course, final evaluation will be performed on the entire dataset (on all subjects and sessions).
 
 As evident from the example, you need to configure the hyperparameter file, specify the number of subjects (nsbj), and set the number of sessions (nsess).
@@ -421,7 +421,10 @@ To ensure transparency and reproducibility, we release the output folder contain
 | 27-10-02 | P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.723952±0.002445 | 1xNVIDIA V100 (16 GB) |
 | 23-10-02 | SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.916148±0.002436 | 1xNVIDIA V100 (16 GB) |
 
-Note that the experiments run with any GPU with memory >= 12 GB.
+Notes:
+- You can access **checkpoints** for each model and dataset, complete with hyperparameter tuning [here](https://www.dropbox.com/sh/ux0i0suljojonmb/AABsTBpEKCTmVE784yQw-WGMa?dl=0).
+- The experiments can be conducted on any GPU with a memory capacity of 12 GB or higher.
+- ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
 
 ## 📧 Contact
 

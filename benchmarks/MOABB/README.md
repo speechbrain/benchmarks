@@ -408,7 +408,73 @@ Notes:
 - To ensure transparency and reproducibility, we release the output folder containing model checkpoints and training logs. You can access **checkpoints** for each model and dataset, complete with hyperparameter tuning [here](https://www.dropbox.com/sh/ux0i0suljojonmb/AABsTBpEKCTmVE784yQw-WGMa?dl=0).
 - The experiments can be conducted on any GPU with a memory capacity of 12 GB or higher.
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
+
 ## 📈️ [Results on protocol key aspects](#results_protocol)
+### One-step vs. two-step hyperparameter search
+Hyperparameter search was performed on the entire search space in a single step (1-step search) or on subspaces of the entire search space performing two sequential spaces (2-step search).
+From our results, two-step search was superior than single-step search for 6 out of 9 datasets used. 
+
+| Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): 2-step - 1-step search |  GPUs |
+|:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
+| Motor imagery | /MotorImagery/BNCI2014001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0324  |1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/BNCI2014004/EEGNet.yaml | leave-one-session-out |  'acc'| -0.0035 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/BNCI2015001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0465 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/Lee2019_MI/EEGNet.yaml | leave-one-session-out |  'acc'| -0.0207 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/Zhou2016/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0305 | 1xNVIDIA V100 (16 GB) |
+| P300 | /P300/EPFLP300/EEGNet.yaml | leave-one-session-out |  'f1'| -0.0109 | 1xNVIDIA V100 (16 GB) |
+| P300 | /P300/BNCI2014009/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0136 |1xNVIDIA V100 (16 GB) |
+| P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0127 |  1xNVIDIA V100 (16 GB) |
+| SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.1088 | 1xNVIDIA V100 (16 GB) |
+
+
+### Sequential model-based search (TPE-based) vs. random search
+Hyperparameter search was performed using TPE (configuration file at: `hparams/orion/hparams_tpe.yaml`) or using random search (configuration file at: `hparams/orion/hparams_random_search.yaml`).
+From our results, two-step search was superior than single-step search for 7 out of 9 datasets used. 
+
+| Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): TPE - random search |  GPUs |
+|:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
+| Motor imagery | /MotorImagery/BNCI2014001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0567  |1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/BNCI2014004/EEGNet.yaml | leave-one-session-out |  'acc'| -0.0063 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/BNCI2015001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0535 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/Lee2019_MI/EEGNet.yaml | leave-one-session-out |  'acc'| -0.0105 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/Zhou2016/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0535 | 1xNVIDIA V100 (16 GB) |
+| P300 | /P300/EPFLP300/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0036 | 1xNVIDIA V100 (16 GB) |
+| P300 | /P300/BNCI2014009/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0137 |1xNVIDIA V100 (16 GB) |
+| P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0142 |  1xNVIDIA V100 (16 GB) |
+| SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0224 | 1xNVIDIA V100 (16 GB) |
+
+### Hyperparameter search on all participants or on a subset of participants
+Hyperparameter search was performed using all the participants available or a subset of participants, for reducing computational time.
+The subset of participants was set to 3 or 5 for the largest datasets among the considered ones (i.e., Lee2019_MI, Lee2019_SSVEP).
+From our results, two-step search was superior than single-step search for 5 out of 9 datasets used.
+
+| Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): all - subset participants |  GPUs |
+|:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
+| Motor imagery | /MotorImagery/BNCI2014001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0318  |1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/BNCI2014004/EEGNet.yaml | leave-one-session-out |  'acc'| -0.0076| 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/BNCI2015001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0350 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/Lee2019_MI/EEGNet.yaml | leave-one-session-out |  'acc'| -0.0532 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/Zhou2016/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0091 | 1xNVIDIA V100 (16 GB) |
+| P300 | /P300/EPFLP300/EEGNet.yaml | leave-one-session-out |  'f1'| -0.0140 | 1xNVIDIA V100 (16 GB) |
+| P300 | /P300/BNCI2014009/EEGNet.yaml | leave-one-session-out |  'f1'| -0.0073 |1xNVIDIA V100 (16 GB) |
+| P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0101 |  1xNVIDIA V100 (16 GB) |
+| SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0144 | 1xNVIDIA V100 (16 GB) |
+
+### Performance variability due to random initialization
+After hyperparameter search, the final models were trained and evaluated with 100 random seeds and the standard deviation was computed across averages across 1 or 10 seeds.
+From our results, using 10 random seeds the performance variability was less than 1% for all datasets (9 out of 9 datasets), while with only 1 random seed the performance variability was up to 4.9639%
+
+| Task | Hyperparams file | Training strategy | Key loaded model | std. dev.: 1 seed (%)| std. dev.: 10 seeds (%)|  GPUs |
+|:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:|-----:| :-----------:|
+| Motor imagery | /MotorImagery/BNCI2014001/EEGNet.yaml | leave-one-session-out |  'acc'| 1.3470  |0.4251  |1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/BNCI2014004/EEGNet.yaml | leave-one-session-out |  'acc'| 0.9280 |0.2016  | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/BNCI2015001/EEGNet.yaml | leave-one-session-out |  'acc'| 1.5500 |0.5143  | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/Lee2019_MI/EEGNet.yaml | leave-one-session-out |  'acc'| 4.9639 |0.8843  | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/Zhou2016/EEGNet.yaml | leave-one-session-out |  'acc'| 1.6872 |0.4132  | 1xNVIDIA V100 (16 GB) |
+| P300 | /P300/EPFLP300/EEGNet.yaml | leave-one-session-out |  'f1'| 1.8622 |0.5874  | 1xNVIDIA V100 (16 GB) |
+| P300 | /P300/BNCI2014009/EEGNet.yaml | leave-one-session-out |  'f1'| 1.6558 |0.4564  |1xNVIDIA V100 (16 GB) |
+| P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.9080 | 0.1607  | 1xNVIDIA V100 (16 GB) |
+| SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 1.6279 |0.7560  | 1xNVIDIA V100 (16 GB) |
 
 ## 📧 Contact
 

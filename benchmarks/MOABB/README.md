@@ -24,7 +24,6 @@ Specifically, it comes with recipes for the following [datasets](#dataset-table)
 |[Zhou2016](https://neurotechx.github.io/moabb/generated/moabb.datasets.Zhou2016.html#moabb.datasets.Zhou2016) | Motor Imagery | 4 | 3 |
 |[BNCI2014009](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2014009.html#moabb.datasets.BNCI2014009) | P300 | 10 | 3 |
 |[EPFLP300](https://neurotechx.github.io/moabb/generated/moabb.datasets.EPFLP300.html#moabb.datasets.EPFLP300) | P300 | 8 | 4 |
-|[Lee2019_ERP](https://neurotechx.github.io/moabb/generated/moabb.datasets.Lee2019_ERP.html#moabb.datasets.Lee2019_ERP) | P300 | 54 | 2 |
 |[bi2015a](https://neurotechx.github.io/moabb/generated/moabb.datasets.bi2015a.html#moabb.datasets.bi2015a) | P300 | 43 | 3 |
 |[Lee2019_SSVEP](https://neurotechx.github.io/moabb/generated/moabb.datasets.Lee2019_SSVEP.html#moabb.datasets.Lee2019_SSVEP) | SSVEP | 54 | 2 |
 
@@ -113,7 +112,6 @@ Normally, two common strategies are used during the training phase: *Leave-One-S
   This approach is challenging because each subject has a unique brain activity pattern, making it difficult to successfully leverage data from other subjects.
 
 
-
 ## ▶️ Quickstart
 
 **Note:** Before proceeding with the experiments, make sure that you have installed the additional dependencies listed in the `extra_requirements.txt` file. 
@@ -172,9 +170,9 @@ Additionally, you can find detailed performance metrics for both validation and 
 ### Run a Training Experiment on a Given Dataset
 
 To train models using either the *Leave-One-Subject-Out* or *Leave-One-Session-Out* approach and then average their performance, we have developed a convenient bash script called `run_experiment.sh`. 
-This script orchestrates the necessary loops for easy execution.
+This script orchestrates the necessary loops for easy execution and represents the first command-line interface of SpeechBrain-MOABB.
 
-To run a training experiment, use the following command:
+To run a full training experiment, use the following command:
 
 ```bash
 ./run_experiments.sh --hparams hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder eeg_data --output_folder results/MotorImagery/BNCI2014001/EEGNet --nsbj 9 --nsess 2 --nruns 10 --train_mode leave-one-session-out --device=cuda
@@ -232,15 +230,20 @@ By default, the hyperparameters in the yaml files are those determined during hy
 
 **Note**: This script operates under the assumption that you are utilizing a Linux-based system. In this scenario, we offer a bash script instead of a Python script due to its inherent suitability for effectively orchestrating multiple training loops across various subjects and sessions.
 
-**Important:** The number of subjects (`--nsbj`) and sessions (`--nsess`) is dataset dependent. Refer to the dataset [dataset table above](#link-to-dataset-table) for these details. When executing a training experiment on a different dataset or model, please modify both the hparam file and adjust the subject and session counts accordingly.
+**Important:** The number of subjects (`--nsbj`) and sessions (`--nsess`) is dataset dependent. Refer to the dataset [dataset table above](#dataset-table) for these details. When executing a training experiment on a different dataset or model, please modify both the hparam file and adjust the subject and session counts accordingly.
 
 ### Hyperparameter Tuning
 
-Efficient hyperparameter tuning is paramount when introducing novel models or experimenting with diverse datasets. Our benchmark establishes a standardized protocol for hyperparameter tuning, utilizing [Orion](https://orion.readthedocs.io/en/stable/) to ensure fair model comparisons.
-
+Efficient hyperparameter tuning is paramount when introducing novel models or experimenting with diverse datasets. 
+Our benchmark establishes a standardized protocol for hyperparameter tuning, utilizing [Orion](https://orion.readthedocs.io/en/stable/) to ensure fair model comparisons.
+The standardized protocol we proposed is based on multi-step hyperparameter search, for addressing the search in a large hyperparameter space, and on multi-seed initialization, for providing robust performance estimates. 
+Note that several aspects affecting this protocol underwent deep investigation.
+These include multi-step vs. single-step search, the search algorithm used, the number of participants for hyperparameter search, the number of random seeds for providing a stable decoding performance. 
+Refer to [protocol results below](#results_protocol) for these results. 
 #### **Overview**
 
-Hyperparameter tuning is orchestrated through the `./run_hparam_optimization.sh` script, which oversees the execution of multiple hyperparameter trials via `run_experiments.sh`. This script supports leave-one-subject-out and leave-one-session-out training.
+Hyperparameter tuning is orchestrated through the `./run_hparam_optimization.sh` script, which oversees the execution of multiple hyperparameter trials via `run_experiments.sh`. 
+This script represents the second command-line interface of SpeechBrain-MOABB.
 
 Please keep in mind the following points:
 - In certain scenarios, you may find it advantageous to retain separate experiment folders for each hyperparameter trial. You can achieve this by using the `--store_all True` flag. Conversely, setting it to false will condense results within a singular folder, a space-saving measure.
@@ -302,14 +305,14 @@ You can conduct hyperparameter optimization with commands similar to the followi
                              --exp_max_trials 50
 ```
 
-Note that hyperparameter tuning may take several hours (or days) depending on the model complexity and dataset.
+Note that hyperparameter tuning may take several hours (up to several days) depending on the model complexity and dataset.
 To speed up hyper-parameter tuning you can consider to reduce the number of subjects and sessions used during hyper-parameter tuning, by setting the `--nsbj_hpsearch ` and `--nsess_hpsearch` flags.
 As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 1` to run hyper-parameter tuning only on a subset of subjects / sessions.
 Of course, final evaluation will be performed on the entire dataset (on all subjects and sessions).
 
 As evident from the example, you need to configure the hyperparameter file, specify the number of subjects (nsbj), and set the number of sessions (nsess).
 
-The [table above](#link-to-dataset-table) provides these values for each compatible dataset.
+The [table above](#dataset-table) provides these values for each compatible dataset.
 
 When it comes to training the model utilizing the leave-one-subject-out approach, simply employ the `--train_mode leave-one-subject-out` flag.
 
@@ -345,7 +348,7 @@ For further details on arguments and customization options, consult `./run_hpara
 
 #### **Additional Notes:**
 
-- The quantities of subjects (`--nsbj`, `--nsbj_hpsearch`) and of sessions (`--nsess`, `--nsess_hpsearch`) are dataset-dependent. Please consult the [table above](#link-to-dataset-table) for this information.
+- The quantities of subjects (`--nsbj`, `--nsbj_hpsearch`) and of sessions (`--nsess`, `--nsess_hpsearch`) are dataset-dependent. Please consult the [table above](#dataset-table) for this information.
  When conducting a hyperparameter optimization experiment using an alternative dataset or model, kindly adjust both the hparam file and the subject/session counts accordingly.
 
 - If you intend to perform multiple repetitions of the same hparam optimization, it is necessary to modify the `--exp_name`.
@@ -353,13 +356,14 @@ For further details on arguments and customization options, consult `./run_hpara
 - This script is designed for a Linux-based system. In this context, we provide a bash script instead of a Python script due to its natural ability of orchestrating diverse training loops across various subjects and sessions.
 
 
-## Incorporating Your Model
-[Link Text](#incorporating-your-model)
+## [Incorporating Your Model](#incorporating-your-model)
 
 Let's bow assume you've designed a neural network in PyTorch and wish to integrate it into our benchmark.
- we've streamlined the process for your convenience. Follow these steps:
+You're in luck because we've made this step as simple as possible for you!
+Here are the steps you should follow:
 
-1. Write your model's code in a Python library saved in `benchmarks/MOABB/models` (e.g., `benchmarks/MOABB/models/my_model.py`). Ensure that your model is compatible with the EGG task, considering varying input channels and variable-length inputs across different datasets.
+1. Write your model's code in a Python library saved in `benchmarks/MOABB/models` (e.g., `benchmarks/MOABB/models/my_model.py`). 
+Ensure that your model is compatible with the EEG task, considering varying input channels and variable-length inputs across different datasets.
 
 2. Create a YAML file for each dataset you want to experiment with. Thankfully, you don't have to start from scratch. For example, if you're working with BNCI2014001 (Motor Imagery/), copy `benchmarks/MOABB/hparams/MotorImagery/BNCI2014001/EEGNet.yaml` and save it in the same folder with a different name (e.g., `my_model.yaml`).
 
@@ -372,32 +376,11 @@ Let's bow assume you've designed a neural network in PyTorch and wish to integra
 **Note**: If you're not familiar with YAML, you can refer to our [HyperPyYAML tutorial](https://speechbrain.github.io/tutorial_basics.html) on the SpeechBrain website for guidance.
 
 
-
-## [Incorporating Your Model](#incorporating-your-model)
-
-Let's now assume that you designed your fancy neural network in PyTorch and you would like to plug it in our benchmark.
-You're in luck because we've made this step as simple as possible for you!
-
-Here are the steps you should follow:
-
-1- Write the code of your model in a python library saved in `benchmarks/MOABB/models` (e.g., `benchmarks/MOABB/models/my_model.py`). Note that you have to design the model such that it is compliant with the EGG task (e.g, we have might have different input channels in different datasets and the inputs are of variable length).
-2- You have now to create a yaml file for each dataset you would like to try. Fortunately, you don't have to do it from scratch.  For instance, if you want to run your model into with
-`BNCI2014001` (MotorImagery), just copy  `benchmarks/MOABB/hparams/MotorImagery/BNCI2014001/EEGNet.yaml` and save it in the same folder with another name (e.g., `my_model.yaml`).
-3- Now, you can just edit the relevant part of your my_model.yaml. In particular, you have to redefine the `model:` such that you fetch your own model (e.g, `model: !new:models.my_model.my_model`).
-4- Make sure you add the hyperparameters specific to your model along with the ranges you would like to explore in the hparam tuning phase.
-5- At this point, you can follow the instructions above for runnning and experiment and the needed hparam tuning phase.
-
-**Note**: If you feel unfamiliar with YAML, you can take a look at our [HyperPyYAML tutorial](https://speechbrain.github.io/tutorial_basics.html) in the speechbrain website.
-
-
-
 ## 📈️ [Results](#results)
 
 Here are some results obtained with a leave-one-session-out strategy.
 
 Performance metrics were computed on each held-out session (stored in the metrics.pkl file) and reported here averaged across sessions and subjects, displaying the average value ± standard deviation across 10 random seeds.
-
-To ensure transparency and reproducibility, we release the output folder containing model checkpoints and training logs [here](add_link).
 
 | Release | Task | Hyperparams file | Training strategy | Key loaded model | Performance (test set) |  GPUs |
 |:-------------:|:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
@@ -422,9 +405,10 @@ To ensure transparency and reproducibility, we release the output folder contain
 | 23-10-02 | SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.916148±0.002436 | 1xNVIDIA V100 (16 GB) |
 
 Notes:
-- You can access **checkpoints** for each model and dataset, complete with hyperparameter tuning [here](https://www.dropbox.com/sh/ux0i0suljojonmb/AABsTBpEKCTmVE784yQw-WGMa?dl=0).
+- To ensure transparency and reproducibility, we release the output folder containing model checkpoints and training logs. You can access **checkpoints** for each model and dataset, complete with hyperparameter tuning [here](https://www.dropbox.com/sh/ux0i0suljojonmb/AABsTBpEKCTmVE784yQw-WGMa?dl=0).
 - The experiments can be conducted on any GPU with a memory capacity of 12 GB or higher.
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
+## 📈️ [Results on protocol key aspects](#results_protocol)
 
 ## 📧 Contact
 
@@ -432,7 +416,7 @@ For any questions or inquiries, feel free to reach out to [davide.borra2@unibo.i
 
 ## **Citing**
 
-If you use the SpeechBrainMOABB benchmark, please cite:
+If you use the SpeechBrain-MOABB, please cite:
 
 [The link to the official paper will be available soon]
 

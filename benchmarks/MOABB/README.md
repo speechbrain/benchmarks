@@ -4,6 +4,8 @@ This repository provides a set of recipes for processing electroencephalographic
 This package facilitates the integration of new models and their evaluation on MOABB supported tasks, i.e., motor imagery (MI), P300, and steady-state visual evoked potential (SSVEP). 
 It not only offers an interface for easy model integration and testing but also proposes a fair and robust protocol for comparing different decoding pipelines.
 This code could be used for benchmarking new decoding pipelines (e.g., involving a novel deep learning architecture or a novel data augmentation strategy).
+We accompany our code with a benchmark on 9 MOABB datasets (for MI-based, P300-based, and SSVEP-based BCIs) performed using 3 popular deep neural networks for EEG decoding. 
+Moreover, we also report the main results on the key aspects characterizing the decoding protocol we propose for enabling a trustworthy EEG decoding.
 
 For detailed information, please refer to [The link to the official paper will be available soon].
 
@@ -236,10 +238,11 @@ By default, the hyperparameters in the yaml files are those determined during hy
 
 Efficient hyperparameter tuning is paramount when introducing novel models or experimenting with diverse datasets. 
 Our benchmark establishes a standardized protocol for hyperparameter tuning, utilizing [Orion](https://orion.readthedocs.io/en/stable/) to ensure fair model comparisons.
-The standardized protocol we proposed is based on multi-step hyperparameter search, for addressing the search in a large hyperparameter space, and on multi-seed initialization, for providing robust performance estimates. 
+
+The standardized protocol we propose is based on multi-step hyperparameter search, for addressing the search in a large hyperparameter space, and on multi-seed initialization, for providing robust performance estimates. 
 Note that several aspects affecting this protocol underwent deep investigation.
 These include multi-step vs. single-step search, the search algorithm used, the number of participants for hyperparameter search, the number of random seeds for providing a stable decoding performance. 
-Refer to [protocol results below](#results_protocol) for these results. 
+Refer to [protocol results below](#results_protocol) for the results on the key aspects characterizing the decoding protocol. 
 #### **Overview**
 
 Hyperparameter tuning is orchestrated through the `./run_hparam_optimization.sh` script, which oversees the execution of multiple hyperparameter trials via `run_experiments.sh`. 

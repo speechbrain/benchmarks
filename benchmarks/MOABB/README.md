@@ -404,9 +404,9 @@ Notes:
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
 
 ## 📈️ [Results on protocol key aspects](#results_protocol)
-### One-step vs. two-step hyperparameter search
+### Two-stepvs. one-step hyperparameter search
 Hyperparameter search was performed on the entire search space in a single step (1-step search) or on subspaces of the entire search space performing two sequential spaces (2-step search).
-From our results, two-step search was superior than single-step search for 6 out of 9 datasets used. 
+From our results, two-step search was superior than single-step search for 6 out of 9 datasets used, with improvements up to 10.9%. 
 
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): 2-step - 1-step search |  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
@@ -420,10 +420,9 @@ From our results, two-step search was superior than single-step search for 6 out
 | P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0127 |  1xNVIDIA V100 (16 GB) |
 | SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.1088 | 1xNVIDIA V100 (16 GB) |
 
-
 ### Sequential model-based search (TPE-based) vs. random search
 Hyperparameter search was performed using TPE (configuration file at: `hparams/orion/hparams_tpe.yaml`) or using random search (configuration file at: `hparams/orion/hparams_random_search.yaml`).
-From our results, two-step search was superior than single-step search for 7 out of 9 datasets used. 
+From our results, sequential model-based search (TPE-based) was superior than random search for 7 out of 9 datasets used, with improvements up to 5.7%. 
 
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): TPE - random search |  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
@@ -440,7 +439,7 @@ From our results, two-step search was superior than single-step search for 7 out
 ### Hyperparameter search on all participants or on a subset of participants
 Hyperparameter search was performed using all the participants available or a subset of participants, for reducing computational time.
 The subset of participants was set to 3 or 5 for the largest datasets among the considered ones (i.e., Lee2019_MI, Lee2019_SSVEP).
-From our results, two-step search was superior than single-step search for 5 out of 9 datasets used.
+From our results, using a subset of participants slightly worsened the performance only for 4 out of 9 datasets from 0.7 to 1.4%, while at the same time reducing the computational time required (from 321.8 to 55.9 hours, on average across datasets).
 
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): all - subset participants |  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
@@ -456,7 +455,7 @@ From our results, two-step search was superior than single-step search for 5 out
 
 ### Performance variability due to random initialization
 After hyperparameter search, the final models were trained and evaluated with 100 random seeds and the standard deviation was computed across averages across 1 or 10 seeds.
-From our results, using 10 random seeds the performance variability was less than 1% for all datasets (9 out of 9 datasets), while with only 1 random seed the performance variability was up to 4.9639%
+From our results, using 10 random seeds the performance variability was less than 1% for all datasets (9 out of 9 datasets), while with only 1 random seed the performance variability was up to 4.9639%.
 
 | Task | Hyperparams file | Training strategy | Key loaded model | std. dev.: 1 seed (%)| std. dev.: 10 seeds (%)|  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:|-----:| :-----------:|

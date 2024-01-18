@@ -11,11 +11,9 @@ class BraindecodeNN(torch.nn.Module):
 
     Example
     -------
-    #>>> inp_tensor = torch.rand([1, 200, 32, 1])
-    #>>> model = EEGConformer(input_shape=inp_tensor.shape)
-    #>>> output = model(inp_tensor)
-    #>>> output.shape
-    #torch.Size([1,4])
+    >>> from benchmarks.MOABB.models.EEGConformer import EEGConformer
+    >>> model = EEGConformer(input_shape=inp_tensor.shape)
+    >>> model_braindecode = BraindecodeNN(model)
     """
 
     def __init__(self, model):

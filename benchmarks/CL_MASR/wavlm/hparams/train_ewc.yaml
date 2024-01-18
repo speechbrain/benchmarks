@@ -38,6 +38,7 @@ lr: 0.0001
 improvement_threshold: 0.0025
 annealing_factor: 0.8
 ewc_lambda: 5.0
+ewc_alpha: 0.5
 
 wavlm_variant: wavlm-large
 pretrained_wavlm_path: null

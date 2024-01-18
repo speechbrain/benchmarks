@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
 
 """Recipe for fine-tuning a WavLM-based ASR system on Common Voice in a continual
-learning fashion via Piggyback (https://arxiv.org/abs/1801.06519).
+learning fashion via (task-incremental) Dark Experience Replay (https://arxiv.org/abs/2004.07211).
 
 To run this recipe, do the following:
-> python train_pb.py hparams/train_pb.yaml
-
-NOTE: automatic experiment resumption is not supported.
-NOTE: since there is no forgetting by design, only the current locale is tested.
+> python train_der.py hparams/train_der.yaml
 
 Authors
  * Luca Della Libera 2023
- * Salah Zaiem 2023
 """
 
 import logging
 import os
 import pathlib
+import random
 import sys
 import time
 
@@ -30,48 +27,12 @@ from speechbrain.utils.distributed import run_on_main
 from common_voice_prepare import prepare_common_voice
 
 
-class Threshold(torch.autograd.Function):
-    """Pseudo-differentiable thresholding function."""
-
-    @staticmethod
-    def forward(ctx, input, threshold=0.005):
-        return torch.where(input >= threshold, 1.0, 0.0)
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        return grad_output, None
-
-
 class ASR(sb.Brain):
     def compute_forward(self, batch, stage):
         """Forward computations from the waveform batches to the output probabilities."""
         batch = batch.to(self.device)
         wavs, wav_lens = batch.sig
         tokens, _ = batch.tokens
-
-        if stage != sb.Stage.TEST:
-            # Threshold and apply mask for training and validation
-            # To avoid unnecessary overhead when testing, this is done
-            # only once before calling `asr_brain.evaluate`
-            self.modules.wavlm.model.decoder.load_state_dict(
-                self.hparams.decoder_state_backup, strict=False
-            )
-            decoder_mask = self.hparams.decoder_mask.get(
-                self.hparams.forced_decoder_locale
-            )
-            if decoder_mask is not None:
-                for (
-                    k,
-                    v,
-                ) in self.modules.wavlm.model.decoder.named_parameters():
-                    if k not in decoder_mask:
-                        continue
-                    v.detach_()
-                    thresholded_mask = Threshold.apply(
-                        decoder_mask[k].to(v.device),
-                        self.hparams.mask_threshold,
-                    )
-                    v *= thresholded_mask
 
         # Forward encoder + projection
         if self.hparams.gradient_checkpointing:
@@ -100,6 +61,58 @@ class ASR(sb.Brain):
         logits = logits.float()  # Force float32 when using mixed precision
         log_probs = logits.log_softmax(dim=-1)
         loss = self.hparams.ctc_loss(log_probs, tokens, wav_lens, tokens_lens)
+
+        # Compute distillation loss
+        if stage == sb.Stage.TRAIN:
+            selected_samples = random.sample(
+                self.hparams.replay_buffer, len(ids),
+            )
+
+            tmp = []
+            for sample in selected_samples:
+                data = self._pipeline(sample[0])
+                wav = data["sig"]
+                logits = torch.load(sample[1])
+                tmp.append((wav, logits))
+            selected_samples = tmp
+
+            # Retrieve wavs
+            replay_wavs = [x[0] for x in selected_samples]
+            replay_wav_lens = [len(x) for x in replay_wavs]
+            max_len = max(replay_wav_lens)
+            replay_wavs = [
+                torch.nn.functional.pad(x, [0, max_len - len(x)])
+                for x in replay_wavs
+            ]
+            replay_wavs = torch.stack(replay_wavs).to(self.device)
+            replay_wav_lens = torch.as_tensor(
+                [x / max_len for x in replay_wav_lens],
+                device=replay_wavs.device,
+            )
+
+            # Retrieve logits
+            target_replay_logits = [x[1] for x in selected_samples]
+            max_len = max(len(x) for x in target_replay_logits)
+            target_replay_logits = [
+                torch.nn.functional.pad(x, [0, 0, 0, max_len - len(x)])
+                for x in target_replay_logits
+            ]
+            target_replay_logits = torch.stack(target_replay_logits).to(
+                self.device
+            )
+
+            if self.hparams.gradient_checkpointing:
+                replay_wavs.requires_grad_()
+                replay_logits = torch.utils.checkpoint.checkpoint(
+                    self.modules.wavlm, replay_wavs, replay_wav_lens,
+                )
+            else:
+                replay_logits = self.modules.wavlm(replay_wavs, replay_wav_lens)
+
+            loss += (
+                self.hparams.der_alpha
+                * ((replay_logits - target_replay_logits) ** 2).mean()
+            )
 
         if stage != sb.Stage.TRAIN:
             target_words = batch.target_wrd
@@ -153,21 +166,10 @@ class ASR(sb.Brain):
             with open(self.hparams.wer_file, "w", encoding="utf-8") as w:
                 self.wer_metric.write_stats(w)
 
-    def init_optimizers(self):
-        if self.opt_class is not None:
-            parameters = [
-                p for p in self.modules.parameters() if p.requires_grad
-            ]
-            decoder_mask = self.hparams.decoder_mask.get(
-                self.hparams.forced_decoder_locale
-            )
-            if decoder_mask is not None:
-                parameters += list(decoder_mask.values())
-
-            self.optimizer = self.opt_class(parameters)
-
-            if self.checkpointer is not None:
-                self.checkpointer.add_recoverable("optimizer", self.optimizer)
+    def _fit_train(self, train_set, epoch, enable):
+        # Training stage
+        self._pipeline = train_set.dataset.pipeline
+        return super()._fit_train(train_set, epoch, enable)
 
 
 def dataio_prepare(hparams, tokenizer):
@@ -268,6 +270,7 @@ def test(hparams, run_opts, locales, wer_file="wer_test.txt"):
         The name of the file where WER results are saved.
 
     """
+
     # Test on base + new locales
     for locale in locales:
         # Multi-gpu (ddp) save data preparation
@@ -290,30 +293,11 @@ def test(hparams, run_opts, locales, wer_file="wer_test.txt"):
         else:
             hparams["wer_computer"] = sb.utils.metric_stats.ErrorRateStats
 
-        # Set forced decoder locale (for mask selection)
-        hparams["forced_decoder_locale"] = locale
-
         # Define tokenizer
         tokenizer = hparams["wavlm"].tokenizer
 
         # Create datasets, tokenization and encoding
         _, _, test_data = dataio_prepare(hparams, tokenizer)
-
-        # Retrieve threshold and apply corresponding mask
-        hparams["wavlm"].model.decoder.load_state_dict(
-            hparams["decoder_state_backup"], strict=False
-        )
-        decoder_mask = hparams["decoder_mask"].get(locale)
-        if decoder_mask is not None:
-            for k, v in hparams["wavlm"].model.decoder.named_parameters():
-                if k not in decoder_mask:
-                    continue
-                v.detach_()
-                with torch.no_grad():
-                    thresholded_mask = Threshold.apply(
-                        decoder_mask[k].to(v.device), hparams["mask_threshold"]
-                    )
-                    v *= thresholded_mask
 
         # Trainer initialization
         asr_brain = ASR(
@@ -377,27 +361,12 @@ def train(hparams, run_opts):
             torch.load(hparams["pretrained_wavlm_path"])
         )
 
-    # Store decoder mask for each locale
-    hparams["decoder_mask"] = {}
-    for locale in hparams["base_locales"]:
-        hparams["decoder_mask"][locale] = None
-
-    # Store decoder state (projection layer excluded)
-    hparams["decoder_state_backup"] = hparams[
-        "wavlm"
-    ].model.decoder.state_dict()
-    for k in list(hparams["decoder_state_backup"]):
-        if "out_proj" in k:
-            hparams["decoder_state_backup"].pop(k)
-            continue
-        hparams["decoder_state_backup"][k] = (
-            hparams["decoder_state_backup"][k].clone().cpu()
-        )
-
     # Testing
     test(
         hparams, run_opts, hparams["base_locales"], f"wer_test_before.txt",
     )
+
+    replay_buffer = []
 
     # Train on new locales
     for i, locale in enumerate(hparams["new_locales"]):
@@ -419,24 +388,45 @@ def train(hparams, run_opts):
             f"Total number of tokens: {hparams['wavlm'].model.decoder.out_proj.out_features}"
         )
 
-        # Freeze the whole model to avoid forgetting
-        hparams["wavlm"].model.requires_grad_(False)
-
-        # Initialize decoder mask
-        hparams["decoder_mask"][locale] = {
-            k: torch.full_like(v, hparams["mask_init"], requires_grad=True)
-            for k, v in hparams["wavlm"].model.decoder.named_parameters()
-            if "out_proj" not in k
-        }
-
-        # Unfreeze projection layer
-        hparams["wavlm"].model.decoder.out_proj.requires_grad_()
-
-        # Set forced decoder locale (for mask selection)
-        hparams["forced_decoder_locale"] = locale
-
         # Create datasets, tokenization and encoding
         train_data, valid_data, _ = dataio_prepare(hparams, tokenizer)
+        length = len(train_data)
+
+        # Get train data from previous tasks
+        old_locales = (
+            hparams["base_locales"]
+            if i == 0
+            else [hparams["new_locales"][i - 1]]
+        )
+        for old_locale in old_locales:
+            run_on_main(
+                prepare_common_voice,
+                kwargs={
+                    "locales": [old_locale],
+                    "data_folder": hparams["data_folder"],
+                    "max_durations": hparams["max_durations"],
+                },
+            )
+            old_train_data, _, _ = dataio_prepare(hparams, tokenizer)
+            selected_idxes = random.sample(
+                range(len(old_train_data)),
+                round(
+                    min(length * hparams["replay_ratio"], len(old_train_data))
+                ),
+            )
+            for idx in selected_idxes:
+                wavs = old_train_data[idx]["sig"].to(run_opts["device"])
+                hparams["wavlm"].eval()
+                with torch.no_grad():
+                    logits = hparams["wavlm"](wavs[None])
+                ID = old_train_data[idx]["id"]
+                save_path = os.path.join(
+                    hparams["save_folder"], "buffer", old_locale, f"{ID}.pt"
+                )
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                torch.save(logits[0].cpu(), save_path)
+                raw = old_train_data.data[ID]
+                replay_buffer.append((raw, save_path))
 
         # Trainer initialization
         checkpoint_folder = os.path.join(hparams["save_folder"], locale)
@@ -447,6 +437,7 @@ def train(hparams, run_opts):
         hparams["lr_annealing"].hyperparam_value = hparams["lr"]
         hparams["lr_annealing"].metric_values.clear()
         hparams["lr_annealing"].current_patient = 0
+        hparams["replay_buffer"] = replay_buffer
         asr_brain = ASR(
             modules=hparams["modules"],
             hparams=hparams,
@@ -473,27 +464,9 @@ def train(hparams, run_opts):
         test(
             hparams,
             run_opts,
-            [locale],
-            # hparams["base_locales"] + hparams["new_locales"][: i + 1],
+            hparams["base_locales"] + hparams["new_locales"][: i + 1],
             f"wer_test_after_{locale}.txt",
         )
-
-        # Copy previous lines (no forgetting by design)
-        if not hparams["skip_test"]:
-            save_file = asr_brain.hparams.train_logger.save_file
-            with open(save_file, encoding="utf-8") as f:
-                lines = f.readlines()
-            previous_lines = []
-            count = 0
-            for line in lines[::-1]:
-                if line.startswith("Epoch loaded:"):
-                    previous_lines.append(line)
-                    count += 1
-                if count == len(hparams["base_locales"]) + i + 1:
-                    break
-            previous_lines = previous_lines[::-1]
-            with open(save_file, "w", encoding="utf-8") as f:
-                f.writelines(lines[:-1] + previous_lines)
 
 
 def profile(hparams, run_opts):
@@ -537,20 +510,7 @@ def profile(hparams, run_opts):
         "memory": max_mem,
         "time": time_stop,
     }
-    summary = torchinfo.summary(model, verbose=0)
-    # Manually fix number of parameters
-    summary.trainable_params = hparams[
-        "wavlm"
-    ].model.decoder.out_proj.weight.numel()
-    summary.total_params = sum(
-        p.numel() for p in hparams["wavlm"].model.parameters()
-    )
-    for i, (k, v) in enumerate(hparams["decoder_mask"].items()):
-        if v is None:
-            continue
-        for buffer in v.values():
-            summary.total_params += buffer.numel()
-    logging.info(summary)
+    logging.info(torchinfo.summary(model, verbose=0))
     logging.info(result)
 
 
@@ -570,6 +530,7 @@ if __name__ == "__main__":
         ".txt",
         f"_base={','.join(hparams['base_locales'])}_new={','.join(hparams['new_locales'])}.txt",
     )
+    random.seed(hparams["seed"])
 
     # Create experiment directory
     sb.create_experiment_directory(

@@ -69,10 +69,17 @@ To set up SpeechBrain-MOABB, follow these steps:
 
    These commands will install the necessary dependencies for the benchmark, including both the base requirements and the additional requirements.
 
-### Notes on MNE
+
 
 The code relies on [MNE](https://mne.tools/stable/index.html), which, by default, stores a config file at `$HOME/.mne/mne-python.json` and downloads data to `$HOME/mne-data`. 
 However, in some cases, the home directory may not exist, have storage limitations, or be on a shared filesystem where data operations are restricted by the system admin.
+
+### Notes on MOABB
+The benchmark results presented here were generated using MOABB version 0.4.6.
+The code, however, remains compatible with newer MOABB versions.
+It is important to be aware that starting from MOABB version 1.0, there have been changes to the naming conventions for sessions.
+As an example, in BNCI2014001, the session labeled as `session_T` in previous versions is now referred to as `0train`, and `session_E` is now named `1test` in MOABB versions 1.0 and above.
+
 
 If you need to set up a different folder for MNE, follow these steps:
 

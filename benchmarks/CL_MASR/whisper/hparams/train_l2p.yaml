@@ -1,15 +1,14 @@
 # ############################################################################
 # Model: Whisper (encoder-decoder) + cross-entropy loss
-# Authors: Luca Della Libera 2023, Pooneh Mousavi 2023
+# Authors: Luca Della Libera 2023
 # ############################################################################
 
-experiment_name: EWC
+experiment_name: L2P
 
 seed: 0
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 skip_test: False
-skip_ewc: False
 
 # Data preparation
 base_locales: [en, zh-CN, de, es, ru, fr, pt, ja, tr, pl]
@@ -22,7 +21,7 @@ output_folder: !ref results/<whisper_variant>/<experiment_name>/<seed>
 save_folder: !ref <output_folder>/save
 
 # Training parameters
-train_batch_size: 6
+train_batch_size: 8
 valid_batch_size: 16
 train_num_workers: 6
 valid_num_workers: 6
@@ -38,8 +37,7 @@ num_epochs: 2
 lr: 0.0001
 improvement_threshold: 0.0025
 annealing_factor: 0.8
-ewc_lambda: 5.0
-ewc_alpha: 0.5
+d_prompt: 1280
 
 whisper_variant: whisper-large-v2
 encoder_only: False
@@ -79,8 +77,13 @@ ce_loss: !new:torch.nn.CrossEntropyLoss
     ignore_index: !ref <ignore_index>
     label_smoothing: !ref <label_smoothing>
 
+prompt_pool: !new:train_l2p.PromptPool
+    locales: !ref <new_locales>
+    d_prompt: !ref <d_prompt>
+
 modules:
     whisper: !ref <whisper>
+    prompt_pool: !ref <prompt_pool>
 
 # Optimizers
 opt_class: !name:torch.optim.AdamW
@@ -106,6 +109,7 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
     checkpoints_dir: !ref <save_folder>
     recoverables:
         model: !ref <whisper>
+        prompt_pool: !ref <prompt_pool>
         scheduler: !ref <lr_annealing>
         counter: !ref <epoch_counter>
 

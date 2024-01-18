@@ -40,7 +40,7 @@ Users can easily integrate their own PyTorch models into our benchmark by follow
 
 ## 🛠️ Installation
 
-To set up the benchmark, follow these steps:
+To set up SpeechBrain-MOABB, follow these steps:
 
 1. Install SpeechBrain:
 
@@ -404,7 +404,8 @@ Notes:
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
 
 ## 📈️ [Results on protocol key aspects](#results_protocol)
-### Two-stepvs. one-step hyperparameter search
+
+### Two-step vs. one-step hyperparameter search
 Hyperparameter search was performed on the entire search space in a single step (1-step search) or on subspaces of the entire search space performing two sequential spaces (2-step search).
 From our results, two-step search was superior than single-step search for 6 out of 9 datasets used, with improvements up to 10.9%. 
 
@@ -471,15 +472,15 @@ From our results, using 10 random seeds the performance variability was less tha
 
 ## 📧 Contact
 
-For any questions or inquiries, feel free to reach out to [davide.borra2@unibo.it](mailto:davide.borra2@unibo.it).
+For any questions or inquiries, feel free to reach Davide Borra, Ph.D., University of Bologna ([davide.borra2@unibo.it](mailto:davide.borra2@unibo.it)).
 
 ## **Citing**
 
-If you use the SpeechBrain-MOABB, please cite:
+If you use SpeechBrain-MOABB for your research or business, please cite:
 
 [The link to the official paper will be available soon]
 
-Please also cite SpeechBrain if you use it for your research or business.
+Please also cite SpeechBrain:
 
 ```bibtex
 @misc{speechbrain,

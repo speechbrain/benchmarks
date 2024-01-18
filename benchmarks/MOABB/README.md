@@ -1,8 +1,10 @@
 # SpeechBrain-MOABB: An open-source Python library for EEG decoding with neural networks
 
 This repository provides a set of recipes for processing electroencephalographic (EEG) signals based on the popular [Mother of all BCI Benchmarks (MOABB)](https://github.com/NeuroTechX/moabb), seamlessly integrated with SpeechBrain. 
+
 This package facilitates the integration of new models and their evaluation on MOABB-supported tasks, i.e., motor imagery (MI), P300, and steady-state visual evoked potential (SSVEP). 
 It not only offers an interface for easy model integration and testing but also proposes a fair and robust protocol for comparing different decoding pipelines.
+
 This code could be used for benchmarking new decoding pipelines (e.g., involving a novel deep learning architecture or a novel data augmentation strategy).
 We accompany our code with a benchmark on 9 MOABB datasets (for MI-based, P300-based, and SSVEP-based BCIs) performed using 3 popular deep neural networks for EEG decoding. 
 Moreover, we also report the main results on the key aspects characterizing the decoding protocol we propose for enabling trustworthy EEG decoding.
@@ -44,12 +46,6 @@ To set up SpeechBrain-MOABB, follow these steps:
 
 1. Install SpeechBrain:
 
-   ```shell
-   pip install speechbrain
-   ```
-
-**Note:** Before the release of SpeechBrain v1.0, you'll need to clone and install the SpeechBrain repository as follows:
-
     ```shell
     git clone https://github.com/speechbrain/speechbrain/
     cd speechbrain
@@ -78,7 +74,7 @@ To set up SpeechBrain-MOABB, follow these steps:
 The code relies on [MNE](https://mne.tools/stable/index.html), which, by default, stores a config file at `$HOME/.mne/mne-python.json` and downloads data to `$HOME/mne-data`. 
 However, in some cases, the home directory may not exist, have storage limitations, or be on a shared filesystem where data operations are restricted by the system admin.
 
-To set up a different folder for MNE, follow these steps:
+If you need to set up a different folder for MNE, follow these steps:
 
 1. Open your bash shell and execute the following command to set the environment variable `_MNE_FAKE_HOME_DIR` to your preferred folder:
 
@@ -352,7 +348,7 @@ Results are saved within the specified output folder (`--output_folder`):
 
 ## [Incorporating Your Model](#incorporating-your-model)
 
-Let's bow assume you've designed a neural network in PyTorch and wish to integrate it into our benchmark.
+Let's now assume you've designed a neural network in PyTorch and wish to integrate it into our benchmark.
 You're in luck because we've made this step as simple as possible for you!
 Here are the steps you should follow:
 
@@ -372,7 +368,7 @@ Ensure that your model is compatible with the EEG task, considering varying inpu
 
 ## 📈️ [Results](#results)
 
-Here we report some results while benchmarking three popular EEG deep learning-based models for decoding motor imagery, P300, and SSVEP with SpeechBrain-MOABB. 
+Here, we report some results while benchmarking three popular EEG deep learning-based models for decoding motor imagery, P300, and SSVEP with SpeechBrain-MOABB. 
 
 Performance metrics were computed on each held-out session (stored in the metrics.pkl file) and reported here averaged across sessions and subjects, displaying the average value ± standard deviation across 10 random seeds.
 
@@ -403,7 +399,7 @@ Notes:
 - The experiments can be conducted on any GPU with a memory capacity of 12 GB or higher.
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
 
-## 📈️ [Results on the key aspects of the decoding protocol](#results_protocol)
+## 📈️ [Validation of the proposed decoding protocol](#results_protocol)
 In the following, we report the main results that were obtained by changing the key aspects of the decoding protocol, such as:
 * The number of participants used during hyperparameter search
 * Multi-step hyperparameter search (2-step search vs. 1-step search)
@@ -418,6 +414,9 @@ In a first case of study, we use a subset of formed by 3 or 5 participants (5 pa
 From our results, using a subset of participants slightly worsened the performance only for 4 out of 9 datasets from 0.73 to 5.3%, while at the same time reducing the computational time required (from 321.8 to 55.9 hours, on average across datasets).
 
 We also report results using a subset formed by only 1 participant, as a last case of study. In this case, the performance worsened up to 14.6%. 
+
+The table presented below illustrates the performance difference observed when utilizing the entire set of subjects compared to using only a subset of them (A negative number indicates a decline in performance.)
+
 
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): all - subset of 3-5 participants | Mean performance (test set): all - subset of 1 participant|  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:|-----:| :-----------:|
@@ -436,6 +435,8 @@ We also report results using a subset formed by only 1 participant, as a last ca
 Hyperparameter search was performed on the entire search space in a single step (1-step search) or on subspaces of the entire search space performing two sequential spaces (2-step search).
 From our results, two-step search was superior to single-step search for 6 out of 9 datasets used, with improvements up to 10.9%. 
 
+The table presented below illustrates the performance difference observed when utilizing 1-step search vs 2-step search (A negative number indicates a decline in performance.)
+
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): 2-step - 1-step search |  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
 | Motor imagery | /MotorImagery/BNCI2014001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0324  |1xNVIDIA V100 (16 GB) |
@@ -451,6 +452,8 @@ From our results, two-step search was superior to single-step search for 6 out o
 ### Sequential model-based search (TPE-based) vs. random search
 Hyperparameter search was performed using TPE (configuration file at: `hparams/orion/hparams_tpe.yaml`) or using random search (configuration file at: `hparams/orion/hparams_random_search.yaml`).
 From our results, sequential model-based search (TPE-based) was superior to random search for 7 out of 9 datasets used, with improvements up to 5.7%. 
+
+The table presented below illustrates the performance difference observed when utilizing TPE search vs Random search (A negative number indicates a decline in performance.)
 
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): TPE - random search |  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|

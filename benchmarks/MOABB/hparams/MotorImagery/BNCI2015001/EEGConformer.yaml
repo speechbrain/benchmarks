@@ -119,7 +119,7 @@ augment: !new:speechbrain.augment.augmenter.Augmenter
         !ref <rand_amp>,
         !ref <time_shift>,
         !ref <add_noise_white>]
-        
+
 # DATA NORMALIZATION
 dims_to_normalize: 1 # 1 (time) or 2 (EEG channels)
 normalize: !name:speechbrain.processing.signal_processing.mean_std_norm

@@ -18,10 +18,7 @@ class BraindecodeNN(torch.nn.Module):
     #torch.Size([1,4])
     """
 
-    def __init__(
-        self,
-        model
-    ):
+    def __init__(self, model):
         super().__init__()
         self.model = model
 

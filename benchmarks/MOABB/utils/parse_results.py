@@ -120,20 +120,12 @@ def parse_one_session_out(
     out_stat = {
         key.name: {metric: [] for metric in stat_metrics}
         for key in sorted(
-            folder
-            for folder in folds[0].iterdir()
-            if folder.is_dir()
+            folder for folder in folds[0].iterdir() if folder.is_dir()
         )
     }
 
     for f in folds:
-        child = sorted(
-            [
-                folder
-                for folder in f.iterdir()
-                if folder.is_dir()
-            ]
-        )
+        child = sorted([folder for folder in f.iterdir() if folder.is_dir()])
         for sess in child:
             metrics = load_metrics(sess.joinpath(metric_file))
             if metrics is not None:

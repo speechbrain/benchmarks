@@ -1,11 +1,11 @@
 # SpeechBrain-MOABB: An open-source Python library for EEG decoding with neural networks
 
 This repository provides a set of recipes for processing electroencephalographic (EEG) signals based on the popular [Mother of all BCI Benchmarks (MOABB)](https://github.com/NeuroTechX/moabb), seamlessly integrated with SpeechBrain. 
-This package facilitates the integration of new models and their evaluation on MOABB supported tasks, i.e., motor imagery (MI), P300, and steady-state visual evoked potential (SSVEP). 
+This package facilitates the integration of new models and their evaluation on MOABB-supported tasks, i.e., motor imagery (MI), P300, and steady-state visual evoked potential (SSVEP). 
 It not only offers an interface for easy model integration and testing but also proposes a fair and robust protocol for comparing different decoding pipelines.
 This code could be used for benchmarking new decoding pipelines (e.g., involving a novel deep learning architecture or a novel data augmentation strategy).
 We accompany our code with a benchmark on 9 MOABB datasets (for MI-based, P300-based, and SSVEP-based BCIs) performed using 3 popular deep neural networks for EEG decoding. 
-Moreover, we also report the main results on the key aspects characterizing the decoding protocol we propose for enabling a trustworthy EEG decoding.
+Moreover, we also report the main results on the key aspects characterizing the decoding protocol we propose for enabling trustworthy EEG decoding.
 
 For detailed information, please refer to [The link to the official paper will be available soon].
 
@@ -227,7 +227,7 @@ By default, the hyperparameters in the yaml files are those determined during hy
 
 **Note**: This script operates under the assumption that you are utilizing a Linux-based system. In this scenario, we offer a bash script instead of a Python script due to its inherent suitability for effectively orchestrating multiple training loops across various subjects and sessions.
 
-**Important:** The number of subjects (`--nsbj`) and sessions (`--nsess`) is dataset dependent. Refer to the dataset [dataset table above](#dataset-table) for these details. When executing a training experiment on a different dataset or model, please modify both the hparam file and adjust the subject and session counts accordingly.
+**Important:** The number of subjects (`--nsbj`) and sessions (`--nsess`) is dataset-dependent. Refer to the dataset [dataset table above](#dataset-table) for these details. When executing a training experiment on a different dataset or model, please modify both the hparam file and adjust the subject and session counts accordingly.
 
 ### Hyperparameter Tuning
 
@@ -236,7 +236,7 @@ Our benchmark establishes a standardized protocol for hyperparameter tuning, uti
 
 The standardized protocol we propose is based on multi-step hyperparameter search, for addressing the search in a large hyperparameter space, and on multi-seed initialization, for providing robust performance estimates. 
 Note that several aspects affecting this protocol underwent deep investigation.
-These include multi-step vs. single-step search, the search algorithm used, the number of participants for hyperparameter search, the number of random seeds for providing a stable decoding performance. 
+These include multi-step vs. single-step search, the search algorithm used, the number of participants for hyperparameter search, and the number of random seeds for providing a stable decoding performance. 
 Refer to [protocol results below](#results_protocol) for the results on the key aspects characterizing the decoding protocol. 
 #### **Overview**
 
@@ -306,9 +306,9 @@ You can conduct hyperparameter optimization with commands similar to the followi
 For further details on arguments and customization options, consult `./run_hparam_optimization.sh`.
 
 Note that hyperparameter tuning may take several hours (up to several days) depending on the model complexity and dataset.
-To speed up hyper-parameter tuning you can consider to reduce the number of subjects and sessions used during hyper-parameter tuning, by setting the `--nsbj_hpsearch ` and `--nsess_hpsearch` flags.
+To speed up hyper-parameter tuning you can consider reducing the number of subjects and sessions used during hyper-parameter tuning, by setting the `--nsbj_hpsearch ` and `--nsess_hpsearch` flags.
 As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 1` to run hyper-parameter tuning only on a subset of subjects / sessions.
-Of course, final evaluation will be performed on the entire dataset (on all subjects and sessions).
+Of course, the final evaluation will be performed on the entire dataset (on all subjects and sessions).
 
 Our protocol ensures a model comparison that is as fair as possible. 
 All reported results reported below are achieved with the same hyperparameter tuning methodology, enabling fair assessments across diverse models.
@@ -319,7 +319,7 @@ The [table above](#dataset-table) provides these values for each compatible data
 
 When it comes to training the model utilizing the leave-one-subject-out approach, simply employ the `--train_mode leave-one-subject-out` flag.
 
-By default trainings are performed on gpu. However, in case you do not have any gpu available on your machine, you can train models on cpu by specifying the `--device cpu` flag.
+By default, model training is performed on GPU. However, in case you do not have any GPU available on your machine, you can train models on CPU by specifying the `--device cpu` flag.
 
 **Notes:**
 - To monitor the status of the hyperparameter optimization, simply enter the following command: `orion status --all`. Ensure that you have added the necessary variables required by orion to your bash environment. You can achieve this by executing the following code within your terminal:
@@ -331,14 +331,14 @@ export ORION_DB_TYPE=pickleddb
 
 Please note that the value of the `ORION_DB_ADDRESS` variable will vary depending on the experiment. Adjust it accordingly.
 
-- If needed, you can interrupt the code at any point, and it will resume from the last successfully completed trial.
+- If needed, you can interrupt the code at any point, and it will resume from the last completed trial.
 
 - The quantities of subjects (`--nsbj`, `--nsbj_hpsearch`) and of sessions (`--nsess`, `--nsess_hpsearch`) are dataset-dependent. Please consult the [table above](#dataset-table) for this information.
  When conducting a hyperparameter optimization experiment using an alternative dataset or model, kindly adjust both the hparam file and the subject/session counts accordingly.
 
 - If you intend to perform multiple repetitions of the same hparam optimization, it is necessary to modify the `--exp_name`.
 
-- This script is designed for a Linux-based system. In this context, we provide a bash script instead of a Python script due to its natural ability of orchestrating diverse training loops across various subjects and sessions.
+- This script is designed for a Linux-based system. In this context, we provide a bash script instead of a Python script due to its natural ability to orchestrate diverse training loops across various subjects and sessions.
 
 
 #### **Output Structure**
@@ -404,7 +404,7 @@ Notes:
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
 
 ## 📈️ [Results on the key aspects of the decoding protocol](#results_protocol)
-In the following we report the main results that were obtained by changing the key aspects of the decoding protocol, such as:
+In the following, we report the main results that were obtained by changing the key aspects of the decoding protocol, such as:
 * The number of participants used during hyperparameter search
 * Multi-step hyperparameter search (2-step search vs. 1-step search)
 * The hyperparameter search algorithm (sequential model-based search vs. random search)
@@ -434,7 +434,7 @@ We also report results using a subset formed by only 1 participant, as a last ca
 
 ### Two-step vs. one-step hyperparameter search
 Hyperparameter search was performed on the entire search space in a single step (1-step search) or on subspaces of the entire search space performing two sequential spaces (2-step search).
-From our results, two-step search was superior than single-step search for 6 out of 9 datasets used, with improvements up to 10.9%. 
+From our results, two-step search was superior to single-step search for 6 out of 9 datasets used, with improvements up to 10.9%. 
 
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): 2-step - 1-step search |  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
@@ -450,7 +450,7 @@ From our results, two-step search was superior than single-step search for 6 out
 
 ### Sequential model-based search (TPE-based) vs. random search
 Hyperparameter search was performed using TPE (configuration file at: `hparams/orion/hparams_tpe.yaml`) or using random search (configuration file at: `hparams/orion/hparams_random_search.yaml`).
-From our results, sequential model-based search (TPE-based) was superior than random search for 7 out of 9 datasets used, with improvements up to 5.7%. 
+From our results, sequential model-based search (TPE-based) was superior to random search for 7 out of 9 datasets used, with improvements up to 5.7%. 
 
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): TPE - random search |  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|

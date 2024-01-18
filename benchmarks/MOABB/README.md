@@ -403,7 +403,34 @@ Notes:
 - The experiments can be conducted on any GPU with a memory capacity of 12 GB or higher.
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
 
-## 📈️ [Results on protocol key aspects](#results_protocol)
+## 📈️ [Results on the key aspects of the decoding protocol](#results_protocol)
+In the following we report the main results that were obtained by changing the key aspects of the decoding protocol, such as:
+* The number of participants used during hyperparameter search
+* Multi-step hyperparameter search (2-step search vs. 1-step search)
+* The hyperparameter search algorithm (sequential model-based search vs. random search)
+* The performance fluctuations due to random initialization of neural networks
+
+Performance metrics were computed on each held-out session (stored in the metrics.pkl file) and reported here averaged across sessions and subjects.
+### Hyperparameter search on all participants or on a subset of participants
+Hyperparameter search was performed using all the participants available or a subset of participants, for reducing computational time.
+
+In a first case of study, we use a subset of formed by 3 or 5 participants (5 participants for the largest datasets among the considered ones, i.e., Lee2019_MI, Lee2019_SSVEP).
+From our results, using a subset of participants slightly worsened the performance only for 4 out of 9 datasets from 0.73 to 5.3%, while at the same time reducing the computational time required (from 321.8 to 55.9 hours, on average across datasets).
+
+We also report results using a subset formed by only 1 participant, as a last case of study. In this case, the performance worsened up to 14.6%. 
+
+| Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): all - subset of 3-5 participants | Mean performance (test set): all - subset of 1 participant|  GPUs |
+|:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:|-----:| :-----------:|
+| Motor imagery | /MotorImagery/BNCI2014001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0318  | 0.0176 |1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/BNCI2014004/EEGNet.yaml | leave-one-session-out |  'acc'| -0.0076| -0.0008 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/BNCI2015001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0350 | 0.0208 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/Lee2019_MI/EEGNet.yaml | leave-one-session-out |  'acc'| -0.0532 | -0.1088 | 1xNVIDIA V100 (16 GB) |
+| Motor imagery | /MotorImagery/Zhou2016/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0091 | -0.0504 | 1xNVIDIA V100 (16 GB) |
+| P300 | /P300/EPFLP300/EEGNet.yaml | leave-one-session-out |  'f1'| -0.0140 | -0.0423 |1xNVIDIA V100 (16 GB) |
+| P300 | /P300/BNCI2014009/EEGNet.yaml | leave-one-session-out |  'f1'| -0.0073 | -0.0206 |1xNVIDIA V100 (16 GB) |
+| P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0101 | -0.0117 | 1xNVIDIA V100 (16 GB) |
+| SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0144 |-0.1456 |1xNVIDIA V100 (16 GB) |
+
 
 ### Two-step vs. one-step hyperparameter search
 Hyperparameter search was performed on the entire search space in a single step (1-step search) or on subspaces of the entire search space performing two sequential spaces (2-step search).
@@ -436,23 +463,6 @@ From our results, sequential model-based search (TPE-based) was superior than ra
 | P300 | /P300/BNCI2014009/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0137 |1xNVIDIA V100 (16 GB) |
 | P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0142 |  1xNVIDIA V100 (16 GB) |
 | SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0224 | 1xNVIDIA V100 (16 GB) |
-
-### Hyperparameter search on all participants or on a subset of participants
-Hyperparameter search was performed using all the participants available or a subset of participants, for reducing computational time.
-The subset of participants was set to 3 or 5 for the largest datasets among the considered ones (i.e., Lee2019_MI, Lee2019_SSVEP).
-From our results, using a subset of participants slightly worsened the performance only for 4 out of 9 datasets from 0.7 to 1.4%, while at the same time reducing the computational time required (from 321.8 to 55.9 hours, on average across datasets).
-
-| Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): all - subset participants |  GPUs |
-|:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
-| Motor imagery | /MotorImagery/BNCI2014001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0318  |1xNVIDIA V100 (16 GB) |
-| Motor imagery | /MotorImagery/BNCI2014004/EEGNet.yaml | leave-one-session-out |  'acc'| -0.0076| 1xNVIDIA V100 (16 GB) |
-| Motor imagery | /MotorImagery/BNCI2015001/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0350 | 1xNVIDIA V100 (16 GB) |
-| Motor imagery | /MotorImagery/Lee2019_MI/EEGNet.yaml | leave-one-session-out |  'acc'| -0.0532 | 1xNVIDIA V100 (16 GB) |
-| Motor imagery | /MotorImagery/Zhou2016/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0091 | 1xNVIDIA V100 (16 GB) |
-| P300 | /P300/EPFLP300/EEGNet.yaml | leave-one-session-out |  'f1'| -0.0140 | 1xNVIDIA V100 (16 GB) |
-| P300 | /P300/BNCI2014009/EEGNet.yaml | leave-one-session-out |  'f1'| -0.0073 |1xNVIDIA V100 (16 GB) |
-| P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0101 |  1xNVIDIA V100 (16 GB) |
-| SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.0144 | 1xNVIDIA V100 (16 GB) |
 
 ### Performance variability due to random initialization
 After hyperparameter search, the final models were trained and evaluated with 100 random seeds and the standard deviation was computed across averages across 1 or 10 seeds.

@@ -1,18 +1,18 @@
-# SpeechBrain-MOABB: An open-source Python library for EEG decoding with neural networks
+# SpeechBrain-MOABB: An open-source Python library for benchmarking deep neural networks applied to EEG signals
 
 This repository provides a set of recipes for processing electroencephalographic (EEG) signals based on the popular [Mother of all BCI Benchmarks (MOABB)](https://github.com/NeuroTechX/moabb), seamlessly integrated with SpeechBrain.
 
-This package facilitates the integration of new models and their evaluation on MOABB-supported tasks, i.e., motor imagery (MI), P300, and steady-state visual evoked potential (SSVEP).
+This package facilitates the integration and evaluation of new algorithms (e.g., a novel deep learning architecture or a novel data augmentation strategy) in EEG decoding pipelines based on MOABB-supported tasks, i.e., motor imagery (MI), P300, and steady-state visual evoked potential (SSVEP).
 It not only offers an interface for easy model integration and testing but also proposes a fair and robust protocol for comparing different decoding pipelines.
 
-This code could be used for benchmarking new decoding pipelines (e.g., involving a novel deep learning architecture or a novel data augmentation strategy).
+This code can be used for benchmarking new decoding pipelines in a reliable way.
 We accompany our code with a benchmark on 9 MOABB datasets (for MI-based, P300-based, and SSVEP-based BCIs) performed using 3 popular deep neural networks for EEG decoding.
 Moreover, we also report the main results on the key aspects characterizing the decoding protocol we propose for enabling trustworthy EEG decoding.
 
 For detailed information, please refer to [The link to the official paper will be available soon].
 
 ## 🎓 Tutorials
-We provide tutorials for introducing users to SpeechBrain-MOABB. These covers the main aspects of SpeechBrain-MOABB.
+We provide tutorials for introducing users to SpeechBrain-MOABB, covering its main aspects.
 
 Specifically, we provide:
 * Tutorial no. 1 **[Setting up EEG decoding](https://drive.google.com/file/d/1x3kNX65FelDhyl6ooNyFK8pVXsLxTm_N/view?usp=sharing)**.

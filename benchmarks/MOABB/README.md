@@ -408,7 +408,8 @@ output folder
 
 Notes:
 - Random names are widely used for directories containing results from the performed experiments (e.g., within 'best' folder)
-- To circumvent the generation of excessive files and folders within the directory containing hyperparameter search results (e.g., `step1`), which can be an issue on certain HPC clusters due to file quantity restrictions, consider activating the `--compress_exp True` option.
+- To circumvent the generation of excessive files and folders within the directory containing hyperparameter search results (e.g., 'step1' folder), which can be an issue on certain HPC clusters due to file quantity restrictions, consider activating the `--compress_exp True` option.
+- Note that, the organization of the 'best' folder obtained by running the command-line interface `run_hparam_optimization.sh` corresponds to the organization of the output folder obtained with the previous command-line interface (i.e., `run_experiments.sh`)
 
 ## [Incorporating Your Model](#incorporating-your-model)
 

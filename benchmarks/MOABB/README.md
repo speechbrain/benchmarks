@@ -11,7 +11,7 @@ Moreover, we also report the main results on the key aspects characterizing the 
 
 For detailed information, please refer to [The link to the official paper will be available soon].
 
-We also provide tutorials covering the main aspects of SpeechBrain-MOABB, in the `tutorials/` folder.
+We also provide tutorials covering the main aspects of SpeechBrain-MOABB.
 
 ## ⚡ Datasets and Recipes
 
@@ -40,7 +40,7 @@ The benchmark includes recipes for using the datasets mentioned above with popul
 
 Users can easily integrate their own PyTorch models into our benchmark by following the instructions provided in the [Incorporating Your Model](#incorporating-your-model) section below.
 
-# 🎓 Tutorials
+## 🎓 Tutorials
 We provide tutorials for introducing users to SpeechBrain-MOABB.
 
 Specifically, we provide:
@@ -430,7 +430,7 @@ In the following, we report the main results that were obtained by changing the 
 * The hyperparameter search algorithm (sequential model-based search vs. random search)
 * The performance fluctuations due to random initialization of neural networks
 
-Performance metrics were computed on each held-out session (stored in the metrics.pkl file) and reported here averaged across sessions and subjects.
+The performance was computed on each held-out session (stored in the metrics.pkl file) and was averaged across sessions and subjects.
 ### Hyperparameter search on all participants or on a subset of participants
 Hyperparameter search was performed using all the participants available or a subset of participants, for reducing computational time.
 
@@ -439,8 +439,7 @@ From our results, using a subset of participants slightly worsened the performan
 
 We also report results using a subset formed by only 1 participant, as a last case of study. In this case, the performance worsened up to 14.6%.
 
-The table presented below illustrates the performance difference observed when utilizing the entire set of subjects compared to using only a subset of them (A negative number indicates a decline in performance.)
-
+The table presented below illustrates the performance difference observed when utilizing the entire set of subjects compared to using only a subset of them (a negative number indicates a decline in performance).
 
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): all - subset of 3-5 participants | Mean performance (test set): all - subset of 1 participant|  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:|-----:| :-----------:|
@@ -459,7 +458,7 @@ The table presented below illustrates the performance difference observed when u
 Hyperparameter search was performed on the entire search space in a single step (1-step search) or on subspaces of the entire search space performing two sequential spaces (2-step search).
 From our results, two-step search was superior to single-step search for 6 out of 9 datasets used, with improvements up to 10.9%.
 
-The table presented below illustrates the performance difference observed when utilizing 1-step search vs 2-step search (A negative number indicates a decline in performance.)
+The table presented below illustrates the performance difference observed when utilizing 1-step search vs. 2-step search (a negative number indicates a decline in performance).
 
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): 2-step - 1-step search |  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
@@ -477,7 +476,7 @@ The table presented below illustrates the performance difference observed when u
 Hyperparameter search was performed using TPE (configuration file at: `hparams/orion/hparams_tpe.yaml`) or using random search (configuration file at: `hparams/orion/hparams_random_search.yaml`).
 From our results, sequential model-based search (TPE-based) was superior to random search for 7 out of 9 datasets used, with improvements up to 5.7%.
 
-The table presented below illustrates the performance difference observed when utilizing TPE search vs Random search (A negative number indicates a decline in performance.)
+The table presented below illustrates the performance difference observed when utilizing TPE search vs. random search (a negative number indicates a decline in performance).
 
 | Task | Hyperparams file | Training strategy | Key loaded model | Mean performance (test set): TPE - random search |  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:| :-----------:|
@@ -494,6 +493,8 @@ The table presented below illustrates the performance difference observed when u
 ### Performance variability due to random initialization
 After hyperparameter search, the final models were trained and evaluated with 100 random seeds and the standard deviation was computed across averages across 1 or 10 seeds.
 From our results, using 10 random seeds the performance variability was less than 1% for all datasets (9 out of 9 datasets), while with only 1 random seed the performance variability was up to 4.9639%.
+
+The table presented below illustrates the performance variability (std. dev.) resulting from using averages across 1 random seed or 10 random seeds (i.e., no multi-seed random initialization vs. 10-seed random initialization).
 
 | Task | Hyperparams file | Training strategy | Key loaded model | std. dev.: 1 seed (%)| std. dev.: 10 seeds (%)|  GPUs |
 |:-------------:|:---------------------------:|:---------------------------:|  -----:| -----:|-----:| :-----------:|

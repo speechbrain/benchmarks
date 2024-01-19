@@ -11,37 +11,8 @@ Moreover, we also report the main results on the key aspects characterizing the 
 
 For detailed information, please refer to [The link to the official paper will be available soon].
 
-We also provide tutorials covering the main aspects of SpeechBrain-MOABB.
-
-## ⚡ Datasets and Recipes
-
-This package leverages datasets supported by [MOABB](https://neurotechx.github.io/moabb/datasets.html).
-Specifically, it comes with recipes for the following [datasets](#dataset-table):
-
-
-| Dataset ID | Task | nsbj | nsess |
-|------------|-------------|-----|-----|
-|[BNCI2014001](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2014001.html#moabb.datasets.BNCI2014001) | Motor Imagery | 9 | 2 |
-|[BNCI2014004](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2014004.html#moabb.datasets.BNCI2014004) | Motor Imagery | 9 | 5 |
-|[BNCI2015001](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2015001.html#moabb.datasets.BNCI2015001) | Motor Imagery | 12 | 2 |
-|[Lee2019_MI](https://neurotechx.github.io/moabb/generated/moabb.datasets.Lee2019_MI.html#moabb.datasets.Lee2019_MI) | Motor Imagery | 54 | 2 |
-|[Zhou2016](https://neurotechx.github.io/moabb/generated/moabb.datasets.Zhou2016.html#moabb.datasets.Zhou2016) | Motor Imagery | 4 | 3 |
-|[BNCI2014009](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2014009.html#moabb.datasets.BNCI2014009) | P300 | 10 | 3 |
-|[EPFLP300](https://neurotechx.github.io/moabb/generated/moabb.datasets.EPFLP300.html#moabb.datasets.EPFLP300) | P300 | 8 | 4 |
-|[bi2015a](https://neurotechx.github.io/moabb/generated/moabb.datasets.bi2015a.html#moabb.datasets.bi2015a) | P300 | 43 | 3 |
-|[Lee2019_SSVEP](https://neurotechx.github.io/moabb/generated/moabb.datasets.Lee2019_SSVEP.html#moabb.datasets.Lee2019_SSVEP) | SSVEP | 54 | 2 |
-
-The EEG datasets are automatically downloaded when running the provided recipes.
-Furthermore, the code is designed to allow easy integration of any other dataset from MOABB, as well as the ability to plug and test various deep neural networks.
-The benchmark includes recipes for using the datasets mentioned above with popular models such as:
-- [EEGNet](https://arxiv.org/pdf/1611.08024.pdf)
-- [ShallowConvNet](https://arxiv.org/pdf/1703.05051.pdf)
-- [EEGConformer](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9991178)
-
-Users can easily integrate their own PyTorch models into our benchmark by following the instructions provided in the [Incorporating Your Model](#incorporating-your-model) section below.
-
 ## 🎓 Tutorials
-We provide tutorials for introducing users to SpeechBrain-MOABB.
+We provide tutorials for introducing users to SpeechBrain-MOABB. These covers the main aspects of SpeechBrain-MOABB.
 
 Specifically, we provide:
 * Tutorial no. 1 **[Setting up EEG decoding](https://drive.google.com/file/d/1x3kNX65FelDhyl6ooNyFK8pVXsLxTm_N/view?usp=sharing)**.
@@ -112,6 +83,32 @@ If you need to set up a different folder for MNE, follow these steps:
 
 By following these steps, you can ensure that MNE uses the specified folder for configuration and data storage.
 
+## ⚡ Datasets and Recipes
+
+This package leverages datasets supported by [MOABB](https://neurotechx.github.io/moabb/datasets.html).
+Specifically, it comes with recipes for the following [datasets](#dataset-table):
+
+
+| Dataset ID | Task | nsbj | nsess |
+|------------|-------------|-----|-----|
+|[BNCI2014001](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2014001.html#moabb.datasets.BNCI2014001) | Motor Imagery | 9 | 2 |
+|[BNCI2014004](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2014004.html#moabb.datasets.BNCI2014004) | Motor Imagery | 9 | 5 |
+|[BNCI2015001](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2015001.html#moabb.datasets.BNCI2015001) | Motor Imagery | 12 | 2 |
+|[Lee2019_MI](https://neurotechx.github.io/moabb/generated/moabb.datasets.Lee2019_MI.html#moabb.datasets.Lee2019_MI) | Motor Imagery | 54 | 2 |
+|[Zhou2016](https://neurotechx.github.io/moabb/generated/moabb.datasets.Zhou2016.html#moabb.datasets.Zhou2016) | Motor Imagery | 4 | 3 |
+|[BNCI2014009](https://neurotechx.github.io/moabb/generated/moabb.datasets.BNCI2014009.html#moabb.datasets.BNCI2014009) | P300 | 10 | 3 |
+|[EPFLP300](https://neurotechx.github.io/moabb/generated/moabb.datasets.EPFLP300.html#moabb.datasets.EPFLP300) | P300 | 8 | 4 |
+|[bi2015a](https://neurotechx.github.io/moabb/generated/moabb.datasets.bi2015a.html#moabb.datasets.bi2015a) | P300 | 43 | 3 |
+|[Lee2019_SSVEP](https://neurotechx.github.io/moabb/generated/moabb.datasets.Lee2019_SSVEP.html#moabb.datasets.Lee2019_SSVEP) | SSVEP | 54 | 2 |
+
+The EEG datasets are automatically downloaded when running the provided recipes.
+Furthermore, the code is designed to allow easy integration of any other dataset from MOABB, as well as the ability to plug and test various deep neural networks.
+The benchmark includes recipes for using the datasets mentioned above with popular models such as:
+- [EEGNet](https://arxiv.org/pdf/1611.08024.pdf)
+- [ShallowConvNet](https://arxiv.org/pdf/1703.05051.pdf)
+- [EEGConformer](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9991178)
+
+Users can easily integrate their own PyTorch models into our benchmark by following the instructions provided in the [Incorporating Your Model](#incorporating-your-model) section below.
 
 ## Training Strategies
 EEG recordings involve recording the brain activity from a subject using multiple EEG sensors placed on their head, resulting in a multi-channel signal (one for each sensor).
@@ -363,12 +360,55 @@ Please note that the value of the `ORION_DB_ADDRESS` variable will vary dependin
 
 #### **Output Structure**
 
-Results are saved within the specified output folder (`--output_folder`):
+Results are saved within the specified output folder (`--output_folder`). 
+In the following, we report a typical output organization obtained during leave-one-session-out training, using multi-step hyperparameter search with 2 steps and multi-seed training and evaluation with 10 seeds.
 
-- The optimal hyperparameters are stored in `best_hparams.yaml`.
-- The outcomes of individual optimization steps are stored within the subfolders `step1` and `step2`. When the `--store_all True` flag is employed, all hyperparameter trials are saved within the `exp` folder, each contained in subfolders with random names.
-- To circumvent the generation of excessive files and folders within the `exp` directory, which can be an issue on certain HPC clusters due to file quantity restrictions, consider activating the `--compress_exp True` option.
-- The "best" subfolder contains performance metrics on test sets using the best hyperparameters. Refer to `aggregated_performance.txt` for averaged results across multiple runs.
+```
+output folder
+│   best_hparams.yaml # YAML file containing optimal hyperparameters after all hyperparameter search steps (copy of the ones contained in 'best' folder)
+│   hyperparameter-search.pkl # result history of hyperparameter search 
+└───best # multi-seed final training and evaluation
+│   └───sjsHfg # random name
+│       │   flags.txt # options used while launching SpeechBrain-MOABB command-line interface
+│       │   aggregated_performance.txt # aggregated performance evaluation across seeds
+│       │   run1_results.txt # performance evaluation for one seed
+│       │   run2_results.txt
+│       │   ...
+│       │   run10_results.txt
+│       └───run1 # one run of multi-seed random training and evaluation
+│       │   └───1986  # seed used
+│       │       └───leave-one-session-out  # training strategy
+│       │           └───sub-001 # subject 
+│       │           │   └───ses-01 # held-out session (used as test set)
+│       │           │   │   └───save # saved model checkpoints
+│       │           │   │   │   env.log # environment details (Python, Python libraries, etc.)
+│       │           │   │   │   log.txt # complete log file 
+│       │           │   │   │   train_log.txt # training log file 
+│       │           │   │   │   model.txt # model details
+│       │           │   │   │   train.py # Python script used for training and evaluation
+│       │           │   │   │   hyperparameters.yaml # hyperparameter YAML file  
+│       │           │   │   │   valid_metrics.pkl # evaluation metrics on validation set
+│       │           │   │   │   test_metrics.pkl # evaluation metrics on test set
+│       │           │   └───... # other held-out sessions
+│       │           └───... # other subjects
+│       └───run2
+│       │   └───...
+│       │ ...
+│       └───run10
+│       		└───...
+└───step1 # step of multi-step hyperparameter search
+│   │   best_hparams.txt # optimal hyperparameters found during the search
+│   │   best_hparams.yaml # YAML file containing all hyperparameters, with the tuned hyperparameters at their optimal value
+│   │   exp.tar.gz # compressed directory with all results obtained during the search 
+│   │   orion-info.txt # results from Orion
+│   │   orion_hunt_command.txt # command used for running Orion
+└───step2
+		│   ...
+```
+
+Notes:
+- Random names are widely used for directories containing results from the performed experiments (e.g., within 'best' folder)
+- To circumvent the generation of excessive files and folders within the directory containing hyperparameter search results (e.g., `step1`), which can be an issue on certain HPC clusters due to file quantity restrictions, consider activating the `--compress_exp True` option.
 
 ## [Incorporating Your Model](#incorporating-your-model)
 

@@ -1,12 +1,12 @@
 # SpeechBrain-MOABB: An open-source Python library for EEG decoding with neural networks
 
-This repository provides a set of recipes for processing electroencephalographic (EEG) signals based on the popular [Mother of all BCI Benchmarks (MOABB)](https://github.com/NeuroTechX/moabb), seamlessly integrated with SpeechBrain. 
+This repository provides a set of recipes for processing electroencephalographic (EEG) signals based on the popular [Mother of all BCI Benchmarks (MOABB)](https://github.com/NeuroTechX/moabb), seamlessly integrated with SpeechBrain.
 
-This package facilitates the integration of new models and their evaluation on MOABB-supported tasks, i.e., motor imagery (MI), P300, and steady-state visual evoked potential (SSVEP). 
+This package facilitates the integration of new models and their evaluation on MOABB-supported tasks, i.e., motor imagery (MI), P300, and steady-state visual evoked potential (SSVEP).
 It not only offers an interface for easy model integration and testing but also proposes a fair and robust protocol for comparing different decoding pipelines.
 
 This code could be used for benchmarking new decoding pipelines (e.g., involving a novel deep learning architecture or a novel data augmentation strategy).
-We accompany our code with a benchmark on 9 MOABB datasets (for MI-based, P300-based, and SSVEP-based BCIs) performed using 3 popular deep neural networks for EEG decoding. 
+We accompany our code with a benchmark on 9 MOABB datasets (for MI-based, P300-based, and SSVEP-based BCIs) performed using 3 popular deep neural networks for EEG decoding.
 Moreover, we also report the main results on the key aspects characterizing the decoding protocol we propose for enabling trustworthy EEG decoding.
 
 For detailed information, please refer to [The link to the official paper will be available soon].
@@ -15,7 +15,7 @@ We also provide tutorials covering the main aspects of SpeechBrain-MOABB, in the
 
 ## ⚡ Datasets and Recipes
 
-This package leverages datasets supported by [MOABB](https://neurotechx.github.io/moabb/datasets.html). 
+This package leverages datasets supported by [MOABB](https://neurotechx.github.io/moabb/datasets.html).
 Specifically, it comes with recipes for the following [datasets](#dataset-table):
 
 
@@ -31,14 +31,31 @@ Specifically, it comes with recipes for the following [datasets](#dataset-table)
 |[bi2015a](https://neurotechx.github.io/moabb/generated/moabb.datasets.bi2015a.html#moabb.datasets.bi2015a) | P300 | 43 | 3 |
 |[Lee2019_SSVEP](https://neurotechx.github.io/moabb/generated/moabb.datasets.Lee2019_SSVEP.html#moabb.datasets.Lee2019_SSVEP) | SSVEP | 54 | 2 |
 
-The EEG datasets are automatically downloaded when running the provided recipes. 
-Furthermore, the code is designed to allow easy integration of any other dataset from MOABB, as well as the ability to plug and test various deep neural networks. 
+The EEG datasets are automatically downloaded when running the provided recipes.
+Furthermore, the code is designed to allow easy integration of any other dataset from MOABB, as well as the ability to plug and test various deep neural networks.
 The benchmark includes recipes for using the datasets mentioned above with popular models such as:
 - [EEGNet](https://arxiv.org/pdf/1611.08024.pdf)
 - [ShallowConvNet](https://arxiv.org/pdf/1703.05051.pdf)
 - [EEGConformer](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9991178)
 
 Users can easily integrate their own PyTorch models into our benchmark by following the instructions provided in the [Incorporating Your Model](#incorporating-your-model) section below.
+
+# 🎓 Tutorials
+We provide tutorials for introducing users to SpeechBrain-MOABB.
+
+Specifically, we provide:
+* Tutorial no. 1 **[Setting up EEG decoding](https://drive.google.com/file/d/1x3kNX65FelDhyl6ooNyFK8pVXsLxTm_N/view?usp=sharing)**.
+In this tutorial, we provide a brief introduction to SpeechBrain-MOABB and its first command-line interface.
+This interface allows users to run a full experiment on a target decoding problem (e.g., P300 decoding on a MOABB dataset) with known hyperparameters (i.e., no hyperparameter tuning is performed).
+Models are trained and evaluated adopting a multi-seed initialization strategy, for providing performance estimates robust to fluctuations due to random initialization.
+* Tutorial no. 2 **[Setting up hyper-parameter tuning](https://drive.google.com/file/d/1w-VTkYn4MPKa1PZceKZ7MkBDMVi1zi4J/view?usp=sharing)**.
+This tutorial covers the second command-line interface of SpeechBrain-MOABB, devoted to performing multi-step hyperparameter tuning of the hyperparameters characterizing the entire decoding pipeline.
+Notably, the tuned hyperparameters can include data pre-processing, network architecture, network training, and data augmentation steps of the deep learning-based EEG decoding pipeline.
+As for the previous command-line interface, here models are trained and evaluated by adopting a multi-seed initialization strategy, for providing robust performance estimates.
+* Tutorial no. 3 **[Integrating braindecode models](https://drive.google.com/file/d/1W_0YRAqioceKo3XPdLB9A2d7yT4iOO50/view?usp=sharing)**.
+This tutorial shows how to use braindecode models in SpeechBrain-MOABB, designing a robust and comprehensive decoding pipeline with SpeechBrain-MOABB while taking advantage of the large set of models supported in braindecode.
+
+Moreover, we also provide a [tutorial](https://drive.google.com/file/d/1EmgYqHv7xdhUpkrNL5eVMwF054__MGWq/view?usp=sharing) for replicating the results reported in the paper associated with SpeechBrain-MOABB, to ensure transparency of the results reported in the paper.
 
 ## 🛠️ Installation
 
@@ -71,7 +88,7 @@ To set up SpeechBrain-MOABB, follow these steps:
 
 
 
-The code relies on [MNE](https://mne.tools/stable/index.html), which, by default, stores a config file at `$HOME/.mne/mne-python.json` and downloads data to `$HOME/mne-data`. 
+The code relies on [MNE](https://mne.tools/stable/index.html), which, by default, stores a config file at `$HOME/.mne/mne-python.json` and downloads data to `$HOME/mne-data`.
 However, in some cases, the home directory may not exist, have storage limitations, or be on a shared filesystem where data operations are restricted by the system admin.
 
 ### Notes on MOABB
@@ -108,18 +125,18 @@ One of the distinctive features of EEG tasks compared to other popular machine l
 Normally, two common strategies are used during the training phase: *Leave-One-Session-Out* and *Leave-One-Subject-Out* cross-validation.
 
 * **Leave-One-Session-Out**:
-  For each subject, we reserve one session as a test set and use the remaining sessions for training neural networks. 
-  We thus train different neural networks, each excluding a different session. 
+  For each subject, we reserve one session as a test set and use the remaining sessions for training neural networks.
+  We thus train different neural networks, each excluding a different session.
   We repeat this process for all subjects and then average the performance to asses the final performance of our models.
 
 * **Leave-One-Subject-Out**:
-  In this challenging condition, we reserve one subject as the test set while training using the data from all the other subjects. 
+  In this challenging condition, we reserve one subject as the test set while training using the data from all the other subjects.
   This approach is challenging because each subject has a unique brain activity pattern, making it difficult to successfully leverage data from other subjects.
 
 
 ## ▶️ Quickstart
 
-**Note:** Before proceeding with the experiments, make sure that you have installed the additional dependencies listed in the `extra_requirements.txt` file. 
+**Note:** Before proceeding with the experiments, make sure that you have installed the additional dependencies listed in the `extra_requirements.txt` file.
 Please, read the content above as well.
 
 ### Training and Evaluation for a Specific Subject and Session
@@ -130,8 +147,8 @@ Let's now dive into how to train a model using data from a single subject and se
 python train.py hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder=eeg_data --cached_data_folder=eeg_pickled_data --output_folder=results/MotorImagery/BNCI2014001/ --target_subject_idx=0 --target_session_idx=1 --data_iterator_name=leave-one-session-out
 ```
 
-In this example, we will train EEGNet for Motor Imagery using the BNCI2014001 dataset. 
-Specifically, we will train the model using data from *subject 0*. 
+In this example, we will train EEGNet for Motor Imagery using the BNCI2014001 dataset.
+Specifically, we will train the model using data from *subject 0*.
 The data recorded in *session 1* of *subject 0* will be used for testing, while all the other sessions will be used for training.
 
 The data will be automatically downloaded to the specified `data_folder`, and a cached version of the data will be stored in `cached_data_folder` for future reuse.
@@ -174,7 +191,7 @@ Additionally, you can find detailed performance metrics for both validation and 
 
 ### Run a Complete Experiment on a Given Dataset
 
-To train models using either the *Leave-One-Subject-Out* or *Leave-One-Session-Out* approach and then average their performance, we have developed a convenient bash script called `run_experiment.sh`. 
+To train models using either the *Leave-One-Subject-Out* or *Leave-One-Session-Out* approach and then average their performance, we have developed a convenient bash script called `run_experiment.sh`.
 This script orchestrates the necessary loops for easy execution and represents the first command-line interface of SpeechBrain-MOABB.
 
 To run a full training experiment, use the following command:
@@ -234,16 +251,16 @@ By default, the hyperparameters in the yaml files are those determined during hy
 
 ### Hyperparameter Tuning
 
-Efficient hyperparameter tuning is paramount when introducing novel models or experimenting with diverse datasets. 
+Efficient hyperparameter tuning is paramount when introducing novel models or experimenting with diverse datasets.
 Our benchmark establishes a standardized protocol for hyperparameter tuning, utilizing [Orion](https://orion.readthedocs.io/en/stable/) to ensure fair model comparisons.
 
-The standardized protocol we propose is based on multi-step hyperparameter search, for addressing the search in a large hyperparameter space, and on multi-seed initialization, for providing robust performance estimates. 
+The standardized protocol we propose is based on multi-step hyperparameter search, for addressing the search in a large hyperparameter space, and on multi-seed initialization, for providing robust performance estimates.
 Note that several aspects affecting this protocol underwent deep investigation.
-These include multi-step vs. single-step search, the search algorithm used, the number of participants for hyperparameter search, and the number of random seeds for providing a stable decoding performance. 
-Refer to [protocol results below](#results_protocol) for the results on the key aspects characterizing the decoding protocol. 
+These include multi-step vs. single-step search, the search algorithm used, the number of participants for hyperparameter search, and the number of random seeds for providing a stable decoding performance.
+Refer to [protocol results below](#results_protocol) for the results on the key aspects characterizing the decoding protocol.
 #### **Overview**
 
-Hyperparameter tuning is orchestrated through the `./run_hparam_optimization.sh` script, which oversees the execution of multiple hyperparameter trials via `run_experiments.sh`. 
+Hyperparameter tuning is orchestrated through the `./run_hparam_optimization.sh` script, which oversees the execution of multiple hyperparameter trials via `run_experiments.sh`.
 This script represents the second command-line interface of SpeechBrain-MOABB.
 
 Please keep in mind the following points:
@@ -313,7 +330,7 @@ To speed up hyper-parameter tuning you can consider reducing the number of subje
 As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 1` to run hyper-parameter tuning only on a subset of subjects / sessions.
 Of course, the final evaluation will be performed on the entire dataset (on all subjects and sessions).
 
-Our protocol ensures a model comparison that is as fair as possible. 
+Our protocol ensures a model comparison that is as fair as possible.
 All reported results reported below are achieved with the same hyperparameter tuning methodology, enabling fair assessments across diverse models.
 
 As evident from the example, you need to configure the hyperparameter file, specify the number of subjects (nsbj), and set the number of sessions (nsess).
@@ -359,7 +376,7 @@ Let's now assume you've designed a neural network in PyTorch and wish to integra
 You're in luck because we've made this step as simple as possible for you!
 Here are the steps you should follow:
 
-1. Write your model's code in a Python library saved in `benchmarks/MOABB/models` (e.g., `benchmarks/MOABB/models/my_model.py`). 
+1. Write your model's code in a Python library saved in `benchmarks/MOABB/models` (e.g., `benchmarks/MOABB/models/my_model.py`).
 Ensure that your model is compatible with the EEG task, considering varying input channels and variable-length inputs across different datasets.
 
 2. Create a YAML file for each dataset you want to experiment with. Thankfully, you don't have to start from scratch. For example, if you're working with BNCI2014001 (Motor Imagery/), copy `benchmarks/MOABB/hparams/MotorImagery/BNCI2014001/EEGNet.yaml` and save it in the same folder with a different name (e.g., `my_model.yaml`).
@@ -375,7 +392,7 @@ Ensure that your model is compatible with the EEG task, considering varying inpu
 
 ## 📈️ [Results](#results)
 
-Here, we report some results while benchmarking three popular EEG deep learning-based models for decoding motor imagery, P300, and SSVEP with SpeechBrain-MOABB. 
+Here, we report some results while benchmarking three popular EEG deep learning-based models for decoding motor imagery, P300, and SSVEP with SpeechBrain-MOABB.
 
 Performance metrics were computed on each held-out session (stored in the metrics.pkl file) and reported here averaged across sessions and subjects, displaying the average value ± standard deviation across 10 random seeds.
 
@@ -420,7 +437,7 @@ Hyperparameter search was performed using all the participants available or a su
 In a first case of study, we use a subset of formed by 3 or 5 participants (5 participants for the largest datasets among the considered ones, i.e., Lee2019_MI, Lee2019_SSVEP).
 From our results, using a subset of participants slightly worsened the performance only for 4 out of 9 datasets from 0.73 to 5.3%, while at the same time reducing the computational time required (from 321.8 to 55.9 hours, on average across datasets).
 
-We also report results using a subset formed by only 1 participant, as a last case of study. In this case, the performance worsened up to 14.6%. 
+We also report results using a subset formed by only 1 participant, as a last case of study. In this case, the performance worsened up to 14.6%.
 
 The table presented below illustrates the performance difference observed when utilizing the entire set of subjects compared to using only a subset of them (A negative number indicates a decline in performance.)
 
@@ -440,7 +457,7 @@ The table presented below illustrates the performance difference observed when u
 
 ### Two-step vs. one-step hyperparameter search
 Hyperparameter search was performed on the entire search space in a single step (1-step search) or on subspaces of the entire search space performing two sequential spaces (2-step search).
-From our results, two-step search was superior to single-step search for 6 out of 9 datasets used, with improvements up to 10.9%. 
+From our results, two-step search was superior to single-step search for 6 out of 9 datasets used, with improvements up to 10.9%.
 
 The table presented below illustrates the performance difference observed when utilizing 1-step search vs 2-step search (A negative number indicates a decline in performance.)
 
@@ -458,7 +475,7 @@ The table presented below illustrates the performance difference observed when u
 
 ### Sequential model-based search (TPE-based) vs. random search
 Hyperparameter search was performed using TPE (configuration file at: `hparams/orion/hparams_tpe.yaml`) or using random search (configuration file at: `hparams/orion/hparams_random_search.yaml`).
-From our results, sequential model-based search (TPE-based) was superior to random search for 7 out of 9 datasets used, with improvements up to 5.7%. 
+From our results, sequential model-based search (TPE-based) was superior to random search for 7 out of 9 datasets used, with improvements up to 5.7%.
 
 The table presented below illustrates the performance difference observed when utilizing TPE search vs Random search (A negative number indicates a decline in performance.)
 

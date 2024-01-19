@@ -13,6 +13,7 @@ For detailed information, please refer to [The link to the official paper will b
 
 ## 🎓 Tutorials
 We provide tutorials for introducing users to SpeechBrain-MOABB, covering its main aspects.
+Users can open and run tutorials directly in Google Colaboratory in a straightforward way.
 
 Specifically, we provide:
 * Tutorial no. 1 **[Setting up EEG decoding](https://drive.google.com/file/d/1x3kNX65FelDhyl6ooNyFK8pVXsLxTm_N/view?usp=sharing)**.

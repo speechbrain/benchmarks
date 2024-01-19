@@ -324,7 +324,7 @@ For further details on arguments and customization options, consult `./run_hpara
 
 Note that hyperparameter tuning may take several hours (up to several days) depending on the model complexity and dataset.
 To speed up hyper-parameter tuning you can consider reducing the number of subjects and sessions used during hyper-parameter tuning, by setting the `--nsbj_hpsearch ` and `--nsess_hpsearch` flags.
-As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 1` to run hyper-parameter tuning only on a subset of subjects / sessions.
+As an example, in the previous command you can set `--nsbj_hpsearch 3 --nsess_hpsearch 2` to run hyper-parameter tuning only on a subset of subjects / sessions.
 Of course, the final evaluation will be performed on the entire dataset (on all subjects and sessions).
 
 Our protocol ensures a model comparison that is as fair as possible.
@@ -393,9 +393,9 @@ output folder
 │       │           └───... # other subjects
 │       └───run2
 │       │   └───...
-│       │ ...
+│       └───...
 │       └───run10
-│       		└───...
+│       	└───...
 └───step1 # step of multi-step hyperparameter search
 │   │   best_hparams.txt # optimal hyperparameters found during the search
 │   │   best_hparams.yaml # YAML file containing all hyperparameters, with the tuned hyperparameters at their optimal value
@@ -403,7 +403,7 @@ output folder
 │   │   orion-info.txt # results from Orion
 │   │   orion_hunt_command.txt # command used for running Orion
 └───step2
-		│   ...
+│    │   ...
 ```
 
 Notes:

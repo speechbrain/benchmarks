@@ -1,5 +1,6 @@
 mne
-MOABB==0.4.6
+moabb
 orion
+orion[profet]
 scikit-learn
 torchinfo

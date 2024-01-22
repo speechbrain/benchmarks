@@ -109,7 +109,8 @@ The benchmark includes recipes for using the datasets mentioned above with popul
 - [ShallowConvNet](https://arxiv.org/pdf/1703.05051.pdf)
 - [EEGConformer](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9991178)
 
-Users can easily integrate their own PyTorch models into our benchmark by following the instructions provided in the [Incorporating Your Model](#incorporating-your-model) section below.
+Users can easily integrate their own PyTorch models into our benchmark by following the instructions provided in the "Incorporating Your Model" section below.
+
 
 ## Training Strategies
 EEG recordings involve recording the brain activity from a subject using multiple EEG sensors placed on their head, resulting in a multi-channel signal (one for each sensor).

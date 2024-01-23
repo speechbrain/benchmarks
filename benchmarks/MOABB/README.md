@@ -21,7 +21,6 @@ For detailed information, please refer to [The link to the official paper will b
 - [Table of Contents](#table-of-contents)
 - [Tutorials](#-tutorials)
 - [Installation](#-installation)
-  - [Notes on MOABB](#notes-on-moabb)
 - [Datasets and Recipes](#-datasets-and-recipes)
   - [Training Strategies](#training-strategies)
 - [Quickstart](#-quickstart)
@@ -34,6 +33,7 @@ For detailed information, please refer to [The link to the official paper will b
     - [Workflow of the Script](#workflow-of-the-script)
     - [Running Hyperparameter Optimization](#running-hyperparameter-optimization)
     - [Output Structure](#output-structure)
+- [‍Incorporating Your Model](#-incorporating-your-model)
 - [Results](#-results)
 - [Validation of the proposed decoding protocol](#-validation-of-the-proposed-decoding-protocol)
   - [Hyperparameter search on all participants or on a subset of participants](#hyperparameter-search-on-all-participants-or-on-a-subset-of-participants)
@@ -100,7 +100,8 @@ To set up SpeechBrain-MOABB, follow these steps:
 The code relies on [MNE](https://mne.tools/stable/index.html), which, by default, stores a config file at `$HOME/.mne/mne-python.json` and downloads data to `$HOME/mne-data`.
 However, in some cases, the home directory may not exist, have storage limitations, or be on a shared filesystem where data operations are restricted by the system admin.
 
-## Notes on MOABB
+**Notes on MOABB:** 
+
 The benchmark results presented here were generated using MOABB version 0.4.6.
 The code, however, remains compatible with newer MOABB versions.
 It is important to be aware that starting from MOABB version 1.0, there have been changes to the naming conventions for sessions.

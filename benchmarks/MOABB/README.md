@@ -31,12 +31,12 @@ For detailed information, please refer to [The link to the official paper will b
     - [Multi-Step Hyperparameter Optimization](#multi-step-hyperparameter-optimization)
     - [Workflow of the Script](#workflow-of-the-script)
     - [Running Hyperparameter Optimization](#running-hyperparameter-optimization)
-    - [Output Structure](#output-ttructure)
+    - [Output Structure](#output-structure)
 - [Results](#-results)
 - [Validation of the proposed decoding protocol](#-validation-of-the-proposed-decoding-protocol)
   - [Hyperparameter search on all participants or on a subset of participants](#hyperparameter-search-on-all-participants-or-on-a-subset-of-participants)
   - [Two-step vs. one-step hyperparameter search](#two-step-vs-one-step-hyperparameter-search)
-  - [Sequential model-based search (TPE-based) vs. random search](#sequential-model-based-search-(TPE-based)-vs-random-search)
+  - [Sequential model-based search vs. random search](#sequential-model-based-search-vs-random-search)
   - [Performance variability due to random initialization](#performance-variability-due-to-random-initialization)
 - [Contact](#-contact)
 - [Citing](#-citing)
@@ -59,7 +59,7 @@ This tutorial shows how to use braindecode models in SpeechBrain-MOABB, designin
 
 Moreover, we also provide a [tutorial](https://drive.google.com/file/d/1EmgYqHv7xdhUpkrNL5eVMwF054__MGWq/view?usp=sharing) for replicating the results reported in the paper associated with SpeechBrain-MOABB, to ensure transparency of the results reported in the paper.
 <!-- ############################################################################################################### -->
-# 🛠️ Installation
+# 🛠 Installation
 
 To set up SpeechBrain-MOABB, follow these steps:
 
@@ -463,7 +463,7 @@ Ensure that your model is compatible with the EEG task, considering varying inpu
 **Note**: If you're not familiar with YAML, you can refer to our [HyperPyYAML tutorial](https://speechbrain.github.io/tutorial_basics.html) on the SpeechBrain website for guidance.
 <!-- ############################################################################################################### -->
 
-# 📈️ [Results](#results)
+# 📈️ Results
 
 Here, we report some results while benchmarking three popular EEG deep learning-based models for decoding motor imagery, P300, and SSVEP with SpeechBrain-MOABB.
 
@@ -496,7 +496,7 @@ Notes:
 - The experiments can be conducted on any GPU with a memory capacity of 12 GB or higher.
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
 <!-- ############################################################################################################### -->
-# 📈️ Validation of the proposed decoding protocol
+# 📈 Validation of the proposed decoding protocol
 In the following, we report the main results that were obtained by changing the key aspects of the decoding protocol, such as:
 * The number of participants used during hyperparameter search
 * Multi-step hyperparameter search (2-step search vs. 1-step search)
@@ -545,7 +545,7 @@ The table presented below illustrates the performance difference observed when u
 | P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.0127 |  1xNVIDIA V100 (16 GB) |
 | SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 0.1088 | 1xNVIDIA V100 (16 GB) |
 
-## Sequential model-based search (TPE-based) vs. random search
+## Sequential model-based search vs. random search
 Hyperparameter search was performed using TPE (configuration file at: `hparams/orion/hparams_tpe.yaml`) or using random search (configuration file at: `hparams/orion/hparams_random_search.yaml`).
 From our results, sequential model-based search (TPE-based) was superior to random search for 7 out of 9 datasets used, with improvements up to 5.7%.
 

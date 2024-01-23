@@ -95,7 +95,7 @@ To set up SpeechBrain-MOABB, follow these steps:
 
    These commands will install the necessary dependencies for the benchmark, including both the base requirements and the additional requirements.
 
-**Notes on MOABB and MNE:** 
+**Notes on MOABB and MNE:**
 
 The benchmark results presented here were generated using MOABB version 0.4.6.
 The code, however, remains compatible with newer MOABB versions.

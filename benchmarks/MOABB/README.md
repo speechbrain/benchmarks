@@ -19,7 +19,7 @@ For detailed information, please refer to [The link to the official paper will b
 # Table of Contents
 
 - [Table of Contents](#table-of-contents)
-- [Tutorials](#🎓-tutorials)
+- [Tutorials](#-tutorials)
 - [Installation](#installation)
   - [Notes on MOABB](#notes-on-moabb)
 - [Quickstart](#quickstart)

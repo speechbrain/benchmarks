@@ -1,9 +1,6 @@
-<div align="center">
-
-<!-- ![SpeechBrain-MOABB logo](speechbrain-moabb_logo.svg) -->
-
-<img src="speechbrain-moabb_logo.svg" width=512>
-</div>
+<p align="center">
+  <img src="speechbrain-moabb_logo.svg" alt="SpeechBrain Logo"/>
+</p>
 
 # SpeechBrain-MOABB: An open-source Python library for benchmarking deep neural networks applied to EEG signals
 

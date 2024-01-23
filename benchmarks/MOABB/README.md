@@ -19,10 +19,10 @@ For detailed information, please refer to [The link to the official paper will b
 # Table of Contents
 
 - [Table of Contents](#table-of-contents)
-- [Tutorials](#tutorials)
-- [Installation](#installation)
+- [Tutorials](#🎓-tutorials)
+- [Installation](#🛠️-installation)
   - [Notes on MOABB](#notes-on-moabb)
-- [Quickstart](#quickstart)
+- [Quickstart](#▶️-quickstart)
   - [Training and Evaluation for a Specific Subject and Session](#training-and-evaluation-for-a-specific-subject-and-session)
   - [Run a Complete Experiment on a Given Dataset](#)
   - [Hyperparameter Tuning](#)

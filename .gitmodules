@@ -1,0 +1,3 @@
+[submodule "speechbrain"]
+	path = speechbrain
+	url = https://github.com/speechbrain/speechbrain.git

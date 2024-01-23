@@ -6,7 +6,7 @@
    height="44.999069mm"
    viewBox="0 0 196.39568 44.999069"
    version="1.1"
-   id="svg1890"
+   id="svg5"
    inkscape:version="1.1 (c4e8f9e, 2021-05-24)"
    sodipodi:docname="drawing.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -15,7 +15,7 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
-     id="namedview1892"
+     id="namedview7"
      pagecolor="#505050"
      bordercolor="#eeeeee"
      borderopacity="1"
@@ -24,21 +24,21 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.67081229"
-     inkscape:cx="352.55764"
-     inkscape:cy="194.54026"
-     inkscape:window-width="1312"
-     inkscape:window-height="997"
-     inkscape:window-x="41"
-     inkscape:window-y="25"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="g862"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
-     fit-margin-bottom="0" />
+     fit-margin-bottom="0"
+     inkscape:zoom="0.67081229"
+     inkscape:cx="306.34501"
+     inkscape:cy="439.01998"
+     inkscape:window-width="1640"
+     inkscape:window-height="997"
+     inkscape:window-x="40"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g862" />
   <defs
-     id="defs1887">
+     id="defs2">
     <inkscape:path-effect
        effect="bspline"
        id="path-effect6181"
@@ -461,11 +461,11 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-10.229051,-11.795584)">
+     transform="translate(-5.9296503,-5.5044502)">
     <g
        inkscape:label="Layer 1"
        id="layer1-5"
-       transform="translate(5.4278757,7.0994708)">
+       transform="translate(1.1284749,0.80833689)">
       <g
          transform="matrix(0.99997799,0,0,0.99997799,-316.65694,85.808765)"
          id="g862">
@@ -539,15 +539,15 @@
            inkscape:original-d="m 349.38087,-75.040498 c 2.30104,-0.02339 4.60201,-0.04685 6.90292,-0.07037 2.29914,1.748558 4.59812,3.496981 6.89708,5.245373 1.25016,1.800744 2.50021,3.601351 3.75022,5.401928 -0.0572,1.831896 -0.11442,3.663654 -0.17173,5.495381 -1.88901,2.461586 -3.778,4.92301 -5.66711,7.384415 -0.62962,0.458025 -1.25929,0.915962 -1.88904,1.373845 -0.0572,-1.43105 -0.11442,-2.86211 -0.17173,-4.293265 -0.73348,-1.454065 -1.46701,-2.908136 -2.20061,-4.362304 -2.74999,-3.575005 -5.49994,-7.149934 -8.25,-10.725 -1.78331,-0.708282 -3.56661,-1.416601 -5.35001,-2.125 -1.43059,-0.387567 -2.86118,-0.775184 -4.29187,-1.162875 0.22905,-0.343402 0.45802,-0.686856 0.68692,-1.030384 1.43119,-0.457891 2.86225,-0.91583 4.29327,-1.373845 1.82067,0.08077 3.64119,0.161469 5.46169,0.242104 z" />
         <text
            xml:space="preserve"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.6393px;line-height:1.25;font-family:'Apple Braille';-inkscape-font-specification:'Apple Braille, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#73131c;fill-opacity:0.979633;stroke:none;stroke-width:0.0661473;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
-           x="403.09933"
-           y="-41.860138"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.1671px;line-height:1.25;font-family:'Arial Unicode MS';-inkscape-font-specification:'Arial Unicode MS, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#73131c;fill-opacity:0.979633;stroke:none;stroke-width:0.0661473;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
+           x="399.94388"
+           y="-40.55191"
            id="text8847"><tspan
              sodipodi:role="line"
              id="tspan8845"
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.6393px;font-family:'Apple Braille';-inkscape-font-specification:'Apple Braille, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#73131c;fill-opacity:0.979633;stroke:none;stroke-width:0.0661473;stroke-opacity:1"
-             x="403.09933"
-             y="-41.860138">MOABB</tspan></text>
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.1671px;font-family:'Arial Unicode MS';-inkscape-font-specification:'Arial Unicode MS, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#73131c;fill-opacity:0.979633;stroke:none;stroke-width:0.0661473;stroke-opacity:1"
+             x="399.94388"
+             y="-40.55191">MOABB</tspan></text>
         <text
            xml:space="preserve"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.6393px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#575757;fill-opacity:0.960784;stroke:none;stroke-width:0.0661473;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"

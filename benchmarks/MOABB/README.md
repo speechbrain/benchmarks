@@ -58,7 +58,7 @@ As for the previous command-line interface, here models are trained and evaluate
 This tutorial shows how to use braindecode models in SpeechBrain-MOABB, designing a robust and comprehensive decoding pipeline with SpeechBrain-MOABB while taking advantage of the large set of models supported in braindecode.
 
 Moreover, we also provide a [tutorial](https://drive.google.com/file/d/1EmgYqHv7xdhUpkrNL5eVMwF054__MGWq/view?usp=sharing) for replicating the results reported in the paper associated with SpeechBrain-MOABB, to ensure transparency of the results reported in the paper.
-
+<!-- ############################################################################################################### -->
 # 🛠️ Installation
 
 To set up SpeechBrain-MOABB, follow these steps:
@@ -113,7 +113,7 @@ If you need to set up a different folder for MNE, follow these steps:
 3. Open the newly created file (`your/folder/.mne/mne-python.json`) and set the `MNE_DATA` and `MNE_DATASETS_BNCI_PATH` variables to the folders you want to use for MNE data and MOABB datasets, respectively.
 
 By following these steps, you can ensure that MNE uses the specified folder for configuration and data storage.
-
+<!-- ############################################################################################################### -->
 # ⚡ Datasets and Recipes
 
 This package leverages datasets supported by [MOABB](https://neurotechx.github.io/moabb/datasets.html).
@@ -161,7 +161,7 @@ Normally, two common strategies are used during the training phase: *Leave-One-S
 * **Leave-One-Subject-Out**:
   In this challenging condition, we reserve one subject as the test set while training using the data from all the other subjects.
   This approach is challenging because each subject has a unique brain activity pattern, making it difficult to successfully leverage data from other subjects.
-
+<!-- ############################################################################################################### -->
 
 # ▶️ Quickstart
 
@@ -442,7 +442,7 @@ Notes:
 - Random names are widely used for directories containing results from the performed experiments (e.g., within 'best' folder)
 - To circumvent the generation of excessive files and folders within the directory containing hyperparameter search results (e.g., 'step1' folder), which can be an issue on certain HPC clusters due to file quantity restrictions, consider activating the `--compress_exp True` option.
 - Note that, the organization of the 'best' folder obtained by running the command-line interface `run_hparam_optimization.sh` corresponds to the organization of the output folder obtained with the previous command-line interface (i.e., `run_experiments.sh`)
-
+<!-- ############################################################################################################### -->
 # [Incorporating Your Model](#incorporating-your-model)
 
 Let's now assume you've designed a neural network in PyTorch and wish to integrate it into our benchmark.
@@ -461,7 +461,7 @@ Ensure that your model is compatible with the EEG task, considering varying inpu
 5. Now, follow the instructions above to run an experiment and perform the necessary hyperparameter tuning.
 
 **Note**: If you're not familiar with YAML, you can refer to our [HyperPyYAML tutorial](https://speechbrain.github.io/tutorial_basics.html) on the SpeechBrain website for guidance.
-
+<!-- ############################################################################################################### -->
 
 # 📈️ [Results](#results)
 
@@ -495,7 +495,7 @@ Notes:
 - To ensure transparency and reproducibility, we release the output folder containing model checkpoints and training logs. You can access **checkpoints** for each model and dataset, complete with hyperparameter tuning [here](https://www.dropbox.com/sh/ux0i0suljojonmb/AABsTBpEKCTmVE784yQw-WGMa?dl=0).
 - The experiments can be conducted on any GPU with a memory capacity of 12 GB or higher.
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
-
+<!-- ############################################################################################################### -->
 # 📈️ Validation of the proposed decoding protocol
 In the following, we report the main results that were obtained by changing the key aspects of the decoding protocol, such as:
 * The number of participants used during hyperparameter search
@@ -580,11 +580,11 @@ The table presented below illustrates the performance variability (std. dev.) re
 | P300 | /P300/BNCI2014009/EEGNet.yaml | leave-one-session-out |  'f1'| 1.6558 |0.4564  |1xNVIDIA V100 (16 GB) |
 | P300 | /P300/bi2015a/EEGNet.yaml | leave-one-session-out |  'f1'| 0.9080 | 0.1607  | 1xNVIDIA V100 (16 GB) |
 | SSVEP | /SSVEP/Lee2019_SSVEP/EEGNet.yaml | leave-one-session-out |  'acc'| 1.6279 |0.7560  | 1xNVIDIA V100 (16 GB) |
-
+<!-- ############################################################################################################### -->
 # 📧 Contact
 
 For any questions or inquiries, feel free to reach Davide Borra, Ph.D., University of Bologna ([davide.borra2@unibo.it](mailto:davide.borra2@unibo.it)).
-
+<!-- ############################################################################################################### -->
 # **Citing**
 
 If you use SpeechBrain-MOABB for your research or business, please cite:

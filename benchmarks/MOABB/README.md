@@ -22,6 +22,8 @@ For detailed information, please refer to [The link to the official paper will b
 - [Tutorials](#-tutorials)
 - [Installation](#-installation)
   - [Notes on MOABB](#notes-on-moabb)
+- [Datasets and Recipes](#-datasets-and-recipes)
+  - [Training Strategies](#training-strategies)
 - [Quickstart](#-quickstart)
   - [Training and Evaluation for a Specific Subject and Session](#training-and-evaluation-for-a-specific-subject-and-session)
   - [Run a Complete Experiment on a Given Dataset](#run-a-complete-experiment-on-a-given-dataset)
@@ -253,7 +255,7 @@ acc [0.728009 0.729552 0.728588 0.735918 0.732253 0.732446 0.740934 0.729360 0.7
 
 ```
 
-The system's performance should closely match the values reported in the first row of the table in [Results](#results) section. Specifically, please refer to the line corresponding to `/MotorImagery/BNCI2014001/EEGNet.yaml`.
+The system's performance should closely match the values reported in the first row of the table in [Results](#-results) section. Specifically, please refer to the line corresponding to `/MotorImagery/BNCI2014001/EEGNet.yaml`.
 
 Please be aware that there may be slight variability each time the experiment is run, primarily due to different seeds being used in each run. For example, you may observe accuracy values like `0.732620` in the current run, while the original table reports `0.731559`. We conduct 10 runs and average the results to minimize this variability and provide a more accurate performance estimate.
 
@@ -276,7 +278,7 @@ By default, the hyperparameters in the yaml files are those determined during hy
 
 **Note**: This script operates under the assumption that you are utilizing a Linux-based system. In this scenario, we offer a bash script instead of a Python script due to its inherent suitability for effectively orchestrating multiple training loops across various subjects and sessions.
 
-**Important:** The number of subjects (`--nsbj`) and sessions (`--nsess`) is dataset-dependent. Refer to the dataset [dataset table above](#dataset-table) for these details. When executing a training experiment on a different dataset or model, please modify both the hparam file and adjust the subject and session counts accordingly.
+**Important:** The number of subjects (`--nsbj`) and sessions (`--nsess`) is dataset-dependent. Refer to the dataset [dataset table above](#-datasets-and-recipes) for these details. When executing a training experiment on a different dataset or model, please modify both the hparam file and adjust the subject and session counts accordingly.
 
 ## Hyperparameter Tuning
 
@@ -286,7 +288,7 @@ Our benchmark establishes a standardized protocol for hyperparameter tuning, uti
 The standardized protocol we propose is based on multi-step hyperparameter search, for addressing the search in a large hyperparameter space, and on multi-seed initialization, for providing robust performance estimates.
 Note that several aspects affecting this protocol underwent deep investigation.
 These include multi-step vs. single-step search, the search algorithm used, the number of participants for hyperparameter search, and the number of random seeds for providing a stable decoding performance.
-Refer to [protocol results below](#results_protocol) for the results on the key aspects characterizing the decoding protocol.
+Refer to [protocol results below](#-validation-of-the-proposed-decoding-protocol) for the results on the key aspects characterizing the decoding protocol.
 ### **Overview**
 
 Hyperparameter tuning is orchestrated through the `./run_hparam_optimization.sh` script, which oversees the execution of multiple hyperparameter trials via `run_experiments.sh`.
@@ -364,7 +366,7 @@ All reported results reported below are achieved with the same hyperparameter tu
 
 As evident from the example, you need to configure the hyperparameter file, specify the number of subjects (nsbj), and set the number of sessions (nsess).
 
-The [table above](#dataset-table) provides these values for each compatible dataset.
+The [table above](#-datasets-and-recipes) provides these values for each compatible dataset.
 
 When it comes to training the model utilizing the leave-one-subject-out approach, simply employ the `--train_mode leave-one-subject-out` flag.
 
@@ -382,7 +384,7 @@ Please note that the value of the `ORION_DB_ADDRESS` variable will vary dependin
 
 - If needed, you can interrupt the code at any point, and it will resume from the last completed trial.
 
-- The quantities of subjects (`--nsbj`, `--nsbj_hpsearch`) and of sessions (`--nsess`, `--nsess_hpsearch`) are dataset-dependent. Please consult the [table above](#dataset-table) for this information.
+- The quantities of subjects (`--nsbj`, `--nsbj_hpsearch`) and of sessions (`--nsess`, `--nsess_hpsearch`) are dataset-dependent. Please consult the [table above](#-datasets-and-recipes) for this information.
  When conducting a hyperparameter optimization experiment using an alternative dataset or model, kindly adjust both the hparam file and the subject/session counts accordingly.
 
 - If you intend to perform multiple repetitions of the same hparam optimization, it is necessary to modify the `--exp_name`.

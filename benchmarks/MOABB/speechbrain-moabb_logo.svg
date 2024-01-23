@@ -21,7 +21,7 @@
      borderopacity="1"
      inkscape:pageshadow="0"
      inkscape:pageopacity="0"
-     inkscape:pagecheckerboard="0"
+     inkscape:pagecheckerboard="true"
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="0.27018298"
@@ -32,7 +32,8 @@
      inkscape:window-x="37"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
-     inkscape:current-layer="g862" />
+     inkscape:current-layer="layer1"
+     showborder="false" />
   <defs
      id="defs2">
     <inkscape:path-effect

@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="210mm"
-   height="297mm"
-   viewBox="0 0 210 297"
+   width="196.39568mm"
+   height="44.999069mm"
+   viewBox="0 0 196.39568 44.999069"
    version="1.1"
    id="svg5"
    inkscape:version="1.1 (c4e8f9e, 2021-05-24)"
@@ -24,16 +24,20 @@
      inkscape:pagecheckerboard="true"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.27018298"
-     inkscape:cx="207.26694"
-     inkscape:cy="209.11754"
-     inkscape:window-width="1643"
+     inkscape:zoom="0.088980349"
+     inkscape:cx="455.15668"
+     inkscape:cy="-2140.9221"
+     inkscape:window-width="1640"
      inkscape:window-height="997"
-     inkscape:window-x="37"
+     inkscape:window-x="40"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
-     showborder="false" />
+     showborder="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
   <defs
      id="defs2">
     <inkscape:path-effect
@@ -388,8 +392,8 @@
        id="pe3cd2eef30">
       <rect
          x="72"
-         y="19.008"
-         width="446.4"
+         y="19.007999"
+         width="446.39999"
          height="121.968"
          id="rect11392" />
     </clipPath>
@@ -400,8 +404,8 @@
        id="pee37511c10">
       <rect
          x="72"
-         y="19.008"
-         width="446.4"
+         y="19.007999"
+         width="446.39999"
          height="121.968"
          id="rect11522" />
     </clipPath>
@@ -412,8 +416,8 @@
        id="p9c2d497522">
       <rect
          x="72"
-         y="19.008"
-         width="446.4"
+         y="19.007999"
+         width="446.39999"
          height="121.968"
          id="rect11714" />
     </clipPath>
@@ -424,8 +428,8 @@
        id="p1fde417467">
       <rect
          x="72"
-         y="19.008"
-         width="446.4"
+         y="19.007999"
+         width="446.39999"
          height="121.968"
          id="rect11826" />
     </clipPath>
@@ -436,8 +440,8 @@
        id="p4c737d4197">
       <rect
          x="72"
-         y="19.008"
-         width="446.4"
+         y="19.007999"
+         width="446.39999"
          height="121.968"
          id="rect12460" />
     </clipPath>
@@ -448,8 +452,8 @@
        id="pd32b173c7c">
       <rect
          x="72"
-         y="19.008"
-         width="446.4"
+         y="19.007999"
+         width="446.39999"
          height="121.968"
          id="rect12590" />
     </clipPath>
@@ -457,7 +461,8 @@
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(-4.8011754,-4.6961133)">
     <g
        transform="matrix(0.99997799,0,0,0.99997799,-316.65694,85.808765)"
        id="g862">

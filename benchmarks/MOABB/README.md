@@ -20,14 +20,14 @@ For detailed information, please refer to [The link to the official paper will b
 
 - [Table of Contents](#table-of-contents)
 - [Tutorials](#🎓-tutorials)
-- [Installation](#🛠️-installation)
+- [Installation](#installation)
   - [Notes on MOABB](#notes-on-moabb)
-- [Quickstart](#▶️-quickstart)
+- [Quickstart](#quickstart)
   - [Training and Evaluation for a Specific Subject and Session](#training-and-evaluation-for-a-specific-subject-and-session)
-  - [Run a Complete Experiment on a Given Dataset](#)
-  - [Hyperparameter Tuning](#)
+  - [Run a Complete Experiment on a Given Dataset](#run-a-complete-experiment-on-a-given-dataset)
+  - [Hyperparameter Tuning](#hyperparameter-tuning)
     - [Overview](#overview)
-    - [Incorporating Orion Flags in Hparam Files](#)
+    - [Incorporating Orion Flags in Hparam Files](#incorporating-orion-flags-in-hparam-files)
     - [Multi-Step Hyperparameter Optimization](#)
     - [Workflow of the Script](#)
     - [Running Hyperparameter Optimization](#)
@@ -163,7 +163,7 @@ Normally, two common strategies are used during the training phase: *Leave-One-S
   This approach is challenging because each subject has a unique brain activity pattern, making it difficult to successfully leverage data from other subjects.
 <!-- ############################################################################################################### -->
 
-# ▶️ Quickstart
+# 🚀 Quickstart
 
 **Note:** Before proceeding with the experiments, make sure that you have installed the additional dependencies listed in the `extra_requirements.txt` file.
 Please, read the content above as well.
@@ -443,7 +443,7 @@ Notes:
 - To circumvent the generation of excessive files and folders within the directory containing hyperparameter search results (e.g., 'step1' folder), which can be an issue on certain HPC clusters due to file quantity restrictions, consider activating the `--compress_exp True` option.
 - Note that, the organization of the 'best' folder obtained by running the command-line interface `run_hparam_optimization.sh` corresponds to the organization of the output folder obtained with the previous command-line interface (i.e., `run_experiments.sh`)
 <!-- ############################################################################################################### -->
-# [Incorporating Your Model](#incorporating-your-model)
+# 📝 ‍Incorporating Your Model
 
 Let's now assume you've designed a neural network in PyTorch and wish to integrate it into our benchmark.
 You're in luck because we've made this step as simple as possible for you!
@@ -585,7 +585,7 @@ The table presented below illustrates the performance variability (std. dev.) re
 
 For any questions or inquiries, feel free to reach Davide Borra, Ph.D., University of Bologna ([davide.borra2@unibo.it](mailto:davide.borra2@unibo.it)).
 <!-- ############################################################################################################### -->
-# **Citing**
+# 📖 Citing
 
 If you use SpeechBrain-MOABB for your research or business, please cite:
 

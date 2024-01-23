@@ -48,18 +48,23 @@ We provide tutorials for introducing users to SpeechBrain-MOABB, covering its ma
 Users can open and run tutorials directly in Google Colaboratory in a straightforward way.
 
 Specifically, we provide:
-* Tutorial no. 1 **[Setting up EEG decoding](https://drive.google.com/file/d/1x3kNX65FelDhyl6ooNyFK8pVXsLxTm_N/view?usp=sharing)**.
+
+
+* Tutorial no. 1 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1x3kNX65FelDhyl6ooNyFK8pVXsLxTm_N)
+ **[Setting up EEG decoding](https://drive.google.com/file/d/1x3kNX65FelDhyl6ooNyFK8pVXsLxTm_N/view?usp=sharing)**.
 In this tutorial, we provide a brief introduction to SpeechBrain-MOABB and its first command-line interface.
 This interface allows users to run a full experiment on a target decoding problem (e.g., P300 decoding on a MOABB dataset) with known hyperparameters (i.e., no hyperparameter tuning is performed).
 Models are trained and evaluated adopting a multi-seed initialization strategy, for providing performance estimates robust to fluctuations due to random initialization.
-* Tutorial no. 2 **[Setting up hyper-parameter tuning](https://drive.google.com/file/d/1w-VTkYn4MPKa1PZceKZ7MkBDMVi1zi4J/view?usp=sharing)**.
+* Tutorial no. 2 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1w-VTkYn4MPKa1PZceKZ7MkBDMVi1zi4J)
+ **[Setting up hyper-parameter tuning](https://drive.google.com/file/d/1w-VTkYn4MPKa1PZceKZ7MkBDMVi1zi4J/view?usp=sharing)**.
 This tutorial covers the second command-line interface of SpeechBrain-MOABB, devoted to performing multi-step hyperparameter tuning of the hyperparameters characterizing the entire decoding pipeline.
 Notably, the tuned hyperparameters can include data pre-processing, network architecture, network training, and data augmentation steps of the deep learning-based EEG decoding pipeline.
 As for the previous command-line interface, here models are trained and evaluated by adopting a multi-seed initialization strategy, for providing robust performance estimates.
-* Tutorial no. 3 **[Integrating braindecode models](https://drive.google.com/file/d/1W_0YRAqioceKo3XPdLB9A2d7yT4iOO50/view?usp=sharing)**.
+* Tutorial no. 3 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1W_0YRAqioceKo3XPdLB9A2d7yT4iOO50)
+ **[Integrating braindecode models](https://drive.google.com/file/d/1W_0YRAqioceKo3XPdLB9A2d7yT4iOO50/view?usp=sharing)**.
 This tutorial shows how to use braindecode models in SpeechBrain-MOABB, designing a robust and comprehensive decoding pipeline with SpeechBrain-MOABB while taking advantage of the large set of models supported in braindecode.
 
-Moreover, we also provide a [tutorial](https://drive.google.com/file/d/1EmgYqHv7xdhUpkrNL5eVMwF054__MGWq/view?usp=sharing) for replicating the results reported in the paper associated with SpeechBrain-MOABB, to ensure transparency of the results reported in the paper.
+Moreover, we also provide a [tutorial](https://drive.google.com/file/d/1EmgYqHv7xdhUpkrNL5eVMwF054__MGWq/view?usp=sharing)[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1EmgYqHv7xdhUpkrNL5eVMwF054__MGWq) for replicating the results reported in the paper associated with SpeechBrain-MOABB, to ensure transparency of the results reported in the paper.
 <!-- ############################################################################################################### -->
 # 🛠 Installation
 

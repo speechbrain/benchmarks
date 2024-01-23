@@ -463,8 +463,7 @@ Ensure that your model is compatible with the EEG task, considering varying inpu
 **Note**: If you're not familiar with YAML, you can refer to our [HyperPyYAML tutorial](https://speechbrain.github.io/tutorial_basics.html) on the SpeechBrain website for guidance.
 <!-- ############################################################################################################### -->
 
-# 📈️ Results
-
+# 📈 Results
 Here, we report some results while benchmarking three popular EEG deep learning-based models for decoding motor imagery, P300, and SSVEP with SpeechBrain-MOABB.
 
 Performance metrics were computed on each held-out session (stored in the metrics.pkl file) and reported here averaged across sessions and subjects, displaying the average value ± standard deviation across 10 random seeds.
@@ -495,6 +494,7 @@ Notes:
 - To ensure transparency and reproducibility, we release the output folder containing model checkpoints and training logs. You can access **checkpoints** for each model and dataset, complete with hyperparameter tuning [here](https://www.dropbox.com/sh/ux0i0suljojonmb/AABsTBpEKCTmVE784yQw-WGMa?dl=0).
 - The experiments can be conducted on any GPU with a memory capacity of 12 GB or higher.
 - ShallowConvNet and EECConformer models are excluded for P300 and SSVEP experiments, as these models are tailored for Motor Imagery tasks.
+
 <!-- ############################################################################################################### -->
 # 📈 Validation of the proposed decoding protocol
 In the following, we report the main results that were obtained by changing the key aspects of the decoding protocol, such as:

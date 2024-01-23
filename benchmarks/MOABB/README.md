@@ -160,6 +160,7 @@ Multiple recordings, each involving the same subject undertaking the same task, 
 One of the distinctive features of EEG tasks compared to other popular machine learning tasks, such as speech processing or computer vision, is the relatively low amount of data available for each subject. Additionally, due to the cost of recording brain activity, the number of subjects is not large.
 
 Normally, two common strategies are used during the training phase: *Leave-One-Session-Out* and *Leave-One-Subject-Out* cross-validation.
+Both cross-validation approaches are supported in SpeechBrain-MOABB.
 
 * **Leave-One-Session-Out**:
   For each subject, we reserve one session as a test set and use the remaining sessions for training neural networks.

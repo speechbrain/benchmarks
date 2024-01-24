@@ -1,9 +1,13 @@
 #!/usr/bin/env/python3
-"""
-Script for training an ASR model evaluating an SSL representation
+""" Script for training an ASR model evaluating an SSL representation
 model on one language from the CommonVoice dataset. A SentencePiece tokenizer
 with number of tokens equal to <output_neurons> is learned in a first phase, on
 the considered language.
+
+Authors
+ * Adel Moumen 2024
+ * Salah Zaiem 2023
+ * Youcef Kemiche 2023
 """
 
 import sys

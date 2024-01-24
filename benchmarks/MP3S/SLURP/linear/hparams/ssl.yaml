@@ -29,15 +29,14 @@ skip_prep: False
 compute_cost: !name:speechbrain.nnet.losses.nll_loss
 # URL for the encoder2 model, you can change to benchmark diffrenet models
 
-
-num_layers_ssl: 13  #Number of layers in the SSL model (should be 25 for large)
 ssl_hub: facebook/wav2vec2-base
+ssl_folder: !ref <output_folder>/ssl_checkpoints
 encoder_dim: 768
 
 # Training parameters
 number_of_epochs: 20
 batch_size: 2
-test_batch_size: 2
+test_batch_size: 1
 lr: 0.0002
 lr_weights: 0.01
 # token_type: unigram # ["unigram", "bpe", "char"]
@@ -80,10 +79,9 @@ epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
    limit: !ref <number_of_epochs>
 
 # Models
-
-weighted_ssl_model: !new:speechbrain.lobes.models.huggingface_wav2vec.WeightedSSLModel # yamllint disable-line rule:line-length
+weighted_ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.WeightedSSLModel # yamllint disable-line rule:line-length   
    hub: !ref <ssl_hub>
-   num_layers: !ref <num_layers_ssl>
+   save_path: !ref <ssl_folder>
 
 avg_pool: !new:speechbrain.nnet.pooling.StatisticsPooling
    return_std: False

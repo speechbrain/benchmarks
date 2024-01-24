@@ -40,7 +40,7 @@ number_of_epochs: 20
 lr: 0.0002
 lr_weights: 0.01
 sorting: ascending
-auto_mix_prec: False
+precision: fp32
 sample_rate: 16000
 token_type: bpe  # ["unigram", "bpe", "char"]
 character_coverage: 1.0
@@ -142,7 +142,7 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
       scheduler_encoder: !ref <lr_annealing_weights>
       counter: !ref <epoch_counter>
       tokenizer: !ref <label_encoder>
-      
+
 train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
    save_file: !ref <train_log>
 

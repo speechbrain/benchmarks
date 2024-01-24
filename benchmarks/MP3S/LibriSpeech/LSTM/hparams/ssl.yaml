@@ -32,7 +32,6 @@ test_csv:
    - !ref <output_folder>/test-clean.csv
    - !ref <output_folder>/test-other.csv
 
-num_layers_ssl: 13  #Number of layers in the SSL model (should be 25 for large )
 ssl_hub: facebook/wav2vec2-base
 ssl_folder: !ref <output_folder>/ssl_checkpoints
 encoder_dim: 768

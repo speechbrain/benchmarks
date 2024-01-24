@@ -3,6 +3,7 @@
 
 Decoding is performed with greedy decoding at validation time.
 At test time, beamsearch is used with an optional external language model.
+
 Authors
  * Adel Moumen 2024
  * Salah Zaiem 2023
@@ -60,14 +61,9 @@ class ASR(sb.Brain):
                 for utt_seq in predicted_tokens
             ]
         elif stage == sb.Stage.TEST:
-            if hasattr(self.hparams, "rescorer"):
-                predicted_words = [
-                    hyp[0].split(" ") for hyp in predicted_tokens
-                ]
-            else:
-                predicted_words = [
-                    hyp[0].text.split(" ") for hyp in predicted_tokens
-                ]
+            predicted_words = [
+                hyp[0].text.split(" ") for hyp in predicted_tokens
+            ]
 
         if stage != sb.Stage.TRAIN:
             target_words = [wrd.split(" ") for wrd in batch.wrd]

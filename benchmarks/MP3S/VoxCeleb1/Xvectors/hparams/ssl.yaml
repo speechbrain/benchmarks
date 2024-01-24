@@ -94,9 +94,9 @@ classifier: !new:speechbrain.lobes.models.Xvector.Classifier
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
     limit: !ref <number_of_epochs>
 
-weighted_ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.WeightedSSLModel # yamllint disable-line rule:line-length   
-   hub: !ref <ssl_hub>
-   save_path: !ref <ssl_folder>
+weighted_ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.WeightedSSLModel # yamllint disable-line rule:line-length
+    hub: !ref <ssl_hub>
+    save_path: !ref <ssl_folder>
 
 modules:
     weighted_ssl_model: !ref <weighted_ssl_model>

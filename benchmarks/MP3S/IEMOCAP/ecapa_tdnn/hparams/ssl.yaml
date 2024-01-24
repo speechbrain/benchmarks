@@ -69,9 +69,9 @@ valid_dataloader_opts:
 test_dataloader_opts:
     batch_size: !ref <test_batch_size>
 
-weighted_ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.WeightedSSLModel # yamllint disable-line rule:line-length   
-   hub: !ref <ssl_hub>
-   save_path: !ref <ssl_folder>
+weighted_ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.WeightedSSLModel # yamllint disable-line rule:line-length
+    hub: !ref <ssl_hub>
+    save_path: !ref <ssl_folder>
 
 embedding_model: !new:speechbrain.lobes.models.ECAPA_TDNN.ECAPA_TDNN
     input_size: !ref <encoder_dim>

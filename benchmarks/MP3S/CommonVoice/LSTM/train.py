@@ -118,7 +118,6 @@ class ASR(sb.Brain):
                 with open(self.hparams.test_wer_file, "w") as w:
                     self.wer_metric.write_stats(w)
 
-
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
         self.weights_optimizer = self.hparams.weights_opt_class(

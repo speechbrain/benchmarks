@@ -33,7 +33,7 @@ class EmoIdBrain(sb.Brain):
         if stage != sb.Stage.TRAIN:
             self.error_metrics.append(batch.id, predictions, emoid)
         return loss
-    
+
     def on_stage_start(self, stage, epoch=None):
         """Gets called at the beginning of each epoch.
         Arguments

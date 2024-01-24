@@ -27,11 +27,11 @@ class ASR(sb.Brain):
         """Forward computations from the waveform batches to the output probabilities."""
         batch = batch.to(self.device)
         wavs, wav_lens = batch.sig
-        
+
         # Forward pass
         feats = self.modules.weighted_ssl_model(wavs)
         y = self.modules.enc(feats)
-        
+
         # Compute outputs
         p_tokens = None
         logits = self.modules.ctc_lin(y)
@@ -286,7 +286,7 @@ if __name__ == "__main__":
 
     # We dynamicaly add the tokenizer to our brain class.
     asr_brain.tokenizer = label_encoder
-    
+
     ind2lab = label_encoder.ind2lab
     vocab_list = [ind2lab[x] for x in range(len(ind2lab))]
 

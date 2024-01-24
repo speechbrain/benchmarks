@@ -10,7 +10,7 @@ import sys
 import torch
 import logging
 import speechbrain as sb
-from speechbrain.utils.distributed import run_on_main
+from speechbrain.utils.distributed import run_on_main, if_main_process
 from hyperpyyaml import load_hyperpyyaml
 import torchaudio
 from speechbrain.tokenizers.SentencePiece import SentencePiece
@@ -25,7 +25,7 @@ class ASR(sb.Brain):
         """Forward computations from the waveform batches to the output probabilities."""
         batch = batch.to(self.device)
         wavs, wav_lens = batch.sig
-        wavs, wav_lens = wavs.to(self.device), wav_lens.to(self.device)
+
         # Forward pass
         feats = self.modules.weighted_ssl_model(wavs)
         y = self.modules.enc(feats)
@@ -33,53 +33,38 @@ class ASR(sb.Brain):
         p_tokens = None
         logits = self.modules.ctc_lin(y)
         p_ctc = self.hparams.log_softmax(logits)
-        if stage != sb.Stage.TRAIN:
+        if stage == sb.Stage.VALID:
             p_tokens = sb.decoders.ctc_greedy_decode(
                 p_ctc, wav_lens, blank_id=self.hparams.blank_index
             )
+        elif stage == sb.Stage.TEST:
+            p_tokens = test_searcher(p_ctc, wav_lens)
         return p_ctc, wav_lens, p_tokens
 
     def compute_objectives(self, predictions, batch, stage):
         """Computes the loss (CTC+NLL) given predictions and targets."""
 
-        p_ctc, wav_lens, predicted_tokens = predictions
+        p_ctc, wav_lens, p_tokens = predictions
         ids = batch.id
         tokens, tokens_lens = batch.tokens
-        loss_ctc = self.hparams.ctc_cost(p_ctc, tokens, wav_lens, tokens_lens)
-        loss = loss_ctc
+        loss = self.hparams.ctc_cost(p_ctc, tokens, wav_lens, tokens_lens)
+
+        if stage == sb.Stage.VALID:
+            # Convert token indices to words
+            predicted_words = self.tokenizer(p_tokens, task="decode_from_list")
+
+        elif stage == sb.Stage.TEST:
+            predicted_words = [hyp[0].text.split(" ") for hyp in p_tokens]
 
         if stage != sb.Stage.TRAIN:
-            # Decode token terms to words
-            predicted_words = self.tokenizer(
-                predicted_tokens, task="decode_from_list"
-            )
-
             # Convert indices to words
             target_words = undo_padding(tokens, tokens_lens)
             target_words = self.tokenizer(target_words, task="decode_from_list")
 
             self.wer_metric.append(ids, predicted_words, target_words)
             self.cer_metric.append(ids, predicted_words, target_words)
+
         return loss
-
-    def fit_batch(self, batch):
-        """Train the parameters given a single batch in input"""
-        predictions = self.compute_forward(batch, sb.Stage.TRAIN)
-        loss = self.compute_objectives(predictions, batch, sb.Stage.TRAIN)
-        loss.backward()
-        if self.check_gradients(loss):
-            self.model_optimizer.step()
-            self.weights_optimizer.step()
-        self.model_optimizer.zero_grad()
-        self.weights_optimizer.zero_grad()
-        return loss.detach()
-
-    def evaluate_batch(self, batch, stage):
-        """Computations needed for validation/test batches"""
-        predictions = self.compute_forward(batch, stage=stage)
-        with torch.no_grad():
-            loss = self.compute_objectives(predictions, batch, stage=stage)
-        return loss.detach()
 
     def on_stage_start(self, stage, epoch):
         """Gets called at the beginning of each epoch"""
@@ -124,8 +109,9 @@ class ASR(sb.Brain):
                 stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
                 test_stats=stage_stats,
             )
-            with open(self.hparams.wer_file, "w") as w:
-                self.wer_metric.write_stats(w)
+            if if_main_process():
+                with open(self.hparams.test_wer_file, "w") as w:
+                    self.wer_metric.write_stats(w)
 
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
@@ -135,6 +121,10 @@ class ASR(sb.Brain):
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
         )
+        self.optimizers_dict = {
+            "model_optimizer": self.model_optimizer,
+            "weights_optimizer": self.weights_optimizer,
+        }
         # Initializing the weights
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)
@@ -287,6 +277,16 @@ if __name__ == "__main__":
     )
 
     asr_brain.tokenizer = tokenizer
+    vocab_list = [
+        tokenizer.sp.id_to_piece(i) for i in range(tokenizer.sp.vocab_size())
+    ]
+
+    from speechbrain.decoders.ctc import CTCBeamSearcher
+
+    test_searcher = CTCBeamSearcher(
+        **hparams["test_beam_search"], vocab_list=vocab_list,
+    )
+
     # Training
     asr_brain.fit(
         asr_brain.hparams.epoch_counter,
@@ -297,7 +297,6 @@ if __name__ == "__main__":
     )
 
     # Testing
-    asr_brain.hparams.wer_file = hparams["output_folder"] + "/wer_test.txt"
     asr_brain.evaluate(
         test_data,
         min_key="WER",

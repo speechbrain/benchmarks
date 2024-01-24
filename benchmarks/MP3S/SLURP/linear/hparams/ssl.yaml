@@ -34,6 +34,7 @@ ssl_folder: !ref <output_folder>/ssl_checkpoints
 encoder_dim: 768
 
 # Training parameters
+precision: fp32
 number_of_epochs: 20
 batch_size: 2
 test_batch_size: 1

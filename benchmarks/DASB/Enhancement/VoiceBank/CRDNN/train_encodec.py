@@ -197,6 +197,7 @@ class Enhancement(sb.Brain):
         from speechbrain.nnet.loss.si_snr_loss import si_snr_loss
         from tqdm import tqdm
 
+        from cos_sim import CosSim
         from dnsmos import DNSMOS
         from dwer import DWER
 
@@ -205,6 +206,7 @@ class Enhancement(sb.Brain):
         dnsmoses = []
         rec_dnsmoses = []
         ref_dnsmoses = []
+        cos_sims = []
         dwers = []
         texts = []
         ref_texts = []
@@ -274,6 +276,7 @@ class Enhancement(sb.Brain):
             dnsmos = DNSMOS(hyp_sig, self.hparams.sample_rate)
             rec_dnsmos = DNSMOS(rec_sig, self.hparams.sample_rate)
             ref_dnsmos = DNSMOS(ref_sig, self.hparams.sample_rate)
+            cos_sim = CosSim(hyp_sig, ref_sig, self.hparams.sample_rate)
             dwer, text, ref_text = DWER(
                 hyp_sig, ref_sig, self.hparams.sample_rate
             )
@@ -283,6 +286,7 @@ class Enhancement(sb.Brain):
             dnsmoses.append(dnsmos)
             rec_dnsmoses.append(rec_dnsmos)
             ref_dnsmoses.append(ref_dnsmos)
+            cos_sims.append(cos_sim)
             dwers.append(dwer)
             texts.append(text)
             ref_texts.append(ref_text)
@@ -293,6 +297,7 @@ class Enhancement(sb.Brain):
             "DNSMOS",
             "RecDNSMOS",
             "RefDNSMOS",
+            "CosSim",
             "dWER",
             "text",
             "ref_text",
@@ -311,6 +316,7 @@ class Enhancement(sb.Brain):
                 dnsmoses,
                 rec_dnsmoses,
                 ref_dnsmoses,
+                cos_sims,
                 dwers,
                 texts,
                 ref_texts,
@@ -327,6 +333,7 @@ class Enhancement(sb.Brain):
                         sum(dnsmoses) / len(dnsmoses),
                         sum(rec_dnsmoses) / len(rec_dnsmoses),
                         sum(ref_dnsmoses) / len(ref_dnsmoses),
+                        sum(cos_sims) / len(cos_sims),
                         sum(dwers) / len(dwers),
                         "",
                         "",

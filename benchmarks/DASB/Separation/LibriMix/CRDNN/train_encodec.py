@@ -277,6 +277,7 @@ class Separation(sb.Brain):
         from speechbrain.nnet.loss.si_snr_loss import si_snr_loss
         from tqdm import tqdm
 
+        from cos_sim import CosSim
         from dnsmos import DNSMOS
         from dwer import DWER
 
@@ -285,6 +286,7 @@ class Separation(sb.Brain):
         dnsmoses = []
         rec_dnsmoses = []
         ref_dnsmoses = []
+        cos_sims = []
         dwers = []
         texts = []
         ref_texts = []
@@ -357,6 +359,7 @@ class Separation(sb.Brain):
             spk_dnsmoses = []
             spk_rec_dnsmoses = []
             spk_ref_dnsmoses = []
+            spk_cos_sims = []
             spk_dwers = []
             spk_texts = []
             spk_ref_texts = []
@@ -385,6 +388,9 @@ class Separation(sb.Brain):
                 spk_dnsmos = DNSMOS(spk_hyp_sig, self.hparams.sample_rate)
                 spk_rec_dnsmos = DNSMOS(spk_rec_sig, self.hparams.sample_rate)
                 spk_ref_dnsmos = DNSMOS(spk_ref_sig, self.hparams.sample_rate)
+                spk_cos_sim = CosSim(
+                    spk_hyp_sig, spk_ref_sig, self.hparams.sample_rate
+                )
                 spk_dwer, spk_text, spk_ref_text = DWER(
                     spk_hyp_sig, spk_ref_sig, self.hparams.sample_rate
                 )
@@ -393,6 +399,7 @@ class Separation(sb.Brain):
                 spk_dnsmoses.append(spk_dnsmos)
                 spk_rec_dnsmoses.append(spk_rec_dnsmos)
                 spk_ref_dnsmoses.append(spk_ref_dnsmos)
+                spk_cos_sims.append(spk_cos_sim)
                 spk_dwers.append(spk_dwer)
                 spk_texts.append(spk_text)
                 spk_ref_texts.append(spk_ref_text)
@@ -401,6 +408,7 @@ class Separation(sb.Brain):
             dnsmos = sum(spk_dnsmoses) / len(spk_dnsmoses)
             rec_dnsmos = sum(spk_rec_dnsmoses) / len(spk_rec_dnsmoses)
             ref_dnsmos = sum(spk_ref_dnsmoses) / len(spk_ref_dnsmoses)
+            cos_sim = sum(spk_cos_sims) / len(spk_cos_sims)
             dwer = sum(spk_dwers) / len(spk_dwers)
             text = " || ".join(spk_texts)
             ref_text = " || ".join(spk_ref_texts)
@@ -410,6 +418,7 @@ class Separation(sb.Brain):
             dnsmoses.append(dnsmos)
             rec_dnsmoses.append(rec_dnsmos)
             ref_dnsmoses.append(ref_dnsmos)
+            cos_sims.append(cos_sim)
             dwers.append(dwer)
             texts.append(text)
             ref_texts.append(ref_text)
@@ -420,6 +429,7 @@ class Separation(sb.Brain):
             "DNSMOS",
             "RecDNSMOS",
             "RefDNSMOS",
+            "CosSim",
             "dWER",
             "text",
             "ref_text",
@@ -438,6 +448,7 @@ class Separation(sb.Brain):
                 dnsmoses,
                 rec_dnsmoses,
                 ref_dnsmoses,
+                cos_sims,
                 dwers,
                 texts,
                 ref_texts,
@@ -454,6 +465,7 @@ class Separation(sb.Brain):
                         sum(dnsmoses) / len(dnsmoses),
                         sum(rec_dnsmoses) / len(rec_dnsmoses),
                         sum(ref_dnsmoses) / len(ref_dnsmoses),
+                        sum(cos_sims) / len(cos_sims),
                         sum(dwers) / len(dwers),
                         "",
                         "",

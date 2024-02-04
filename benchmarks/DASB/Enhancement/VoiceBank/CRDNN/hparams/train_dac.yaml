@@ -117,7 +117,7 @@ augmentation: !new:speechbrain.augment.augmenter.Augmenter
 
 # Modules
 # DAC model (see https://github.com/descriptinc/descript-audio-codec)
-codec: !new:dac.DAC
+codec: !new:speechbrain.lobes.models.discrete.dac.DAC
     model_type: !ref <model_type>
     model_bitrate: !ref <model_bitrate>
     load_pretrained: True

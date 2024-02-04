@@ -146,27 +146,16 @@ class Separation(sb.Brain):
                 length=out_tokens_lens,
             )
         else:
-            # Batch of permutation matrices (one for each of the factorial(num_speakers) permutations)
-            perms = itertools.permutations(range(self.hparams.num_speakers))
-            perm_matrix = torch.stack(
-                [
-                    torch.eye(self.hparams.num_speakers, device=self.device)[
-                        torch.as_tensor(perm)
-                    ]
-                    for perm in perms
-                ]
-            )
-
             # Apply permutations
             batch_size = len(out_tokens)
-            num_perms = len(perm_matrix)
+            num_perms = len(self.perm_matrix)
             num_heads = self.hparams.num_codebooks * self.hparams.num_speakers
             perm_out_tokens = (
                 (
                     out_tokens.reshape(-1, self.hparams.num_speakers)
                     .expand(num_perms, -1, -1)
-                    .type(perm_matrix.dtype)
-                    @ perm_matrix
+                    .type(self.perm_matrix.dtype)
+                    @ self.perm_matrix
                 )
                 .reshape(num_perms, batch_size, -1, num_heads,)
                 .long()
@@ -220,6 +209,17 @@ class Separation(sb.Brain):
         """Gets called at the beginning of each epoch."""
         if stage != sb.Stage.TRAIN:
             self.ter_metric = self.hparams.ter_computer()
+        if self.hparams.use_pit:
+            # Batch of permutation matrices (one for each of the factorial(num_speakers) permutations)
+            perms = itertools.permutations(range(self.hparams.num_speakers))
+            self.perm_matrix = torch.stack(
+                [
+                    torch.eye(self.hparams.num_speakers, device=self.device)[
+                        torch.as_tensor(perm)
+                    ]
+                    for perm in perms
+                ]
+            )
 
     def on_stage_end(self, stage, stage_loss, epoch):
         """Gets called at the end of each epoch."""

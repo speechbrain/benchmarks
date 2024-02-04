@@ -3,14 +3,14 @@
 """Recipe for training an encoder-only transformer-based speech separation system using
 discrete audio representations (see https://arxiv.org/abs/2312.09747).
 
-The model is trained via cross-entropy loss applied to each timestep using DAC audio
-representations (see https://arxiv.org/abs/2306.06546).
+The model is trained via cross-entropy loss applied to each timestep using discrete wav2vec 2.0 audio
+representations (see https://arxiv.org/abs/2006.11477, https://arxiv.org/abs/2309.07377).
 
 The neural network architecture is inspired by:
 https://github.com/facebookresearch/encodec/blob/0e2d0aed29362c8e8f52494baf3e6f99056b214f/encodec/model.py#L27
 
 To run this recipe:
-> python train_dac.py hparams/train_dac.yaml
+> python train_discrete_wav2vec2.py hparams/train_discrete_wav2vec2.yaml
 
 Authors
  * Luca Della Libera 2023
@@ -53,11 +53,17 @@ class Separation(sb.Brain):
         # Extract audio tokens
         assert (in_sig_lens == out_sig_lens).all()
         sig = torch.cat([in_sig, out_sig])
+        lens = torch.cat(
+            [
+                in_sig_lens,
+                out_sig_lens[:, None]
+                .expand(-1, self.hparams.num_speakers)
+                .flatten(),
+            ]
+        )
         with torch.no_grad():
             self.hparams.codec.to(self.device).eval()
-            tokens = self.hparams.codec(
-                sig[:, None], n_quantizers=self.hparams.num_codebooks
-            )[0].movedim(-2, -1)
+            tokens = self.hparams.codec(sig, lens)[1][..., None]
         in_tokens = tokens[: len(tokens) // (self.hparams.num_speakers + 1)]
         out_tokens = tokens[
             len(tokens) // (self.hparams.num_speakers + 1) :
@@ -312,17 +318,14 @@ class Separation(sb.Brain):
             )
 
             with torch.no_grad():
-                self.hparams.codec.to(self.device).eval()
-                hyp_sig = self.hparams.codec.decode(
-                    self.hparams.codec.quantizer.from_codes(
-                        hyp_tokens.movedim(-1, -2)
-                    )[0]
-                )[:, 0].flatten()
-                rec_sig = self.hparams.codec.decode(
-                    self.hparams.codec.quantizer.from_codes(
-                        rec_tokens.movedim(-1, -2)
-                    )[0]
-                )[:, 0].flatten()
+                self.hparams.vocoder.device = self.device
+                self.hparams.vocoder.to(self.device).eval()
+                hyp_sig = self.hparams.vocoder.decode_batch(hyp_tokens[..., 0])[
+                    :, 0
+                ].flatten()
+                rec_sig = self.hparams.vocoder.decode_batch(rec_tokens[..., 0])[
+                    :, 0
+                ].flatten()
             ref_sig = self.test_set[self.test_set.data_ids.index(ID)][
                 "out_sig"
             ].to(

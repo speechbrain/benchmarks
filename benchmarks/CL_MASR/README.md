@@ -135,7 +135,7 @@ If you use the CL-MASR benchmark, please cite:
 
 ```bibtex
 @article{dellalibera2023clmasr,
-  author = {Luca Della Libera, Pooneh Mousavi, Salah Zaiem, Cem Subakan, Mirco Ravanelli},
+  author = {Luca Della Libera and Pooneh Mousavi and Salah Zaiem and Cem Subakan and Mirco Ravanelli},
   title = {{CL-MASR}: A Continual Learning Benchmark for Multilingual {ASR}},
   journal = {arXiv preprint arXiv:2310.16931},
   year = {2023},

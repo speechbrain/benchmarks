@@ -8,6 +8,7 @@ import sys
 import torch
 import logging
 import speechbrain as sb
+from speechbrain.utils.distributed import run_on_main
 from hyperpyyaml import load_hyperpyyaml
 from pathlib import Path
 
@@ -260,6 +261,18 @@ if __name__ == "__main__":
 
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
+
+    from buckeye_prepare import prepare_buckeye  # noqa
+
+    # multi-gpu (ddp) save data preparation
+    run_on_main(
+        prepare_buckeye,
+        kwargs={
+            "buckeye_dir": hparams["data_folder"],
+            "save_folder": hparams["output_folder"],
+            "skip_prep": hparams["skip_prep"],
+        },
+    )
 
     # Create experiment directory
     sb.create_experiment_directory(

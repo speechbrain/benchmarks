@@ -14,6 +14,9 @@ We accompany our code with a benchmark on 9 MOABB datasets (for MI-based, P300-b
 Moreover, we also report the main results on the key aspects characterizing the decoding protocol we propose for enabling trustworthy EEG decoding.
 
 For detailed information, please refer to [The link to the official paper will be available soon].
+
+**Important:** This tool requires a Linux environment to run properly.
+
 <!-- ############################################################################################################### -->
 
 # Table of Contents
@@ -70,23 +73,18 @@ Moreover, we also provide a [tutorial](https://drive.google.com/file/d/1EmgYqHv7
 
 To set up SpeechBrain-MOABB, follow these steps:
 
-1. Install SpeechBrain:
 
-    ```shell
-    git clone https://github.com/speechbrain/speechbrain/
-    cd speechbrain
-    pip install -r requirements.txt
-    pip install -e .
-    cd ..
-    ```
-
-
-2. Clone the benchmark repository:
+1. Clone the benchmark repository and install SpeechBrain:
    ```shell
-   git clone https://github.com/speechbrain/benchmarks/
+   git clone https://github.com/speechbrain/benchmarks.git
+   cd benchmarks
+   git submodule update --init --recursive
+   cd speechbrain
+   pip install -r requirements.txt
+   pip install -e .
    ```
 
-3. Navigate to `<path-to-repository>/benchmarks/MOABB` in your file system, open a terminal, and run the following commands:
+2. Navigate to `<path-to-repository>/benchmarks/MOABB` in your file system, open a terminal, and run the following commands:
 
    ```shell
    pip install -r ../../requirements.txt    # Install base dependencies
@@ -182,6 +180,8 @@ Let's now dive into how to train a model using data from a single subject and se
 ```bash
 python train.py hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder=eeg_data --cached_data_folder=eeg_pickled_data --output_folder=results/MotorImagery/BNCI2014001/ --target_subject_idx=0 --target_session_idx=1 --data_iterator_name=leave-one-session-out
 ```
+
+**Note**: To run the model on the CPU, simply include --device='cpu' in the training command.
 
 In this example, we will train EEGNet for Motor Imagery using the BNCI2014001 dataset.
 Specifically, we will train the model using data from *subject 0*.
@@ -375,9 +375,8 @@ The [table above](#-datasets-and-recipes) provides these values for each compati
 
 When it comes to training the model utilizing the leave-one-subject-out approach, simply employ the `--train_mode leave-one-subject-out` flag.
 
-By default, model training is performed on GPU. However, in case you do not have any GPU available on your machine, you can train models on CPU by specifying the `--device cpu` flag.
-
 **Notes:**
+- By default, model training is performed on GPU. However, in case you do not have any GPU available on your machine, you can train models on CPU by specifying the `--device cpu` flag.
 - To monitor the status of the hyperparameter optimization, simply enter the following command: `orion status --all`. Ensure that you have added the necessary variables required by orion to your bash environment. You can achieve this by executing the following code within your terminal:
 
 ```bash

@@ -33,7 +33,9 @@ If you have any questions or need assistance, please don't hesitate to reach out
 1. Clone the GitHub repository and install the requirements:
 
     ```bash
-    git clone https://github.com/speechbrain/benchmarks.git --recursive
+    git clone https://github.com/speechbrain/benchmarks.git
+    cd benchmarks
+    git submodule update --init --recursive
     cd speechbrain
     pip install -r requirements.txt
     pip install -e .

@@ -19,12 +19,12 @@ train_log: !ref <output_folder>/train_log.txt
 
 # Data files
 skip_prep: False
-csv_folder: !PLACEHOLDER # Path to the folder containing Buckeye training files
+data_folder: !PLACEHOLDER # Path to the folder containing Buckeye zip files
 ckpt_interval_minutes: 25 # save checkpoint every N min
-train_csv: !ref <csv_folder>/train.csv
-valid_csv: !ref <csv_folder>/dev.csv
+train_csv: !ref <output_folder>/train.csv
+valid_csv: !ref <output_folder>/dev.csv
 test_csv:
-   - !ref <csv_folder>/test.csv
+   - !ref <output_folder>/test.csv
 
 ssl_hub: facebook/wav2vec2-base
 ssl_folder: !ref <output_folder>/ssl_checkpoints

@@ -41,7 +41,7 @@ Download the dataset from [here](https://zenodo.org/record/8065754) and extract 
 
 ## 🛠️️ Installation
 
-To set up SpeechBrain-MOABB, follow these steps:
+To set up the benchmark, follow these steps:
 
 
 1. Clone the benchmark repository and install SpeechBrain:

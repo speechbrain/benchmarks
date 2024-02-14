@@ -375,9 +375,8 @@ The [table above](#-datasets-and-recipes) provides these values for each compati
 
 When it comes to training the model utilizing the leave-one-subject-out approach, simply employ the `--train_mode leave-one-subject-out` flag.
 
-By default, model training is performed on GPU. However, in case you do not have any GPU available on your machine, you can train models on CPU by specifying the `--device cpu` flag.
-
 **Notes:**
+- By default, model training is performed on GPU. However, in case you do not have any GPU available on your machine, you can train models on CPU by specifying the `--device cpu` flag.
 - To monitor the status of the hyperparameter optimization, simply enter the following command: `orion status --all`. Ensure that you have added the necessary variables required by orion to your bash environment. You can achieve this by executing the following code within your terminal:
 
 ```bash

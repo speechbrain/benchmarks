@@ -181,6 +181,8 @@ Let's now dive into how to train a model using data from a single subject and se
 python train.py hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder=eeg_data --cached_data_folder=eeg_pickled_data --output_folder=results/MotorImagery/BNCI2014001/ --target_subject_idx=0 --target_session_idx=1 --data_iterator_name=leave-one-session-out
 ```
 
+**Note**: To run the model on the CPU, simply include --device='cpu' in the training command
+
 In this example, we will train EEGNet for Motor Imagery using the BNCI2014001 dataset.
 Specifically, we will train the model using data from *subject 0*.
 The data recorded in *session 1* of *subject 0* will be used for testing, while all the other sessions will be used for training.

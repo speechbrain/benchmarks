@@ -120,9 +120,9 @@ class ASR(sb.Brain):
     def fit_batch(self, batch):
         """Fit one batch."""
         # Managing automatic mixed precision
-        if self.auto_mix_prec:
+        if self.use_amp:
             # Compute gradient
-            with torch.cuda.amp.autocast(self.auto_mix_prec):
+            with torch.cuda.amp.autocast(self.use_amp):
                 outputs = self.compute_forward(batch, sb.Stage.TRAIN)
                 loss = self.compute_objectives(outputs, batch, sb.Stage.TRAIN)
             with self.no_sync(False):
@@ -143,7 +143,7 @@ class ASR(sb.Brain):
                 batch = next(self.replay_data_iter)
 
             # Compute reference gradient
-            with torch.cuda.amp.autocast(self.auto_mix_prec):
+            with torch.cuda.amp.autocast(self.use_amp):
                 outputs = self.compute_forward(batch, sb.Stage.TRAIN)
                 loss = self.compute_objectives(outputs, batch, sb.Stage.TRAIN)
             with self.no_sync(False):
@@ -175,7 +175,7 @@ class ASR(sb.Brain):
                         param.grad = None
 
             self.scaler.unscale_(self.optimizer)
-            if self.check_gradients(loss):
+            if self.check_gradients():
                 self.scaler.step(self.optimizer)
             self.scaler.update()
             self.zero_grad()
@@ -232,7 +232,7 @@ class ASR(sb.Brain):
                     else:
                         param.grad = None
 
-            if self.check_gradients(loss):
+            if self.check_gradients():
                 self.optimizer.step()
             self.zero_grad()
             self.optimizer_step += 1

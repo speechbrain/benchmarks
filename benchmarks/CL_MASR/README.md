@@ -41,19 +41,20 @@ Download the dataset from [here](https://zenodo.org/record/8065754) and extract 
 
 ## 🛠️️ Installation
 
-To install and set up the benchmark, follow these steps:
+To set up SpeechBrain-MOABB, follow these steps:
 
-1. Install SpeechBrain:
+
+1. Clone the benchmark repository and install SpeechBrain:
    ```shell
-   pip install speechbrain
+   git clone https://github.com/speechbrain/benchmarks.git
+   cd benchmarks
+   git submodule update --init --recursive
+   cd speechbrain
+   pip install -r requirements.txt
+   pip install -e .
    ```
 
-2. Clone the benchmark repository:
-   ```shell
-   git clone https://github.com/speechbrain/benchmarks/
-   ```
-
-3. Navigate to `<path-to-repository>/benchmarks/CL_MASR` in your file system, open a terminal, and run the following commands:
+2. Navigate to `<path-to-repository>/benchmarks/MOABB` in your file system, open a terminal, and run the following commands:
 
    ```shell
    pip install -r ../../requirements.txt    # Install base dependencies
@@ -75,6 +76,8 @@ python train_<cl-method>.py hparams/train_<cl-method>.yaml --data_folder <path-t
 ```
 
 **NOTE**: to profile the model (optional), install `ptflops` and `torchinfo` as additional dependencies.
+
+**NOTE**: multi-GPU training is currently not supported.
 
 ### Analyzing the results
 
@@ -134,7 +137,7 @@ If you use the CL-MASR benchmark, please cite:
 
 ```bibtex
 @article{dellalibera2023clmasr,
-  author = {Luca Della Libera, Pooneh Mousavi, Salah Zaiem, Cem Subakan, Mirco Ravanelli},
+  author = {Luca Della Libera and Pooneh Mousavi and Salah Zaiem and Cem Subakan and Mirco Ravanelli},
   title = {{CL-MASR}: A Continual Learning Benchmark for Multilingual {ASR}},
   journal = {arXiv preprint arXiv:2310.16931},
   year = {2023},

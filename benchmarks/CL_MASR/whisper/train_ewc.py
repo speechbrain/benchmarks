@@ -203,10 +203,10 @@ def compute_ewc_params(hparams, run_opts, locales):
     batch_size = hparams["train_dataloader_kwargs"].get("batch_size", 1)
     max_grad_norm = hparams.get("max_grad_norm", 5.0)
     grad_accumulation_factor = hparams.get("grad_accumulation_factor", 1)
-    auto_mix_prec = hparams.get("auto_mix_prec", False)
+    precision = hparams.get("precision", "fp32")
     hparams["train_dataloader_kwargs"]["batch_size"] = 1
     hparams["max_grad_norm"] = float("inf")
-    hparams["auto_mix_prec"] = False
+    hparams["precision"] = "fp32"
     hparams["grad_accumulation_factor"] = 1
 
     # Multi-gpu (ddp) save data preparation
@@ -242,7 +242,7 @@ def compute_ewc_params(hparams, run_opts, locales):
 
     hparams["train_dataloader_kwargs"]["batch_size"] = batch_size
     hparams["max_grad_norm"] = max_grad_norm
-    hparams["auto_mix_prec"] = auto_mix_prec
+    hparams["precision"] = precision
     hparams["grad_accumulation_factor"] = grad_accumulation_factor
 
     return params, fisher

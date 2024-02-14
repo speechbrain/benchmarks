@@ -35,11 +35,9 @@ def prepare_buckeye(buckeye_dir, save_folder, unzip=True, skip_prep=False):
     skip_prep: bool
         If True, data preparation is skipped.
 
-    Example
+    Returns
     -------
-    >>> buckeye_dir = 'datasets/Buckeye'
-    >>> save_folder = 'buckeye_preparation/'
-    >>> prepare_buckeye(buckeye_dir, save_folder)
+    None
     """
     if skip_prep:
         return
@@ -70,9 +68,23 @@ def prepare_buckeye(buckeye_dir, save_folder, unzip=True, skip_prep=False):
 
 
 def treat_word_file(wrd, buckeye_dir):
-    # This is the most technical part, the main idea here is to get rid of very short or noisy utterances.
-    # Baddies designate all the non verbal annotations present in the dataset, if you want to keep them
-    # You may want to rewrite this part
+    """
+    This is the most technical part, the main idea here is to get rid of very short or noisy utterances.
+    Baddies designate all the non verbal annotations present in the dataset, if you want to keep them
+    If you are not using this script for MP3S but for broader spontaneous ASR, you may wot to change this.
+
+    Arguments
+    ---------
+    wrd: str
+        Path to the .words file in the Buckeye directory.
+    buckeye_dir : str
+        Path to the folder containing the Buckeye unzipped files.
+    Returns
+    -------
+    csvs: list
+        The list of csv lines for that .wrd file.
+
+    """
     wavname = wrd.split("/")[-1].split(".")[0]
     with open(wrd, "r") as word_file:
         lines = word_file.read().splitlines()
@@ -155,7 +167,18 @@ def treat_word_file(wrd, buckeye_dir):
 
 
 def unzip_buckeye(buckeye_dir):
-    # Little script to unzip the Buckeye dataset files
+    """
+    Little script to unzip the Buckeye dataset files
+
+    Arguments
+    ---------
+    buckeye_dir : str
+        Path to the folder containing the Buckeye zipped folders.
+
+    Returns
+    -------
+    None
+    """
     files = os.listdir(buckeye_dir)
     for zip_fil in files:
         if ".py" not in zip_fil:
@@ -175,7 +198,24 @@ def unzip_buckeye(buckeye_dir):
 
 
 def prepare_csv(buckeye_dir, save_folder, csv_file, prefixes):
-    # Output the CSVS after parsing the .words files
+    """
+    This function prepares and outputs the csv for a given split defined by its recording prefixes.
+
+    Arguments
+    ---------
+    buckeye_dir : str
+        Path to the folder containing the Buckeye unzipped files.
+    save_folder: str
+        Path to the folder where the preparation is saved.
+    csv_file: str
+        Name of the file that will be saved (corresponding to the split)
+    prefixes: list
+        List of prefixes of recordings defining the elements that go into this split
+
+    Returns
+    -------
+    None
+    """
     csv_lines = [
         ["ID", "duration", "wav", "spk_id", "start_seg", "end_seg", "wrd"]
     ]

@@ -14,6 +14,9 @@ We accompany our code with a benchmark on 9 MOABB datasets (for MI-based, P300-b
 Moreover, we also report the main results on the key aspects characterizing the decoding protocol we propose for enabling trustworthy EEG decoding.
 
 For detailed information, please refer to [The link to the official paper will be available soon].
+
+**Important:** This tool requires a Linux environment to run properly.
+
 <!-- ############################################################################################################### -->
 
 # Table of Contents

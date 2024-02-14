@@ -70,23 +70,18 @@ Moreover, we also provide a [tutorial](https://drive.google.com/file/d/1EmgYqHv7
 
 To set up SpeechBrain-MOABB, follow these steps:
 
-1. Install SpeechBrain:
 
-    ```shell
-    git clone https://github.com/speechbrain/speechbrain/
-    cd speechbrain
-    pip install -r requirements.txt
-    pip install -e .
-    cd ..
-    ```
-
-
-2. Clone the benchmark repository:
+1. Clone the benchmark repository and install SpeechBrain:
    ```shell
-   git clone https://github.com/speechbrain/benchmarks/
+   git clone https://github.com/speechbrain/benchmarks.git
+   cd benchmarks
+   git submodule update --init --recursive
+   cd speechbrain
+   pip install -r requirements.txt
+   pip install -e .
    ```
 
-3. Navigate to `<path-to-repository>/benchmarks/MOABB` in your file system, open a terminal, and run the following commands:
+2. Navigate to `<path-to-repository>/benchmarks/MOABB` in your file system, open a terminal, and run the following commands:
 
    ```shell
    pip install -r ../../requirements.txt    # Install base dependencies

@@ -34,7 +34,8 @@ If you have any questions or need assistance, please don't hesitate to reach out
 
     ```bash
     git clone https://github.com/speechbrain/benchmarks.git
-    git submodule init
+    cd benchmarks
+    git submodule update --init --recursive
     cd speechbrain
     pip install -r requirements.txt
     pip install -e .

@@ -54,7 +54,7 @@ To set up SpeechBrain-MOABB, follow these steps:
    pip install -e .
    ```
 
-2. Navigate to `<path-to-repository>/benchmarks/MOABB` in your file system, open a terminal, and run the following commands:
+2. Navigate to `<path-to-repository>/benchmarks/CL_MASR` in your file system, open a terminal, and run the following commands:
 
    ```shell
    pip install -r ../../requirements.txt    # Install base dependencies

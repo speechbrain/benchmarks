@@ -1,1 +1,1 @@
-kenlm
+kenlm # kenlm is only required for ASR recipes when decoding using a language model, which is not the default option.

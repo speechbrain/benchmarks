@@ -214,8 +214,6 @@ class SpeakerBrain(sb.core.Brain):
 
     def compute_forward(self, batch, stage):
         """Computation pipeline based on a encoder + speaker classifier.
-        Data augmentation and environmental corruption are applied to the
-        input speech.
         """
         batch = batch.to(self.device)
         wavs, lens = batch.sig

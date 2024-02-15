@@ -103,10 +103,6 @@ output_mlp: !new:speechbrain.nnet.linear.Linear
    n_neurons: 18
    bias: False
 
-augmentation: !new:speechbrain.lobes.augment.TimeDomainSpecAugment
-   sample_rate: !ref <sample_rate>
-   speeds: [95, 100, 105]
-
 modules:
    enc: !ref <enc>
    avg_pool: !ref <avg_pool>

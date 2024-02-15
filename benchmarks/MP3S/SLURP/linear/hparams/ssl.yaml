@@ -95,10 +95,6 @@ output_mlp: !new:speechbrain.nnet.linear.Linear
 model: !new:torch.nn.ModuleList
    - [!ref <output_mlp>]
 
-augmentation: !new:speechbrain.lobes.augment.TimeDomainSpecAugment
-   sample_rate: !ref <sample_rate>
-   speeds: [95, 100, 105]
-
 modules:
    avg_pool: !ref <avg_pool>
    output_mlp: !ref <output_mlp>

@@ -76,7 +76,7 @@ To run all tasks, make the following changes:
 |----------|------------------------------------------|-----------------------|---------------------|----------------------------------------------------------|
 | LibriSpeech |  Speech Recognition                         | BiLSTM                | Conformer           | https://www.openslr.org/12                               |
 |  Buckeye | Speech Recognition                               | BiLSTM                | ContextNet          | https://buckeyecorpus.osu.edu/                           |
-| CommonVoice |  Low-Resource  ASR             | BiLSTM                | Linear              | https://commonvoice.mozilla.org/fr                       |
+| CommonVoice 11.0 (Welsh (Cymraeg) and Basque (Euskera) |  Low-Resource  ASR             | BiLSTM                | Linear              | https://commonvoice.mozilla.org/en/datasets                       |
 | VoxCeleb1 |  Automatic Speaker Verification | X-Vectors             | ECAPA-TDNN          | https://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox1.html |
 |  IEMOCAP | Emotion Recognition              | Time-Pooling + Linear | ECAPA-TDNN          | https://sail.usc.edu/iemocap/                            |
 | SLURP | Intent Classification              | Time-Pooling + Linear | BiLSTM + Linear     | https://zenodo.org/record/4274930                        |

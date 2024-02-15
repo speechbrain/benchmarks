@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Recipe for training an emotion recognition system from speech data only using IEMOCAP.
+""" Recipe for training an emotion recognition system from speech data only using IEMOCAP.
 The system classifies 4 emotions ( anger, happiness, sadness, neutrality) starting from a SSL encoder.
 The probing head is ECAPA-TDNN.
 
 Authors
+ * Adel Moumen 2024
  * Salah Zaiem 2023
  * Youcef Kemiche 2023
 """
@@ -19,7 +20,6 @@ class EmoIdBrain(sb.Brain):
         """Computation pipeline based on a encoder + emotion classifier."""
         batch = batch.to(self.device)
         wavs, wav_lens = batch.sig
-        wavs, wav_lens = wavs.to(self.device), wav_lens.to(self.device)
         feats = self.modules.weighted_ssl_model(wavs)
         embeddings = self.modules.embedding_model(feats, wav_lens)
         outputs = self.modules.classifier(embeddings)
@@ -33,18 +33,6 @@ class EmoIdBrain(sb.Brain):
         if stage != sb.Stage.TRAIN:
             self.error_metrics.append(batch.id, predictions, emoid)
         return loss
-
-    def fit_batch(self, batch):
-        """Trains the parameters given a single batch in input"""
-        predictions = self.compute_forward(batch, sb.Stage.TRAIN)
-        loss = self.compute_objectives(predictions, batch, sb.Stage.TRAIN)
-        loss.backward()
-        if self.check_gradients(loss):
-            self.model_optimizer.step()
-            self.weights_optimizer.step()
-        self.model_optimizer.zero_grad()
-        self.weights_optimizer.zero_grad()
-        return loss.detach()
 
     def on_stage_start(self, stage, epoch=None):
         """Gets called at the beginning of each epoch.
@@ -127,15 +115,18 @@ class EmoIdBrain(sb.Brain):
             )
 
     def init_optimizers(self):
-        "Initializes the encoder2 optimizer and model optimizer"
-
+        "Initializes the weights optimizer and model optimizer"
         self.weights_optimizer = self.hparams.weights_opt_class(
             [self.modules.weighted_ssl_model.weights]
         )
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
         )
-
+        self.optimizers_dict = {
+            "model_optimizer": self.model_optimizer,
+            "weights_optimizer": self.weights_optimizer,
+        }
+        # Initializing the weights
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)
             self.checkpointer.add_recoverable(

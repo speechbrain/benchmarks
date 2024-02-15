@@ -1,6 +1,11 @@
 #!/usr/bin/python3
 """Recipe for training then testing speaker embeddings using the VoxCeleb1 Dataset.
 Embeddings are used using the Xvector network
+
+Authors
+ * Adel Moumen 2024
+ * Salah Zaiem 2023
+ * Youcef Kemiche 2023
 """
 
 import os
@@ -210,8 +215,6 @@ class SpeakerBrain(sb.core.Brain):
 
     def compute_forward(self, batch, stage):
         """Computation pipeline based on a encoder + speaker classifier.
-        Data augmentation and environmental corruption are applied to the
-        input speech.
         """
         batch = batch.to(self.device)
         wavs, lens = batch.sig
@@ -239,19 +242,6 @@ class SpeakerBrain(sb.core.Brain):
             self.error_metrics.append(uttid, predictions, spkid, lens)
 
         return loss
-
-    def fit_batch(self, batch):
-        """Train the parameters given a single batch in input"""
-        predictions = self.compute_forward(batch, sb.Stage.TRAIN)
-        loss = self.compute_objectives(predictions, batch, sb.Stage.TRAIN)
-        loss.backward()
-        if self.check_gradients(loss):
-            self.model_optimizer.step()
-            self.weights_optimizer.step()
-
-        self.model_optimizer.zero_grad()
-        self.weights_optimizer.zero_grad()
-        return loss.detach()
 
     def on_stage_start(self, stage, epoch=None):
         """Gets called at the beginning of an epoch."""
@@ -292,6 +282,10 @@ class SpeakerBrain(sb.core.Brain):
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
         )
+        self.optimizers_dict = {
+            "weights_optimizer": self.weights_optimizer,
+            "model_optimizer": self.model_optimizer,
+        }
         # Initializing the weights
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)

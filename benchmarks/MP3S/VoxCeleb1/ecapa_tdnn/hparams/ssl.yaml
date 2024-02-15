@@ -17,15 +17,35 @@ train_log: !ref <output_folder>/train_log.txt
 data_folder: !PLACEHOLDER  # e.g. /path/to/Voxceleb
 train_annotation: !ref <output_folder>/train.csv
 valid_annotation: !ref <output_folder>/dev.csv
-num_layers_ssl: 13
+
+ssl_folder: !ref <output_folder>/ssl_checkpoints
 ssl_hub: facebook/wav2vec2-base
 
 verification_file: !PLACEHOLDER #path/to/veri_test2.txt
 
+train_data: !ref <save_folder>/train.csv
+enrol_data: !ref <save_folder>/enrol.csv
+test_data: !ref <save_folder>/test.csv
+
+verif_batch_size: 2
+n_train_snts: 300000 # used for normalization stats
+
+# Dataloader options
+train_dataloader_opts:
+    batch_size: !ref <batch_size>
+
+enrol_dataloader_opts:
+    batch_size: !ref <batch_size>
+
+test_dataloader_opts:
+    batch_size: !ref <batch_size>
+
 skip_prep: False
 ckpt_interval_minutes: 15 # save checkpoint every N min
 pretrain: True
+
 # Training parameters
+precision: fp32
 number_of_epochs: 15
 batch_size: 8
 lr: 0.001
@@ -66,11 +86,9 @@ classifier: !new:speechbrain.lobes.models.ECAPA_TDNN.Classifier
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
     limit: !ref <number_of_epochs>
 
-
-weighted_ssl_model: !new:speechbrain.lobes.models.hugginface_wav2vec.WeightedSSLModel # yamllint disable-line rule:line-length
+weighted_ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.WeightedSSLModel # yamllint disable-line rule:line-length
     hub: !ref <ssl_hub>
-    num_layers: !ref <num_layers_ssl>
-
+    save_path: !ref <ssl_folder>
 
 modules:
     weighted_ssl_model: !ref <weighted_ssl_model>
@@ -79,7 +97,6 @@ modules:
 
 model: !new:torch.nn.ModuleList
     - [!ref <embedding_model>, !ref <classifier>]
-
 
 # Cost + optimization
 compute_error: !name:speechbrain.nnet.losses.classification_error
@@ -129,25 +146,6 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
         ssl_model: !ref <weighted_ssl_model>
         classifier: !ref <classifier>
         counter: !ref <epoch_counter>
-
-train_data: !ref <save_folder>/train.csv
-enrol_data: !ref <save_folder>/enrol.csv
-test_data: !ref <save_folder>/test.csv
-
-verif_batch_size: 2
-n_train_snts: 300000 # used for normalization stats
-
-
-# Dataloader options
-train_dataloader_opts:
-    batch_size: !ref <batch_size>
-
-enrol_dataloader_opts:
-    batch_size: !ref <batch_size>
-
-test_dataloader_opts:
-    batch_size: !ref <batch_size>
-
 
 mean_var_norm_emb: !new:speechbrain.processing.features.InputNormalization
     norm_type: global

@@ -41,6 +41,15 @@ def prepare_buckeye(buckeye_dir, save_folder, unzip=True, skip_prep=False):
     """
     if skip_prep:
         return
+
+    # Check if csv files are already created
+    skip_prep = any(
+        os.path.isfile(os.path.join(save_folder, split + ".csv"))
+        for split in ["train", "dev", "test"]
+    )
+
+    if skip_prep:
+        return
     if unzip:
         unzip_buckeye(buckeye_dir)
     if not os.path.exists(save_folder):

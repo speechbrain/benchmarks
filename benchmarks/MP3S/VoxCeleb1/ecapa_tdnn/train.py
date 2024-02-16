@@ -389,6 +389,7 @@ if __name__ == "__main__":
         splits=["train", "dev", "test"],
         split_ratio=[90, 10],
         seg_dur=hparams["sentence_len"],
+        skip_prep=hparams["skip_prep"],
         source=hparams["voxceleb_source"]
         if "voxceleb_source" in hparams
         else None,
@@ -426,37 +427,40 @@ if __name__ == "__main__":
         valid_loader_kwargs=hparams["dataloader_options"],
     )
 
-    # Now preparing for test :
-    hparams["device"] = speaker_brain.device
+    if hparams["do_verification"]:
+        # Now preparing for test :
+        hparams["device"] = speaker_brain.device
 
-    speaker_brain.modules.eval()
-    train_dataloader, enrol_dataloader, test_dataloader = dataio_prep_verif(
-        hparams
-    )
-    # Computing  enrollment and test embeddings
-    logger.info("Computing enroll/test embeddings...")
+        speaker_brain.modules.eval()
+        train_dataloader, enrol_dataloader, test_dataloader = dataio_prep_verif(
+            hparams
+        )
+        # Computing  enrollment and test embeddings
+        logger.info("Computing enroll/test embeddings...")
 
-    # First run
-    enrol_dict = compute_embedding_loop(enrol_dataloader)
-    test_dict = compute_embedding_loop(test_dataloader)
+        # First run
+        enrol_dict = compute_embedding_loop(enrol_dataloader)
+        test_dict = compute_embedding_loop(test_dataloader)
 
-    if "score_norm" in hparams:
-        train_dict = compute_embedding_loop(train_dataloader)
+        if "score_norm" in hparams:
+            train_dict = compute_embedding_loop(train_dataloader)
 
-    # Compute the EER
-    logger.info("Computing EER..")
-    # Reading standard verification split
-    with open(veri_file_path) as f:
-        veri_test = [line.rstrip() for line in f]
+        # Compute the EER
+        logger.info("Computing EER..")
+        # Reading standard verification split
+        with open(veri_file_path) as f:
+            veri_test = [line.rstrip() for line in f]
 
-    positive_scores, negative_scores = get_verification_scores(veri_test)
-    del enrol_dict, test_dict
+        positive_scores, negative_scores = get_verification_scores(veri_test)
+        del enrol_dict, test_dict
 
-    eer, th = EER(torch.tensor(positive_scores), torch.tensor(negative_scores))
-    logger.info("EER(%%)=%f", eer * 100)
+        eer, th = EER(
+            torch.tensor(positive_scores), torch.tensor(negative_scores)
+        )
+        logger.info("EER(%%)=%f", eer * 100)
 
-    min_dcf, th = minDCF(
-        torch.tensor(positive_scores), torch.tensor(negative_scores)
-    )
-    # Testing
-    logger.info("minDCF=%f", min_dcf * 100)
+        min_dcf, th = minDCF(
+            torch.tensor(positive_scores), torch.tensor(negative_scores)
+        )
+        # Testing
+        logger.info("minDCF=%f", min_dcf * 100)

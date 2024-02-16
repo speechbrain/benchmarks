@@ -21,7 +21,7 @@ valid_annotation: !ref <output_folder>/dev.csv
 ssl_folder: !ref <output_folder>/ssl_checkpoints
 ssl_hub: facebook/wav2vec2-base
 
-verification_file: !PLACEHOLDER #path/to/veri_test2.txt
+verification_file: https://www.robots.ox.ac.uk/~vgg/data/voxceleb/meta/veri_test2.txt #path/to/veri_test2.txt
 
 train_data: !ref <save_folder>/train.csv
 enrol_data: !ref <save_folder>/enrol.csv
@@ -43,6 +43,7 @@ test_dataloader_opts:
 skip_prep: False
 ckpt_interval_minutes: 15 # save checkpoint every N min
 pretrain: True
+do_verification: True
 
 # Training parameters
 precision: fp32

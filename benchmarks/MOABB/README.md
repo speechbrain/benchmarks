@@ -93,6 +93,8 @@ To set up SpeechBrain-MOABB, follow these steps:
 
    These commands will install the necessary dependencies for the benchmark, including both the base requirements and the additional requirements.
 
+**⚠️ Note**: We tested the toolkit with Python 3.10. While it also works with Python 3.11, some users have reported issues, particularly related to GPy. You can find more information about this in [issue](https://github.com/speechbrain/benchmarks/issues/21).
+
 **Notes on MOABB and MNE:**
 
 The benchmark results presented here were generated using MOABB version 0.4.6.

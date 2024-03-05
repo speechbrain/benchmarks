@@ -1,0 +1,6 @@
+librosa
+onnxruntime
+scikit-learn
+tgt
+transformers>=4.31.0
+unidecode

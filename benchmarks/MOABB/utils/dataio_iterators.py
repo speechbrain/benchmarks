@@ -163,6 +163,7 @@ class LeaveOneSessionOut(object):
         tmax=None,
         save_prepared_dataset=None,
         n_steps_channel_selection=None,
+        seed_nodes=["Cz"],
     ):
         """This function returns the pre-processed datasets (training, validation and test sets).
 
@@ -310,18 +311,21 @@ class LeaveOneSessionOut(object):
                 data_dict["adjacency_mtx"],
                 data_dict["channels"],
                 n_steps=n_steps_channel_selection,
+                seed_nodes=seed_nodes,
             )
             x_valid = sample_channels(
                 x_valid,
                 data_dict["adjacency_mtx"],
                 data_dict["channels"],
                 n_steps=n_steps_channel_selection,
+                seed_nodes=seed_nodes,
             )
             x_test = sample_channels(
                 x_test,
                 data_dict["adjacency_mtx"],
                 data_dict["channels"],
                 n_steps=n_steps_channel_selection,
+                seed_nodes=seed_nodes,
             )
 
         # swap axes: from (N_examples, C, T) to (N_examples, T, C)
@@ -382,6 +386,7 @@ class LeaveOneSubjectOut(object):
         tmax=None,
         save_prepared_dataset=None,
         n_steps_channel_selection=None,
+        seed_nodes=["Cz"],
     ):
         """This function returns the pre-processed datasets (training, validation and test sets).
 
@@ -541,18 +546,21 @@ class LeaveOneSubjectOut(object):
                 srate=srate,
                 interval_in=original_interval,
                 interval_out=interval,
+                seed_nodes=seed_nodes,
             )
             x_valid = crop_signals(
                 x=x_valid,
                 srate=srate,
                 interval_in=original_interval,
                 interval_out=interval,
+                seed_nodes=seed_nodes,
             )
             x_test = crop_signals(
                 x=x_test,
                 srate=srate,
                 interval_in=original_interval,
                 interval_out=interval,
+                seed_nodes=seed_nodes,
             )
 
         # channel sampling

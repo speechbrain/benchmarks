@@ -111,7 +111,7 @@ def prepare_common_voice(
     _LOGGER.info(
         "----------------------------------------------------------------------",
     )
-    _LOGGER.info(f"Merging TSV files...")
+    _LOGGER.info("Merging TSV files...")
     for split, max_duration in zip(_SPLITS, max_durations):
         tsv_files = [
             os.path.join(data_folder, locale, f"{split}_with_duration.tsv")
@@ -126,7 +126,7 @@ def prepare_common_voice(
     _LOGGER.info(
         "----------------------------------------------------------------------",
     )
-    _LOGGER.info(f"Creating data manifest CSV files...")
+    _LOGGER.info("Creating data manifest CSV files...")
     for split in _SPLITS:
         preprocess_tsv_file(
             os.path.join(data_folder, f"{split}_with_duration.tsv"),
@@ -272,7 +272,7 @@ def merge_tsv_files(
 # Adapted from:
 # https://github.com/speechbrain/speechbrain/blob/v0.5.13/recipes/CommonVoice/common_voice_prepare.py#L160
 def preprocess_tsv_file(
-    input_tsv_file: "str", output_csv_file: "str",
+    input_tsv_file: "str", output_csv_file: "str"
 ) -> "None":
     """Apply minimal Common Voice preprocessing (e.g. rename columns, remove unused columns,
     remove commas, special characters and empty sentences etc.) to each row of an input TSV file.
@@ -383,6 +383,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    prepare_common_voice(
-        args.locales, args.data_folder, args.max_durations,
-    )
+    prepare_common_voice(args.locales, args.data_folder, args.max_durations)

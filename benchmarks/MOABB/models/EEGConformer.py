@@ -9,6 +9,7 @@ https://github.com/eeyhsong/EEG-Conformer.git.
 Authors
  * Davide Borra, 2023
 """
+
 import torch
 import speechbrain as sb
 
@@ -103,13 +104,11 @@ class EEGConformer(torch.nn.Module):
         dense_input_size = self._num_flat_features(out)
         # DENSE MODULE
         self.dense_module = torch.nn.Sequential()
-        self.dense_module.add_module(
-            "flatten", torch.nn.Flatten(),
-        )
+        self.dense_module.add_module("flatten", torch.nn.Flatten())
         self.dense_module.add_module(
             "fc_out",
             sb.nnet.linear.Linear(
-                input_size=dense_input_size, n_neurons=dense_n_neurons,
+                input_size=dense_input_size, n_neurons=dense_n_neurons
             ),
         )
         self.dense_module.add_module("act_out", torch.nn.LogSoftmax(dim=1))
@@ -213,7 +212,7 @@ class PatchEmbedding(torch.nn.Module):
                 swap=True,
             ),
             sb.nnet.normalization.BatchNorm2d(
-                input_size=cnn_spatial_kernels, momentum=0.01, affine=True,
+                input_size=cnn_spatial_kernels, momentum=0.01, affine=True
             ),
             activation,
             sb.nnet.pooling.Pooling2d(
@@ -271,17 +270,17 @@ class MultiHeadAttention(torch.nn.Module):
         self.num_heads = num_heads
 
         self.keys = sb.nnet.linear.Linear(
-            input_size=emb_size, n_neurons=emb_size, bias=True,
+            input_size=emb_size, n_neurons=emb_size, bias=True
         )
         self.queries = sb.nnet.linear.Linear(
-            input_size=emb_size, n_neurons=emb_size, bias=True,
+            input_size=emb_size, n_neurons=emb_size, bias=True
         )
         self.values = sb.nnet.linear.Linear(
-            input_size=emb_size, n_neurons=emb_size, bias=True,
+            input_size=emb_size, n_neurons=emb_size, bias=True
         )
         self.dropout = torch.nn.Dropout(dropout)
         self.projection = sb.nnet.linear.Linear(
-            input_size=emb_size, n_neurons=emb_size, bias=True,
+            input_size=emb_size, n_neurons=emb_size, bias=True
         )
 
     def forward(

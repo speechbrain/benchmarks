@@ -435,7 +435,7 @@ def plot_wer(
             margin={"t": 60, "b": 60},
         )
         fig.write_html(
-            f"{output_image.rsplit('.', 1)[0]}.html", include_plotlyjs=True,
+            f"{output_image.rsplit('.', 1)[0]}.html", include_plotlyjs=True
         )
     except ImportError:
         logging.warning(
@@ -650,7 +650,7 @@ def plot_metric(
             margin={"t": 60, "b": 60},
         )
         fig.write_html(
-            f"{output_image.rsplit('.', 1)[0]}.html", include_plotlyjs=True,
+            f"{output_image.rsplit('.', 1)[0]}.html", include_plotlyjs=True
         )
     except ImportError:
         logging.warning(
@@ -689,9 +689,7 @@ if __name__ == "__main__":
         # fmt: on
         help="forward transfer references",
     )
-    parser.add_argument(
-        "-f", "--format", default="png", help="image format",
-    )
+    parser.add_argument("-f", "--format", default="png", help="image format")
     parser.add_argument(
         "-s",
         "--figsize",
@@ -700,17 +698,15 @@ if __name__ == "__main__":
         type=float,
         help="figure size",
     )
+    parser.add_argument("-t", "--title", default=None, help="title")
     parser.add_argument(
-        "-t", "--title", default=None, help="title",
+        "-o", "--opacity", default=0.15, help="confidence interval opacity"
     )
     parser.add_argument(
-        "-o", "--opacity", default=0.15, help="confidence interval opacity",
+        "--hide_legend", action="store_true", help="hide legend"
     )
     parser.add_argument(
-        "--hide_legend", action="store_true", help="hide legend",
-    )
-    parser.add_argument(
-        "-u", "--usetex", action="store_true", help="render text with LaTeX",
+        "-u", "--usetex", action="store_true", help="render text with LaTeX"
     )
     parser.add_argument(
         "--order",
@@ -831,7 +827,7 @@ if __name__ == "__main__":
                 avg_mean = np.mean(avg)
                 # Assuming independence, sigma^2 = sum_1^n sigma_i^2 / n^2
                 avg_stddev = np.sqrt(
-                    np.nansum(stddev ** 2) / (~np.isnan(stddev)).sum() ** 2
+                    np.nansum(stddev**2) / (~np.isnan(stddev)).sum() ** 2
                 )
                 csv_writer.writerow(
                     [group_name]
@@ -851,9 +847,9 @@ if __name__ == "__main__":
                 f"{name.lower().replace(' ', '_')}.{args.format}",
             ),
             xlabel=None,
-            ylabel=f"{name} (\%)"
-            if args.usetex
-            else f"{name} (%)",  # noqa: W605
+            ylabel=(
+                f"{name} (\\%)" if args.usetex else f"{name} (%)"
+            ),  # noqa: W605
             xticks=["base"] + [f"L{i}" for i in range(1, 1 + len(new_locales))],
             figsize=args.figsize,
             title=args.title,

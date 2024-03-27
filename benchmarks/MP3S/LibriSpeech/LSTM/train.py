@@ -109,7 +109,8 @@ class ASR(sb.Brain):
                 valid_stats=stage_stats,
             )
             self.checkpointer.save_and_keep_only(
-                meta={"WER": stage_stats["WER"]}, min_keys=["WER"],
+                meta={"WER": stage_stats["WER"]},
+                min_keys=["WER"],
             )
         elif stage == sb.Stage.TEST:
             self.hparams.train_logger.log_stats(
@@ -142,11 +143,13 @@ class ASR(sb.Brain):
 
 def dataio_prepare(hparams):
     """This function prepares the datasets to be used in the brain class.
-    It also defines the data processing pipeline through user-defined functions."""
+    It also defines the data processing pipeline through user-defined functions.
+    """
     data_folder = hparams["data_folder"]
 
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["train_csv"], replacements={"data_root": data_folder},
+        csv_path=hparams["train_csv"],
+        replacements={"data_root": data_folder},
     )
 
     if hparams["sorting"] == "ascending":
@@ -171,7 +174,8 @@ def dataio_prepare(hparams):
         )
 
     valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["valid_csv"], replacements={"data_root": data_folder},
+        csv_path=hparams["valid_csv"],
+        replacements={"data_root": data_folder},
     )
     valid_data = valid_data.filtered_sorted(sort_key="duration")
 
@@ -229,7 +233,8 @@ def dataio_prepare(hparams):
 
     # 4. Set output:
     sb.dataio.dataset.set_output_keys(
-        datasets, ["id", "sig", "wrd", "char_list", "tokens"],
+        datasets,
+        ["id", "sig", "wrd", "char_list", "tokens"],
     )
     return train_data, valid_data, test_datasets, label_encoder
 
@@ -294,7 +299,8 @@ if __name__ == "__main__":
     from speechbrain.decoders.ctc import CTCBeamSearcher
 
     test_searcher = CTCBeamSearcher(
-        **hparams["test_beam_search"], vocab_list=vocab_list,
+        **hparams["test_beam_search"],
+        vocab_list=vocab_list,
     )
 
     # Training
@@ -312,7 +318,7 @@ if __name__ == "__main__":
 
     for k in test_datasets.keys():  # keys are test_clean, test_other etc
         asr_brain.hparams.test_wer_file = os.path.join(
-            hparams["output_wer_folder"], f"wer_{k}.txt"
+            hparams["output_wer_folder"], "wer_{k}.txt"
         )
         asr_brain.evaluate(
             test_datasets[k],

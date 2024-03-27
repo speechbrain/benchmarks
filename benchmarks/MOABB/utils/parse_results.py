@@ -32,7 +32,6 @@ import sys
 
 
 def load_metrics(filepath: Path) -> dict:
-
     """
     Loads pickles and parses into a dictionary
 
@@ -68,7 +67,7 @@ def visualize_results(paradigm: str, results: dict, vis_metrics: list) -> None:
     """
     print("\n----", paradigm.name, "----")
     for key in results:
-        if type(results[key]) == dict:
+        if isinstance(results[key], dict):
             for m in vis_metrics:
                 print(
                     key,
@@ -93,7 +92,6 @@ def parse_one_session_out(
     stat_metrics: list = ["loss", "f1", "acc"],
     metric_file: str = "test_metrics.pkl",
 ) -> dict:
-
     """
     Aggregates results obtain by helding back one session as test set and
     using the remaining ones to train the neural nets

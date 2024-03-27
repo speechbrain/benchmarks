@@ -128,9 +128,7 @@ def prepare_common_voice(
         [save_csv_train, save_csv_dev, save_csv_test],
     )
     for tsv_file, save_csv in file_pairs:
-        create_csv(
-            tsv_file, save_csv, data_folder, accented_letters, language,
-        )
+        create_csv(tsv_file, save_csv, data_folder, accented_letters, language)
 
 
 def skip(save_csv_train, save_csv_dev, save_csv_test):
@@ -333,9 +331,7 @@ def language_specific_preprocess(language, words):
         )  # replace 0000SS0000 back to ß as its initial presence in the corpus
 
     elif language == "fr":  # SM
-        words = re.sub(
-            "[^’'A-Za-z0-9À-ÖØ-öø-ÿЀ-ӿéæœâçèàûî]+", " ", words
-        )
+        words = re.sub("[^’'A-Za-z0-9À-ÖØ-öø-ÿЀ-ӿéæœâçèàûî]+", " ", words)
         words = words.replace("’", "'")
         words = words.replace("é", "é")
         words = words.replace("æ", "ae")

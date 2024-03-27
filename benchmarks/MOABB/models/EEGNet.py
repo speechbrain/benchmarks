@@ -5,6 +5,7 @@ It was proposed for P300, error-related negativity, motor execution, motor image
 Authors
  * Davide Borra, 2021
 """
+
 import torch
 import speechbrain as sb
 
@@ -107,7 +108,7 @@ class EEGNet(torch.nn.Module):
         self.conv_module.add_module(
             "bnorm_0",
             sb.nnet.normalization.BatchNorm2d(
-                input_size=cnn_temporal_kernels, momentum=0.01, affine=True,
+                input_size=cnn_temporal_kernels, momentum=0.01, affine=True
             ),
         )
         # Spatial depthwise convolution
@@ -130,7 +131,7 @@ class EEGNet(torch.nn.Module):
         self.conv_module.add_module(
             "bnorm_1",
             sb.nnet.normalization.BatchNorm2d(
-                input_size=cnn_spatial_kernels, momentum=0.01, affine=True,
+                input_size=cnn_spatial_kernels, momentum=0.01, affine=True
             ),
         )
         self.conv_module.add_module("act_1", activation)
@@ -204,9 +205,7 @@ class EEGNet(torch.nn.Module):
         dense_input_size = self._num_flat_features(out)
         # DENSE MODULE
         self.dense_module = torch.nn.Sequential()
-        self.dense_module.add_module(
-            "flatten", torch.nn.Flatten(),
-        )
+        self.dense_module.add_module("flatten", torch.nn.Flatten())
         self.dense_module.add_module(
             "fc_out",
             sb.nnet.linear.Linear(

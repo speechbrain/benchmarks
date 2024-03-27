@@ -100,7 +100,7 @@ To set up SpeechBrain-MOABB, follow these steps:
 The benchmark results presented here were generated using MOABB version 0.4.6.
 The code, however, remains compatible with newer MOABB versions.
 It is important to be aware that starting from MOABB version 1.0, there have been changes to the naming conventions for sessions.
-As an example, in BNCI2014001, the session labeled as `session_T` in previous versions is now referred to as `0train`, and `session_E` is now named `1test` in MOABB versions 1.0 and above.
+As an example, in BNCI2014001, the session labeled as `session_T` in previous versions is now referred to as `0train`, and `session_E` is now named `1test` in MOABB versions 1.0 and above. Please, take a look [here](https://github.com/NeuroTechX/moabb/issues/528) for more details.
 
 
 The code relies on [MNE](https://mne.tools/stable/index.html), which, by default, stores a config file at `$HOME/.mne/mne-python.json` and downloads data to `$HOME/mne-data`.
@@ -264,6 +264,8 @@ acc [0.728009 0.729552 0.728588 0.735918 0.732253 0.732446 0.740934 0.729360 0.7
 [{'name': 'objective', 'type': 'objective', 'value': 0.26738040123456785}]
 
 ```
+**Note**: Be aware that starting from MOABB version 1.0, there have been changes to the naming conventions for sessions.
+As an example, in BNCI2014001, the session labeled as `session_T` in previous versions is now referred to as `0train`, and `session_E` is now named `1test` in MOABB versions 1.0 and above. Please, take a look [here](https://github.com/NeuroTechX/moabb/issues/528) for more details.
 
 The system's performance should closely match the values reported in the first row of the table in [Results](#-results) section. Specifically, please refer to the line corresponding to `/MotorImagery/BNCI2014001/EEGNet.yaml`.
 

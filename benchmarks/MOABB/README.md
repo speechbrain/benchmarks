@@ -215,14 +215,17 @@ epoch: 3, lr: 6.11e-05 - train loss: 1.25 - valid loss: 1.39, valid f1: 3.13e-01
 
 ...
 
-epoch loaded: 862 - test loss: 5.94e-02, test f1: 8.57e-01, test acc: 8.57e-01, test cm: [[13  1  0  0]
- [ 3 11  0  0]
- [ 0  0 12  2]
- [ 0  0  2 12]]
-
+epoch loaded: 862 - test loss: 5.71e-01, test f1: 7.80e-01, test acc: 7.81e-01, test cm: [[53 10  2  7]
+ [ 4 66  1  1]
+ [ 2  5 50 15]
+ [ 1  4 11 56]]
+epoch loaded: 862 - valid loss: 8.68e-02, valid f1: 8.75e-01, valid acc: 8.75e-01, valid cm: [[11  3  0  0]
+ [ 1 13  0  0]
+ [ 0  0 13  1]
+ [ 1  0  1 12]]
 ```
 
-This log file reports various training metrics for each epoch, including train/validation losses, accuracies, and a confusion matrix that provides insights into misclassified classes.
+This log file reports various training metrics for each epoch, including train/validation losses, accuracies, and a confusion matrix that provides insights into misclassified classes. At the end of training, we evaluate the final test and validation performance.
 
 Additionally, you can find detailed performance metrics for both validation and testing in files named `valid_metrics.pkl` and `test_metrics.pkl`."
 

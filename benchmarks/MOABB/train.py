@@ -368,6 +368,7 @@ def prepare_dataset_iterators(hparams):
         tmax=hparams["tmax"],
         save_prepared_dataset=hparams["save_prepared_dataset"],
         n_steps_channel_selection=hparams["n_steps_channel_selection"],
+        seed_nodes=hparams.get("seed_nodes", ["Cz"]),
     )
     return tail_path, datasets
 

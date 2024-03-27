@@ -184,7 +184,12 @@ class MOABBBrain(sb.Brain):
                     stats_meta={
                         "epoch loaded": self.hparams.epoch_counter.current
                     },
-                    test_stats=self.last_eval_stats,
+                    test_stats=self.last_eval_stats
+                    if not getattr(self, "log_test_as_valid", False)
+                    else None,
+                    valid_stats=self.last_eval_stats
+                    if getattr(self, "log_test_as_valid", False)
+                    else None,
                 )
                 # save the averaged checkpoint at the end of the evaluation stage
                 # delete the rest of the intermediate checkpoints
@@ -304,6 +309,8 @@ def run_experiment(hparams, run_opts, datasets):
 
 def perform_evaluation(brain, hparams, datasets, dataset_key="test"):
     """This function perform the evaluation stage on a dataset and save the performance metrics in a pickle file"""
+    brain.log_test_as_valid = dataset_key == "valid"
+
     min_key, max_key = None, None
     if hparams["test_key"] == "loss":
         min_key = hparams["test_key"]

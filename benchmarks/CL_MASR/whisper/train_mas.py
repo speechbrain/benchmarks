@@ -201,6 +201,10 @@ def compute_mas_params(hparams, run_opts, locales):
     locales : list[str]
         The locales to consider.
 
+    Returns
+    -------
+    params
+    importance
     """
     tokenizer = hparams["whisper"].tokenizer
     batch_size = hparams["train_dataloader_kwargs"].get("batch_size", 1)

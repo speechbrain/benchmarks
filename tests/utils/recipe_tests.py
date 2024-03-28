@@ -35,7 +35,7 @@ def check_row_for_test(row, filters_fields, filters, test_field):
         Key of the input dictionary that contains the test flags.
 
     Returns
-    ---------
+    -------
     test: bool
         True if the line must be tested, False otherwise.
     """
@@ -102,7 +102,7 @@ def prepare_test(
         See above.
 
     Returns
-    ---------
+    -------
     test_script: dict
         A Dictionary containing recipe IDs as keys and test_scripts as values.
     test_hparam: dict
@@ -183,7 +183,7 @@ def check_files(
         The pattern used to extract the list of files to check from check_str.
 
     Returns
-    ---------
+    -------
     check: bool
         True if all the files are found, False otherwise.
     """
@@ -226,7 +226,7 @@ def check_performance(
         The pattern used to extract the list of files to check from check_str.
 
     Returns
-    ---------
+    -------
     check: bool
         True if all the files are found, False otherwise.
     """
@@ -317,7 +317,7 @@ def extract_value(string, key):
         The key argument to extract.
 
     Returns
-    ---------
+    -------
     value: float or str
         The value corresponding to the specified key.
     """
@@ -351,7 +351,7 @@ def check_threshold(threshold, value):
         Float corresponding to the value to test
 
     Returns
-    ---------
+    -------
     bool
         True if the constraint is satisfied, False otherwise.
     """
@@ -394,7 +394,7 @@ def run_test_cmd(cmd, stdout_file, stderr_file):
         File where standard error is stored.
 
     Returns
-    ---------
+    -------
     rc: bool
         The return code obtained after running the command. If 0, the test is
         run without errors. If >0 the execution failed.
@@ -626,8 +626,6 @@ def download_only_test(
         A dictionary containing recipe IDs as keys and the checks as values.
     run_opts: str
         Running options to append to each test.
-    run_tests_with_checks_only: str
-            Running options to append to each test.
     run_tests_with_checks_only: bool
         If True skips all tests that do not have performance check criteria defined.
     output_folder: path
@@ -712,15 +710,15 @@ def load_yaml_test(
         See above.
     avoid_list: list
         List of hparam file not to check.
-    rir_folder:
+    rir_folder: str
         This overrides the rir_folder; rir_path, and openrir_folder usually specified in the hparam files.
-    data_folder:
+    data_folder: str
         This overrides the data_folder usually specified in the hparam files.
-    output_folder:
+    output_folder: str
         This overrides the output_folder usually specified in the hparam files.
 
     Returns
-    ---------
+    -------
     check: True
         True if all the hparam files are loaded correctly, False otherwise.
     """

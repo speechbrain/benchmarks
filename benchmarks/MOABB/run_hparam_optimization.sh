@@ -92,7 +92,7 @@ print_argument_descriptions() {
     echo "  --mne_dir mne_dir [Optional]          MNE directory. Need it different from your home (see notes on MNE in README.md)"
     echo "  --orion_db_address [Optional]         Path of the database where orion will store hparams and performance"
     echo "  --orion_db_type db_type [Optional]    Type of the dataset that orion will use. Default: PickledDB"
-    echo "  --exp_max_trials int [Optional]       Maximum number of hparam trials for each oprimization step. Default:50"
+    echo "  --exp_max_trials int [Optional]       Maximum number of hparam trials for each optimization step. Default:50"
     echo "  --store_all Bool [Optional]           When set to True, the output folders of all hparam trials will be stored in randomly named folders. Default: False"
     echo "  --compress_exp Bool [Optional]        When set to True, this option compresses the output folders of all hyperparameter trials into a single tar.gz file. This is particularly useful when store_all is set to True, as it helps prevent the accumulation of a large number of files. Default: False"
     exit 1
@@ -297,7 +297,7 @@ echo "-------------------------------------"
 
 # This function will extract all the optimization flags added in the yaml file
 # The input is a text file (e.g, a yaml file) and a pattern (e.g, "@orion_step1:")
-# The ouput are the detected flags (e.g.,  --dropout~"uniform(0.0, 0.5)").
+# The output are the detected flags (e.g.,  --dropout~"uniform(0.0, 0.5)").
 get_flag() {
     local file_path="$1"
     local pattern="$2"

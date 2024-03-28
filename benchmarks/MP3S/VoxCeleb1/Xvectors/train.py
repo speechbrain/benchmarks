@@ -27,12 +27,16 @@ def compute_embedding(wavs, wav_lens):
 
     Arguments
     ---------
-    wavs : Torch.Tensor
+    wavs : torch.Tensor
         Tensor containing the speech waveform (batch, time).
         Make sure the sample rate is fs=16000 Hz.
-    wav_lens: Torch.Tensor
+    wav_lens : torch.Tensor
         Tensor containing the relative length for each sentence
         in the length (e.g., [0.8 0.6 1.0])
+
+    Returns
+    -------
+    embeddings : torch.Tensor
     """
     with torch.no_grad():
         wavs, wav_lens = (
@@ -375,7 +379,7 @@ if __name__ == "__main__":
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
 
-    # Download verification list (to exlude verification sentences from train)
+    # Download verification list (to exclude verification sentences from train)
     veri_file_path = os.path.join(
         hparams["save_folder"], os.path.basename(hparams["verification_file"])
     )

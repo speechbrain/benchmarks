@@ -28,6 +28,12 @@ class ProgressiveWhisperTokenizer(WhisperTokenizer):
 
     See the documentation of `transformers.models.whisper.tokenization_whisper.WhisperTokenizer`.
 
+    Arguments
+    ---------
+    *args : tuple
+    **kwargs : dict
+        Arguments forwarded to ``WhisperTokenizer``
+
     Examples
     --------
     >>> model_hub = "openai/whisper-tiny"
@@ -95,6 +101,13 @@ class ProgressiveWhisper(Whisper):
 
     See the documentation of `speechbrain.lobes.models.huggingface_whisper.HuggingFaceWhisper`.
 
+    Arguments
+    ---------
+    source : str
+    save_path : str
+    **kwargs : dict
+        Arguments forwarded to ``Whisper``
+
     Examples
     --------
     >>> model_hub = "openai/whisper-tiny"
@@ -103,7 +116,6 @@ class ProgressiveWhisper(Whisper):
     >>> inputs = torch.randn([2, 93680])
     >>> tokens = torch.tensor([[1, 1]]) * model.model.config.decoder_start_token_id
     >>> outputs = model(inputs, tokens)
-
     """
 
     # override

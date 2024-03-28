@@ -120,6 +120,11 @@ class EEGConformer(torch.nn.Module):
         ---------
         x : torch.Tensor (batch, time, EEG channel, channel)
             Input to convolve. 4d tensors are expected.
+
+        Returns
+        -------
+        x : torch.Tensor
+            The transformed outputs.
         """
 
         x = self.emb_module(x)  # (batch, time_, EEG channel, channel)
@@ -134,6 +139,11 @@ class EEGConformer(torch.nn.Module):
         ---------
         x : torch.Tensor
             Input feature map.
+
+        Returns
+        -------
+        num_features : int
+            Count of features in the input.
         """
 
         size = x.size()[1:]  # all dimensions except the batch dimension
@@ -154,6 +164,8 @@ class PatchEmbedding(torch.nn.Module):
         Number of kernels in the 2d spatial convolution in the convolutional module.
     cnn_temporal_kernelsize: tuple
         Kernel size of the 2d temporal convolution in the convolutional module.
+    cnn_spatial_kernelsize: tuple
+        Kernel size of the 2d spatial convolution in the convolutional module.
     cnn_poolsize: tuple
         Pool size in the convolutional module.
     cnn_poolstride: tuple
@@ -240,6 +252,11 @@ class PatchEmbedding(torch.nn.Module):
         ---------
         x : torch.Tensor (batch, time, EEG channel, channel)
             Input to convolve. 4d tensors are expected.
+
+        Returns
+        -------
+        x : torch.Tensor
+            The convolved outputs.
         """
         x = self.shallownet(
             x

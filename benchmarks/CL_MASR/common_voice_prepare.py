@@ -59,17 +59,17 @@ def prepare_common_voice(
     locales: "Sequence[str]" = ("en",),
     data_folder: "str" = "data",
     max_durations: "Optional[Sequence[float]]" = None,
-) -> "None":
+):
     """Prepare data manifest CSV files for Common Voice dataset
     (see https://commonvoice.mozilla.org/en/datasets).
 
     Arguments
     ---------
-    locales:
+    locales: Sequence[str]
         The locales to use (e.g. "en", "it", etc.).
-    data_folder:
+    data_folder: str
         The path to the dataset folder.
-    max_durations:
+    max_durations: float
         The maximum total durations in seconds to sample from
         each locale for train, dev and test splits, respectively.
         Default to infinity.
@@ -134,12 +134,12 @@ def prepare_common_voice(
         )
 
 
-def compute_clip_durations(locale_folder: "str") -> "None":
+def compute_clip_durations(locale_folder: "str"):
     """Compute clip durations for a Common Voice dataset locale.
 
     Arguments
     ---------
-    locale_folder:
+    locale_folder: str
         The path to the dataset locale folder.
 
     Examples
@@ -185,20 +185,20 @@ def merge_tsv_files(
     output_tsv_file: "str",
     max_duration: "Optional[float]" = None,
     shuffle: "bool" = False,
-) -> "None":
+):
     """Merge input TSV files into a single output TSV file.
 
     Arguments
     ---------
-    input_tsv_files:
+    input_tsv_files: str
         The paths to the input TSV files.
-    output_tsv_file:
+    output_tsv_file: str
         The path to the output TSV file.
-    max_duration:
+    max_duration: float
         The maximum total duration in seconds to
         sample from each TSV file.
         Default to infinity.
-    shuffle:
+    shuffle: bool
         True to shuffle the data, False otherwise.
         Used only if `max_duration` is less than infinity.
 
@@ -271,23 +271,20 @@ def merge_tsv_files(
 
 # Adapted from:
 # https://github.com/speechbrain/speechbrain/blob/v0.5.13/recipes/CommonVoice/common_voice_prepare.py#L160
-def preprocess_tsv_file(
-    input_tsv_file: "str", output_csv_file: "str"
-) -> "None":
+def preprocess_tsv_file(input_tsv_file: "str", output_csv_file: "str"):
     """Apply minimal Common Voice preprocessing (e.g. rename columns, remove unused columns,
     remove commas, special characters and empty sentences etc.) to each row of an input TSV file.
 
     Arguments
     ---------
-    input_tsv_file:
+    input_tsv_file: str
         The path to the input TSV file.
-    output_csv_file:
+    output_csv_file: str
         The path to the output CSV file.
 
     Examples
     --------
     >>> preprocess_tsv_file("data/test_with_duration.tsv", "data/test.csv")
-
     """
     # Header: client_id path sentence up_votes down_votes age gender accents locale segment duration
     _LOGGER.info(f"Reading input TSV file ({input_tsv_file})...")

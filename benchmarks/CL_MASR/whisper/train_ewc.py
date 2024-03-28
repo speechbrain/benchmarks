@@ -199,6 +199,10 @@ def compute_ewc_params(hparams, run_opts, locales):
     locales : list[str]
         The locales to consider.
 
+    Returns
+    -------
+    params
+    fisher
     """
     tokenizer = hparams["whisper"].tokenizer
     batch_size = hparams["train_dataloader_kwargs"].get("batch_size", 1)

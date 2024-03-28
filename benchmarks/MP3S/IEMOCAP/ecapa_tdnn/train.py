@@ -161,7 +161,7 @@ def dataio_prep(hparams):
         sig = sb.dataio.dataio.read_audio(wav)
         return sig
 
-    # Initialization of the label encoder. The label encoder assignes to each
+    # Initialization of the label encoder. The label encoder assigns to each
     # of the observed label a unique index (e.g, 'spk01': 0, 'spk02': 1, ..)
     label_encoder = sb.dataio.encoder.CategoricalEncoder()
 

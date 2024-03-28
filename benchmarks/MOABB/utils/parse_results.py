@@ -256,7 +256,7 @@ def aggregate_metrics(
 
     Arguments
     ---------
-    verbode: int
+    verbose: int
     metric_file: str
     stat_metrics: list
 

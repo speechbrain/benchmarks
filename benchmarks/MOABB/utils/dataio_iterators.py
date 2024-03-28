@@ -213,15 +213,13 @@ class LeaveOneSessionOut(object):
             Flag to save the prepared dataset into a pkl file.
         n_steps_channel_selection: int
             Number of steps to perform when sampling a subset of channels from a seed channel, based on the adjacency matrix.
-        ...
 
         Returns
-        ---------
+        -------
         tail_path: str
             String containing the relative path where results will be stored for the specified iterator, subject and session.
         datasets: dict
             Dictionary containing all sets (keys: 'train', 'test', 'valid').
-         ---------
         """
         interval = [tmin, tmax]
 
@@ -434,15 +432,13 @@ class LeaveOneSubjectOut(object):
             Flag to save the prepared dataset into a pkl file.
         n_steps_channel_selection: int
             Number of steps to perform when sampling a subset of channels from a seed channel, based on the adjacency matrix.
-        ...
 
         Returns
-        ---------
+        -------
         tail_path: str
             String containing the relative path where results will be stored for the specified iterator, subject and session.
         datasets: dict
             Dictionary containing all sets (keys: 'train', 'test', 'valid').
-         ---------
         """
         interval = [tmin, tmax]
         if len(dataset.subject_list) < 2:

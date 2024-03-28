@@ -147,6 +147,11 @@ class ShallowConvNet(torch.nn.Module):
         ---------
         x : torch.Tensor
             Input feature map.
+
+        Returns
+        -------
+        num_features : int
+            Count of all features in input.
         """
 
         size = x.size()[1:]  # all dimensions except the batch dimension
@@ -162,6 +167,11 @@ class ShallowConvNet(torch.nn.Module):
         ---------
         x : torch.Tensor (batch, time, EEG channel, channel)
             Input to convolve. 4d tensors are expected.
+
+        Returns
+        -------
+        x : torch.Tensor
+            The convolved output.
         """
         x = self.conv_module(x)
         x = self.dense_module(x)

@@ -59,7 +59,7 @@ def get_all_urls(file_lst, avoid_urls):
     -------
     urls: dict
         A dictionary where the keys are the detected URLs and the values
-    are the files where the URLs are found.
+        are the files where the URLs are found.
     """
     all_urls = {}
 
@@ -132,6 +132,13 @@ def check_links(
         Used to avoid some file extensions.
     avoid_files: list
         Used to avoid testing some specific file.
+    avoid_urls: list
+        Used to avoid testing some urls.
+
+    Returns
+    -------
+    bool
+        True if the check is passed.
     """
 
     check_test = True

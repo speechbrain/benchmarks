@@ -37,6 +37,7 @@ def prepare_common_voice(
     """
     Prepares the csv files for the Mozilla Common Voice dataset.
     Download: https://voice.mozilla.org/en/datasets
+
     Arguments
     ---------
     data_folder : str
@@ -57,6 +58,11 @@ def prepare_common_voice(
         Specify the language for text normalization.
     skip_prep: bool
         If True, skip data preparation.
+
+    Returns
+    -------
+    None
+
     Example
     -------
     >>> from recipes.CommonVoice.common_voice_prepare import prepare_common_voice
@@ -101,7 +107,7 @@ def prepare_common_voice(
     if not os.path.exists(save_folder):
         os.makedirs(save_folder)
 
-    # Setting ouput files
+    # Setting output files
     save_csv_train = save_folder + "/train.csv"
     save_csv_dev = save_folder + "/dev.csv"
     save_csv_test = save_folder + "/test.csv"
@@ -135,6 +141,16 @@ def skip(save_csv_train, save_csv_dev, save_csv_test):
     """
     Detects if the Common Voice data preparation has been already done.
     If the preparation has been done, we can skip it.
+
+    Arguments
+    ---------
+    save_csv_train : str
+        The train csv file
+    save_csv_dev : str
+        The dev csv file
+    save_csv_test : str
+        The test csv file
+
     Returns
     -------
     bool
@@ -231,18 +247,20 @@ def create_csv(
 ):
     """
     Creates the csv file given a list of wav files.
+
     Arguments
     ---------
     orig_tsv_file : str
         Path to the Common Voice tsv file (standard file).
+    csv_file : str
+        Path to the new CSV file.
     data_folder : str
         Path of the CommonVoice dataset.
     accented_letters : bool, optional
         Defines if accented letters will be kept as individual letters or
         transformed to the closest non-accented letters.
-    Returns
-    -------
-    None
+    language : str
+        The language to use, default "en"
     """
 
     # Check if the given files exists
@@ -420,9 +438,12 @@ def check_commonvoice_folders(data_folder):
     """
     Check if the data folder actually contains the Common Voice dataset.
     If not, raises an error.
-    Returns
-    -------
-    None
+
+    Arguments
+    ---------
+    data_folder : str
+        Path to the directory containing data.
+
     Raises
     ------
     FileNotFoundError

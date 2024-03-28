@@ -289,7 +289,7 @@ if __name__ == "__main__":
         checkpointer=hparams["checkpointer"],
     )
 
-    # We dynamicaly add the tokenizer to our brain class.
+    # We dynamically add the tokenizer to our brain class.
     asr_brain.tokenizer = label_encoder
 
     ind2lab = label_encoder.ind2lab

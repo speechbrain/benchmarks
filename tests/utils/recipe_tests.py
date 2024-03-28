@@ -4,6 +4,7 @@ Authors
  * Mirco Ravanelli 2022
  * Andreas Nautsch 2022, 2023
 """
+
 import os
 import re
 import csv
@@ -255,7 +256,7 @@ def check_performance(
     with open(filename) as file:
         lines = file.readlines()
 
-    # Fitler the lines
+    # Filter the lines
     lines_filt = []
     last_line = ""
     for line in lines:
@@ -323,8 +324,10 @@ def extract_value(string, key):
     escaped_key = re.escape(key)
 
     # Create the regular expression pattern to match the argument and its corresponding value
-    pattern = r"(?P<key>{})\s*:\s*(?P<value>[-+]?\d*\.\d+([eE][-+]?\d+)?)".format(
-        escaped_key
+    pattern = (
+        r"(?P<key>{})\s*:\s*(?P<value>[-+]?\d*\.\d+([eE][-+]?\d+)?)".format(
+            escaped_key
+        )
     )
 
     # Search for the pattern in the input string
@@ -462,7 +465,7 @@ def run_recipe_tests(
     """
     # Create the output folder (where the tests results will be saved)
     os.makedirs(output_folder, exist_ok=True)
-    print("Test ouputs will be put in %s" % (output_folder))
+    print("Test outputs will be put in %s" % (output_folder))
 
     # Read the csv recipe file and detect which tests we have to run
     (

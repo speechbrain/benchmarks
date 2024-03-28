@@ -120,8 +120,8 @@ def detect_script_vars(script_file, var_lst):
                             detected_var.append(var)
                             continue
 
-                # Chek var types
-                # Chek var types
+                # Check var types
+                # Check var types
                 for var_type in var_types:
                     if var_type + var in line:
                         if var not in detected_var:
@@ -308,7 +308,7 @@ def check_module_vars(
         if avoid in module_var_script:
             module_var_script.remove(avoid)
 
-    # Check Module variavles
+    # Check Module variables
     unused_vars = list(set(module_var_script) - set(module_vars_hparams))
 
     for unused_var in unused_vars:

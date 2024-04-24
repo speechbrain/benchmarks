@@ -1,8 +1,10 @@
 # CL-MASR: A Continual Learning Benchmark for Multilingual ASR
 
-This recipe includes scripts to train [Whisper](https://cdn.openai.com/papers/whisper.pdf) and
-[WavLM](https://arxiv.org/abs/2110.13900)-based ASR systems on a subset of 20 languages selected from [Common Voice 13](https://commonvoice.mozilla.org/en/datasets)
-in a continual learning fashion using a handful of methods including rehearsal-based, architecture-based, and regularization-based approaches.
+This is the official benchmark platform accompanying the paper [CL-MASR: A Continual Learning Benchmark for Multilingual ASR](https://arxiv.org/abs/2310.16931).
+
+It includes scripts to train [Whisper](https://cdn.openai.com/papers/whisper.pdf) and [WavLM](https://arxiv.org/abs/2110.13900)-based ASR systems
+on a subset of 20 languages selected from [Common Voice 13](https://commonvoice.mozilla.org/en/datasets) in a continual learning fashion using a
+handful of methods including rehearsal-based, architecture-based, and regularization-based approaches.
 
 The goal is to continually learn new languages while limiting forgetting the previously learned ones.
 An ideal method should achieve both positive forward transfer (i.e. improve performance on new tasks leveraging
@@ -10,12 +12,21 @@ shared knowledge from previous tasks) and positive backward transfer (i.e. impro
 leveraging shared knowledge from new tasks).
 
 The following algorithms have been implemented so far:
-- [Experience Replay (ER)](https://arxiv.org/abs/1811.11682)
-- [Averaged Gradient Episodic Memory (A-GEM)](https://arxiv.org/abs/1812.00420)
-- [Progressive Neural Networks (PNN)](https://arxiv.org/abs/1606.04671)
-- [Piggyback (PB)](https://arxiv.org/abs/1801.06519)
-- [Elastic Weight Consolidation (EWC)](https://arxiv.org/abs/1612.00796)
-- [Learning without Forgetting (LwF)](https://arxiv.org/abs/1606.09282)
+
+- **Rehearsal-based**
+  - [Experience Replay (ER)](https://arxiv.org/abs/1811.11682)
+  - [Averaged Gradient Episodic Memory (A-GEM)](https://arxiv.org/abs/1812.00420)
+  - [Dark Experience Replay (DER)](https://arxiv.org/abs/2004.07211) (task-incremental variant)
+
+- **Architecture-based**
+  - [Progressive Neural Networks (PNN)](https://arxiv.org/abs/1606.04671)
+  - [Piggyback (PB)](https://arxiv.org/abs/1801.06519)
+  - [Learning to Prompt (L2P)](https://arxiv.org/abs/2112.08654) (task-aware variant)
+
+- **Regularization-based**
+  - [Elastic Weight Consolidation (EWC)](https://arxiv.org/abs/1612.00796) (online variant)
+  - [Learning without Forgetting (LwF)](https://arxiv.org/abs/1606.09282) (online variant)
+  - [Memory Aware Synapses (MAS)](https://arxiv.org/abs/1711.09601)
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -30,19 +41,20 @@ Download the dataset from [here](https://zenodo.org/record/8065754) and extract 
 
 ## 🛠️️ Installation
 
-To install and set up the benchmark, follow these steps:
+To set up the benchmark, follow these steps:
 
-1. Install SpeechBrain:
+
+1. Clone the benchmark repository and install SpeechBrain:
    ```shell
-   pip install speechbrain
+   git clone https://github.com/speechbrain/benchmarks.git
+   cd benchmarks
+   git submodule update --init --recursive
+   cd speechbrain
+   pip install -r requirements.txt
+   pip install -e .
    ```
 
-2. Clone the benchmark repository:
-   ```shell
-   git clone https://github.com/speechbrain/benchmarks/
-   ```
-
-3. Navigate to `<path-to-repository>/benchmarks/CL_MASR` in your file system, open a terminal, and run the following commands:
+2. Navigate to `<path-to-repository>/benchmarks/CL_MASR` in your file system, open a terminal, and run the following commands:
 
    ```shell
    pip install -r ../../requirements.txt    # Install base dependencies
@@ -64,6 +76,8 @@ python train_<cl-method>.py hparams/train_<cl-method>.yaml --data_folder <path-t
 ```
 
 **NOTE**: to profile the model (optional), install `ptflops` and `torchinfo` as additional dependencies.
+
+**NOTE**: multi-GPU training is currently not supported.
 
 ### Analyzing the results
 
@@ -109,11 +123,39 @@ We do not include the checkpoints due to storage limits (each experiment with Wh
 
 Analyses generated via `analyze_logs.py` are available [here](https://www.dropbox.com/sh/59uoq0ys53zf2oj/AABUvEBjNt1jUnqHdZaLdMV6a?dl=0).
 
-All the experiments were run on five CentOS Linux 7 machines with an Intel(R) Xeon(R) Silver 4216 Cascade Lake CPU
+All the experiments were run on 5 CentOS Linux machines with an Intel(R) Xeon(R) Silver 4216 Cascade Lake CPU
 with 32 cores @ 2.10 GHz, 64 GB RAM and an NVIDIA Tesla V100 SXM2 @ 32 GB with CUDA Toolkit 11.4.
-With the specified hardware configuration, approximately one week is necessary to complete all the experiments.
+With the specified hardware configuration, approximately 10 days are necessary to complete all the experiments.
 
 **NOTE**: the checkpoint for WavLM large pretrained on the base languages is available [here](https://www.dropbox.com/sh/tbjuwi9yo1fv2ez/AABILEMY9yAhHMwhTlvyw69Pa?dl=0).
+
+---------------------------------------------------------------------------------------------------------
+
+## @ Citing
+
+If you use the CL-MASR benchmark, please cite:
+
+```bibtex
+@article{dellalibera2023clmasr,
+  author = {Luca Della Libera and Pooneh Mousavi and Salah Zaiem and Cem Subakan and Mirco Ravanelli},
+  title = {{CL-MASR}: A Continual Learning Benchmark for Multilingual {ASR}},
+  journal = {arXiv preprint arXiv:2310.16931},
+  year = {2023},
+  url = {https://arxiv.org/abs/2310.16931},
+}
+```
+
+If you use SpeechBrain, please cite:
+
+```bibtex
+@article{ravanelli2021speechbrain,
+  author = {Mirco Ravanelli and Titouan Parcollet and Peter Plantinga and Aku Rouhe and Samuele Cornell and Loren Lugosch and Cem Subakan and Nauman Dawalatabad and Abdelwahab Heba and Jianyuan Zhong and Ju-Chieh Chou and Sung-Lin Yeh and Szu-Wei Fu and Chien-Feng Liao and Elena Rastorgueva and François Grondin and William Aris and Hwidong Na and Yan Gao and Renato De Mori and Yoshua Bengio},
+  title = {{SpeechBrain}: A General-Purpose Speech Toolkit},
+  journal = {arXiv preprint arXiv:2106.04624},
+  year = {2021},
+  url = {https://arxiv.org/abs/2106.04624},
+}
+```
 
 ---------------------------------------------------------------------------------------------------------
 

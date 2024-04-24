@@ -1,6 +1,11 @@
 #!/usr/bin/python3
 """Recipe for training then testing speaker embeddings using the VoxCeleb Dataset.
 The embeddings are learned using the ECAPA-TDNN architecture
+
+Authors
+ * Adel Moumen 2024
+ * Salah Zaiem 2023
+ * Youcef Kemiche 2023
 """
 
 import os
@@ -209,8 +214,6 @@ class SpeakerBrain(sb.core.Brain):
 
     def compute_forward(self, batch, stage):
         """Computation pipeline based on a encoder + speaker classifier.
-        Data augmentation and environmental corruption are applied to the
-        input speech.
         """
         batch = batch.to(self.device)
         wavs, lens = batch.sig
@@ -238,19 +241,6 @@ class SpeakerBrain(sb.core.Brain):
             self.error_metrics.append(uttid, predictions, spkid, lens)
 
         return loss
-
-    def fit_batch(self, batch):
-        """Train the parameters given a single batch in input"""
-        predictions = self.compute_forward(batch, sb.Stage.TRAIN)
-        loss = self.compute_objectives(predictions, batch, sb.Stage.TRAIN)
-        loss.backward()
-        if self.check_gradients(loss):
-            self.model_optimizer.step()
-            self.weights_optimizer.step()
-
-        self.model_optimizer.zero_grad()
-        self.weights_optimizer.zero_grad()
-        return loss.detach()
 
     def on_stage_start(self, stage, epoch=None):
         """Gets called at the beginning of an epoch."""
@@ -291,6 +281,10 @@ class SpeakerBrain(sb.core.Brain):
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
         )
+        self.optimizers_dict = {
+            "weights_optimizer": self.weights_optimizer,
+            "model_optimizer": self.model_optimizer,
+        }
         # Initializing the weights
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)
@@ -395,6 +389,7 @@ if __name__ == "__main__":
         splits=["train", "dev", "test"],
         split_ratio=[90, 10],
         seg_dur=hparams["sentence_len"],
+        skip_prep=hparams["skip_prep"],
         source=hparams["voxceleb_source"]
         if "voxceleb_source" in hparams
         else None,
@@ -432,37 +427,40 @@ if __name__ == "__main__":
         valid_loader_kwargs=hparams["dataloader_options"],
     )
 
-    # Now preparing for test :
-    hparams["device"] = speaker_brain.device
+    if hparams["do_verification"]:
+        # Now preparing for test :
+        hparams["device"] = speaker_brain.device
 
-    speaker_brain.modules.eval()
-    train_dataloader, enrol_dataloader, test_dataloader = dataio_prep_verif(
-        hparams
-    )
-    # Computing  enrollment and test embeddings
-    logger.info("Computing enroll/test embeddings...")
+        speaker_brain.modules.eval()
+        train_dataloader, enrol_dataloader, test_dataloader = dataio_prep_verif(
+            hparams
+        )
+        # Computing  enrollment and test embeddings
+        logger.info("Computing enroll/test embeddings...")
 
-    # First run
-    enrol_dict = compute_embedding_loop(enrol_dataloader)
-    test_dict = compute_embedding_loop(test_dataloader)
+        # First run
+        enrol_dict = compute_embedding_loop(enrol_dataloader)
+        test_dict = compute_embedding_loop(test_dataloader)
 
-    if "score_norm" in hparams:
-        train_dict = compute_embedding_loop(train_dataloader)
+        if "score_norm" in hparams:
+            train_dict = compute_embedding_loop(train_dataloader)
 
-    # Compute the EER
-    logger.info("Computing EER..")
-    # Reading standard verification split
-    with open(veri_file_path) as f:
-        veri_test = [line.rstrip() for line in f]
+        # Compute the EER
+        logger.info("Computing EER..")
+        # Reading standard verification split
+        with open(veri_file_path) as f:
+            veri_test = [line.rstrip() for line in f]
 
-    positive_scores, negative_scores = get_verification_scores(veri_test)
-    del enrol_dict, test_dict
+        positive_scores, negative_scores = get_verification_scores(veri_test)
+        del enrol_dict, test_dict
 
-    eer, th = EER(torch.tensor(positive_scores), torch.tensor(negative_scores))
-    logger.info("EER(%%)=%f", eer * 100)
+        eer, th = EER(
+            torch.tensor(positive_scores), torch.tensor(negative_scores)
+        )
+        logger.info("EER(%%)=%f", eer * 100)
 
-    min_dcf, th = minDCF(
-        torch.tensor(positive_scores), torch.tensor(negative_scores)
-    )
-    # Testing
-    logger.info("minDCF=%f", min_dcf * 100)
+        min_dcf, th = minDCF(
+            torch.tensor(positive_scores), torch.tensor(negative_scores)
+        )
+        # Testing
+        logger.info("minDCF=%f", min_dcf * 100)

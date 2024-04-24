@@ -166,6 +166,8 @@ class ASR(sb.Brain):
 
             self.optimizer = self.opt_class(parameters)
 
+            self.optimizers_dict = {"opt_class": self.optimizer}
+
             if self.checkpointer is not None:
                 self.checkpointer.add_recoverable("optimizer", self.optimizer)
 
@@ -232,7 +234,6 @@ def dataio_prepare(hparams, tokenizer):
     @sb.utils.data_pipeline.provides("tokens", "target_wrd")
     def text_pipeline(wrd):
         tokens_list = tokenizer.encode(wrd)
-        assert sum(i == hparams["blank_index"] for i in tokens_list) == 0
         tokens_list = tokens_list[: hparams["max_target_length"] - 1]
         tokens = torch.LongTensor(tokens_list)
         yield tokens

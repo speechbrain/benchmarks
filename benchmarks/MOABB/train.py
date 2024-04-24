@@ -23,6 +23,7 @@ import sys
 from utils.dataio_iterators import LeaveOneSessionOut, LeaveOneSubjectOut
 from torchinfo import summary
 import speechbrain as sb
+import yaml
 
 
 class MOABBBrain(sb.Brain):
@@ -89,7 +90,9 @@ class MOABBBrain(sb.Brain):
             + tuple(np.floor(self.hparams.input_shape[1:-1]).astype(int))
             + (1,)
         )
-        model_summary = summary(self.hparams.model, input_size=in_shape)
+        model_summary = summary(
+            self.hparams.model, input_size=in_shape, device=self.device
+        )
         with open(
             os.path.join(self.hparams.exp_dir, "model.txt"), "w"
         ) as text_file:
@@ -182,7 +185,12 @@ class MOABBBrain(sb.Brain):
                     stats_meta={
                         "epoch loaded": self.hparams.epoch_counter.current
                     },
-                    test_stats=self.last_eval_stats,
+                    test_stats=self.last_eval_stats
+                    if not getattr(self, "log_test_as_valid", False)
+                    else None,
+                    valid_stats=self.last_eval_stats
+                    if getattr(self, "log_test_as_valid", False)
+                    else None,
                 )
                 # save the averaged checkpoint at the end of the evaluation stage
                 # delete the rest of the intermediate checkpoints
@@ -210,7 +218,7 @@ class MOABBBrain(sb.Brain):
             max_key=max_key, min_key=min_key
         )
         ckpt = sb.utils.checkpoints.average_checkpoints(
-            ckpts, recoverable_name="model", device=self.device
+            ckpts, recoverable_name="model",
         )
 
         self.hparams.model.load_state_dict(ckpt, strict=True)
@@ -302,6 +310,8 @@ def run_experiment(hparams, run_opts, datasets):
 
 def perform_evaluation(brain, hparams, datasets, dataset_key="test"):
     """This function perform the evaluation stage on a dataset and save the performance metrics in a pickle file"""
+    brain.log_test_as_valid = dataset_key == "valid"
+
     min_key, max_key = None, None
     if hparams["test_key"] == "loss":
         min_key = hparams["test_key"]
@@ -324,17 +334,10 @@ def perform_evaluation(brain, hparams, datasets, dataset_key="test"):
         )
 
 
-if __name__ == "__main__":
-    argv = sys.argv[1:]
-    # loading hparams to prepare the dataset and the data iterators
-    hparams_file, run_opts, overrides = sb.core.parse_arguments(argv)
-    with open(hparams_file) as fin:
-        hparams = load_hyperpyyaml(fin, overrides)
-
+def prepare_dataset_iterators(hparams):
+    """Preprocesses the dataset and partitions it into train, valid and test sets."""
     # defining data iterator to use
     print("Prepare dataset iterators...")
-    data_iterator = None
-
     if hparams["data_iterator_name"] == "leave-one-session-out":
         data_iterator = LeaveOneSessionOut(
             seed=hparams["seed"]
@@ -343,49 +346,72 @@ if __name__ == "__main__":
         data_iterator = LeaveOneSubjectOut(
             seed=hparams["seed"]
         )  # cross-subject and cross-session
-
-    if data_iterator is not None:
-        tail_path, datasets = data_iterator.prepare(
-            data_folder=hparams["data_folder"],
-            dataset=hparams["dataset"],
-            cached_data_folder=hparams["cached_data_folder"],
-            batch_size=hparams["batch_size"],
-            valid_ratio=hparams["valid_ratio"],
-            target_subject_idx=hparams["target_subject_idx"],
-            target_session_idx=hparams["target_session_idx"],
-            events_to_load=hparams["events_to_load"],
-            original_sample_rate=hparams["original_sample_rate"],
-            sample_rate=hparams["sample_rate"],
-            fmin=hparams["fmin"],
-            fmax=hparams["fmax"],
-            tmin=hparams["tmin"],
-            tmax=hparams["tmax"],
-            save_prepared_dataset=hparams["save_prepared_dataset"],
-            n_steps_channel_selection=hparams["n_steps_channel_selection"],
+    else:
+        raise ValueError(
+            "Unknown data_iterator_name: %s" % hparams["data_iterator_name"]
         )
 
-        # override C and T, to be sure that network input shape matches the dataset (e.g., after time cropping or channel sampling)
-        argv += [
-            "--T",
-            str(datasets["train"].dataset.tensors[0].shape[1]),
-            "--C",
-            str(datasets["train"].dataset.tensors[0].shape[-2]),
-            "--n_train_examples",
-            str(datasets["train"].dataset.tensors[0].shape[0]),
-        ]
+    tail_path, datasets = data_iterator.prepare(
+        data_folder=hparams["data_folder"],
+        dataset=hparams["dataset"],
+        cached_data_folder=hparams["cached_data_folder"],
+        batch_size=hparams["batch_size"],
+        valid_ratio=hparams["valid_ratio"],
+        target_subject_idx=hparams["target_subject_idx"],
+        target_session_idx=hparams["target_session_idx"],
+        events_to_load=hparams["events_to_load"],
+        original_sample_rate=hparams["original_sample_rate"],
+        sample_rate=hparams["sample_rate"],
+        fmin=hparams["fmin"],
+        fmax=hparams["fmax"],
+        tmin=hparams["tmin"],
+        tmax=hparams["tmax"],
+        save_prepared_dataset=hparams["save_prepared_dataset"],
+        n_steps_channel_selection=hparams["n_steps_channel_selection"],
+    )
+    return tail_path, datasets
 
-        # loading hparams for the each training and evaluation processes
-        hparams_file, run_opts, overrides = sb.core.parse_arguments(argv)
-        with open(hparams_file) as fin:
-            hparams = load_hyperpyyaml(fin, overrides)
-        hparams["exp_dir"] = os.path.join(hparams["output_folder"], tail_path)
 
-        # creating experiment directory
-        sb.create_experiment_directory(
-            experiment_directory=hparams["exp_dir"],
-            hyperparams_to_save=hparams_file,
-            overrides=overrides,
-        )
+def load_hparams_and_dataset_iterators(hparams_file, run_opts, overrides):
+    """Loads the hparams and datasets, injecting appropriate overrides
+    for the shape of the dataset.
+    """
+    with open(hparams_file) as fin:
+        hparams = load_hyperpyyaml(fin, overrides)
 
-        # Run training
-        run_experiment(hparams, run_opts, datasets)
+    tail_path, datasets = prepare_dataset_iterators(hparams)
+    # override C and T, to be sure that network input shape matches the dataset (e.g., after time cropping or channel sampling)
+    overrides.update(
+        T=datasets["train"].dataset.tensors[0].shape[1],
+        C=datasets["train"].dataset.tensors[0].shape[-2],
+        n_train_examples=datasets["train"].dataset.tensors[0].shape[0],
+    )
+
+    # loading hparams for the each training and evaluation processes
+    with open(hparams_file) as fin:
+        hparams = load_hyperpyyaml(fin, overrides)
+    hparams["exp_dir"] = os.path.join(hparams["output_folder"], tail_path)
+
+    # creating experiment directory
+    sb.create_experiment_directory(
+        experiment_directory=hparams["exp_dir"],
+        hyperparams_to_save=hparams_file,
+        overrides=overrides,
+    )
+
+    return hparams, datasets
+
+
+if __name__ == "__main__":
+    argv = sys.argv[1:]
+    # loading hparams to prepare the dataset and the data iterators
+    hparams_file, run_opts, overrides = sb.core.parse_arguments(argv)
+    overrides = yaml.load(
+        overrides, yaml.SafeLoader
+    )  # Convert overrides to a dict
+    hparams, datasets = load_hparams_and_dataset_iterators(
+        hparams_file, run_opts, overrides
+    )
+
+    # Run training
+    run_experiment(hparams, run_opts, datasets)

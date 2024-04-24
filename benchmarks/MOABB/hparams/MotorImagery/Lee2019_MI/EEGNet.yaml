@@ -78,12 +78,12 @@ valid_ratio: 0.2
 # DATA AUGMENTATION
 # cutcat (disabled when min_num_segments=max_num_segments=1)
 max_num_segments: 3 # @orion_step2: --max_num_segments~"uniform(2, 6, discrete=True)"
-cutcat: !new:speechbrain.processing.speech_augmentation.CutCat
+cutcat: !new:speechbrain.augment.time_domain.CutCat
     min_num_segments: 2
     max_num_segments: !ref <max_num_segments>
 # random amplitude gain between 0.5-1.5 uV (disabled when amp_delta=0.)
 amp_delta: 0.3492 # @orion_step2: --amp_delta~"uniform(0.0, 0.5)"
-rand_amp: !new:speechbrain.processing.speech_augmentation.RandAmp
+rand_amp: !new:speechbrain.augment.time_domain.RandAmp
     amp_low: !ref 1 - <amp_delta>
     amp_high: !ref 1 + <amp_delta>
 # random shifts between -300 ms to 300 ms (disabled when shift_delta=0.)
@@ -93,7 +93,7 @@ min_shift: !apply:math.floor
     - !ref 0 - <sample_rate> * <shift_delta>
 max_shift: !apply:math.floor
     - !ref 0 + <sample_rate> * <shift_delta>
-time_shift: !new:speechbrain.processing.speech_augmentation.RandomShift
+time_shift: !new:speechbrain.augment.freq_domain.RandomShift
     min_shift: !ref <min_shift>
     max_shift: !ref <max_shift>
     dim: 1
@@ -101,12 +101,12 @@ time_shift: !new:speechbrain.processing.speech_augmentation.RandomShift
 snr_white_low: 14.0 # @orion_step2: --snr_white_low~"uniform(0.0, 15, precision=2)"
 snr_white_delta: 7.02 # @orion_step2: --snr_white_delta~"uniform(5.0, 20.0, precision=3)"
 snr_white_high: !ref <snr_white_low> + <snr_white_delta>
-add_noise_white: !new:speechbrain.processing.speech_augmentation.AddNoise
+add_noise_white: !new:speechbrain.augment.time_domain.AddNoise
     snr_low: !ref <snr_white_low>
     snr_high: !ref <snr_white_high>
 
 repeat_augment: 1 # @orion_step1: --repeat_augment 0
-augment: !new:speechbrain.processing.augmentation.Augmenter
+augment: !new:speechbrain.augment.augmenter.Augmenter
     parallel_augment: True
     concat_original: True
     parallel_augment_fixed_bs: True
@@ -114,10 +114,11 @@ augment: !new:speechbrain.processing.augmentation.Augmenter
     shuffle_augmentations: True
     min_augmentations: 4
     max_augmentations: 4
-    cutcat: !ref <cutcat>
-    rand_amp: !ref <rand_amp>
-    time_shift: !ref <time_shift>
-    augment_noise: !ref <add_noise_white>
+    augmentations: [
+        !ref <cutcat>,
+        !ref <rand_amp>,
+        !ref <time_shift>,
+        !ref <add_noise_white>]
 
 # DATA NORMALIZATION
 dims_to_normalize: 1 # 1 (time) or 2 (EEG channels)

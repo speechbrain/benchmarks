@@ -8,7 +8,7 @@ import os
 
 from torch import nn
 
-from speechbrain.lobes.models.huggingface_wav2vec import HuggingFaceWav2Vec2
+from speechbrain.lobes.models.huggingface_transformers.wavlm import WavLM
 from speechbrain.nnet.RNN import LSTM as SBLSTM
 from speechbrain.tokenizers.SentencePiece import SentencePiece
 from speechbrain.utils.data_utils import download_file
@@ -19,9 +19,7 @@ __all__ = [
 ]
 
 
-_TOKENIZER_URL = (
-    "https://www.dropbox.com/sh/gxzzr2znd9z8tu1/AACQgjzSVG1PgoyIK_Og8Brda?dl=1"
-)
+_TOKENIZER_URL = "https://www.dropbox.com/sh/tbjuwi9yo1fv2ez/AADRL8BIRX-K-aaMyIwrRovEa/tokenizer?dl=1"
 
 _TOKENIZER_PATH = os.path.join(os.path.dirname(__file__), "tokenizer")
 
@@ -166,9 +164,7 @@ class Model(nn.Module):
     ):
         super().__init__()
         self.vocab_size = vocab_size
-        self.encoder = HuggingFaceWav2Vec2(
-            source, save_path, **(encoder_kwargs or {}),
-        )
+        self.encoder = WavLM(source, save_path, **(encoder_kwargs or {}))
         self.decoder = Decoder(
             self.encoder.model.config.hidden_size,
             vocab_size,

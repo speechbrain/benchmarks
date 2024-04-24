@@ -1,0 +1,123 @@
+# ############################################################################
+# Model: WavLM + LSTM + CTC loss
+# Authors: Luca Della Libera 2023
+# ############################################################################
+
+experiment_name: L2P
+
+seed: 0
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+
+skip_test: False
+
+# Data preparation
+base_locales: [en, zh-CN, de, es, ru, fr, pt, ja, tr, pl]
+new_locales: [rw, eo, kab, lg, mhr, ckb, ab, kmr, fy-NL, ia]
+data_folder: !PLACEHOLDER
+max_durations: [36000, 3600, 3600]  # Maximum total durations in seconds for train, dev, and test splits for each locale
+
+# Output directories
+output_folder: !ref results/<wavlm_variant>/<experiment_name>/<seed>
+save_folder: !ref <output_folder>/save
+
+# Training parameters
+train_batch_size: 8
+valid_batch_size: 16
+train_num_workers: 6
+valid_num_workers: 6
+
+sample_rate: 16000
+sorting: ascending
+avoid_if_longer_than: 10  # Remove utterances longer than 10s (open microphones)
+
+blank_index: 0
+
+num_epochs: 2
+lr: 0.0001
+improvement_threshold: 0.0025
+annealing_factor: 0.8
+d_prompt: 1024
+
+wavlm_variant: wavlm-large
+pretrained_wavlm_path: null
+output_norm: True
+freeze: False  # WavLM + LSTM
+freeze_encoder: False  # WavLM
+freeze_feature_extractor: True  # Feature extractor of WavLM
+hidden_size: 1024
+num_layers: 2
+dropout: 0.0
+bidirectional: True
+
+max_target_length: 448  # Must be <= 448 (Whisper maximum target length)
+nonfinite_patience: 10
+max_grad_norm: 5.0
+precision: fp16
+gradient_checkpointing: False
+ckpt_interval_minutes: 600
+
+forced_decoder_locale: null  # Set dynamically
+
+# Dataloader options
+train_dataloader_kwargs:
+    batch_size: !ref <train_batch_size>
+    num_workers: !ref <train_num_workers>
+
+valid_dataloader_kwargs:
+    batch_size: !ref <valid_batch_size>
+    num_workers: !ref <valid_num_workers>
+
+# Modules
+wavlm: !new:model.ProgressiveWavLM
+    source: !ref microsoft/<wavlm_variant>
+    save_path: !ref <save_folder>/checkpoint
+    output_norm: !ref <output_norm>
+    freeze: !ref <freeze>
+    freeze_encoder: !ref <freeze_encoder>
+    freeze_feature_extractor: !ref <freeze_feature_extractor>
+    hidden_size: !ref <hidden_size>
+    num_layers: !ref <num_layers>
+    dropout: !ref <dropout>
+    bidirectional: !ref <bidirectional>
+
+ctc_loss: !name:speechbrain.nnet.losses.ctc_loss
+    blank_index: !ref <blank_index>
+
+prompt_pool: !new:train_l2p.PromptPool
+    locales: !ref <new_locales>
+    d_prompt: !ref <d_prompt>
+
+modules:
+    wavlm: !ref <wavlm>
+    prompt_pool: !ref <prompt_pool>
+
+# Optimizers
+opt_class: !name:torch.optim.AdamW
+    lr: !ref <lr>
+
+lr_annealing: !new:speechbrain.nnet.schedulers.NewBobScheduler
+    initial_value: !ref <lr>
+    improvement_threshold: !ref <improvement_threshold>
+    annealing_factor: !ref <annealing_factor>
+    patient: 0
+
+# Performance metrics
+wer_computer: !name:speechbrain.utils.metric_stats.ErrorRateStats
+
+cer_computer: !name:speechbrain.utils.metric_stats.ErrorRateStats
+    split_tokens: True
+
+# Counters, checkpointers, loggers, etc.
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <num_epochs>
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        model: !ref <wavlm>
+        prompt_pool: !ref <prompt_pool>
+        scheduler: !ref <lr_annealing>
+        counter: !ref <epoch_counter>
+
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <output_folder>/<experiment_name>.txt

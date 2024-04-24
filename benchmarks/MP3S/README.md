@@ -14,24 +14,28 @@ The key feature of this benchmark is that it allows users to choose their desire
 
 ## 🛠️️ Installation
 
-To install and set up the benchmark, follow these steps:
+To set up the benchmark, follow these steps:
 
-1. Install SpeechBrain:
-   ```
-   pip install speechbrain
-   ```
 
-2. Clone the benchmark repository:
-   ```
-   git clone https://github.com/speechbrain/benchmarks/
-   ```
-
-3. Additional requirements are only necessary if you want to use the n-gram language model during decoding for English ASR experiments. If you need it, navigate to `<path-to-repository>/benchmarks/MP3S` and run the following command:
-   ```
-   pip install -r extra_requirements.txt
+1. Clone the benchmark repository and install SpeechBrain:
+   ```shell
+   git clone https://github.com/speechbrain/benchmarks.git
+   cd benchmarks
+   git submodule update --init --recursive
+   cd speechbrain
+   pip install -r requirements.txt
+   pip install -e .
    ```
 
-   This will install the required dependencies for the n-gram language model.
+2. Navigate to `<path-to-repository>/benchmarks/MP3S` in your file system, open a terminal, and run the following commands:
+
+   ```shell
+   pip install -r ../../requirements.txt    # Install base dependencies
+   pip install -r extra-requirements.txt    # Install additional dependencies
+   ```
+
+   These commands will install the necessary dependencies for the benchmark, including both the base requirements and the additional requirements (i.e., kenlm for the n-gram language model).
+
 
 ## ▶️ Quickstart
 
@@ -72,7 +76,7 @@ To run all tasks, make the following changes:
 |----------|------------------------------------------|-----------------------|---------------------|----------------------------------------------------------|
 | LibriSpeech |  Speech Recognition                         | BiLSTM                | Conformer           | https://www.openslr.org/12                               |
 |  Buckeye | Speech Recognition                               | BiLSTM                | ContextNet          | https://buckeyecorpus.osu.edu/                           |
-| CommonVoice |  Low-Resource  ASR             | BiLSTM                | Linear              | https://commonvoice.mozilla.org/fr                       |
+| CommonVoice 11.0 (Welsh (Cymraeg) and Basque (Euskera) |  Low-Resource  ASR             | BiLSTM                | Linear              | https://commonvoice.mozilla.org/en/datasets                       |
 | VoxCeleb1 |  Automatic Speaker Verification | X-Vectors             | ECAPA-TDNN          | https://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox1.html |
 |  IEMOCAP | Emotion Recognition              | Time-Pooling + Linear | ECAPA-TDNN          | https://sail.usc.edu/iemocap/                            |
 | SLURP | Intent Classification              | Time-Pooling + Linear | BiLSTM + Linear     | https://zenodo.org/record/4274930                        |

@@ -28,6 +28,55 @@ To learn more about each available benchmark, please click on the corresponding 
 
 If you have any questions or need assistance, please don't hesitate to reach out. Happy benchmarking!
 
+## 🛠️ Installation
+
+1. Clone the GitHub repository and install the requirements:
+
+    ```bash
+    git clone https://github.com/speechbrain/benchmarks.git
+    cd benchmarks
+    git submodule update --init --recursive
+    cd speechbrain
+    pip install -r requirements.txt
+    pip install -e .
+    ```
+
+2. Access SpeechBrain in your Python code:
+
+    ```python
+    import speechbrain as sb
+    ```
+
+Any modifications made to the `speechbrain` package will be automatically reflected, thanks to the `--editable` flag.
+
+## ✔️ Test Installation
+
+Ensure your installation is correct by running the following commands:
+
+```bash
+pytest tests
+pytest --doctest-modules speechbrain
+```
+
+## 🏃‍♂️ Running an Experiment
+
+In SpeechBrain, you can train a model for any task using the following steps:
+
+```python
+cd recipes/<dataset>/<task>/
+python experiment.py params.yaml
+```
+
+The results will be saved in the `output_folder` specified in the YAML file.
+
+## 📘 Learning SpeechBrain
+
+- **Website:** Explore general information on the [official website](https://speechbrain.github.io).
+
+- **Tutorials:** Start with [basic tutorials](https://speechbrain.github.io/tutorial_basics.html) covering fundamental functionalities. Find advanced tutorials and topics in the Tutorials menu on the [SpeechBrain website](https://speechbrain.github.io).
+
+- **Documentation:** Detailed information on the SpeechBrain API, contribution guidelines, and code is available in the [documentation](https://speechbrain.readthedocs.io/en/latest/index.html).
+
 
 # Citing SpeechBrain
 Please, cite SpeechBrain if you use it for your research or business.

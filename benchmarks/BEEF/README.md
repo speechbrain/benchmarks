@@ -1,11 +1,11 @@
 # Brain and EEG Foundational Model Benchmark (BEEF)
-The goal of this project is 
+The goal of this project is
 
 1) To curate brain-recoding datasets suitable for training large-scale models
 
 2) To train foundation models for brain recording, starting with EEG
 
-3)To train foundation models for multiple modalities of brain recording. 
+3)To train foundation models for multiple modalities of brain recording.
 
 The goal of these foundation models is to achieve state of art results with minimal fine-tuning  cost on diverse brain recording-related tasks.
 
@@ -51,7 +51,7 @@ To set up the benchmark, follow these steps:
 
 ## 📈️ Results
 
-The following table shows the results obtained with 
+The following table shows the results obtained with
 All the experiments presented in this work, including those with large SSL encoders such as Data2Vec Large, should be able to run on a 32Gb V100 GPU with the batch sizes provided in the yaml files. These batch sizes may be increased for faster training with smaller "Base" SSL encoders.
 
 

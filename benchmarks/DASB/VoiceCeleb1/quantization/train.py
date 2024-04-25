@@ -34,7 +34,6 @@ def dataio_prepare(hparams):
         replacements={"data_root": data_folder},
     )
 
-
     datasets = [train_data]
 
     snt_len_sample = int(hparams["sample_rate"] * hparams["sentence_len"])
@@ -58,8 +57,6 @@ def dataio_prepare(hparams):
         return sig
 
     sb.dataio.dataset.add_dynamic_item(datasets, audio_pipeline)
-
-    
 
     # 4. Set output:
     sb.dataio.dataset.set_output_keys(datasets, ["id", "sig"])

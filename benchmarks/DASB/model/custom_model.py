@@ -1,28 +1,39 @@
 import torch
 
+
 class AttentionMLP(torch.nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super(AttentionMLP, self).__init__()
         self.layers = torch.nn.Sequential(
             torch.nn.Linear(input_dim, hidden_dim),
             torch.nn.ReLU(),
-            torch.nn.Linear(hidden_dim, 1, bias=False)
+            torch.nn.Linear(hidden_dim, 1, bias=False),
         )
 
     def forward(self, x):
         x = self.layers(x)
         att_w = torch.nn.functional.softmax(x, dim=2)
         return att_w
-    
-    
+
+
 class Discrete_EmbeddingLayer(torch.nn.Module):
-    def __init__(self, num_codebooks, vocab_size, emb_dim,pad_index=0,init=False, freeze=False):
-       super(Discrete_EmbeddingLayer, self).__init__()
-       self.vocab_size = vocab_size
-       self.num_codebooks=num_codebooks
-       self.freeze= freeze
-       self.embedding =  torch.nn.Embedding(num_codebooks*vocab_size, emb_dim).requires_grad_(not self.freeze)
-       #  TODO: handle padding tokens and initialization with embedding from codec
+    def __init__(
+        self,
+        num_codebooks,
+        vocab_size,
+        emb_dim,
+        pad_index=0,
+        init=False,
+        freeze=False,
+    ):
+        super(Discrete_EmbeddingLayer, self).__init__()
+        self.vocab_size = vocab_size
+        self.num_codebooks = num_codebooks
+        self.freeze = freeze
+        self.embedding = torch.nn.Embedding(
+            num_codebooks * vocab_size, emb_dim
+        ).requires_grad_(not self.freeze)
+        #  TODO: handle padding tokens and initialization with embedding from codec
 
     def forward(self, in_tokens):
         with torch.set_grad_enabled(not self.freeze):
@@ -32,10 +43,11 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
                 self.num_codebooks * self.vocab_size,
                 self.vocab_size,
                 device=in_tokens.device,
-            ) 
-            # Forward Pass to embedding and 
+            )
+            # Forward Pass to embedding and
             in_embs = self.embedding(in_tokens)
             return in_embs
+
 
 # from speechbrain.lobes.models.huggingface_transformers.encodec import Encodec
 # model_hub = "facebook/encodec_24khz"
@@ -44,8 +56,8 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
 # audio = torch.randn(4, 1000)
 # length = torch.tensor([1.0, .5, .75, 1.0])
 # tokens, emb = model.encode(audio, length)
-# print("hi")      
-        
+# print("hi")
+
 # import torch
 # from speechbrain.lobes.models.huggingface_transformers.discrete_ssl import DiscreteSSL
 # from speechbrain.lobes.models.huggingface_transformers.hubert import (HuBERT)
@@ -72,17 +84,19 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
 # emb= Discrete_EmbeddingLayer(2, 1024, 1024)
 # in_emb = emb(tokens)
 # print(in_emb.shape)
-        
 
-from speechbrain.lobes.models.discrete.speechtokenizer_interface import SpeechTokenizer_interface
+
+from speechbrain.lobes.models.discrete.speechtokenizer_interface import (
+    SpeechTokenizer_interface,
+)
 
 model_hub = "fnlp/SpeechTokenizer"
 save_path = "savedir"
-model =SpeechTokenizer_interface(model_hub, save_path)  # doctest: +SKIP
+model = SpeechTokenizer_interface(model_hub, save_path)  # doctest: +SKIP
 # continuous_embeddings = torch.randn(1, 1024, 100) # Example shape: [Batch, Channels, Time]
 audio = torch.randn(160, 2000)
 # length = torch.tensor([1.0, .5, .75, 1.0])
-tokens = model(audio).permute(1,2,0)[:,:,:2]
-emb= Discrete_EmbeddingLayer(2, 1024, 1024)
+tokens = model(audio).permute(1, 2, 0)[:, :, :2]
+emb = Discrete_EmbeddingLayer(2, 1024, 1024)
 in_emb = emb(tokens)
 print(in_emb.shape)

@@ -25,7 +25,9 @@ class EmoIdBrain(sb.Brain):
         # Feature extraction and attention pooling
         with torch.no_grad():
             self.hparams.codec.to(self.device).eval()
-            tokens, _ = self.hparams.codec.encode(wavs, wav_lens)
+            tokens = self.hparams.codec(wavs).permute(1, 2, 0)[
+                :, :, : self.hparams.num_codebooks
+            ]
         embeddings = self.modules.discrete_embedding_layer(tokens)
         att_w = self.modules.attention_mlp(embeddings)
         feats = torch.matmul(att_w.transpose(2, -1), embeddings).squeeze(-2)

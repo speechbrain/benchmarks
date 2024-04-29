@@ -56,7 +56,6 @@ random_chunk: True
 sentence_len: 3
 
 ### Config for Tokenizer
-### Config for Tokenizer
 # DAC parameters
 # model_type: [16khz, 24khz, 44khz, 44khz]
 # vocab_size: [1024, 1024, 1024, 1024]

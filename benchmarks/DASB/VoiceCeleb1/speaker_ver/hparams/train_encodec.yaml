@@ -66,7 +66,6 @@ bandwidth: 1.5
 num_codebooks: 2
 sample_rate: 24000
 # Feature parameters
-
 encoder_dim: 768
 
 # Number of speakers

@@ -297,7 +297,7 @@ class SpeakerBrain(sb.core.Brain):
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
         self.weights_optimizer = self.hparams.weights_opt_class(
-            [self.modules.attention_mlp.weights]
+            self.hparams.modules.attention_mlp.weights.parameters()
         )
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()

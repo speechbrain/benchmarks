@@ -51,7 +51,7 @@ lr_final: 0.0001
 mask_length: 10
 mask_prob: 0.65
 lr_weights: 0.01
-sample_rate: 16000
+original_sample_rate: 16000
 shuffle: True
 random_chunk: True
 sentence_len: 3
@@ -76,7 +76,7 @@ ssl_layer_num: [1,3,7,12,18,23]
 num_codebooks: 6
 deduplicate: [False,False,False,False,False,False]
 bpe_tokenizer_path: [null,null,null,null,null,null]
-
+sample_rate: 16000
 
 # Feature parameters
 

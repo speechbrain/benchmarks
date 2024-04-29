@@ -292,7 +292,7 @@ class SpeakerBrain(sb.core.Brain):
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
         self.weights_optimizer = self.hparams.weights_opt_class(
-            self.hparams.modules.attention_mlp.weights.parameters()
+            self.hparams.attention_mlp.weights.parameters()
         )
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
@@ -328,14 +328,14 @@ def dataio_prep(hparams):
     datasets = [train_data, valid_data]
     label_encoder = sb.dataio.encoder.CategoricalEncoder()
 
-    snt_len_sample = int(16000 * hparams["sentence_len"])
+    snt_len_sample = int(hparams['original_sample_rate'] * hparams["sentence_len"])
 
     # 2. Define audio pipeline:
     @sb.utils.data_pipeline.takes("wav", "start", "stop", "duration")
     @sb.utils.data_pipeline.provides("sig")
     def audio_pipeline(wav, start, stop, duration):
         if hparams["random_chunk"]:
-            duration_sample = int(duration * hparams["sample_rate"])
+            duration_sample = int(duration * hparams['original_sample_rate'])
             start = random.randint(0, duration_sample - snt_len_sample)
             stop = start + snt_len_sample
         else:

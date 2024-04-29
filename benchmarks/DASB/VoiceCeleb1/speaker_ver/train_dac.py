@@ -233,7 +233,6 @@ class SpeakerBrain(sb.core.Brain):
         # Feature extraction aned attention pooling
         with torch.no_grad():
             self.hparams.codec.to(self.device).eval()
-            tokens, _ = self.hparams.codec.encode(wavs, lens)
             tokens, _ = self.hparams.codec(
                 wavs.unsqueeze(1), n_quantizers=self.hparams.num_codebooks
             )

@@ -71,10 +71,10 @@ num_clusters: 1000
 # ssl_layer_num: [3, 7, 12, 23]
 # deduplicate: [False, False, False, False]
 # bpe_tokenizer_path: [null , null,  null, null]
-ssl_layer_num: [1,3,7,12,18,23]
+ssl_layer_num: [1, 3, 7, 12, 18, 23]
 num_codebooks: 6
-deduplicate: [False,False,False,False,False,False]
-bpe_tokenizer_path: [null,null,null,null,null,null]
+deduplicate: [False, False, False, False, False, False]
+bpe_tokenizer_path: [null, null, null, null, null, null]
 sample_rate: 16000
 
 # Feature parameters
@@ -86,28 +86,28 @@ out_n_neurons: 1211  #1211 for vox1  # 5994 for vox2, 7205 for vox1+vox2
 
 # Modules
 tokenizer_config:
-   SSL_layers: !ref <ssl_layer_num>
-   deduplicates: !ref <deduplicate>
-   bpe_tokenizers:  !ref <bpe_tokenizer_path>
+    SSL_layers: !ref <ssl_layer_num>
+    deduplicates: !ref <deduplicate>
+    bpe_tokenizers: !ref <bpe_tokenizer_path>
 
 ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
-   source: !ref <ssl_hub>
-   output_norm: False
-   freeze: !ref <freeze_ssl>
-   freeze_feature_extractor: !ref <freeze_feature_extractor>
-   output_all_hiddens: True
-   save_path: !ref <ssl_folder>
+    source: !ref <ssl_hub>
+    output_norm: False
+    freeze: !ref <freeze_ssl>
+    freeze_feature_extractor: !ref <freeze_feature_extractor>
+    output_all_hiddens: True
+    save_path: !ref <ssl_folder>
 
 codec: !new:speechbrain.lobes.models.huggingface_transformers.discrete_ssl.DiscreteSSL
-   save_path: !ref <kmeans_cache_dir>
-   ssl_model: !ref <ssl_model>
-   kmeans_dataset: !ref <kmeans_dataset>
-   kmeans_repo_id: !ref <kmeans_repo_id>
-   num_clusters: !ref <num_clusters>
+    save_path: !ref <kmeans_cache_dir>
+    ssl_model: !ref <ssl_model>
+    kmeans_dataset: !ref <kmeans_dataset>
+    kmeans_repo_id: !ref <kmeans_repo_id>
+    num_clusters: !ref <num_clusters>
 
 discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
     num_codebooks: !ref <num_codebooks>
-    vocab_size: !ref <vocab_size>
+    vocab_size: !ref <num_clusters>
     emb_dim: !ref <encoder_dim>
 
 attention_mlp: !new:custom_model.AttentionMLP

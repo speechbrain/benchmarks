@@ -68,7 +68,7 @@ encoder_dim: 768
 out_n_neurons: 1211  #1211 for vox1  # 5994 for vox2, 7205 for vox1+vox2
 
 # Modules
-codec: !new:speechbrain.lobes.models.speechtokenizer_interface.SpeechTokenizer_interface
+codec: !new:speechbrain.lobes.models.discrete.speechtokenizer_interface.SpeechTokenizer_interface
     source: fnlp/SpeechTokenizer  # Only the 24kHz version supports mono audio
     save_path: !ref <save_folder>
 

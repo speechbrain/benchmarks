@@ -41,7 +41,7 @@ def compute_embedding(wavs, wav_lens):
         )
         speaker_brain.hparams.codec.to(speaker_brain.device).eval()
         tokens = speaker_brain.hparams.codec(wavs).permute(1, 2, 0)[
-            :, :, : speaker_brain.num_codebooks
+            :, :, : speaker_brain.hparams.num_codebooks
         ]
         embeddings = speaker_brain.modules.discrete_embedding_layer(tokens)
         att_w = speaker_brain.modules.attention_mlp(embeddings)
@@ -232,7 +232,7 @@ class SpeakerBrain(sb.core.Brain):
         with torch.no_grad():
             self.hparams.codec.to(self.device).eval()
             tokens = self.hparams.codec(wavs).permute(1, 2, 0)[
-                :, :, : hparams.num_codebooks
+                :, :, : self.hparams.num_codebooks
             ]
         embeddings = self.modules.discrete_embedding_layer(tokens)
         att_w = self.modules.attention_mlp(embeddings)

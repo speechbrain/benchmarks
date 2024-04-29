@@ -40,10 +40,12 @@ def compute_embedding(wavs, wav_lens):
             wav_lens.to(speaker_brain.device),
         )
         speaker_brain.hparams.codec.to(speaker_brain.device).eval()
-        tokens, _, _ = speaker_brain.hparams.codec(wavs, wav_lens,**speaker_brain.hparams['tokenizer_config'])
+        tokens, _, _ = speaker_brain.hparams.codec(
+            wavs, wav_lens, **speaker_brain.hparams["tokenizer_config"]
+        )
         embeddings = speaker_brain.modules.discrete_embedding_layer(tokens)
         att_w = speaker_brain.modules.attention_mlp(embeddings)
-        feats = torch.matmul(att_w.transpose(2,-1), embeddings).squeeze(-2)
+        feats = torch.matmul(att_w.transpose(2, -1), embeddings).squeeze(-2)
         embeddings = speaker_brain.modules.embedding_model(feats, wav_lens)
     return embeddings.squeeze(1)
 
@@ -197,7 +199,6 @@ def dataio_prep_verif(params):
         resampled = resampled.transpose(0, 1).squeeze(1)
         return resampled
 
-
     sb.dataio.dataset.add_dynamic_item(datasets, audio_pipeline)
 
     # 3. Set output:
@@ -226,14 +227,16 @@ class SpeakerBrain(sb.core.Brain):
         """
         batch = batch.to(self.device)
         wavs, lens = batch.sig
-        
+
         # Feature extraction aned attention pooling
         with torch.no_grad():
             self.hparams.codec.to(self.device).eval()
-            tokens, _, _ = self.hparams.codec(wavs, lens,**self.hparams['tokenizer_config'])
+            tokens, _, _ = self.hparams.codec(
+                wavs, lens, **self.hparams["tokenizer_config"]
+            )
         embeddings = self.modules.discrete_embedding_layer(tokens)
         att_w = self.modules.attention_mlp(embeddings)
-        feats = torch.matmul(att_w.transpose(2,-1), embeddings).squeeze(-2)
+        feats = torch.matmul(att_w.transpose(2, -1), embeddings).squeeze(-2)
         # Embeddings + speaker classifier
         embeddings = self.modules.embedding_model(feats)
         outputs = self.modules.classifier(embeddings)
@@ -316,26 +319,26 @@ def dataio_prep(hparams):
 
     # 1. Declarations:
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["train_data"],
-        replacements={"data_root": data_folder},
+        csv_path=hparams["train_data"], replacements={"data_root": data_folder},
     )
 
     valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["enrol_data"],
-        replacements={"data_root": data_folder},
+        csv_path=hparams["dev_data"], replacements={"data_root": data_folder},
     )
 
     datasets = [train_data, valid_data]
     label_encoder = sb.dataio.encoder.CategoricalEncoder()
 
-    snt_len_sample = int(hparams['original_sample_rate'] * hparams["sentence_len"])
+    snt_len_sample = int(
+        hparams["original_sample_rate"] * hparams["sentence_len"]
+    )
 
     # 2. Define audio pipeline:
     @sb.utils.data_pipeline.takes("wav", "start", "stop", "duration")
     @sb.utils.data_pipeline.provides("sig")
     def audio_pipeline(wav, start, stop, duration):
         if hparams["random_chunk"]:
-            duration_sample = int(duration * hparams['original_sample_rate'])
+            duration_sample = int(duration * hparams["original_sample_rate"])
             start = random.randint(0, duration_sample - snt_len_sample)
             stop = start + snt_len_sample
         else:
@@ -351,7 +354,6 @@ def dataio_prep(hparams):
         )(sig)
         resampled = resampled.transpose(0, 1).squeeze(1)
         return resampled
-
 
     sb.dataio.dataset.add_dynamic_item(datasets, audio_pipeline)
 

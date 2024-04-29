@@ -316,12 +316,12 @@ def dataio_prep(hparams):
 
     # 1. Declarations:
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["train_annotation"],
+        csv_path=hparams["train_data"],
         replacements={"data_root": data_folder},
     )
 
     valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["valid_annotation"],
+        csv_path=hparams["enrol_data"],
         replacements={"data_root": data_folder},
     )
 

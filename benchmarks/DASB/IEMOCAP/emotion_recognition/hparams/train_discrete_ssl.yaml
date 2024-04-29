@@ -116,7 +116,7 @@ codec: !new:speechbrain.lobes.models.huggingface_transformers.discrete_ssl.Discr
 
 discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
     num_codebooks: !ref <num_codebooks>
-    vocab_size: !ref <vocab_size>
+    vocab_size: !ref <num_clusters>
     emb_dim: !ref <encoder_dim>
 
 attention_mlp: !new:custom_model.AttentionMLP

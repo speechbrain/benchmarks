@@ -15,7 +15,7 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # Dataset will be downloaded to the `data_original`
 data_folder: !PLACEHOLDER # e.g., /path/to/IEMOCAP_full_release
-output_folder: !ref results/IEMOCAP/IEMOCAP_full_release/<seed>
+output_folder: !ref results/IEMOCAP/IEMOCAP_full_release/dac/<seed>
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 

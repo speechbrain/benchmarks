@@ -108,19 +108,19 @@ epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
 # Modules
 # DAC model (see https://github.com/descriptinc/descript-audio-codec)
 codec: !new:speechbrain.lobes.models.discrete.dac.DAC
-    model_type: !ref <model_type>
-    model_bitrate: !ref <model_bitrate>
-    load_pretrained: True
-    tag: latest
+   model_type: !ref <model_type>
+   model_bitrate: !ref <model_bitrate>
+   load_pretrained: True
+   tag: latest
 
 discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
-    num_codebooks: !ref <num_codebooks>
-    vocab_size: !ref <vocab_size>
-    emb_dim: !ref <encoder_dim>
+   num_codebooks: !ref <num_codebooks>
+   vocab_size: !ref <vocab_size>
+   emb_dim: !ref <encoder_dim>
 
 attention_mlp: !new:custom_model.AttentionMLP
-    input_dim: !ref <encoder_dim>
-    hidden_dim: !ref <encoder_dim>
+   input_dim: !ref <encoder_dim>
+   hidden_dim: !ref <encoder_dim>
 
 enc: !new:speechbrain.nnet.RNN.LSTM
    input_shape: [Null, Null, !ref <encoder_dim>]

@@ -171,9 +171,8 @@ def dataio_prep(hparams):
         resampled = torchaudio.transforms.Resample(
             info.sample_rate, hparams["sample_rate"],
         )(sig)
-#         resampled = resampled.unsqueeze(0)
+        #         resampled = resampled.unsqueeze(0)
         return resampled
-
 
     # Initialization of the label encoder. The label encoder assignes to each
     # of the observed label a unique index (e.g, 'spk01': 0, 'spk02': 1, ..)

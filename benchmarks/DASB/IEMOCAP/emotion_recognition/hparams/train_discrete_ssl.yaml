@@ -19,8 +19,6 @@ output_folder: !ref results/IEMOCAP/IEMOCAP_full_release/discrete_ssl/<seed>
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 
-
-
 ### Configuration for  discrete SSL model
 ssl_hub: facebook/hubert-large-ll60k
 ssl_folder: !ref <save_folder>/hubert_checkpoint

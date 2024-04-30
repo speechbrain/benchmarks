@@ -129,7 +129,7 @@ class ASR(sb.Brain):
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
         self.weights_optimizer = self.hparams.weights_opt_class(
-              self.hparams.attention_mlp.parameters()
+            self.hparams.attention_mlp.parameters()
         )
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()

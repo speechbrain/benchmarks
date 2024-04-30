@@ -204,7 +204,7 @@ def dataio_prepare(hparams):
         resampled = torchaudio.transforms.Resample(
             info.sample_rate, hparams["sample_rate"],
         )(sig)
-#         resampled = resampled.unsqueeze(0)
+        #         resampled = resampled.unsqueeze(0)
         return resampled
 
     sb.dataio.dataset.add_dynamic_item(datasets, audio_pipeline)

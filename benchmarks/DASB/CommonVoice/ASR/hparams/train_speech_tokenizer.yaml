@@ -103,17 +103,17 @@ epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
 
 # Modules
 codec: !new:speechbrain.lobes.models.discrete.speechtokenizer_interface.SpeechTokenizer_interface
-    source: fnlp/SpeechTokenizer  # Only the 24kHz version supports mono audio
-    save_path: !ref <save_folder>
+   source: fnlp/SpeechTokenizer  # Only the 24kHz version supports mono audio
+   save_path: !ref <save_folder>
 
 discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
-    num_codebooks: !ref <num_codebooks>
-    vocab_size: !ref <vocab_size>
-    emb_dim: !ref <encoder_dim>
+   num_codebooks: !ref <num_codebooks>
+   vocab_size: !ref <vocab_size>
+   emb_dim: !ref <encoder_dim>
 
 attention_mlp: !new:custom_model.AttentionMLP
-    input_dim: !ref <encoder_dim>
-    hidden_dim: !ref <encoder_dim>
+   input_dim: !ref <encoder_dim>
+   hidden_dim: !ref <encoder_dim>
 
 
 enc: !new:speechbrain.nnet.RNN.LSTM

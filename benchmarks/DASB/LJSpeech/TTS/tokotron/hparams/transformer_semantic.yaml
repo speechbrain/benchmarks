@@ -52,7 +52,7 @@ input: text
 number_of_epochs: 1000
 batch_size: 16
 grad_accumulation_factor: 1
-max_grad_norm: 5.0
+max_grad_norm: 0.01
 sorting: random
 num_workers: 4
 skip_prep: False
@@ -70,7 +70,7 @@ eos_width: 1
 audio_token_shift: 0
 
 # stages related parameters
-lr: 0.001
+lr: 0.0005
 lr_warmup_steps: 10000
 lr_annealing_mode: step
 guided_attention_weight: 50.0
@@ -96,7 +96,7 @@ beam_size: 5
 # Feature parameters
 sample_rate: 22050
 model_sample_rate: 16000
-max_audio_length: 700
+max_audio_length: 1000
 infer_max_audio_length: !ref <max_audio_length>
 debug_infer_max_audio_length: 10
 

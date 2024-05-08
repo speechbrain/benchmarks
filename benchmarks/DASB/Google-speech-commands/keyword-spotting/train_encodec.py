@@ -65,6 +65,26 @@ class SpeakerBrain(sb.core.Brain):
             self.error_metrics.append(uttid, predictions, command, lens)
 
         return loss
+    
+    def on_stage_start(self, stage, epoch=None):
+        """Gets called at the beginning of each epoch.
+        Arguments
+        ---------
+        stage : sb.Stage
+            One of sb.Stage.TRAIN, sb.Stage.VALID, or sb.Stage.TEST.
+        epoch : int
+            The currently-starting epoch. This is passed
+            `None` during the test stage.
+        """
+
+        # Set up statistics trackers for this stage
+        self.loss_metric = sb.utils.metric_stats.MetricStats(
+            metric=sb.nnet.losses.nll_loss
+        )
+
+        # Set up evaluation-only statistics trackers
+        if stage != sb.Stage.TRAIN:
+            self.error_metrics = self.hparams.error_stats()
 
     def on_stage_end(self, stage, stage_loss, epoch=None):
         """Gets called at the end of an epoch.

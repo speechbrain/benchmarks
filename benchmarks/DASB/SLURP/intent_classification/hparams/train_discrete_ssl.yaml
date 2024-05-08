@@ -29,6 +29,17 @@ skip_prep: False
 compute_cost: !name:speechbrain.nnet.losses.nll_loss
 
 
+### Configuration for  discrete SSL model
+ssl_hub: facebook/hubert-large-ll60k
+ssl_folder: !ref <save_folder>/hubert_checkpoint
+kmeans_repo_id: poonehmousavi/SSL_Quantization
+kmeans_cache_dir: !ref <save_folder>/kmeans_checkpoint
+kmeans_dataset: LibriSpeech-100-360-500
+freeze_ssl: True
+freeze_feature_extractor: True
+num_clusters: 1000
+
+
 ### Config for Tokenizer
 # Layer number should be among the supported layers for discrete SSL models(kmenas  model should be available for that layer)
 # ssl_layer_num: [3, 7, 12, 23]

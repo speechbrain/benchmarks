@@ -83,7 +83,7 @@ gate_loss_max_weight: 1.
 
 # Inference parameters
 inference_mode: autoregressive
-eos_mode: token
+eos_mode: gate
 decoder_mode: autoregressive
 scale_factor: 4
 

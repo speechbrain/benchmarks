@@ -11,7 +11,7 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # Use 12 for V2 12 task and 35 for V2 35 task
 number_of_commands: 12
-output_folder: !ref results/xvect_<number_of_commands>/<seed>
+output_folder: !ref results/ks/xvect_<number_of_commands>/<seed>
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 
@@ -19,9 +19,9 @@ train_log: !ref <output_folder>/train_log.txt
 # Data files
 # Data files
 data_folder: !PLACEHOLDER  # e.g. /path/to/GSC
-train_annotation: !ref <save_folder>/train.csv
-valid_annotation: !ref <save_folder>/valid.csv
-test_annotation: !ref <save_folder>/test.csv
+train_annotation: !ref <output_folder>/train.csv
+valid_annotation: !ref <output_folder>/valid.csv
+test_annotation: !ref <output_folder>/test.csv
 
 
 ### Config for Tokenizer

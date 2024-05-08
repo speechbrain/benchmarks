@@ -1432,8 +1432,13 @@ class TokotronLoss(nn.Module):
             audio_eos = self.audio_eos.unsqueeze(0).expand(
                 batch_size, self.eos_width, heads
             )
+            features = [audio_tokens + self.audio_token_shift, audio_eos]
+            # TODO: Fix concat_padded_features to use the correct dtype
+            # Adding a workaround here because the core cannot be modified
+            # for the benchmark
+            features = [item.float() for item in features]
             audio_tokens, audio_length = concat_padded_features(
-                [audio_tokens + self.audio_token_shift, audio_eos],
+                features,
                 [audio_length, padding_lengths],
                 dim=1,
             )

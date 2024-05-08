@@ -11,7 +11,7 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # Use 12 for V2 12 task and 35 for V2 35 task
 number_of_commands: 12
-output_folder: !ref results/ks/xvect_<number_of_commands>/enocdec/<seed>
+output_folder: !ref results/ks/xvect_<number_of_commands>/dac/<seed>
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 
@@ -25,14 +25,17 @@ test_annotation: !ref <output_folder>/test.csv
 
 
 ### Config for Tokenizer
-# EnCodec parameters
-# sample_rate: [24000, 24000, 24000, 24000]
+### Config for Tokenizer
+# DAC parameters
+# model_type: [16khz, 24khz, 44khz, 44khz]
 # vocab_size: [1024, 1024, 1024, 1024]
-# bandwidth: [1.5, 3.0, 6.0, 12.0, 24.0]
-# num_codebooks: [2, 4, 8, 16, 32]
+# model_bitrate: [8kbps, 8kbps, 8kbps, 16kbps]
+# max_num_codebooks: [12, 32, 9, 18]
+# embedding_dim: [1024, 1024, 1024, 128]
+model_type: 24khz
 vocab_size: 1024
-bandwidth: 1.5
-num_codebooks: 2
+model_bitrate: 8kbps
+num_codebooks: 2  # NOTE: must be smaller or equal to the maximum number of codebooks for the given model type
 sample_rate: 24000
 # Feature parameters
 encoder_dim: 768
@@ -73,15 +76,12 @@ dataloader_options:
 
 
 # Modules
-# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
-codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
-    source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
-    save_path: !ref <save_folder>
-    sample_rate: !ref <sample_rate>
-    bandwidth: !ref <bandwidth>
-    flat_embeddings: False
-    freeze: True
-    renorm_embeddings: False
+# DAC model (see https://github.com/descriptinc/descript-audio-codec)
+codec: !new:speechbrain.lobes.models.discrete.dac.DAC
+    model_type: !ref <model_type>
+    model_bitrate: !ref <model_bitrate>
+    load_pretrained: True
+    tag: latest
 
 discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
     num_codebooks: !ref <num_codebooks>

@@ -100,6 +100,7 @@ def prepare_libritts(
     logger.info(
         f"Creating {save_json_train}, {save_json_valid}, and {save_json_test}"
     )
+    Path(save_folder).mkdir(parents=True, exist_ok=True)
     extract_features_context = None
     extract_features_folder = None
     if extract_features:
@@ -309,7 +310,7 @@ def create_json(
 
     # Feature Extraction
     if extract_features:
-        extract_features_folder.mkdir(exist_ok=True)
+        extract_features_folder.mkdir(exist_ok=True, parents=True)
         prepare_features(
             data=json_dict,
             data_folder=data_folder,

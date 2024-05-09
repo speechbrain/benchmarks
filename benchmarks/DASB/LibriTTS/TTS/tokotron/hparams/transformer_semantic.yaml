@@ -14,7 +14,7 @@ train_log: !ref <output_folder>/train_log.txt
 data_folder: !PLACEHOLDER # e.g., /path/to/LibriSpeech
 prepare_save_folder: !ref <data_folder>/prepared
 pretrained_model_save_folder: !ref <prepare_save_folder>
-vocoder_model_name: unithifigan-hubert
+vocoder_model_name: unithifigan-hubert-ms
 vocoder_model_path: !ref <pretrained_model_save_folder>/<vocoder_model_name>
 prepare_archive_path: null
 prepare_skip_ignore_folders: False
@@ -41,7 +41,7 @@ samples_interval: 5
 
 freeze_token_model: True
 ssl_model_type: hubert
-token_model_src: facebook/hubert-base-ls960
+token_model_src: facebook/hubert-large-ll60k
 g2p_src: flexthink/soundchoice-g2p
 token_model_kmeans_src: poonehmousavi/SSL_Quantization
 token_model_kmeans_dataset: LibriSpeech-100-360-500

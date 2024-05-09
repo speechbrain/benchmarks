@@ -193,10 +193,12 @@ class HierarchicalUnitWrapper(torch.nn.Module):
         The layers that will be used. If omitted, all layers will be used
     offset : int, optional
         The offset added globally to all layers
+    use_length : False
+        Whether to use length
     """
 
     def __init__(
-        self, model, available_layers, num_units, layers=None, offset=0
+        self, model, available_layers, num_units, layers=None, offset=0, use_length=False
     ):
         super().__init__()
         self.model = model
@@ -218,6 +220,7 @@ class HierarchicalUnitWrapper(torch.nn.Module):
         self.offset = offset
         if hasattr(self.model, "tokenize"):
             self.model.tokenize = False
+        self.use_length = use_length
 
     def compute_offset(self):
         """Computes offsets for each layer"""
@@ -228,11 +231,15 @@ class HierarchicalUnitWrapper(torch.nn.Module):
         offset = torch.tensor(layers_idx, device=self.device) * self.num_units
         return offset[None, None, :]
 
-    def forward(self, units, length):
+    def forward(self, units, length, **kwargs):
         units_with_offset = (
             units + self.layer_offset.to(units.device) + self.offset
         )
-        return self.model(units_with_offset, length)
+        if self.use_length:
+            result = self.model(units_with_offset, length, **kwargs)
+        else:
+            result = self.model(units_with_offset, **kwargs)
+        return result
 
     def decode_batch_with_details(self, units):
         units_with_offset = (

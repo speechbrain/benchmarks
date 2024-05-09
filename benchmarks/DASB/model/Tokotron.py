@@ -395,7 +395,7 @@ class TokotronTransformerAutoregressiveInference(nn.Module):
         """
         self.decoder = model.decoder
 
-    def forward(self, enc_out, length):
+    def forward(self, enc_out, length, emb=None):
         """Performs autoregressive inference
 
         Arguments
@@ -408,6 +408,10 @@ class TokotronTransformerAutoregressiveInference(nn.Module):
 
         length : torch.Tensor
             Relative lengths
+
+        emb : dict, optional
+            a [str, tensor] dictionary of embeddings (e.g. speaker, language,
+            etc)
 
         Returns
         -------
@@ -930,6 +934,21 @@ class TokotronTransformerModel(nn.Module):
     scale_factor : float, optional
         forward decoding only - the scaling factor for
         targets in non-autoregressive inference
+
+    emb : dict, optional
+        Available embeddings
+
+        Example:
+        {
+            "spk": {
+                "kind": "pretrained"
+                "dim" : 512
+            },
+            "lang": {
+                "kind": "trained",
+                "count" : 2
+            }
+        }
     """
 
     def __init__(
@@ -962,12 +981,14 @@ class TokotronTransformerModel(nn.Module):
         audio_token_shift=0,
         decoder_mode=DecoderMode.AUTOREGRESSIVE,
         scale_factor=5.0,
+        emb=None
     ):
         super().__init__()
         self.in_emb = Embedding(
             num_embeddings=input_num_tokens, embedding_dim=d_model,
         )
         self.eos_mode = EosMode(eos_mode)
+        self.d_model = d_model
         self.audio_token_shift = 1 if eos_mode == EosMode.TOKEN else 0
         self.encoder = TransformerEncoder(
             num_layers=enc_num_layers,
@@ -1035,6 +1056,38 @@ class TokotronTransformerModel(nn.Module):
         self.inference = inference
         self.inference.bind(self)
         self.scale_factor = scale_factor
+        if emb is not None:
+            self.emb_proj = self._build_emb_proj(emb)
+            self.vocoder_emb = [
+                key for key, emb_config in emb.items()
+                if emb_config.get("vocoder")]
+
+    def _build_emb_proj(self, emb):
+        """Builds the embedding projection
+        
+        Arguments
+        ---------
+        emb : torch.Tensor
+            """
+        emb_proj = {}
+        for key, emb_config in emb.items():
+            kind = emb_config.get("kind", "learned")
+            if kind == "pretrained":
+                emb_mod = Linear(
+                    input_size=emb_config.get("dim", self.d_model),
+                    n_neurons=self.d_model
+                )
+            elif kind == "learned":
+                emb_count = emb_config["count"]
+                emb_dim = emb_config.get("dim", self.d_model)
+                emb_mod = Embedding(
+                    num_embeddings=emb_count,
+                    embedding_dim=emb_dim
+                )
+            else:
+                raise ValueError(f"Invallid embedding kind: {kind}")
+            emb_proj[key] = emb_mod
+        return nn.ModuleDict(emb_proj)
 
     def __setattr__(self, name, value):
         """Prevents the vocoder from being saved in state_dict() - it is not typically fine-tuned
@@ -1098,7 +1151,7 @@ class TokotronTransformerModel(nn.Module):
         self.decoder.show_inference_progress = value
 
     def forward(
-        self, input_tokens, input_length, audio_tokens, audio_length,
+        self, input_tokens, input_length, audio_tokens, audio_length, emb=None
     ):
         """Computes the forward pass, for training
 
@@ -1112,12 +1165,15 @@ class TokotronTransformerModel(nn.Module):
         audio_tokens : torch.Tensor
             a (Batch x Length) tensor of output audio tokens (e.g. encodec)
         audio_length : torch.Tensor
-            a 1-D tensor of relative output lengths"""
+            a 1-D tensor of relative output lengths
+        emb : dict
+            a [str, tensor] dictionary of embeddings (e.g. speaker, language,
+            etc)
+        """
 
         src, src_key_padding_mask, pos_embs_encoder = self.process_inputs(
             input_tokens, input_length
         )
-
         enc_out, enc_self_attn = self.encoder(
             src=src,
             src_mask=None,
@@ -1130,7 +1186,7 @@ class TokotronTransformerModel(nn.Module):
         else:
             tgt = scale(enc_out, self.scale_factor)
             tgt_length = input_length
-
+        enc_out = self.add_emb(enc_out, emb)
         dec_out = self.decoder(
             enc_out=enc_out,
             tgt=tgt,
@@ -1148,6 +1204,23 @@ class TokotronTransformerModel(nn.Module):
             dec_attn=dec_out.dec_attn,
             alignments=dec_out.alignments,
         )
+    
+    def add_emb(self, src, emb):
+        """Adds embedding projections to the source tensor
+
+        Arguments
+        ---------
+        src : torch.Tensor
+            the source tensor
+        emb : dict
+            the embedding dictionary
+        """
+        result = src
+        if emb is not None:
+            for key, emb_t in emb.items():
+                emb_proj = self.emb_proj[key](emb_t)
+                result = result + emb_proj.unsqueeze(1)
+        return result
 
     def process_inputs(self, input_tokens, input_length):
         """Computes embeddings, the padding mask and encoder
@@ -1187,7 +1260,7 @@ class TokotronTransformerModel(nn.Module):
         ).logical_not()
         return src, src_key_padding_mask, pos_embs_encoder
 
-    def infer(self, input_tokens, input_length):
+    def infer(self, input_tokens, input_length, emb=None):
         """Performs end-to-end inference
 
         Arguments
@@ -1197,6 +1270,10 @@ class TokotronTransformerModel(nn.Module):
             characters or phonemes
         input_length : torch.Tensor
             a 1-D tensor of relative input lengths
+        emb : dict, optional
+            a [str, tensor] dictionary of embeddings (e.g. speaker, language,
+            etc)
+
 
         Returns
         -------
@@ -1229,6 +1306,7 @@ class TokotronTransformerModel(nn.Module):
             src_key_padding_mask=src_key_padding_mask,
             pos_embs=pos_embs_encoder,
         )
+        enc_out = self.add_emb(enc_out, emb)
         dec_out = self.inference(enc_out, input_length)
         audio_tokens, audio_length = dec_out.audio_tokens, dec_out.length
         wav, wav_length = None, None
@@ -1237,7 +1315,19 @@ class TokotronTransformerModel(nn.Module):
                 audio_tokens, audio_length
             )
         if self.vocoder is not None:
-            vocoder_out = self.vocoder(audio_tokens, dec_out.length)
+            if emb is None:
+                vocoder_emb = {}
+            else:
+                vocoder_emb = {
+                    key: value
+                    for key, value in emb.items()
+                    if key in self.vocoder_emb
+                }
+            vocoder_out = self.vocoder(
+                audio_tokens,
+                dec_out.length,
+                **vocoder_emb
+            )
             if isinstance(vocoder_out, tuple):
                 wav, wav_length = vocoder_out
             else:

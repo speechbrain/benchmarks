@@ -113,7 +113,7 @@ class FeatureExtractor:
         batch: speechbrain.dataio.batch.PaddedBatch
             a batch
         """
-        batch_dict = batch.as_dict()
+        batch_dict = as_dict(batch)
         ids = batch_dict[self.id_key]
         features = self.pipeline.compute_outputs(batch_dict)
 
@@ -420,3 +420,11 @@ def _unpack_feature(feature):
         feature = undo_padding(feature.data, feature.lengths)
         feature = [torch.tensor(item, device=device) for item in feature]
     return feature
+
+
+# TODO: This is not elegant. The original implementation had 
+# as_dict() added to PaddedBatch. The benchmark has the limitation
+# of not being able to enhance the core.
+def as_dict(batch):
+    """Converts a batch to a dictionary"""
+    return {key: getattr(batch, key) for key in batch._PaddedBatch__keys}

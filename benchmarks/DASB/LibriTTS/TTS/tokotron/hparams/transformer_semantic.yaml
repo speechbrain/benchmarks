@@ -61,6 +61,7 @@ ckpt_interval_minutes: 30 # save checkpoint every N min
 input: text
 number_of_epochs: 1000
 batch_size: 16
+extract_features_batch_size: 32
 grad_accumulation_factor: 1
 max_grad_norm: 0.01
 sorting: random
@@ -204,7 +205,8 @@ token_model_kwargs:
 
 extract_features_opts:
     dataloader_opts:
-        batch_size: !ref <batch_size>
+        batch_size: !ref <extract_features_batch_size>
+        num_workers: !ref <num_workers>
     token_model: !ref <token_model>
     token_model_kwargs: !ref <token_model_kwargs>
     sample_rate: !ref <sample_rate>

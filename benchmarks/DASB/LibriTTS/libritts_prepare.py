@@ -450,7 +450,8 @@ def prepare_features(
     for dynamic_item in dynamic_items:
         feature_extractor.add_dynamic_item(dynamic_item)
     feature_extractor.set_output_features(features)
-    feature_extractor.extract(dataset)
+    with torch.no_grad():
+        feature_extractor.extract(dataset)
 
 
 def get_context(extract_features, extract_features_opts, device):

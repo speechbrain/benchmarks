@@ -28,9 +28,6 @@ skip_prep: False
 
 compute_cost: !name:speechbrain.nnet.losses.nll_loss
 
-
-encoder_dim: 768
-
 # Training parameters
 precision: fp32
 number_of_epochs: 20

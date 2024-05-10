@@ -49,7 +49,8 @@ def get_silence_token(
 
     audio = torch.zeros(1, sample_length, device=device)
     length = torch.ones(1, device=device)
-    tokens, _, _ = model(audio, length, **model_kwargs)
+    result = model(audio, length, **model_kwargs)
+    tokens = result[0]
     silence_tokens = tokens.squeeze(0).mode(0).values
     silence_emb = None
     if extract_emb:

@@ -27,6 +27,7 @@ ssl_hub: facebook/hubert-large-ll60k
 ssl_folder: !ref <output_folder>/ssl_checkpoints
 # Feature parameters
 encoder_dim: 1024
+sample_rate: 16000
 
 
 # Percentage of files used for validation and test

@@ -319,11 +319,11 @@ def dataio_prep(hparams):
 
     # 1. Declarations:
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["train_data"], replacements={"data_root": data_folder},
+        csv_path=hparams["train_annotation"], replacements={"data_root": data_folder},
     )
 
     valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["dev_data"], replacements={"data_root": data_folder},
+        csv_path=hparams["valid_annotation"], replacements={"data_root": data_folder},
     )
 
     datasets = [train_data, valid_data]
@@ -446,8 +446,8 @@ if __name__ == "__main__":
         speaker_brain.hparams.epoch_counter,
         train_data,
         valid_data,
-        train_loader_kwargs=hparams["train_dataloader_opts"],
-        valid_loader_kwargs=hparams["enrol_dataloader_opts"],
+        train_loader_kwargs=hparams["dataloader_options"],
+        valid_loader_kwargs=hparams["dataloader_options"],
     )
 
     if hparams["do_verification"]:

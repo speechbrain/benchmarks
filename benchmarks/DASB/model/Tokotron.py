@@ -1074,7 +1074,7 @@ class TokotronTransformerModel(nn.Module):
             kind = emb_config.get("kind", "learned")
             if kind == "pretrained":
                 emb_mod = Linear(
-                    input_size=emb_config.get("dim", self.d_model),
+                    input_size=emb_config.get("dim", self.d_model) + self.d_model,
                     n_neurons=self.d_model
                 )
             elif kind == "learned":
@@ -1218,8 +1218,18 @@ class TokotronTransformerModel(nn.Module):
         result = src
         if emb is not None:
             for key, emb_t in emb.items():
-                emb_proj = self.emb_proj[key](emb_t)
-                result = result + emb_proj.unsqueeze(1)
+                batch_size, seq_len, feat_size = src.shape
+                emb_size = emb_t.size(-1)
+                emb_t_norm = nn.functional.layer_norm(
+                    emb_t,
+                    emb_t.shape
+                )
+                emb_exp = emb_t_norm.unsqueeze(1).expand(batch_size, seq_len, emb_size)
+                src_norm = nn.functional.layer_norm(
+                    src, src.shape
+                )
+                src_with_emb = torch.cat([src_norm, emb_exp], dim=-1)
+                result = self.emb_proj[key](src_with_emb)
         return result
 
     def process_inputs(self, input_tokens, input_length):

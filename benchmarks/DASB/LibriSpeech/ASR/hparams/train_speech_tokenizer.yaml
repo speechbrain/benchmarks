@@ -1,10 +1,9 @@
 # ################################
-# Recipe for training an SSL-based ctc ASR system with librispeech.
+# Recipe for training an discrete-input ctc ASR system with librispeech.
 # Decoding is performed with ctc greedy or LM-rescored decoder.
 #
 # Authors
-# * Salah Zaiem 2023
-# * Youcef Kemiche 2023
+# * Pooneh Mousavi 2024
 # ################################
 
 # Seed needs to be set at top of yaml, before objects with parameters are made
@@ -54,7 +53,7 @@ sample_rate: 24000
 
 # Feature parameters
 
-encoder_dim: 768
+encoder_dim: 1024
 
 # Dataloader options
 train_dataloader_opts:
@@ -69,7 +68,7 @@ test_dataloader_opts:
 # Model parameters
 activation: !name:torch.nn.Sigmoid
 dnn_layers: 1
-dnn_neurons: 768
+dnn_neurons: 1024
 freeze_encoder: True
 
 # Outputs
@@ -138,7 +137,7 @@ modules:
    discrete_embedding_layer: !ref <discrete_embedding_layer>
 
 model: !new:torch.nn.ModuleList
-   - [!ref <enc>, !ref <ctc_lin>, !ref <discrete_embedding_layer>]
+   - [!ref <enc>, !ref <ctc_lin>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 model_opt_class: !name:torch.optim.Adam
    lr: !ref <lr>
@@ -152,12 +151,6 @@ lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
    annealing_factor: 0.8
    patient: 0
 
-lr_annealing_weights: !new:speechbrain.nnet.schedulers.NewBobScheduler
-   initial_value: !ref <lr_weights>
-   improvement_threshold: 0.0025
-   annealing_factor: 0.9
-   patient: 0
-
 label_encoder: !new:speechbrain.dataio.encoder.CTCTextEncoder
 
 checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
@@ -165,7 +158,6 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
    recoverables:
       model: !ref <model>
       scheduler_model: !ref <lr_annealing_model>
-      scheduler_encoder: !ref <lr_annealing_weights>
       attention_mlp: !ref <attention_mlp>
       codec: !ref <codec>
       discrete_embedding_layer: !ref <discrete_embedding_layer>

@@ -3,9 +3,7 @@
 The embeddings are learned using the ECAPA-TDNN architecture
 
 Authors
- * Adel Moumen 2024
- * Salah Zaiem 2023
- * Youcef Kemiche 2023
+ * Pooneh Mousavi 2024
 """
 
 import os
@@ -294,22 +292,22 @@ class SpeakerBrain(sb.core.Brain):
 
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
-        self.weights_optimizer = self.hparams.weights_opt_class(
-            self.hparams.attention_mlp.parameters()
-        )
+        # self.weights_optimizer = self.hparams.weights_opt_class(
+        #     self.hparams.attention_mlp.parameters()
+        # )
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
         )
         self.optimizers_dict = {
-            "weights_optimizer": self.weights_optimizer,
+            # "weights_optimizer": self.weights_optimizer,
             "model_optimizer": self.model_optimizer,
         }
         # Initializing the weights
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)
-            self.checkpointer.add_recoverable(
-                "weights_opt", self.weights_optimizer
-            )
+            # self.checkpointer.add_recoverable(
+            #     "weights_opt", self.weights_optimizer
+            # )
 
 
 def dataio_prep(hparams):

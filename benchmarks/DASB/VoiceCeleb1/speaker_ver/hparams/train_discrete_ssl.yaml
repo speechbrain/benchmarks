@@ -3,8 +3,7 @@
 # Embeddings are used using the ECAPA-TDNN network
 #
 # Authors
-# * Salah Zaiem 2023
-# * Youcef Kemiche 2023
+# * Pooneh Mousavi 2024
 # ################################
 
 # Basic parameters
@@ -15,6 +14,8 @@ save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 # Data files
 data_folder: !PLACEHOLDER  # e.g. /path/to/Voxceleb
+train_annotation: !ref <save_folder>/train.csv
+valid_annotation: !ref <save_folder>/dev.csv
 
 verification_file: https://www.robots.ox.ac.uk/~vgg/data/voxceleb/meta/veri_test2.txt #path/to/veri_test2.txt
 
@@ -46,7 +47,9 @@ precision: fp32
 number_of_epochs: 15
 batch_size: 8
 lr: 0.001
-lr_final: 0.0001
+base_lr: 0.00000001
+max_lr: !ref <lr>
+step_size: 65000
 mask_length: 10
 mask_prob: 0.65
 lr_weights: 0.01
@@ -78,8 +81,10 @@ bpe_tokenizer_path: [null, null, null, null, null, null]
 sample_rate: 16000
 
 # Feature parameters
-
-encoder_dim: 768
+encoder_dim: 1024
+# If set to True, the encoder_dim should be set to the dim of the tokenizer. For encodec it is 128.
+init_embedding: False 
+freeze_embedding: False
 
 # Number of speakers
 out_n_neurons: 1211  #1211 for vox1  # 5994 for vox2, 7205 for vox1+vox2
@@ -109,6 +114,8 @@ discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
     num_codebooks: !ref <num_codebooks>
     vocab_size: !ref <num_clusters>
     emb_dim: !ref <encoder_dim>
+    freeze: !ref <freeze_embedding>
+    init: !ref <init_embedding>
 
 attention_mlp: !new:custom_model.AttentionMLP
     input_dim: !ref <encoder_dim>
@@ -116,15 +123,15 @@ attention_mlp: !new:custom_model.AttentionMLP
 
 embedding_model: !new:speechbrain.lobes.models.ECAPA_TDNN.ECAPA_TDNN
     input_size: !ref <encoder_dim>
-    channels: [512, 512, 512, 512, 1536]
+    channels: [1024, 1024, 1024, 1024, 3072]
     kernel_sizes: [5, 3, 3, 3, 1]
     dilations: [1, 2, 3, 4, 1]
     groups: [1, 1, 1, 1, 1]
-    attention_channels: 64
-    lin_neurons: 512
+    attention_channels: 128
+    lin_neurons: 192
 
 classifier: !new:speechbrain.lobes.models.ECAPA_TDNN.Classifier
-    input_size: 512
+    input_size: 192
     out_neurons: !ref <out_n_neurons>
 
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
@@ -139,7 +146,7 @@ modules:
     discrete_embedding_layer: !ref <discrete_embedding_layer>
 
 model: !new:torch.nn.ModuleList
-    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>]
+    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 # Cost + optimization
 compute_error: !name:speechbrain.nnet.losses.classification_error
@@ -149,24 +156,14 @@ compute_cost: !new:speechbrain.nnet.losses.LogSoftmaxWrapper
         margin: 0.2
         scale: 30
 
-
 model_opt_class: !name:torch.optim.Adam
     lr: !ref <lr>
     weight_decay: 0.000002
 
-lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
-    initial_value: !ref <lr>
-    final_value: !ref <lr_final>
-    epoch_count: !ref <number_of_epochs>
-
-weights_opt_class: !name:torch.optim.Adam
-    lr: !ref <lr_weights>
-
-lr_annealing_weights: !new:speechbrain.nnet.schedulers.NewBobScheduler
-    initial_value: !ref <lr_weights>
-    improvement_threshold: 0.0025
-    annealing_factor: 0.9
-    patient: 0
+lr_annealing: !new:speechbrain.nnet.schedulers.CyclicLRScheduler
+    base_lr: !ref <base_lr>
+    max_lr: !ref <max_lr>
+    step_size: !ref <step_size>
 
 
 # Logging + checkpoints
@@ -181,7 +178,7 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
     checkpoints_dir: !ref <save_folder>
     recoverables:
         embedding_model: !ref <embedding_model>
-        scheduler_layer_att: !ref <lr_annealing_weights>
+        scheduler_model: !ref <lr_annealing>
         attention_mlp: !ref <attention_mlp>
         codec: !ref <codec>
         discrete_embedding_layer: !ref <discrete_embedding_layer>

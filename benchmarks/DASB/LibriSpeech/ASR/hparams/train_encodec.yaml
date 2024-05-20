@@ -166,7 +166,6 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
    recoverables:
       model: !ref <model>
       scheduler_model: !ref <lr_annealing_model>
-      scheduler_encoder: !ref <lr_annealing_weights>
       attention_mlp: !ref <attention_mlp>
       codec: !ref <codec>
       discrete_embedding_layer: !ref <discrete_embedding_layer>

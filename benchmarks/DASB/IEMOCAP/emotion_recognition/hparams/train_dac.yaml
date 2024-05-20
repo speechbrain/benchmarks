@@ -1,12 +1,10 @@
 # ########################################
 # Recipe for training an emotion recognition system from speech data
-# only using IEMOCAP and an SSL feature extractor
+# only using IEMOCAP and an discrete tokenizer
 # The system classifies 4 emotions ( anger, happiness, sadness, neutrality)
 # with an ECAPA-TDNN model.
 # Authors
-# * Salah Zaiem 2023
-# * Youcef Kemiche 2023
-# * Adel Moumen 2024
+# * Pooneh Mousavi 2024
 # ########################################
 
 # Seed needs to be set at top of yaml, before objects with parameters are made
@@ -37,7 +35,7 @@ num_codebooks: 2  # NOTE: must be smaller or equal to the maximum number of code
 sample_rate: 24000
 
 # Feature parameters
-encoder_dim: 768
+encoder_dim: 1024
 
 # different speakers for train, valid and test sets
 different_speakers: True
@@ -64,7 +62,6 @@ batch_size: 2
 test_batch_size: 1
 
 lr: 0.0002
-lr_weights: 0.01
 
 # Number of emotions
 out_n_neurons: 4 # (anger, happiness, sadness, neutral)
@@ -101,14 +98,14 @@ attention_mlp: !new:custom_model.AttentionMLP
 
 embedding_model: !new:speechbrain.lobes.models.ECAPA_TDNN.ECAPA_TDNN
     input_size: !ref <encoder_dim>
-    channels: [512, 512, 512, 512, 1536]
+    channels: [1024, 1024, 1024, 1024, 3072]
     kernel_sizes: [5, 3, 3, 3, 1]
     dilations: [1, 2, 3, 4, 1]
     attention_channels: 64
-    lin_neurons: 96
+    lin_neurons: 192
 
 classifier: !new:speechbrain.lobes.models.ECAPA_TDNN.Classifier
-    input_size: 96
+    input_size: 192
     out_neurons: !ref <out_n_neurons>
 
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
@@ -122,7 +119,7 @@ modules:
     discrete_embedding_layer: !ref <discrete_embedding_layer>
 
 model: !new:torch.nn.ModuleList
-    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>]
+    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 log_softmax: !new:speechbrain.nnet.activations.Softmax
     apply_log: True
@@ -136,27 +133,17 @@ error_stats: !name:speechbrain.utils.metric_stats.MetricStats
 model_opt_class: !name:torch.optim.Adam
     lr: !ref <lr>
 
-weights_opt_class: !name:torch.optim.Adam
-    lr: !ref <lr_weights>
-
 lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
     initial_value: !ref <lr>
     improvement_threshold: 0.0025
     annealing_factor: 0.9
     patient: 0
 
-lr_annealing_weights: !new:speechbrain.nnet.schedulers.NewBobScheduler
-    initial_value: !ref <lr_weights>
-    improvement_threshold: 0.0025
-    annealing_factor: 0.9
-
-
 checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
     checkpoints_dir: !ref <save_folder>
     recoverables:
         model: !ref <model>
         scheduler_model: !ref <lr_annealing_model>
-        scheduler_encoder: !ref <lr_annealing_weights>
         attention_mlp: !ref <attention_mlp>
         codec: !ref <codec>
         discrete_embedding_layer: !ref <discrete_embedding_layer>

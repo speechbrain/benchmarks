@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """ Recipe for training an emotion recognition system from speech data only using IEMOCAP.
-The system classifies 4 emotions ( anger, happiness, sadness, neutrality) starting from a SSL encoder.
+The system classifies 4 emotions ( anger, happiness, sadness, neutrality) starting from a discrete tokens.
 The probing head is ECAPA-TDNN.
 
 Authors
- * Adel Moumen 2024
- * Salah Zaiem 2023
- * Youcef Kemiche 2023
+ * Pooneh Mousavi 2024
 """
 
 import os
@@ -95,17 +93,17 @@ class EmoIdBrain(sb.Brain):
                 self.model_optimizer, new_lr
             )
 
-            (
-                old_lr_encoder,
-                new_lr_encoder,
-            ) = self.hparams.lr_annealing_weights(stats["error_rate"])
-            sb.nnet.schedulers.update_learning_rate(
-                self.weights_optimizer, new_lr_encoder
-            )
+            # (
+            #     old_lr_encoder,
+            #     new_lr_encoder,
+            # ) = self.hparams.lr_annealing_weights(stats["error_rate"])
+            # sb.nnet.schedulers.update_learning_rate(
+            #     self.weights_optimizer, new_lr_encoder
+            # )
 
             # The train_logger writes a summary to stdout and to the logfile.
             self.hparams.train_logger.log_stats(
-                {"Epoch": epoch, "lr": old_lr, "att_lr": old_lr_encoder},
+                {"Epoch": epoch, "lr": old_lr},
                 train_stats={"loss": self.train_loss},
                 valid_stats=stats,
             )
@@ -124,22 +122,22 @@ class EmoIdBrain(sb.Brain):
 
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
-        self.weights_optimizer = self.hparams.weights_opt_class(
-            self.hparams.attention_mlp.parameters()
-        )
+        # self.weights_optimizer = self.hparams.weights_opt_class(
+        #     self.hparams.attention_mlp.parameters()
+        # )
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
         )
         self.optimizers_dict = {
             "model_optimizer": self.model_optimizer,
-            "weights_optimizer": self.weights_optimizer,
+            # "weights_optimizer": self.weights_optimizer,
         }
         # Initializing the weights
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)
-            self.checkpointer.add_recoverable(
-                "weights_opt", self.weights_optimizer
-            )
+            # self.checkpointer.add_recoverable(
+            #     "weights_opt", self.weights_optimizer
+            # )
 
 
 def dataio_prep(hparams):
@@ -233,6 +231,9 @@ if __name__ == "__main__":
         hyperparams_to_save=hparams_file,
         overrides=overrides,
     )
+    
+    if hparams['discrete_embedding_layer'].init:
+        hparams['discrete_embedding_layer'].init_embedding(hparams['codec'].vocabulary[:hparams['num_codebooks'],:,:].flatten(0,1))   
 
     from iemocap_prepare import prepare_data  # noqa E402
 

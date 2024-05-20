@@ -168,9 +168,6 @@ model: !new:torch.nn.ModuleList
 model_opt_class: !name:torch.optim.Adam
    lr: !ref <lr>
 
-weights_opt_class: !name:torch.optim.Adam
-   lr: !ref <lr_weights>
-
 lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
    initial_value: !ref <lr>
    improvement_threshold: 0.0025

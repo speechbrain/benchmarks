@@ -35,7 +35,6 @@ test_csv:
 # Training parameters
 number_of_epochs: 20
 lr: 0.0002
-lr_weights: 0.01
 sorting: ascending
 precision: fp32
 
@@ -141,9 +140,6 @@ model: !new:torch.nn.ModuleList
 
 model_opt_class: !name:torch.optim.Adam
    lr: !ref <lr>
-
-weights_opt_class: !name:torch.optim.Adam
-   lr: !ref <lr_weights>
 
 lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
    initial_value: !ref <lr>

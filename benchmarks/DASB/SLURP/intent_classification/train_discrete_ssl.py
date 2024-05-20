@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """ Recipe for "direct" (speech -> scenario) "Intent" classification using SLURP Dataset.
 18 Scenarios classes are present in SLURP (calendar, email)
-We encode input waveforms into features using a SSL encoder.
+We encode input waveforms into features using a discrete tokens.
 The probing is done using a RNN layer followed by a linear classifier.
 
 Authors
- * Adel Moumen 2024
- * Salah Zaiem 2023
- * Youcef Kemiche 2023
+ * Pooneh Mousavi 2024
 """
 
 
@@ -107,17 +105,17 @@ class IntentIdBrain(sb.Brain):
                 self.model_optimizer, new_lr
             )
 
-            (
-                old_lr_encoder,
-                new_lr_encoder,
-            ) = self.hparams.lr_annealing_weights(stats["error_rate"])
-            sb.nnet.schedulers.update_learning_rate(
-                self.weights_optimizer, new_lr_encoder
-            )
+            # (
+            #     old_lr_encoder,
+            #     new_lr_encoder,
+            # ) = self.hparams.lr_annealing_weights(stats["error_rate"])
+            # sb.nnet.schedulers.update_learning_rate(
+            #     self.weights_optimizer, new_lr_encoder
+            # )
 
             # The train_logger writes a summary to stdout and to the logfile.
             self.hparams.train_logger.log_stats(
-                {"Epoch": epoch, "lr": old_lr, "wave2vec_lr": old_lr_encoder},
+                {"Epoch": epoch, "lr": old_lr},
                 train_stats={"loss": self.train_loss},
                 valid_stats=stats,
             )
@@ -136,21 +134,21 @@ class IntentIdBrain(sb.Brain):
 
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
-        self.weights_optimizer = self.hparams.weights_opt_class(
-            self.hparams.attention_mlp.parameters()
-        )
+        # self.weights_optimizer = self.hparams.weights_opt_class(
+        #     self.hparams.attention_mlp.parameters()
+        # )
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
         )
         self.optimizers_dict = {
             "model_optimizer": self.model_optimizer,
-            "weights_optimizer": self.weights_optimizer,
+            # "weights_optimizer": self.weights_optimizer,
         }
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)
-            self.checkpointer.add_recoverable(
-                "weights_opt", self.weights_optimizer
-            )
+            # self.checkpointer.add_recoverable(
+            #     "weights_opt", self.weights_optimizer
+            # )
 
 
 def dataio_prep(hparams):

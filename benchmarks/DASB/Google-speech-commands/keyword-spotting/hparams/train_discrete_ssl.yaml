@@ -1,10 +1,10 @@
-# ################################
-# Model: Classification with xvector and LEAF
-# Authors: Hwidong Na & Mirco Ravanelli
-#          Script adapted by David Raby-Pepin 2021
-#          Further adapted for LEAF by Sarthak Yadav 2022
-# ################################
-
+# ########################################
+# Recipe for training an keyword spotting model from speech data
+# only using Google Speech Command and an discrete tokenizer
+# with an xvector model.
+# Authors
+# * Pooneh Mousavi 2024
+# ########################################
 # Basic parameters
 seed: 1986
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
@@ -47,7 +47,7 @@ bpe_tokenizer_path: [null, null, null, null, null, null]
 sample_rate: 16000
 
 # Feature parameters
-encoder_dim: 768
+encoder_dim: 1024
 
 
 # Percentage of files used for validation and test
@@ -63,10 +63,9 @@ skip_prep: False
 ckpt_interval_minutes: 15 # save checkpoint every N min
 
 ####################### Training Parameters ####################################
-number_of_epochs: 100
+number_of_epochs: 50
 batch_size: 32
 lr: 0.001
-lr_weights: 0.01
 
 shuffle: True
 
@@ -117,7 +116,7 @@ embedding_model: !new:speechbrain.lobes.models.Xvector.Xvector
     in_channels: !ref <encoder_dim>
     activation: !name:torch.nn.LeakyReLU
     tdnn_blocks: 5
-    tdnn_channels: [512, 512, 512, 512, 1500]
+    tdnn_channels: [1024, 1024, 1024, 1024, 3072]
     tdnn_kernel_sizes: [5, 3, 3, 1, 1]
     tdnn_dilations: [1, 2, 3, 1, 1]
     lin_neurons: 512
@@ -136,7 +135,7 @@ epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
     limit: !ref <number_of_epochs>
 
 model: !new:torch.nn.ModuleList
-    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>]
+    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>,!ref <attention_mlp]
 
 
 modules:
@@ -154,20 +153,11 @@ compute_cost: !name:speechbrain.nnet.losses.nll_loss
 model_opt_class: !name:torch.optim.Adam
     lr: !ref <lr>
 
-weights_opt_class: !name:torch.optim.Adam
-    lr: !ref <lr_weights>
-
 lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
     initial_value: !ref <lr>
     improvement_threshold: 0.0025
     annealing_factor: 0.9
     patient: 0
-
-lr_annealing_weights: !new:speechbrain.nnet.schedulers.NewBobScheduler
-    initial_value: !ref <lr_weights>
-    improvement_threshold: 0.0025
-    annealing_factor: 0.9
-
 
 # Logging + checkpoints
 train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
@@ -183,7 +173,6 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
         embedding_model: !ref <embedding_model>
         classifier: !ref <classifier>
         scheduler_model: !ref <lr_annealing_model>
-        scheduler_encoder: !ref <lr_annealing_weights>
         attention_mlp: !ref <attention_mlp>
         codec: !ref <codec>
         discrete_embedding_layer: !ref <discrete_embedding_layer>

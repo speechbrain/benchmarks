@@ -20,7 +20,7 @@ train_annotation: !ref <output_folder>/train.csv
 valid_annotation: !ref <output_folder>/dev.csv
 
 ssl_folder: !ref <output_folder>/ssl_checkpoints
-ssl_hub: facebook/hubert-large-ll60k
+ssl_hub: microsoft/wavlm-large
 
 verification_file: https://www.robots.ox.ac.uk/~vgg/data/voxceleb/meta/veri_test2.txt #path/to/veri_test2.txt
 

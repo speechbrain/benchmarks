@@ -22,7 +22,7 @@ train_annotation: !ref <output_folder>/train.csv
 valid_annotation: !ref <output_folder>/valid.csv
 test_annotation: !ref <output_folder>/test.csv
 
-ssl_hub: facebook/hubert-large-ll60k
+ssl_hub: microsoft/wavlm-large
 ssl_folder: !ref <output_folder>/ssl_checkpoints
 # Feature parameters
 encoder_dim: 1024

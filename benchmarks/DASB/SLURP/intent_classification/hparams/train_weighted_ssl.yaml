@@ -29,7 +29,7 @@ skip_prep: False
 
 compute_cost: !name:speechbrain.nnet.losses.nll_loss
 
-ssl_hub: facebook/hubert-large-ll60k
+ssl_hub: microsoft/wavlm-large
 ssl_folder: !ref <output_folder>/ssl_checkpoints
 encoder_dim: 1024
 

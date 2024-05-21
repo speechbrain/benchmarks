@@ -24,7 +24,7 @@ train_log: !ref <output_folder>/train_log.txt
 # Important: we use ssl encoder base and not the fine-tuned one with ASR task
 # This allow you to have ~4% improvment
 
-ssl_hub: facebook/hubert-large-ll60k
+ssl_hub: microsoft/wavlm-large
 ssl_folder: !ref <output_folder>/ssl_checkpoints
 encoder_dim: 1024
 

@@ -1,8 +1,7 @@
 # ################################
 # Model: Classification with xvector and LEAF
-# Authors: Hwidong Na & Mirco Ravanelli
-#          Script adapted by David Raby-Pepin 2021
-#          Further adapted for LEAF by Sarthak Yadav 2022
+# Authors: # 
+# * Pooneh Mousavi 2024
 # ################################
 
 # Basic parameters
@@ -74,7 +73,7 @@ embedding_model: !new:speechbrain.lobes.models.Xvector.Xvector
     in_channels: !ref <encoder_dim>
     activation: !name:torch.nn.LeakyReLU
     tdnn_blocks: 5
-    tdnn_channels: [512, 512, 512, 512, 1500]
+    tdnn_channels: [1024, 1024, 1024, 1024, 3072]
     tdnn_kernel_sizes: [5, 3, 3, 1, 1]
     tdnn_dilations: [1, 2, 3, 1, 1]
     lin_neurons: 512

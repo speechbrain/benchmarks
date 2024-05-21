@@ -25,7 +25,7 @@ train_log: !ref <output_folder>/train_log.txt
 ### Config for Tokenizer
 vocab_size: 1024
 num_codebooks: 2
-sample_rate: 24000
+sample_rate: 16000
 
 # Feature parameters
 

@@ -28,7 +28,7 @@ test_annotation: !ref <output_folder>/test.csv
 ### Config for Tokenizer
 vocab_size: 1024
 num_codebooks: 2
-sample_rate: 24000
+sample_rate: 16000
 
 # Feature parameters
 encoder_dim: 1024

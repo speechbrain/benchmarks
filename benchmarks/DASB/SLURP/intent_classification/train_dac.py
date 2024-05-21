@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """ Recipe for "direct" (speech -> scenario) "Intent" classification using SLURP Dataset.
 18 Scenarios classes are present in SLURP (calendar, email)
-We encode input waveforms into features using a SSL encoder.
+We encode input waveforms into features using a discrete tokens.
 The probing is done using a RNN layer followed by a linear classifier.
 
 Authors
- * Adel Moumen 2024
- * Salah Zaiem 2023
- * Youcef Kemiche 2023
+ * Pooneh Mousavi 2024
 """
 
 

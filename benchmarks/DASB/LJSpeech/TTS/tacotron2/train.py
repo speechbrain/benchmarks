@@ -386,25 +386,27 @@ if __name__ == "__main__":
 
     from ljspeech_prepare import prepare_ljspeech
 
-    sb.utils.distributed.run_on_main(
-        prepare_ljspeech,
-        kwargs={
-            "data_folder": hparams["data_folder"],
-            "save_folder": hparams["prepare_save_folder"],
-            "splits": hparams["splits"],
-            "split_ratio": hparams["split_ratio"],
-            "seed": hparams["seed"],
-            "skip_prep": hparams["skip_prep"],
-            "extract_features": ["audio_ssl", "audio_ssl_len"],
-            "extract_features_opts": hparams["extract_features_opts"],
-            "frozen_split_path": hparams.get("frozen_split_path"),
-            "model_name": "Tacotron2SSL",
-            "skip_ignore_folders": hparams[
-                "prepare_skip_ignore_folders"
-            ],
-            "device": run_opts.get("device", "cpu"),
-        },
-    )
+    if not hparams["skip_prep"]:
+        with hparams["freezer"]:
+            sb.utils.distributed.run_on_main(
+                prepare_ljspeech,
+                kwargs={
+                    "data_folder": hparams["data_folder"],
+                    "save_folder": hparams["prepare_save_folder"],
+                    "splits": hparams["splits"],
+                    "split_ratio": hparams["split_ratio"],
+                    "seed": hparams["seed"],
+                    "skip_prep": hparams["skip_prep"],
+                    "extract_features": ["audio_ssl", "audio_ssl_len"],
+                    "extract_features_opts": hparams["extract_features_opts"],
+                    "frozen_split_path": hparams.get("frozen_split_path"),
+                    "model_name": "Tacotron2SSL",
+                    "skip_ignore_folders": hparams[
+                        "prepare_skip_ignore_folders"
+                    ],
+                    "device": run_opts.get("device", "cpu"),
+                },
+            )
 
     datasets = dataio_prepare(hparams)
 

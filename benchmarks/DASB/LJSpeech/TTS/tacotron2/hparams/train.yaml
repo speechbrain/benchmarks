@@ -39,6 +39,8 @@ samples_interval: 5
 data_folder: !PLACEHOLDER # e.g, /localscratch/ljspeech
 prepare_save_folder: !ref <data_folder>/prepared
 pretrained_model_save_folder: !ref <prepare_save_folder>
+prepare_archive_path: null
+prepare_skip_ignore_folders: False
 freeze_ssl_model: True
 
 
@@ -228,6 +230,11 @@ modules:
 opt_class: !name:torch.optim.Adam
   lr: !ref <learning_rate>
   weight_decay: !ref <weight_decay>
+
+# freezer
+freezer: !new:benchmarks.DASB.utils.preparation.Freezer
+    save_path: !ref <prepare_save_folder>
+    archive_path: !ref <prepare_archive_path>
 
 #epoch object
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter

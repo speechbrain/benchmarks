@@ -50,6 +50,7 @@ test_json: !ref <prepare_save_folder>/test.json
 
 splits: ["train", "valid"]
 split_ratio: [90, 10]
+frozen_split_path: null
 
 skip_prep: False
 

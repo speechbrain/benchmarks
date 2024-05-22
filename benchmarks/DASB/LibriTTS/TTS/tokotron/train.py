@@ -242,7 +242,7 @@ class TokotronBrain(sb.Brain):
             for batch in sample_loader:
                 batch = batch.to(self.device)
                 sample_tokens, length = batch.audio_tokens_pad
-                vocoder_out = self.modules.vocoder(
+                vocoder_out = self.vocoder(
                     sample_tokens,
                     length,
                     spk=batch.spk_emb.data.squeeze(1)
@@ -272,6 +272,16 @@ class TokotronBrain(sb.Brain):
                         "perfect_samples_created"
                     ] = True
                     self.hparams.progress_logger.clear()
+
+    def vocoder(self, audio, length, spk):
+        vocoder_kwargs = {}
+        if self.hparams.vocoder_takes_spk_emb:
+            vocoder_kwargs["spk"] = spk
+        return self.modules.vocoder(
+            audio,
+            length,
+            **vocoder_kwargs
+        )
 
 
 INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phonemes"}
@@ -322,6 +332,7 @@ def dataio_prepare(hparams):
         return label_encoder.encode_sequence_torch(label)
 
     use_silence_padding = hparams.get("use_silence_padding", True)
+    audio_tokens_per_step = hparams["audio_tokens_per_step"]
     if use_silence_padding:
         silence_token, _ = get_silence_token(
             hparams["token_model"],
@@ -330,21 +341,21 @@ def dataio_prepare(hparams):
         )
     else:
         silence_token = (
-            torch.ones(hparams["audio_tokens_per_step"], dtype=torch.int64)
+            torch.ones(audio_tokens_per_step, dtype=torch.int64)
             * hparams["eos_index"]
         )
     silence_token = silence_token.cpu()
     silence_padding_len = int(math.ceil(hparams["silence_padding"]))
     bos_width = hparams.get("bos_width", 1)
     audio_bos = (
-        torch.ones(bos_width, hparams["audio_tokens_per_step"])
+        torch.ones(bos_width, audio_tokens_per_step)
         * hparams["bos_index"]
     )
 
     @sb.utils.data_pipeline.takes("audio_tokens")
     @sb.utils.data_pipeline.provides("audio_tokens_pad", "audio_tokens_bos")
     def audio_pipeline(audio_tokens):
-        audio_tokens = torch.from_numpy(audio_tokens)
+        audio_tokens = torch.from_numpy(audio_tokens)[:, :audio_tokens_per_step]
         audio_tokens_pad = feature_pad_to(
             audio_tokens, len(audio_tokens) + silence_padding_len, silence_token
         )

@@ -14,7 +14,7 @@ train_log: !ref <output_folder>/train_log.txt
 data_folder: !PLACEHOLDER # e.g., /path/to/LibriSpeech
 prepare_save_folder: !ref <data_folder>/prepared
 pretrained_model_save_folder: !ref <prepare_save_folder>
-vocoder_model_name: unithifigan-hubert-ms
+vocoder_model_name: vocos
 vocoder_model_path: !ref <pretrained_model_save_folder>/<vocoder_model_name>
 prepare_archive_path: null
 prepare_skip_ignore_folders: False
@@ -40,16 +40,11 @@ num_audio_samples: 32
 samples_interval: 5
 
 freeze_token_model: True
-ssl_model_type: hubert
-token_model_src: facebook/hubert-large-ll60k
+token_model_src: "facebook/encodec_24khz"
 g2p_src: flexthink/soundchoice-g2p
-token_model_kmeans_src: poonehmousavi/SSL_Quantization
-token_model_kmeans_dataset: LibriSpeech-100-360-500
-token_model_layers: [1, 3, 7, 12, 18, 23] 
 token_offset: 1
-vocoder_src: chaanks/hifigan-hubert-l1-3-7-12-18-23-k1000-LibriTTS-100
-vocoder_available_layers: [1, 3, 7, 12, 18, 23]
-vocoder_takes_spk_emb: True
+vocoder_src: "charactr/vocos-encodec-24khz"
+vocoder_takes_spk_emb: False
 spk_emb_src: speechbrain/spkrec-ecapa-voxceleb-mel-spec
 
 splits: ["train", "valid", "test"]
@@ -133,30 +128,10 @@ use_silence_padding: True
 
 
 # Token model (pretrained)
-ssl_model: !apply:speechbrain.utils.hparams.choice
-    value: !ref <ssl_model_type>
-    choices:
-        wavlm: !new:speechbrain.lobes.models.huggingface_transformers.wavlm.WavLM
-            source: !ref <token_model_src>
-            save_path: !ref <pretrained_model_save_folder>
-            freeze: !ref <freeze_token_model>
-            output_all_hiddens: True
-        hubert: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
-            source: !ref <token_model_src>
-            save_path: !ref <pretrained_model_save_folder>
-            freeze: !ref <freeze_token_model>
-            output_all_hiddens: True
-
-
-token_model: !new:speechbrain.lobes.models.huggingface_transformers.discrete_ssl.DiscreteSSL
-    ssl_model: !ref <ssl_model>
-    kmeans_repo_id: !ref <token_model_kmeans_src>
-    kmeans_dataset: !ref <token_model_kmeans_dataset>
-    num_clusters: !ref <audio_num_tokens>
+token_model: !new:speechbrain.lobes.models.huggingface_transformers.Encodec
+    source: !ref <token_model_src>
     save_path: !ref <pretrained_model_save_folder>
-    layers_num: !apply:benchmarks.DASB.utils.hparams.as_list
-        value: !ref <token_model_layers>
-        dtype: int
+    flat_embeddings: True
 
 spk_emb_model: !name:speechbrain.inference.encoders.MelSpectrogramEncoder.from_hparams
     source: !ref <spk_emb_src>
@@ -193,23 +168,11 @@ sample_dataloader_opts:
         padding_kwargs:
             value: !ref <pad_index>
 
-token_model_kwargs:
-    SSL_layers: !apply:benchmarks.DASB.utils.hparams.as_list
-        value: !ref <token_model_layers>
-    deduplicates: !apply:benchmarks.DASB.utils.hparams.repeat_for_layers
-        layers: !ref <token_model_layers>
-        value: False
-    bpe_tokenizers: !apply:benchmarks.DASB.utils.hparams.repeat_for_layers
-        layers: !ref <token_model_layers>
-        value: null
-
-
 extract_features_opts:
     dataloader_opts:
         batch_size: !ref <extract_features_batch_size>
         num_workers: !ref <num_workers>
     token_model: !ref <token_model>
-    token_model_kwargs: !ref <token_model_kwargs>
     sample_rate: !ref <sample_rate>
     model_sample_rate: !ref <model_sample_rate>
     spk_emb_model: !ref <spk_emb_model>
@@ -241,16 +204,10 @@ attention_type: regularMHA
 
 ############################## models ################################
 
-hifigan: !apply:speechbrain.inference.vocoders.UnitHIFIGAN.from_hparams
+vocoder: !new:speechbrain.lobes.models.huggingface_transformers.vocos.Vocos
     source: !ref <vocoder_src>
-    savedir: !ref <vocoder_model_path>
+    save_path: !ref <pretrained_model_save_folder>
 
-vocoder: !new:benchmarks.DASB.model.custom_model.HierarchicalUnitWrapper
-    model: !ref <hifigan>
-    available_layers: !ref <vocoder_available_layers>
-    layers: !ref <token_model_layers>
-    num_units: !ref <audio_num_tokens>
-    offset: !ref <token_offset>
 
 inference_search: !new:benchmarks.DASB.model.Tokotron.TokotronSearchInference
     bos_index: !ref <bos_index>
@@ -277,7 +234,7 @@ emb:
   spk:
     kind: "pretrained"
     dim: 192
-    vocoder: True
+    vocoder: !ref <vocoder_takes_spk_emb>
 
 model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel # yamllint disable-line rule:line-length
     input_num_tokens: !ref <input_num_tokens>

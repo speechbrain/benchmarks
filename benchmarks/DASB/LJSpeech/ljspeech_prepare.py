@@ -834,6 +834,7 @@ def custom_clean(text, model_name):
         text = re.sub(regex, replacement, text)
     return text
 
+INLINE_FEATURES = ["audio_ssl_len"]
 
 def prepare_features(
     data, data_folder, save_path, features, context, options=None, device="cpu"
@@ -862,6 +863,7 @@ def prepare_features(
         device=device,
     )
     token_model_kwargs = options.get("token_model_kwargs", {})
+    ssl_layers = options["ssl_model_layers"]
 
     @sb.utils.data_pipeline.takes("wav")
     @sb.utils.data_pipeline.provides("sig")
@@ -869,7 +871,8 @@ def prepare_features(
         """Load the audio signal. """
         wav = wav.replace("{data_root}", data_folder)
         sig = sb.dataio.dataio.read_audio(wav)
-        return sig
+
+        yield sig
 
     dataset.add_dynamic_item(audio_pipeline)
 
@@ -896,10 +899,23 @@ def prepare_features(
             yield PaddedData(tokens, sig.lengths)
             yield PaddedData(emb, sig.lengths)
 
+    @sb.utils.data_pipeline.takes("sig_resampled")
+    @sb.utils.data_pipeline.provides("audio_ssl", "audio_ssl_len")
+    def ssl_pipeline(sig):
+        ssl_raw = context.ssl_model(
+            sig.data, sig.lengths
+        )
+        ssl = ssl_raw[ssl_layers].permute(1, 2, 0, 3)
+        yield PaddedData(ssl, sig.lengths)
+        yield (sig.lengths * ssl.size(1)).tolist()
+
     feature_extractor.add_dynamic_item(resample_pipeline)
     feature_extractor.add_dynamic_item(token_pipeline)
-    feature_extractor.set_output_features(features)
-    feature_extractor.extract(dataset)
+    feature_extractor.add_dynamic_item(ssl_pipeline)
+    feature_keys = [key for key in features if key not in INLINE_FEATURES]
+    inline_keys = [key for key in features if key in INLINE_FEATURES]
+    feature_extractor.set_output_features(feature_keys, inline_keys=inline_keys)
+    feature_extractor.extract(dataset, data)
 
 
 def get_context(extract_features, extract_features_opts, device):
@@ -926,4 +942,6 @@ def get_context(extract_features, extract_features_opts, device):
     context = {}
     if any(key in extract_features for key in ["audio_tokens", "audio_emb"]):
         context["token_model"] = extract_features_opts["token_model"].to(device)
+    if "audio_ssl" in extract_features:
+        context["ssl_model"] = extract_features_opts["ssl_model"].to(device)
     return SimpleNamespace(**context)

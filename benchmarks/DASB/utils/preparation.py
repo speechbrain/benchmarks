@@ -83,16 +83,15 @@ class FeatureExtractor:
         )
         self.description = description
 
-    def extract(self, dataset, replacements=None):
+    def extract(self, dataset, data=None):
         """Runs the preprocessing operation
 
         Arguments
         ---------
         dataset : dict|speechbrain.dataio.dataset.DynamicItemDataset
             the dataset to be saved
-        replacements : dict, optional
-            (Optional dict), e.g., {"data_folder": "/home/speechbrain/data"}
-            This is used to recursively format all string values in the data.
+        data : dict
+            the raw data dictionary (to update with extra features)
         """
         if isinstance(dataset, dict):
             dataset = DynamicItemDataset(dataset)
@@ -103,22 +102,34 @@ class FeatureExtractor:
         batch_count = int(math.ceil(len(dataset) / batch_size))
         for batch in tqdm(dataloader, total=batch_count, desc=self.description):
             batch = batch.to(self.device)
-            self.process_batch(batch)
+            self.process_batch(batch, data)
 
-    def process_batch(self, batch):
+    def process_batch(self, batch, data):
         """Processes a batch of data
 
         Arguments
         ---------
         batch: speechbrain.dataio.batch.PaddedBatch
             a batch
+        data : dict
+            the raw data dictionary (to update with extra features)
         """
         batch_dict = as_dict(batch)
         ids = batch_dict[self.id_key]
         features = self.pipeline.compute_outputs(batch_dict)
 
         for item_id, item_features in zip(ids, undo_batch(features)):
+            if data is not None:
+                self._add_inline_features(item_id, item_features, data)
             self.save_fn(item_id, item_features, save_path=self.save_path)
+
+    def _add_inline_features(self, item_id, item_features, data):
+        item_data = data.get(item_id)
+        if not item_data:
+            return
+        for key in self.inline_keys:
+            item_data[key] = item_features[key]
+            del item_features[key]
 
     def add_dynamic_item(self, func, takes=None, provides=None):
         """Adds a dynamic item to be output
@@ -148,9 +159,18 @@ class FeatureExtractor:
         """
         self.pipeline.add_dynamic_item(func, takes, provides)
 
-    def set_output_features(self, keys):
-        """Sets the features to be output"""
-        self.pipeline.set_output_keys(keys)
+    def set_output_features(self, keys, inline_keys=None):
+        """Sets the features to be output
+
+        Arguments
+        ---------
+        keys : list
+            Keys to be output / saved
+        inline_keys : list, optional
+            The keys to be used inline (added to the data dictionary
+            rather than saved in flies)"""
+        self.inline_keys = inline_keys or []
+        self.pipeline.set_output_keys(keys + self.inline_keys)
 
 
 def save_pt(item_id, data, save_path):

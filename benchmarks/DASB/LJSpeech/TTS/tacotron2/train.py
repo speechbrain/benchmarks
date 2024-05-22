@@ -397,7 +397,12 @@ if __name__ == "__main__":
             "skip_prep": hparams["skip_prep"],
             "extract_features": ["audio_ssl", "audio_ssl_len"],
             "extract_features_opts": hparams["extract_features_opts"],
-            "model_name": "Tacotron2SSL"
+            "frozen_split_path": hparams.get("frozen_split_path"),
+            "model_name": "Tacotron2SSL",
+            "skip_ignore_folders": hparams[
+                "prepare_skip_ignore_folders"
+            ],
+            "device": run_opts.get("device", "cpu"),
         },
     )
 

@@ -102,15 +102,15 @@ class ASR(sb.Brain):
             old_lr_model, new_lr_model = self.hparams.lr_annealing_model(
                 stage_stats["loss"]
             )
-            old_lr_weights, new_lr_weights = self.hparams.lr_annealing_weights(
-                stage_stats["loss"]
-            )
+            # old_lr_weights, new_lr_weights = self.hparams.lr_annealing_weights(
+            #     stage_stats["loss"]
+            # )
             sb.nnet.schedulers.update_learning_rate(
                 self.model_optimizer, new_lr_model
             )
-            sb.nnet.schedulers.update_learning_rate(
-                self.weights_optimizer, new_lr_weights
-            )
+            # sb.nnet.schedulers.update_learning_rate(
+            #     self.weights_optimizer, new_lr_weights
+            # )
 
             self.hparams.train_logger.log_stats(
                 stats_meta={"epoch": epoch, "lr_model": old_lr_model},
@@ -131,22 +131,22 @@ class ASR(sb.Brain):
 
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
-        self.weights_optimizer = self.hparams.weights_opt_class(
-            self.hparams.attention_mlp.parameters()
-        )
+        # self.weights_optimizer = self.hparams.weights_opt_class(
+        #     self.hparams.attention_mlp.parameters()
+        # )
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
         )
         self.optimizers_dict = {
-            "weights_optimizer": self.weights_optimizer,
+            # "weights_optimizer": self.weights_optimizer,
             "model_optimizer": self.model_optimizer,
         }
         # Initializing the weights
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)
-            self.checkpointer.add_recoverable(
-                "weights_opt", self.weights_optimizer
-            )
+            # self.checkpointer.add_recoverable(
+            #     "weights_opt", self.weights_optimizer
+            # )
 
 
 def dataio_prepare(hparams):

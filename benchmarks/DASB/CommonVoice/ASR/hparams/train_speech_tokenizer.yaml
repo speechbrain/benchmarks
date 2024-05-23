@@ -91,10 +91,10 @@ test_beam_search:
 ### Config for Tokenizer
 vocab_size: 1024
 num_codebooks: 2
-sample_rate: 24000
+sample_rate: 16000
 
 # Feature parameters
-encoder_dim: 768
+encoder_dim: 1024
 
 # Functions and classes
 #
@@ -136,27 +136,20 @@ ctc_cost: !name:speechbrain.nnet.losses.ctc_loss
 modules:
    enc: !ref <enc>
    ctc_lin: !ref <ctc_lin>
-   weighted_ssl_model: !ref <weighted_ssl_model>
+   attention_mlp: !ref <attention_mlp>
+   codec: !ref <codec>
+   discrete_embedding_layer: !ref <discrete_embedding_layer>
 
 model: !new:torch.nn.ModuleList
-   - [!ref <enc>, !ref <ctc_lin>, !ref <discrete_embedding_layer>]
+   - [!ref <enc>, !ref <ctc_lin>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 model_opt_class: !name:torch.optim.Adam
    lr: !ref <lr>
-
-weights_opt_class: !name:torch.optim.Adam
-   lr: !ref <lr_weights>
 
 lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
    initial_value: !ref <lr>
    improvement_threshold: 0.0025
    annealing_factor: 0.8
-   patient: 0
-
-lr_annealing_weights: !new:speechbrain.nnet.schedulers.NewBobScheduler
-   initial_value: !ref <lr_weights>
-   improvement_threshold: 0.0025
-   annealing_factor: 0.9
    patient: 0
 
 label_encoder: !new:speechbrain.dataio.encoder.CTCTextEncoder
@@ -166,7 +159,6 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
    recoverables:
       model: !ref <model>
       scheduler_model: !ref <lr_annealing_model>
-      scheduler_encoder: !ref <lr_annealing_weights>
       attention_mlp: !ref <attention_mlp>
       codec: !ref <codec>
       discrete_embedding_layer: !ref <discrete_embedding_layer>

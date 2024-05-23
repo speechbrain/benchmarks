@@ -12,7 +12,7 @@
 seed: 1986
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
 language: cy # use 'cy' for Welsh  and 'eu' for Basque
-output_folder: !ref results/CommonVoice/dac/<language>/<seed>
+output_folder: !ref results/CommonVoice/encodec/<language>/<seed>
 test_wer_file: !ref <output_folder>/wer_test.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
@@ -62,9 +62,6 @@ valid_dataloader_opts:
 
 # Model parameters
 activation: !name:torch.nn.Sigmoid
-dnn_layers: 1
-dnn_neurons: 768
-freeze_encoder: True
 
 # Outputs
 output_neurons: 100  # BPE size, index(blank/eos/bos) = 0
@@ -99,7 +96,10 @@ bandwidth: 1.5
 num_codebooks: 2
 sample_rate: 24000
 # Feature parameters
-encoder_dim: 768
+encoder_dim: 1024
+# If set to True, the encoder_dim should be set to the dim of the tokenizer. For encodec it is 128.
+init_embedding: False 
+freeze_embedding: False
 
 # Functions and classes
 #
@@ -121,6 +121,8 @@ discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
    num_codebooks: !ref <num_codebooks>
    vocab_size: !ref <vocab_size>
    emb_dim: !ref <encoder_dim>
+   freeze: !ref <freeze_embedding>
+   init: !ref <init_embedding>
 
 attention_mlp: !new:custom_model.AttentionMLP
    input_dim: !ref <encoder_dim>
@@ -147,27 +149,20 @@ ctc_cost: !name:speechbrain.nnet.losses.ctc_loss
 modules:
    enc: !ref <enc>
    ctc_lin: !ref <ctc_lin>
-   weighted_ssl_model: !ref <weighted_ssl_model>
+   attention_mlp: !ref <attention_mlp>
+   codec: !ref <codec>
+   discrete_embedding_layer: !ref <discrete_embedding_layer>
 
 model: !new:torch.nn.ModuleList
-   - [!ref <enc>, !ref <ctc_lin>, !ref <discrete_embedding_layer>]
+   - [!ref <enc>, !ref <ctc_lin>, !ref <discrete_embedding_layer>,!ref <attention_mlp>]
 
 model_opt_class: !name:torch.optim.Adam
    lr: !ref <lr>
-
-weights_opt_class: !name:torch.optim.Adam
-   lr: !ref <lr_weights>
 
 lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
    initial_value: !ref <lr>
    improvement_threshold: 0.0025
    annealing_factor: 0.8
-   patient: 0
-
-lr_annealing_weights: !new:speechbrain.nnet.schedulers.NewBobScheduler
-   initial_value: !ref <lr_weights>
-   improvement_threshold: 0.0025
-   annealing_factor: 0.9
    patient: 0
 
 label_encoder: !new:speechbrain.dataio.encoder.CTCTextEncoder
@@ -177,7 +172,6 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
    recoverables:
       model: !ref <model>
       scheduler_model: !ref <lr_annealing_model>
-      scheduler_encoder: !ref <lr_annealing_weights>
       attention_mlp: !ref <attention_mlp>
       codec: !ref <codec>
       discrete_embedding_layer: !ref <discrete_embedding_layer>

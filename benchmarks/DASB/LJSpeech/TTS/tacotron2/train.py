@@ -148,6 +148,7 @@ class Tacotron2Brain(sb.Brain):
             The currently-starting epoch. This is passed
             `None` during the test stage.
         """
+        self.modules.vocoder.device = self.device
         self.create_perfect_samples()
 
     def on_stage_end(self, stage, stage_loss, epoch):

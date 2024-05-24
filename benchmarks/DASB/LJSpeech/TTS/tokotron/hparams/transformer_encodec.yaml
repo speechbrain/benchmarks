@@ -188,6 +188,7 @@ model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel  # yamllint 
     audio_emb_freeze: !ref <audio_emb_freeze>
     max_audio_length: !ref <max_audio_length>
     infer_max_audio_length: !ref <infer_max_audio_length>
+    vocoder_emb: {}
 
 
 modules:

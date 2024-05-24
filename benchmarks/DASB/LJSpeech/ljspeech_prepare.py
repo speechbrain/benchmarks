@@ -834,7 +834,9 @@ def custom_clean(text, model_name):
         text = re.sub(regex, replacement, text)
     return text
 
+
 INLINE_FEATURES = ["audio_ssl_len"]
+
 
 def prepare_features(
     data, data_folder, save_path, features, context, options=None, device="cpu"
@@ -863,7 +865,7 @@ def prepare_features(
         device=device,
     )
     token_model_kwargs = options.get("token_model_kwargs", {})
-    ssl_layers = options["ssl_model_layers"]
+    ssl_layers = options.get("ssl_model_layers") or options.get("token_model_layers")
 
     @sb.utils.data_pipeline.takes("wav")
     @sb.utils.data_pipeline.provides("sig")
@@ -890,8 +892,8 @@ def prepare_features(
     @sb.utils.data_pipeline.provides("audio_tokens", "audio_emb")
     def token_pipeline(sig):
         with torch.no_grad():
-            tokens, emb = context.token_model(
-                sig.data.unsqueeze(1), sig.lengths, **token_model_kwargs
+            tokens, emb, _ = context.token_model(
+                sig.data, sig.lengths, **token_model_kwargs
             )
             tokens = tokens.int()
             if tokens.dim() < 3:

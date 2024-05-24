@@ -384,6 +384,9 @@ def check_folders(*folders):
     return True
 
 
+INLINE_FEATURES = ["audio_ssl_len"]
+
+
 def prepare_features(
     data, data_folder, save_path, features, context, options=None, device="cpu"
 ):
@@ -403,7 +406,9 @@ def prepare_features(
         dataloader_opts=options.get("dataloader_opts", {}),
         device=device,
     )
+
     token_model_kwargs = options.get("token_model_kwargs", {})
+    ssl_layers = options["ssl_model_layers"]
 
     @sb.utils.data_pipeline.takes("wav")
     @sb.utils.data_pipeline.provides("sig")
@@ -412,8 +417,6 @@ def prepare_features(
         wav = wav.format(data_root=data_folder)
         sig = sb.dataio.dataio.read_audio(wav)
         return sig
-
-    dataset.add_dynamic_item(audio_pipeline)
 
     @sb.utils.data_pipeline.takes("sig")
     @sb.utils.data_pipeline.provides("sig_resampled")
@@ -436,6 +439,16 @@ def prepare_features(
         yield PaddedData(emb, sig.lengths)
 
     @sb.utils.data_pipeline.takes("sig_resampled")
+    @sb.utils.data_pipeline.provides("audio_ssl", "audio_ssl_len")
+    def ssl_pipeline(sig):
+        ssl_raw = context.ssl_model(
+            sig.data, sig.lengths
+        )
+        ssl = ssl_raw[ssl_layers].permute(1, 2, 0, 3)
+        yield PaddedData(ssl, sig.lengths)
+        yield (sig.lengths * ssl.size(1)).tolist()
+
+    @sb.utils.data_pipeline.takes("sig_resampled")
     @sb.utils.data_pipeline.provides("spk_emb")
     def spk_emb_pipeline(sig):
         mel_spec = context.spk_emb_model.mel_spectogram(audio=sig.data)
@@ -445,11 +458,17 @@ def prepare_features(
     dynamic_items = [
         resample_pipeline,
         token_pipeline,
+        ssl_pipeline,
         spk_emb_pipeline
     ]
+
+    dataset.add_dynamic_item(audio_pipeline)
     for dynamic_item in dynamic_items:
         feature_extractor.add_dynamic_item(dynamic_item)
-    feature_extractor.set_output_features(features)
+    feature_keys = [key for key in features if key not in INLINE_FEATURES]
+    inline_keys = [key for key in features if key in INLINE_FEATURES]
+    feature_extractor.set_output_features(feature_keys, inline_keys=inline_keys)
+    feature_extractor.extract(dataset, data)
     with torch.no_grad():
         feature_extractor.extract(dataset)
 
@@ -478,6 +497,8 @@ def get_context(extract_features, extract_features_opts, device):
     context = {}
     if any(key in extract_features for key in ["audio_tokens", "audio_emb"]):
         context["token_model"] = extract_features_opts["token_model"].to(device)
+    if "audio_ssl" in extract_features:
+        context["ssl_model"] = extract_features_opts["ssl_model"].to(device)
     if "spk_emb" in extract_features:
         context["spk_emb_model"] = extract_features_opts["spk_emb_model"](
             run_opts={"device": device}

@@ -113,7 +113,7 @@ ssl_model: !apply:speechbrain.utils.hparams.choice
             freeze: !ref <freeze_ssl_model>
             output_all_hiddens: True
         wav2vec2: !new:speechbrain.lobes.models.huggingface_transformers.wav2vec2.Wav2Vec2
-            source: !ref <token_model_src>
+            source: !ref <ssl_model_src>
             save_path: !ref <pretrained_model_save_folder>
             freeze: !ref <freeze_token_model>
             output_all_hiddens: True

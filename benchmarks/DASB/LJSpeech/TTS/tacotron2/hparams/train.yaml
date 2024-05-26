@@ -64,7 +64,7 @@ audio_dim: 1024
 
 # Feature Extraction
 extract_features_batch_size: 32
-model_sample_rate: 16000
+model_sample_rate: 24000
 ssl_model_type: hubert
 ssl_model_src: facebook/hubert-large-ll60k
 ssl_model_layers: [3]
@@ -72,8 +72,8 @@ ssl_model_layers: [3]
 # Vocoder Parameters
 vocoder_src: chaanks/hifigan-continuous-hubert-ll60k-l3-ljspeech-ljspeech
 vocoder_available_layers: [3]
-vocoder_flat_feats: true
-vocoder_model_name: unithifigan-hubert-continuous
+vocoder_flat_feats: false
+vocoder_model_name: !ref unithifigan-<ssl_model_type>-continuous-dasb
 vocoder_model_path: !ref <pretrained_model_save_folder>/<vocoder_model_name>
 
 
@@ -221,7 +221,7 @@ criterion: !new:speechbrain.lobes.models.Tacotron2.Loss
   
 vocoder: !apply:speechbrain.inference.vocoders.HIFIGAN.from_hparams
     source: !ref <vocoder_src>
-    savedir: !ref <vocoder_model_path>ß
+    savedir: !ref <vocoder_model_path>
 
 modules:
   model: !ref <model>

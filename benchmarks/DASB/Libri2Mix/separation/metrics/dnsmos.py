@@ -34,7 +34,12 @@ class DNSMOS(MetricStats):
     def __init__(self, sample_rate):
         self.sample_rate = sample_rate
         # self.onnx_sess = ort.InferenceSession(PRIMARY_MODEL_PATH)
-        self.p808_onnx_sess = ort.InferenceSession(P808_MODEL_PATH)
+        sess_options = ort.SessionOptions()
+        sess_options.inter_op_num_threads = os.cpu_count()
+        sess_options.intra_op_num_threads = os.cpu_count()
+        self.p808_onnx_sess = ort.InferenceSession(
+            P808_MODEL_PATH, sess_options=sess_options
+        )
         self.clear()
 
     def append(self, ids, hyp_audio, lens=None):

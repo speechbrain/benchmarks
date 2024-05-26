@@ -22,13 +22,6 @@ from transformers.models.wavlm.modeling_wavlm import WavLMEncoderStableLayerNorm
 __all__ = ["SBWav2Vec2ForwardWrapper", "dataio_prepare"]
 
 
-# Workaround to use fastest backend (SoundFile)
-try:
-    torchaudio._backend.utils.get_available_backends().pop("ffmpeg", None)
-except Exception:
-    pass
-
-
 class SBWav2Vec2ForwardWrapper(torch.nn.Module):
     """SpeechBrain wav2vec 2.0 wrapper that returns the hidden representations from the specified layer IDs.
 

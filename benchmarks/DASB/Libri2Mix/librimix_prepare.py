@@ -15,6 +15,14 @@ import speechbrain as sb
 __all__ = ["prepare_librimix"]
 
 
+# Workaround to use fastest backend (SoundFile)
+try:
+    import torchaudio
+
+    torchaudio._backend.utils.get_available_backends().pop("ffmpeg", None)
+except Exception:
+    pass
+
 # Logging configuration
 logging.basicConfig(
     level=logging.INFO,  # format="%(asctime)s [%(levelname)s] %(funcName)s - %(message)s",

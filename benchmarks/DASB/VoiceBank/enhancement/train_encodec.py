@@ -118,6 +118,15 @@ class Enhancement(sb.Brain):
             length=out_lens,
         )
 
+        # Compute TER
+        if stage != sb.Stage.TRAIN:
+            self.ter_metric.append(
+                IDs,
+                log_probs.flatten(start_dim=1, end_dim=2),
+                out_toks.flatten(start_dim=1),
+                out_lens,
+            )
+
         # Vocode
         if stage == sb.Stage.TEST and self.hparams.compute_metrics:
             hyp_toks = log_probs.argmax(dim=-1)  # [B, N, K]
@@ -128,18 +137,24 @@ class Enhancement(sb.Brain):
     @torch.no_grad()
     def vocode(self, IDs, in_sig, out_sig, hyp_toks, out_toks, lens):
         hyp_sig = self.toks_to_sig(hyp_toks)  # [B, T]
-        if self.hparams.save_audios:
-            rec_sig = self.toks_to_sig(out_toks)  # [B, T]
+        rec_sig = self.toks_to_sig(out_toks)  # [B, T]
 
         # Adjust length
         if out_sig.shape[-1] > hyp_sig.shape[-1]:
-            out_sig = out_sig.narrow(-1, 0, hyp_sig.shape[-1])  # [B, T_min]
+            pad = [0, out_sig.shape[-1] - hyp_sig.shape[-1]]
+            hyp_sig = torch.nn.functional.pad(
+                hyp_sig, pad, mode="replicate"
+            )  # [B, T_out]
+            rec_sig = torch.nn.functional.pad(
+                rec_sig, pad, mode="replicate"
+            )  # [B, T_out]
         elif out_sig.shape[-1] < hyp_sig.shape[-1]:
-            hyp_sig = hyp_sig.narrow(-1, 0, out_sig.shape[-1])  # [B, T_min]
-            if self.hparams.save_audios:
-                rec_sig = rec_sig.narrow(-1, 0, out_sig.shape[-1])  # [B, T_min]
+            hyp_sig = hyp_sig.narrow(-1, 0, out_sig.shape[-1])  # [B, T_out]
+            rec_sig = rec_sig.narrow(-1, 0, out_sig.shape[-1])  # [B, T_out]
 
         self.dnsmos_metric.append(IDs, hyp_sig, lens)
+        self.rec_dnsmos_metric.append(IDs, rec_sig, lens)
+        self.ref_dnsmos_metric.append(IDs, out_sig, lens)
         self.dwer_metric.append(IDs, hyp_sig, out_sig, lens)
         self.wavlm_sim_metric.append(IDs, hyp_sig, out_sig, lens)
         self.ecapatdnn_sim_metric.append(IDs, hyp_sig, out_sig, lens)
@@ -172,8 +187,12 @@ class Enhancement(sb.Brain):
     def on_stage_start(self, stage, epoch=None):
         """Gets called at the beginning of each epoch."""
         super().on_stage_start(stage, epoch)
+        if stage != sb.Stage.TRAIN:
+            self.ter_metric = self.hparams.ter_computer()
         if stage == sb.Stage.TEST and self.hparams.compute_metrics:
             self.dnsmos_metric = self.hparams.dnsmos_computer()
+            self.rec_dnsmos_metric = self.hparams.dnsmos_computer()
+            self.ref_dnsmos_metric = self.hparams.dnsmos_computer()
             self.dwer_metric = self.hparams.dwer_computer()
             self.wavlm_sim_metric = self.hparams.wavlm_sim_computer()
             self.ecapatdnn_sim_metric = self.hparams.ecapatdnn_sim_computer()
@@ -185,10 +204,12 @@ class Enhancement(sb.Brain):
 
         if stage == sb.Stage.TRAIN:
             self.train_stats = stage_stats
+        else:
+            stage_stats["TER"] = self.ter_metric.summarize("average") * 100
 
         # Perform end-of-iteration operations, like annealing, logging, etc.
         if stage == sb.Stage.VALID:
-            _, lr = self.hparams.scheduler(stage_stats["loss"])
+            _, lr = self.hparams.scheduler(stage_stats["TER"])
             sb.nnet.schedulers.update_learning_rate(self.optimizer, lr)
             steps = self.optimizer_step
             self.hparams.train_logger.log_stats(
@@ -197,14 +218,20 @@ class Enhancement(sb.Brain):
                 valid_stats=stage_stats,
             )
             self.checkpointer.save_and_keep_only(
-                meta={"loss": stage_stats["loss"]},
-                min_keys=["loss"],
+                meta={"TER": stage_stats["TER"]},
+                min_keys=["TER"],
                 num_to_keep=self.hparams.keep_checkpoints,
             )
 
         elif stage == sb.Stage.TEST:
             if self.hparams.compute_metrics:
                 stage_stats["DNSMOS"] = self.dnsmos_metric.summarize("average")
+                stage_stats["RecDNSMOS"] = self.rec_dnsmos_metric.summarize(
+                    "average"
+                )
+                stage_stats["RefDNSMOS"] = self.ref_dnsmos_metric.summarize(
+                    "average"
+                )
                 stage_stats["dWER"] = self.dwer_metric.summarize("error_rate")
                 stage_stats["WavLMSim"] = self.wavlm_sim_metric.summarize(
                     "average"

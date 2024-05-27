@@ -34,8 +34,8 @@ sorting: random
 use_cache: True
 
 # Training parameters
-num_epochs: 10
-grad_accumulation_factor: 1
+num_epochs: 20
+grad_accumulation_factor: 16
 train_batch_size: 1
 valid_batch_size: 1
 test_batch_size: 1
@@ -43,7 +43,7 @@ dataloader_workers: 4
 nonfinite_patience: 10
 max_grad_norm: 5.0
 precision: fp32
-ckpt_interval_minutes: 30
+ckpt_interval_minutes: 6000
 keep_checkpoints: 1
 augment: False
 augment_prob: 0.75
@@ -207,6 +207,10 @@ test_dataloader_kwargs:
     pin_memory: True
 
 # Performance metrics
+ter_computer: !name:speechbrain.utils.metric_stats.MetricStats
+    metric: !name:speechbrain.nnet.losses.classification_error
+        reduction: batch
+
 dnsmos_computer: !name:metrics.dnsmos.DNSMOS
     sample_rate: !ref <sample_rate>
 

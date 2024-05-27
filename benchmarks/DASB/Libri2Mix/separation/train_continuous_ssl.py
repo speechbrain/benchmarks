@@ -20,13 +20,13 @@ from hyperpyyaml import load_hyperpyyaml
 from speechbrain.dataio.dataio import write_audio
 from speechbrain.utils.distributed import if_main_process, run_on_main
 
-from train_encodec import Separation as SeparationEncodec, _CACHE
-
 
 warnings.filterwarnings(
     "ignore",
     message="Support for mismatched key_padding_mask and attn_mask is deprecated. Use same type for both instead.",
 )
+
+_CACHE = {}
 
 
 # To use in configuration files
@@ -34,7 +34,7 @@ def len_(num_speakers, SSL_layers, embedding_dim):
     return num_speakers * len(SSL_layers) * embedding_dim
 
 
-class Separation(SeparationEncodec):
+class Separation(sb.Brain):
     @torch.no_grad()
     def sig_to_embs(self, sig, lens):
         # sig: [B, T]
@@ -201,33 +201,36 @@ class Separation(SeparationEncodec):
         hyp_sig = self.embs_to_sig(
             hyp_embs.flatten(end_dim=1)  # [BS, N, K, H]
         )  # [BS, T]
-        if self.hparams.save_audios:
-            rec_sig = self.embs_to_sig(
-                out_embs.flatten(end_dim=1)  # [BS, N, K, H]
-            )  # [BS, T]
+        rec_sig = self.embs_to_sig(
+            out_embs.flatten(end_dim=1)  # [BS, N, K, H]
+        )  # [BS, T]
 
         # Adjust length
         if out_sig.shape[-1] > hyp_sig.shape[-1]:
-            out_sig = out_sig.narrow(-1, 0, hyp_sig.shape[-1])  # [BS, T_min]
+            pad = [0, out_sig.shape[-1] - hyp_sig.shape[-1]]
+            hyp_sig = torch.nn.functional.pad(
+                hyp_sig, pad, mode="replicate"
+            )  # [BS, T_out]
+            rec_sig = torch.nn.functional.pad(
+                rec_sig, pad, mode="replicate"
+            )  # [BS, T_out]
         elif out_sig.shape[-1] < hyp_sig.shape[-1]:
-            hyp_sig = hyp_sig.narrow(-1, 0, out_sig.shape[-1])  # [BS, T_min]
-            if self.hparams.save_audios:
-                rec_sig = rec_sig.narrow(
-                    -1, 0, out_sig.shape[-1]
-                )  # [BS, T_min]
+            hyp_sig = hyp_sig.narrow(-1, 0, out_sig.shape[-1])  # [BS, T_out]
+            rec_sig = rec_sig.narrow(-1, 0, out_sig.shape[-1])  # [BS, T_out]
 
         all_IDs = [
             f"{x}_{i}" for x in IDs for i in range(self.hparams.num_speakers)
         ]
         all_lens = lens.repeat_interleave(self.hparams.num_speakers)
         self.dnsmos_metric.append(all_IDs, hyp_sig, all_lens)
+        self.rec_dnsmos_metric.append(all_IDs, rec_sig, all_lens)
+        self.ref_dnsmos_metric.append(all_IDs, out_sig, all_lens)
         self.dwer_metric.append(all_IDs, hyp_sig, out_sig, all_lens)
         self.wavlm_sim_metric.append(all_IDs, hyp_sig, out_sig, all_lens)
         self.ecapatdnn_sim_metric.append(all_IDs, hyp_sig, out_sig, all_lens)
 
         hyp_sig = hyp_sig.reshape(len(hyp_embs), -1)  # [B, ST_min]
-        if self.hparams.save_audios:
-            rec_sig = rec_sig.reshape(len(hyp_embs), -1)  # [B, ST_min]
+        rec_sig = rec_sig.reshape(len(hyp_embs), -1)  # [B, ST_min]
         out_sig = out_sig.reshape(len(hyp_embs), -1)  # [B, ST_min]
 
         if self.hparams.save_audios:
@@ -254,6 +257,67 @@ class Separation(SeparationEncodec):
                     in_sig[i].cpu(),
                     self.hparams.sample_rate,
                 )
+
+    def on_stage_start(self, stage, epoch=None):
+        """Gets called at the beginning of each epoch."""
+        super().on_stage_start(stage, epoch)
+        if stage == sb.Stage.TEST and self.hparams.compute_metrics:
+            self.dnsmos_metric = self.hparams.dnsmos_computer()
+            self.rec_dnsmos_metric = self.hparams.dnsmos_computer()
+            self.ref_dnsmos_metric = self.hparams.dnsmos_computer()
+            self.dwer_metric = self.hparams.dwer_computer()
+            self.wavlm_sim_metric = self.hparams.wavlm_sim_computer()
+            self.ecapatdnn_sim_metric = self.hparams.ecapatdnn_sim_computer()
+
+    def on_stage_end(self, stage, stage_loss, epoch=None):
+        """Gets called at the end of each epoch."""
+        # Compute/store important stats
+        stage_stats = {"loss": stage_loss}
+
+        if stage == sb.Stage.TRAIN:
+            self.train_stats = stage_stats
+
+        # Perform end-of-iteration operations, like annealing, logging, etc.
+        if stage == sb.Stage.VALID:
+            _, lr = self.hparams.scheduler(stage_stats["loss"])
+            sb.nnet.schedulers.update_learning_rate(self.optimizer, lr)
+            steps = self.optimizer_step
+            self.hparams.train_logger.log_stats(
+                stats_meta={"epoch": epoch, "lr": lr, "steps": steps},
+                train_stats=self.train_stats,
+                valid_stats=stage_stats,
+            )
+            self.checkpointer.save_and_keep_only(
+                meta={"loss": stage_stats["loss"]},
+                min_keys=["loss"],
+                num_to_keep=self.hparams.keep_checkpoints,
+            )
+
+        elif stage == sb.Stage.TEST:
+            if self.hparams.compute_metrics:
+                stage_stats["DNSMOS"] = self.dnsmos_metric.summarize("average")
+                stage_stats["RecDNSMOS"] = self.rec_dnsmos_metric.summarize(
+                    "average"
+                )
+                stage_stats["RefDNSMOS"] = self.ref_dnsmos_metric.summarize(
+                    "average"
+                )
+                stage_stats["dWER"] = self.dwer_metric.summarize("error_rate")
+                stage_stats["WavLMSim"] = self.wavlm_sim_metric.summarize(
+                    "average"
+                )
+                stage_stats["ECAPATDNNSim"] = (
+                    self.ecapatdnn_sim_metric.summarize("average")
+                )
+            self.hparams.train_logger.log_stats(
+                stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
+                test_stats=stage_stats,
+            )
+            if if_main_process():
+                # Save dWER
+                if self.hparams.compute_metrics:
+                    with open(self.hparams.dwer_file, "w") as w:
+                        self.dwer_metric.write_stats(w)
 
 
 if __name__ == "__main__":

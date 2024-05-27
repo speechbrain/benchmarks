@@ -12,6 +12,7 @@ train_log: !ref <output_folder>/train_log.txt
 
 # Data files
 data_folder: !PLACEHOLDER # e.g., /path/to/LibriSpeech
+data_folder_alignments: null
 prepare_save_folder: !ref <data_folder>/prepared
 pretrained_model_save_folder: !ref <prepare_save_folder>
 vocoder_model_name: unithifigan-hubert-ms
@@ -106,7 +107,7 @@ beam_size: 5
 
 
 # Feature parameters
-sample_rate: 22050
+sample_rate: 24000
 model_sample_rate: 16000
 max_audio_length: 1000
 infer_max_audio_length: !ref <max_audio_length>
@@ -213,6 +214,7 @@ extract_features_opts:
     sample_rate: !ref <sample_rate>
     model_sample_rate: !ref <model_sample_rate>
     spk_emb_model: !ref <spk_emb_model>
+    data_folder_alignments: !ref <data_folder_alignments>
 
 
 ####################### Model parameters ###########################

@@ -150,6 +150,6 @@ if __name__ == "__main__":
     brain.hparams.dwer_file = os.path.join(hparams["output_folder"], "dwer.txt")
     brain.evaluate(
         test_data,
-        min_key="loss",
+        min_key="TER",
         test_loader_kwargs=hparams["test_dataloader_kwargs"],
     )

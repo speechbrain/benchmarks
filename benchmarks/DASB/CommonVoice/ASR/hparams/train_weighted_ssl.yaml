@@ -30,7 +30,7 @@ skip_prep: False # Skip data preparation
 
 avoid_if_longer_than: 10.0
 
-ssl_hub: facebook/wav2vec2-base
+ssl_hub: microsoft/wavlm-large
 ssl_folder: !ref <output_folder>/ssl_checkpoints
 encoder_dim: 1024
 

@@ -284,7 +284,7 @@ class TokotronBrain(sb.Brain):
         )
 
 
-INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phonemes"}
+INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phn"}
 
 
 def dataio_prepare(hparams):
@@ -381,11 +381,15 @@ def dataio_prepare(hparams):
             ],
         )
 
+        prepared_features = ["audio_tokens", "spk_emb"]
+        if hparams["input"] == "phonemes":
+            prepared_features.append("phn")
+
         add_prepared_features(
             dataset=dynamic_dataset,
             save_path=Path(hparams["prepare_save_folder"]) / "features",
             id_key="uttid",
-            features=["audio_tokens", "spk_emb"],
+            features=prepared_features,
         )
 
         datasets[dataset] = dynamic_dataset
@@ -591,6 +595,9 @@ if __name__ == "__main__":
     # Data preparation, to be run on only one process.
     if not hparams["skip_prep"]:
         with hparams["freezer"]:
+            extract_features = ["audio_tokens", "spk_emb"]
+            if hparams["input"] == "phonemes":
+                extract_features.append("phn")
             run_on_main(
                 prepare_libritts,
                 kwargs={
@@ -598,12 +605,18 @@ if __name__ == "__main__":
                     "save_folder": hparams["prepare_save_folder"],
                     "save_json_train": hparams["train_json"],
                     "save_json_valid": hparams["valid_json"],
-                    "save_json_test": hparams["test_json"],
+                    "save_json_test": (
+                        hparams["test_json"] if "test" in hparams["splits"]
+                        else None
+                    ),
                     "sample_rate": hparams["sample_rate"],
                     "train_split": hparams["train_split"],
                     "valid_split": hparams["valid_split"],
-                    "test_split": hparams["test_split"],
-                    "extract_features": ["audio_tokens", "spk_emb"],
+                    "test_split": (
+                        hparams["test_split"] if "test" in hparams["splits"]
+                        else None
+                    ),
+                    "extract_features": extract_features,
                     "seed": hparams["seed"],
                     "extract_features_opts": hparams["extract_features_opts"],
                     "model_name": hparams["model"].__class__.__name__,

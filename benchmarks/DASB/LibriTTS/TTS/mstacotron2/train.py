@@ -338,7 +338,6 @@ def dataio_prepare(hparams):
         )
     )
 
-    datasets["valid"].data_ids = datasets["valid"].data_ids[:2]
     return datasets
 
 

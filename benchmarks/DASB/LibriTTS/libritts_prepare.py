@@ -12,6 +12,7 @@ import random
 import logging
 import torchaudio
 import torch
+import re
 import speechbrain as sb
 from tqdm import tqdm
 from types import SimpleNamespace
@@ -339,7 +340,7 @@ def skip(*filenames):
         if False, it must be done.
     """
     for filename in filenames:
-        if not os.path.isfile(filename):
+        if filename is not None and not os.path.isfile(filename):
             return False
     return True
 
@@ -384,7 +385,161 @@ def check_folders(*folders):
     return True
 
 
-INLINE_FEATURES = ["audio_ssl_len"]
+def get_alignment_path(data_folder, alignments_folder, file_name):
+    """Returns the path in the LibriSpeech-Alignments dataset
+    corresponding to the specified file path in LibriSpeech
+
+    Arguments
+    ---------
+    data_folder: str
+        the path to LibriSpeech
+    alignments_folder: str
+        the path to LibriSpeech-Alignments
+    file_name: str
+        the file name within LibriSpeech
+
+    Returns
+    -------
+    file_name: str
+        the alignment file path
+    """
+    file_name = Path(file_name)
+    data_folder = Path(data_folder)
+    if file_name.parts[0] == "{data_root}":
+        file_name_rel = file_name.relative_to("{data_root}")
+    else:
+        file_name_rel = file_name.relative_to(data_folder)
+    data_slice = file_name_rel.parts[0]
+
+    textgrid_folder = file_name_rel.relative_to(Path(data_slice) / "LibriTTS" / data_slice).parent.parent
+    textgrid_file_name = f"{file_name_rel.stem}.TextGrid"
+    textgrid_path = Path(alignments_folder) / data_slice / textgrid_folder / textgrid_file_name
+
+    return textgrid_path
+
+
+def parse_alignments(file_name):
+    """Parses a given LibriSpeech-Alignments TextGrid file and
+    converts the results to the desired format (to be used in JSON
+    metadata)
+
+    Arguments
+    ---------
+    file_name : path-like
+        the file name of the TextGrid file
+
+    Returns
+    -------
+    details: dict
+        the metadata details
+    """
+    try:
+        import textgrids
+    except ImportError:
+        logger.error(
+            "Parsing LibriSpeech-alignments requires the"
+            "praat-textgrids package"
+        )
+        raise
+    if not file_name.exists():
+        return {
+            "has_alignments": False,
+            "phn": [],
+            "phn_stress": [],
+            "phn_start": [],
+            "phn_end": [],
+            "phn_count": 0,
+            "wrd_start": [],
+            "wrd_end": [],
+            "wrd_count": 0,
+            "unk_count": None
+        }
+
+    text_grid = textgrids.TextGrid()
+    text_grid.read(file_name)
+    word_intervals = [
+        {**word, "label": word["label"].upper()}
+        for word in text_grid.interval_tier_to_array("words")
+    ]
+    phn_intervals = text_grid.interval_tier_to_array("phones")
+    details = {}
+    details.update(intervals_to_dict(word_intervals, "wrd"))
+    phn = intervals_to_dict(phn_intervals, "phn")
+    phn_stress = phn["phn"]
+    phn_nostress = remove_stress_marks(phn_stress)
+    phn["phn"] = phn_nostress
+    phn["phn_stress"] = phn_stress
+    details.update(phn)
+    details["unk_count"] = sum(wrd == "<UNK>" for wrd in details["wrd"])
+    details["has_alignments"] = True
+
+    return details
+
+
+INTERVAL_MAP = [("label", ""), ("begin", "_start"), ("end", "_end")]
+INTERVAL_EMPTY_LABELS = {"", "sil", "sp", "spn"}
+
+
+def intervals_to_dict(intervals, prefix):
+    """
+    Converts a parsed list of intervals from PRAAT TextGrid
+    to a learning-friendly array
+
+    Arguments
+    ---------
+    intervals: list
+        A list of raw TextGrid intervals, as returned by
+        TextGrid.interval_tier_to_array
+    prefix: str
+        the prefix to add
+
+    Returns
+    -------
+    result: dict
+        A dictionary of the form
+            {
+                "{prefix}": <list of labels>,
+                "{prefix}_start": <list of begin values>,
+                "{prefix}_end": <list of end values>,
+                "{prefix}_count: <number of intervals>
+            }
+
+    """
+    # Remove meaningless labels
+    intervals_clean = [
+        interval
+        for interval in intervals
+        if interval["label"] not in INTERVAL_EMPTY_LABELS
+    ]
+    result = {
+        f"{prefix}{suffix}": [interval[key] for interval in intervals_clean]
+        for key, suffix in INTERVAL_MAP
+    }
+    # This will map space labels to a single one
+    result[f"{prefix}_count"] = len(intervals_clean)
+    return result
+
+
+RE_STRESS_MARK = re.compile(r"\d$")
+
+
+def remove_stress_marks(phn):
+    """Removes stress marks from a phoneme annotation
+
+    Arguments
+    ---------
+    phn: list
+        a list of phoneme annotations with or without stress marks
+
+    Returns
+    -------
+    result: list
+        a list of phoneme annotations without stress marks
+    """
+    return [RE_STRESS_MARK.sub("", item) for item in phn]
+
+
+INLINE_FEATURES = ["audio_ssl_len", "wrd", "phn", "phn_stress"]
 
 
 def prepare_features(
@@ -401,14 +556,15 @@ def prepare_features(
     dataset = DynamicItemDataset(data)
     feature_extractor = FeatureExtractor(
         save_path=save_path,
-        src_keys=["sig"],
+        src_keys=["sig", "wav"],
         id_key="uttid",
         dataloader_opts=options.get("dataloader_opts", {}),
         device=device,
     )
 
     token_model_kwargs = options.get("token_model_kwargs", {})
-    ssl_layers = options["ssl_model_layers"]
+    ssl_layers = options.get("ssl_model_layers")
+    alignments_folder = options.get("data_folder_alignments", data_folder)
 
     @sb.utils.data_pipeline.takes("wav")
     @sb.utils.data_pipeline.provides("sig")
@@ -454,12 +610,29 @@ def prepare_features(
         mel_spec = context.spk_emb_model.mel_spectogram(audio=sig.data)
         return context.spk_emb_model.encode_mel_spectrogram_batch(
             mel_spec, sig.lengths)
+    
+    @sb.utils.data_pipeline.takes("wav")
+    @sb.utils.data_pipeline.provides("has_alignments", "wrd", "phn", "phn_stress", "unk_count")
+    def alignments_pipeline(wav):
+        alignment_items = [
+            parse_alignments(
+                get_alignment_path(data_folder, alignments_folder, wav_item)
+            )
+            for wav_item in wav
+        ]
+        alignments = batchify(alignment_items)
+        yield alignments["has_alignments"]
+        yield alignments["wrd"]
+        yield alignments["phn"]
+        yield alignments["phn_stress"]
+        yield alignments["unk_count"]
 
     dynamic_items = [
         resample_pipeline,
         token_pipeline,
         ssl_pipeline,
-        spk_emb_pipeline
+        spk_emb_pipeline,
+        alignments_pipeline
     ]
 
     dataset.add_dynamic_item(audio_pipeline)
@@ -471,6 +644,17 @@ def prepare_features(
     feature_extractor.extract(dataset, data)
     with torch.no_grad():
         feature_extractor.extract(dataset)
+
+
+def batchify(values):
+    keys = next(iter(values)).keys()
+    return {
+        key: [
+            item[key]
+            for item in values
+        ]
+        for key in keys
+    }
 
 
 def get_context(extract_features, extract_features_opts, device):

@@ -42,7 +42,7 @@ pretrained_model_save_folder: !ref <prepare_save_folder>
 prepare_archive_path: null
 prepare_skip_ignore_folders: False
 freeze_ssl_model: True
-data_mode: lite
+data_mode: clean
 train_json: !ref <prepare_save_folder>/train.json
 valid_json: !ref <prepare_save_folder>/valid.json
 test_json: !ref <prepare_save_folder>/test.json
@@ -95,7 +95,7 @@ vocoder_model_path: !ref <pretrained_model_save_folder>/<vocoder_model_name>
 spk_emb_src: speechbrain/spkrec-ecapa-voxceleb-mel-spec
 spk_emb_size: 192
 
-splits: ["train", "valid", "test"]
+splits: ["train", "valid"]
 
 
 # Token model (pretrained)

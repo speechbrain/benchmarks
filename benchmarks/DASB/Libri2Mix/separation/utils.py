@@ -104,9 +104,7 @@ def dataio_prepare(
         csvs = [os.path.basename(x) for x in train_csv]
         save_folder = os.path.dirname(train_csv[0])
         merge_csvs(
-            save_folder,
-            csvs,
-            "train.csv",
+            save_folder, csvs, "train.csv",
         )
         train_csv = os.path.join(save_folder, "train.csv")
 
@@ -114,9 +112,7 @@ def dataio_prepare(
         csvs = [os.path.basename(x) for x in valid_csv]
         save_folder = os.path.dirname(valid_csv[0])
         merge_csvs(
-            save_folder,
-            csvs,
-            "valid.csv",
+            save_folder, csvs, "valid.csv",
         )
         valid_csv = os.path.join(save_folder, "valid.csv")
 
@@ -124,15 +120,12 @@ def dataio_prepare(
         csvs = [os.path.basename(x) for x in test_csv]
         save_folder = os.path.dirname(test_csv[0])
         merge_csvs(
-            save_folder,
-            csvs,
-            "test.csv",
+            save_folder, csvs, "test.csv",
         )
         test_csv = os.path.join(save_folder, "test.csv")
 
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=train_csv,
-        replacements={"DATA_ROOT": data_folder},
+        csv_path=train_csv, replacements={"DATA_ROOT": data_folder},
     )
     # Sort training data to speed up training
     train_data = train_data.filtered_sorted(
@@ -142,8 +135,7 @@ def dataio_prepare(
     )
 
     valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=valid_csv,
-        replacements={"DATA_ROOT": data_folder},
+        csv_path=valid_csv, replacements={"DATA_ROOT": data_folder},
     )
     # Sort validation data to speed up validation
     valid_data = valid_data.filtered_sorted(
@@ -153,8 +145,7 @@ def dataio_prepare(
     )
 
     test_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=test_csv,
-        replacements={"DATA_ROOT": data_folder},
+        csv_path=test_csv, replacements={"DATA_ROOT": data_folder},
     )
     # Sort the test data to speed up testing
     test_data = test_data.filtered_sorted(
@@ -190,16 +181,12 @@ def dataio_prepare(
         src_sigs = torch.stack(src_sigs)  # [S, T]
 
         in_sig = torchaudio.functional.resample(
-            mix_sig,
-            original_sample_rate,
-            sample_rate,
+            mix_sig, original_sample_rate, sample_rate,
         )
         yield in_sig
 
         out_sig = torchaudio.functional.resample(
-            src_sigs,
-            original_sample_rate,
-            sample_rate,
+            src_sigs, original_sample_rate, sample_rate,
         )
         # Flatten as SpeechBrain's dataloader does not support multichannel audio
         out_sig = out_sig.flatten()  # [S * T]
@@ -228,9 +215,7 @@ if __name__ == "__main__":
     ]:
         layer_ids = [3, 7]
         encoder1 = Wav2Vec2(
-            source=source,
-            save_path=HUGGINGFACE_HUB_CACHE,
-            output_norm=True,
+            source=source, save_path=HUGGINGFACE_HUB_CACHE, output_norm=True,
         )
         encoder1 = SBWav2Vec2ForwardWrapper(
             encoder1, layer_ids=layer_ids

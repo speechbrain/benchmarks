@@ -16,7 +16,7 @@ import warnings
 import speechbrain as sb
 import torch
 from hyperpyyaml import load_hyperpyyaml
-from speechbrain.utils.distributed import if_main_process, run_on_main
+from speechbrain.utils.distributed import run_on_main
 
 from train_encodec import Enhancement as EnhancementEncodec
 

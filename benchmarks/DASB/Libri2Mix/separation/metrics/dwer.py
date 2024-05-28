@@ -21,16 +21,10 @@ class DWER(MetricStats):
     def __init__(self, model_hub, save_path, sample_rate):
         self.sample_rate = sample_rate
         self.model = Whisper(
-            model_hub,
-            save_path,
-            SAMPLE_RATE,
-            freeze=True,
-            freeze_encoder=True,
+            model_hub, save_path, SAMPLE_RATE, freeze=True, freeze_encoder=True,
         ).cpu()
         self.searcher = S2SWhisperGreedySearcher(
-            self.model,
-            min_decode_ratio=0.0,
-            max_decode_ratio=1.0,
+            self.model, min_decode_ratio=0.0, max_decode_ratio=1.0,
         )
         self.model.tokenizer.set_prefix_tokens("english", "transcribe", False)
         self.wer_computer = ErrorRateStats()

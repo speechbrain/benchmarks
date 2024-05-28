@@ -306,9 +306,9 @@ class Separation(sb.Brain):
                 stage_stats["WavLMSim"] = self.wavlm_sim_metric.summarize(
                     "average"
                 )
-                stage_stats["ECAPATDNNSim"] = (
-                    self.ecapatdnn_sim_metric.summarize("average")
-                )
+                stage_stats[
+                    "ECAPATDNNSim"
+                ] = self.ecapatdnn_sim_metric.summarize("average")
             self.hparams.train_logger.log_stats(
                 stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
                 test_stats=stage_stats,

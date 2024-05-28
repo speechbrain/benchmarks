@@ -69,9 +69,7 @@ class Enhancement(sb.Brain):
                 [len(in_sig), len(out_sig)]
             )  # [B, N, K], [B, N, K]
             out_toks = out_toks.reshape(
-                len(in_sig),
-                -1,
-                self.hparams.num_codebooks,
+                len(in_sig), -1, self.hparams.num_codebooks,
             )  # [B, N, K]
             if self.hparams.use_cache and (not self.hparams.augment):
                 _CACHE[key] = in_toks.cpu(), out_toks.cpu()
@@ -236,9 +234,9 @@ class Enhancement(sb.Brain):
                 stage_stats["WavLMSim"] = self.wavlm_sim_metric.summarize(
                     "average"
                 )
-                stage_stats["ECAPATDNNSim"] = (
-                    self.ecapatdnn_sim_metric.summarize("average")
-                )
+                stage_stats[
+                    "ECAPATDNNSim"
+                ] = self.ecapatdnn_sim_metric.summarize("average")
             self.hparams.train_logger.log_stats(
                 stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
                 test_stats=stage_stats,

@@ -39,7 +39,7 @@ token_model_src: !apply:speechbrain.utils.hparams.choice
         hubert: facebook/hubert-large-ll60k
         wav2vec2: facebook/wav2vec2-large-960h-lv60-self
 
-g2p_src: flexthink/soundchoice-g2p
+g2p_src: speechbrain/soundchoice-g2p
 token_model_kmeans_src: poonehmousavi/SSL_Quantization
 token_model_kmeans_dataset: LibriSpeech-100-360-500
 token_model_layers: [1, 3, 7, 12, 18, 23]
@@ -195,6 +195,7 @@ sample_dataloader_opts:
 token_model_kwargs:
     SSL_layers: !apply:benchmarks.DASB.utils.hparams.as_list
         value: !ref <token_model_layers>
+        dtype: int
     deduplicates: !apply:benchmarks.DASB.utils.hparams.repeat_for_layers
         layers: !ref <token_model_layers>
         value: False
@@ -244,8 +245,12 @@ hifigan: !apply:speechbrain.inference.vocoders.UnitHIFIGAN.from_hparams
 
 vocoder: !new:benchmarks.DASB.model.custom_model.HierarchicalUnitWrapper
     model: !ref <hifigan>
-    available_layers: !ref <vocoder_available_layers>
-    layers: !ref <token_model_layers>
+    available_layers: !apply:benchmarks.DASB.utils.hparams.as_list
+        value: !ref <vocoder_available_layers>
+        dtype: int
+    layers: !apply:benchmarks.DASB.utils.hparams.as_list
+        value: !ref <token_model_layers>
+        dtype: int
     num_units: !ref <audio_num_tokens>
     offset: !ref <token_offset>
 

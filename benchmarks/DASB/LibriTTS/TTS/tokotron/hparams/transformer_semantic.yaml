@@ -213,6 +213,7 @@ sample_dataloader_opts:
 token_model_kwargs:
     SSL_layers: !apply:benchmarks.DASB.utils.hparams.as_list
         value: !ref <token_model_layers>
+        dtype: int
     deduplicates: !apply:benchmarks.DASB.utils.hparams.repeat_for_layers
         layers: !ref <token_model_layers>
         value: False
@@ -265,8 +266,12 @@ hifigan: !apply:speechbrain.inference.vocoders.UnitHIFIGAN.from_hparams
 
 vocoder: !new:benchmarks.DASB.model.custom_model.HierarchicalUnitWrapper
     model: !ref <hifigan>
-    available_layers: !ref <vocoder_available_layers>
-    layers: !ref <token_model_layers>
+    available_layers: !apply:benchmarks.DASB.utils.hparams.as_list
+        value: !ref <vocoder_available_layers>
+        dtype: int
+    layers: !apply:benchmarks.DASB.utils.hparams.as_list
+        value: !ref <token_model_layers>
+        dtype: int
     num_units: !ref <audio_num_tokens>
     offset: !ref <token_offset>
 

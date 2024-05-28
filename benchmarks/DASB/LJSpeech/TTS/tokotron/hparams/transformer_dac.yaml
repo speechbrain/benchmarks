@@ -162,7 +162,7 @@ activation: !name:torch.nn.GELU
 audio_num_tokens: 1024
 audio_emb_size: 128
 audio_emb_freeze: True
-audio_emb_pretrained: True
+audio_emb_pretrained: False
 text_num_tokens: 39
 phn_num_tokens: 52
 input_num_tokens: !apply:speechbrain.utils.hparams.choice

@@ -241,8 +241,19 @@ class HierarchicalUnitWrapper(torch.nn.Module):
             result = self.model(units_with_offset, **kwargs)
         return result
 
-    def decode_batch_with_details(self, units):
-        units_with_offset = (
-            units + self.layer_offset.to(units.device) + self.offset
-        )
-        return self.model.decode_batch_with_details(units_with_offset,)
+
+class EncodecVocoder(nn.Module):
+    """A vocoder wrapper for Encodec
+    
+    Arguments
+    ---------
+    encodec: speechbrain.lobes.models.huggingface_transformers.Encodec
+        An Encodec model
+    """
+    def __init__(self, encodec):        
+        super().__init__()
+        self.encodec = encodec
+
+    def forward(self, units, length=None):
+        """Computes the forward pass"""
+        return self.encodec.decode(units, length)

@@ -12,6 +12,7 @@ train_log: !ref <output_folder>/train_log.txt
 
 token_model_src: "facebook/encodec_24khz"
 g2p_src: flexthink/soundchoice-g2p
+vocoder_type: encodec
 vocoder_src: "charactr/vocos-encodec-24khz"
 
 # Data files
@@ -98,6 +99,7 @@ silence_padding: !ref <gate_offset>
 token_model: !new:speechbrain.lobes.models.huggingface_transformers.Encodec
     source: !ref <token_model_src>
     save_path: !ref <pretrained_model_save_folder>
+    bandwidth: !ref <bandwidth>
     flat_embeddings: True
 
 # Dataloader options
@@ -160,13 +162,19 @@ input_num_tokens: !apply:speechbrain.utils.hparams.choice
         text: !ref <text_num_tokens>
         phonemes: !ref <phn_num_tokens>
 audio_tokens_per_step: 2
+bandwidth: 1.5
 attention_type: regularMHA
 
 ############################## models ################################
 
-vocoder: !new:speechbrain.lobes.models.huggingface_transformers.vocos.Vocos
-    source: !ref <vocoder_src>
-    save_path: !ref <pretrained_model_save_folder>
+vocoder: !apply:speechbrain.utils.hparams.choice
+    value: !ref <vocoder_type>
+    choices:
+        encodec: !new:benchmarks.DASB.model.custom_model.EncodecVocoder
+            encodec: !ref <token_model>
+        vocos: !new:speechbrain.lobes.models.huggingface_transformers.vocos.Vocos
+            source: !ref <vocoder_src>
+            save_path: !ref <pretrained_model_save_folder>
 
 model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel  # yamllint disable-line rule:line-length
     input_num_tokens: !ref <input_num_tokens>
@@ -188,8 +196,6 @@ model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel  # yamllint 
     audio_emb_freeze: !ref <audio_emb_freeze>
     max_audio_length: !ref <max_audio_length>
     infer_max_audio_length: !ref <infer_max_audio_length>
-    vocoder_emb: {}
-
 
 modules:
     model: !ref <model>

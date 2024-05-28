@@ -36,7 +36,7 @@ sorting: random
 use_cache: False
 
 # Training parameters
-num_epochs: 15
+num_epochs: 30
 grad_accumulation_factor: 16
 train_batch_size: 1
 valid_batch_size: 1

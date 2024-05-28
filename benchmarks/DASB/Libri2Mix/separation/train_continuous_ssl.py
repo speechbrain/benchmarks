@@ -229,9 +229,9 @@ class Separation(sb.Brain):
         self.wavlm_sim_metric.append(all_IDs, hyp_sig, out_sig, all_lens)
         self.ecapatdnn_sim_metric.append(all_IDs, hyp_sig, out_sig, all_lens)
 
-        hyp_sig = hyp_sig.reshape(len(hyp_embs), -1)  # [B, ST_min]
-        rec_sig = rec_sig.reshape(len(hyp_embs), -1)  # [B, ST_min]
-        out_sig = out_sig.reshape(len(hyp_embs), -1)  # [B, ST_min]
+        hyp_sig = hyp_sig.reshape(len(hyp_embs), -1)  # [B, ST_out]
+        rec_sig = rec_sig.reshape(len(hyp_embs), -1)  # [B, ST_out]
+        out_sig = out_sig.reshape(len(hyp_embs), -1)  # [B, ST_out]
 
         if self.hparams.save_audios:
             save_folder = os.path.join(self.hparams.output_folder, "audios")

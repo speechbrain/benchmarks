@@ -130,7 +130,7 @@ class TokotronBrain(sb.Brain):
             and epoch == 1
             and stage == sb.Stage.TRAIN
         ):
-            # TODO: Clean this up
+            vocabulary = None
             if hasattr(self.hparams.token_model, "vocabulary"):
                 vocabulary = self.hparams.token_model.vocabulary
             elif hasattr(self.hparams.token_model, "vocabularies"):
@@ -140,7 +140,8 @@ class TokotronBrain(sb.Brain):
                         for voc in self.hparams.token_model.vocabularies
                     ]
                 )
-            self.modules.model.init_audio_emb(vocabulary)
+            if vocabulary is not None:
+                self.modules.model.init_audio_emb(vocabulary)
         # Load the compression model only if compression is enables
         self.compression = getattr(self.hparams, "compression", False)
         if self.compression:

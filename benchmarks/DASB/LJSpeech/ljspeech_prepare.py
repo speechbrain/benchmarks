@@ -892,9 +892,10 @@ def prepare_features(
     @sb.utils.data_pipeline.provides("audio_tokens", "audio_emb")
     def token_pipeline(sig):
         with torch.no_grad():
-            tokens, emb, _ = context.token_model(
+            result = context.token_model(
                 sig.data, sig.lengths, **token_model_kwargs
             )
+            tokens, emb = result[:2]
             tokens = tokens.int()
             if tokens.dim() < 3:
                 tokens = tokens.unsqueeze(-1)

@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from ..utils.hparams import as_list
+from speechbrain.dataio.dataio import clean_padding_, length_to_mask
 import math
 
 
@@ -244,16 +245,154 @@ class HierarchicalUnitWrapper(torch.nn.Module):
 
 class EncodecVocoder(nn.Module):
     """A vocoder wrapper for Encodec
-    
+
     Arguments
     ---------
     encodec: speechbrain.lobes.models.huggingface_transformers.Encodec
         An Encodec model
     """
-    def __init__(self, encodec):        
+    def __init__(self, encodec):
         super().__init__()
         self.encodec = encodec
 
     def forward(self, units, length=None):
-        """Computes the forward pass"""
+        """Computes the forward pass
+
+        Arguments
+        ---------
+        units : torch.Tensor
+            DAC audio tokens
+        length : torch.Tensor, optional
+            Relative lengths (ignored, for compatibility)
+
+        Returns
+        -------
+        wav : torch.Tensor
+            The decoded waveform
+        """
         return self.encodec.decode(units, length)
+
+
+class DACVocoder(nn.Module):
+    """A vocoder adapter for DAC. Please keep in mind that that to obtain
+    audio of the highest quality, it might be necessary to train a
+    different vocoder adapted to the task
+    
+    Arguments
+    ---------
+    dac : DAC
+        a DAC model
+    """
+    def __init__(self, dac):
+        super().__init__()
+        self.dac = dac
+
+    def forward(self, tokens, length):
+        """Decodes tokens into audio
+        
+        Arguments
+        ---------
+        tokens : torch.Tensor
+            A (Batch x Length) tensor of DAC audio tokens
+        length : torch.Tensor
+            A 1-D tensor of relative lengths
+
+        Returns
+        -------
+        wavs : torch.Tensor
+            A (Batch x Length) tensor of raw waveforms
+        length : torch.Tensor
+            Relative lengths
+        """
+        z, _, _ = self.dac.quantizer.from_codes(tokens.transpose(1, 2).int())
+        wav = self.dac.decode(z).squeeze(1)
+        clean_padding_(wav, length)
+        return wav, length
+
+
+class DACFeatureExtractor(nn.Module):
+    """An adapter for feature extraction
+
+    Arguments
+    ---------
+    dac : DAC
+        a DAC model
+    """
+    def __init__(self, dac, n_quantizers):
+        super().__init__()
+        self.dac = dac
+        self.dac.eval()
+        self.n_quantizers = n_quantizers
+
+    def encode(self, inputs, length):
+        """Encodes a raw audio sample using DAC
+
+        Arguments
+        ---------
+        inputs : torch.Tensor
+            A (Batch x Samples) or (Batch x Channel x Samples)
+            tensor of audio
+        length : torch.Tensor
+            A tensor of relative lengths
+
+        Returns
+        -------
+        tokens : torch.Tensor
+            A (Batch x Tokens x Heads) tensor of audio tokens
+        emb : torch.Tensor
+            Raw vector embeddings from the model's
+            quantizers
+
+        """
+        if inputs.dim() < 3:
+            inputs = inputs.unsqueeze(1)
+        emb, codes, _, _, _ = self.dac.encode(inputs, n_quantizers=self.n_quantizers)
+        emb.transpose_(1, 2)
+        codes.transpose_(1, 2)
+        max_len = emb.size(1)
+        mask = length_to_mask(
+            length * max_len, max_len, device=inputs.device
+        ).unsqueeze(-1)
+        return codes * mask, emb * mask
+    
+    def forward(self, inputs, length):
+        """Encodes a raw audio sample using DAC
+
+        Arguments
+        ---------
+        inputs : torch.Tensor
+            A (Batch x Samples) or (Batch x Channel x Samples)
+            tensor of audio
+        length : torch.Tensor
+            A tensor of relative lengths
+
+        Returns
+        -------
+        tokens : torch.Tensor
+            A (Batch x Tokens x Heads) tensor of audio tokens
+        emb : torch.Tensor
+            Raw vector embeddings from the model's
+            quantizers
+
+        """
+        return self.encode(inputs, length)
+
+    def embeddings(self, tokens):
+        """Converts token indexes to vector embeddings
+
+        Arguments
+        ---------
+        tokens : torch.Tensor
+            a (Batch x Length x Heads) tensor of token indexes
+
+        Returns
+        -------
+        emb : torch.Tensor
+            a (Batch x Length x Heads x Embedding) tensor
+            of raw vector embeddings from the model's
+            quantizer codebooks
+        """
+        emb, _, _ = self.dac.quantizer.from_codes(tokens.transpose(1, 2).int())
+        return emb.transpose(1, 2)
+
+

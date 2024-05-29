@@ -895,8 +895,14 @@ def prepare_features(
             result = context.token_model(
                 sig.data, sig.lengths, **token_model_kwargs
             )
-            tokens, emb = result[:2]
-            tokens = tokens.int()
+            # TODO: Clean this up
+            if torch.is_tensor(result):
+                tokens = result
+                # Note: Dummy embedding - meaning embeddings are not available
+                emb = torch.zeros((len(sig.data), 1, 1), device=sig.data.device)
+            else:
+                tokens, emb = result[:2]
+                tokens = tokens.int()
             if tokens.dim() < 3:
                 tokens = tokens.unsqueeze(-1)
             yield PaddedData(tokens, sig.lengths)

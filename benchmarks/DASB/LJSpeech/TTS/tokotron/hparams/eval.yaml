@@ -1,0 +1,55 @@
+eval_mos_source: flexthink/ttseval-wavlm-transformer
+eval_dataset: valid
+eval_suffix: ""
+eval_sample_rate: 16000
+eval_asr_type: encoder_decoder
+eval_asr_source: !apply:speechbrain.utils.hparams.choice
+  value: !ref <eval_asr_type>
+  choices:
+    encoder_decoder: speechbrain/asr-transformer-transformerlm-librispeech
+    whisper: openai/whisper-small
+#evaluations: utmos,asr
+evaluations: asr
+output_folder: !PLACEHOLDER
+utmos_batch_size: 8
+utmos_model_path: null
+utmos_ckpt_name: epoch=3-step=7459.ckpt
+utmos_ckpt_path: !ref <utmos_model_path>/<utmos_ckpt_name>
+utmos_use_python: True
+utmos_script: predict.py
+
+
+eval_asr: !apply:speechbrain.utils.hparams.choice
+  value: !ref <eval_asr_type>
+  choices:
+    encoder_decoder: !name:benchmarks.DASB.utils.eval.EncoderDecoderASRSpeechEvaluator
+      source: !ref <eval_asr_source>
+      sample_rate: !ref <eval_sample_rate>
+      overrides:
+        lm_weight: 0.0
+    whisper: !name:benchmarks.DASB.utils.eval.WhisperASRSpeechEvaluator
+      source: !ref <eval_asr_source>
+      sample_rate: !ref <eval_sample_rate>
+
+evaluators:
+  mos: !name:benchmarks.DASB.utils.eval.RegressionModelSpeechEvaluator
+    source: !ref <eval_mos_source>
+    sample_rate: !ref <eval_sample_rate>
+  asr: !ref <eval_asr>
+
+bulk_evaluators:
+  utmos: !name:benchmarks.DASB.utils.eval.UTMOSSpeechEvaluator
+    model_path: !ref <utmos_model_path>
+    output_folder: !ref <output_folder>
+    ckpt_path: !ref <utmos_ckpt_path>
+    batch_size: !ref <utmos_batch_size>
+    script: !ref <utmos_script>
+    use_python: !ref <utmos_use_python>
+
+eval_summary:
+  mos:
+    descriptive: ["score"]
+  asr:
+    descriptive: ["wer", "cer", "wer_ref", "cer_ref", "dwer", "dcer"]
+  utmos:
+    descriptive: ["utmos"]

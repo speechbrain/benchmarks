@@ -43,6 +43,13 @@ class Tacotron2Brain(sb.Brain):
         self.last_loss_stats = {}
         return super().on_fit_start()
 
+    def _get_squish_layer_weights(self):
+        layer_weights = self.hparams.squish_layers_weights
+        if isinstance(layer_weights, str):
+            layer_weights = [float(weight) for weight in layer_weights.split(",")]
+        layer_weights = torch.tensor(layer_weights)[None, None, :, None].to(self.device)
+        return layer_weights
+
     def compute_forward(self, batch, stage):
         """Computes the forward pass
 
@@ -225,6 +232,9 @@ class Tacotron2Brain(sb.Brain):
                 inputs=tokens,
                 input_lengths=tokens_length * tokens_max_len
             )
+            audio_ssl = audio_ssl.transpose(-1, -2)
+            batch_size, max_len, feat_dim = audio_ssl.shape
+            audio_ssl = audio_ssl.view(batch_size, max_len, self.hparams.audio_tokens_per_step, self.hparams.audio_dim)
             wav = self.modules.vocoder(audio_ssl).squeeze(1)
             self.hparams.progress_report.write(
                 ids=batch.uttid,
@@ -246,7 +256,7 @@ class Tacotron2Brain(sb.Brain):
                 sample_ssl, length = batch.audio_ssl
                 if self.hparams.vocoder_flat_feats:
                     sample_ssl = sample_ssl.flatten(start_dim=-2)
-                samples = self.modules.vocoder(sample_ssl.transpose(-1, -2))
+                samples = self.modules.vocoder(sample_ssl)
                 samples = samples.squeeze(1)
                 max_len = samples.size(1)
                 samples_length_abs = (batch.audio_ssl.lengths * max_len).int()

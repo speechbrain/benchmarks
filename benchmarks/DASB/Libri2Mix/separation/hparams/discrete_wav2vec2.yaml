@@ -1,5 +1,5 @@
 # ###########################################################################################
-# Model: Conformer with discrete discrete wav2vec 2.0 audio representations
+# Model: Conformer with discrete wav2vec 2.0 audio representations
 # Authors: Luca Della Libera 2024
 # ###########################################################################################
 
@@ -36,7 +36,7 @@ sorting: random
 use_cache: True
 
 # Training parameters
-num_epochs: 30
+num_epochs: 50
 grad_accumulation_factor: 16
 train_batch_size: 1
 valid_batch_size: 1

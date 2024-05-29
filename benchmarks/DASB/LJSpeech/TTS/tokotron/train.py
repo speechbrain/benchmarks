@@ -214,9 +214,10 @@ class TokotronBrain(sb.Brain):
         for batch in sample_loader:
             batch = batch.to(self.device)
             tokens, tokens_length = batch.tokens
-            infer_out = self.modules.model.infer(
-                input_tokens=tokens, input_length=tokens_length
-            )
+            with torch.no_grad():
+                infer_out = self.modules.model.infer(
+                    input_tokens=tokens, input_length=tokens_length
+                )
             self.hparams.progress_report.write(
                 ids=batch.uttid,
                 audio=infer_out.wav,
@@ -236,7 +237,8 @@ class TokotronBrain(sb.Brain):
             for batch in sample_loader:
                 batch = batch.to(self.device)
                 sample_tokens, length = batch.audio_tokens_pad
-                vocoder_out = self.modules.vocoder(sample_tokens, length)
+                with torch.no_grad():
+                    vocoder_out = self.modules.vocoder(sample_tokens, length)
                 if isinstance(vocoder_out, tuple):
                     samples, samples_length = vocoder_out
                 else:

@@ -1,4 +1,3 @@
-eval_mos_source: flexthink/ttseval-wavlm-transformer
 eval_dataset: valid
 eval_suffix: ""
 eval_sample_rate: 16000
@@ -8,8 +7,7 @@ eval_asr_source: !apply:speechbrain.utils.hparams.choice
   choices:
     encoder_decoder: speechbrain/asr-transformer-transformerlm-librispeech
     whisper: openai/whisper-small
-#evaluations: utmos,asr
-evaluations: asr
+evaluations: utmos,asr
 output_folder: !PLACEHOLDER
 utmos_batch_size: 8
 utmos_model_path: null
@@ -32,9 +30,6 @@ eval_asr: !apply:speechbrain.utils.hparams.choice
       sample_rate: !ref <eval_sample_rate>
 
 evaluators:
-  mos: !name:benchmarks.DASB.utils.eval.RegressionModelSpeechEvaluator
-    source: !ref <eval_mos_source>
-    sample_rate: !ref <eval_sample_rate>
   asr: !ref <eval_asr>
 
 bulk_evaluators:
@@ -47,8 +42,6 @@ bulk_evaluators:
     use_python: !ref <utmos_use_python>
 
 eval_summary:
-  mos:
-    descriptive: ["score"]
   asr:
     descriptive: ["wer", "cer", "wer_ref", "cer_ref", "dwer", "dcer"]
   utmos:

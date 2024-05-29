@@ -12,11 +12,10 @@ import logging
 import re
 from tarfile import TarFile
 from pathlib import Path
-from speechbrain.dataio.batch import PaddedData
 from speechbrain.dataio.dataloader import make_dataloader
 from speechbrain.dataio.dataset import DynamicItemDataset
 from speechbrain.utils.data_pipeline import DataPipeline
-from speechbrain.utils.data_utils import undo_padding
+from .data import undo_batch, as_dict
 from tqdm.auto import tqdm
 
 logger = logging.getLogger(__name__)
@@ -119,17 +118,16 @@ class FeatureExtractor:
         features = self.pipeline.compute_outputs(batch_dict)
 
         for item_id, item_features in zip(ids, undo_batch(features)):
-            if data is not None:
-                self._add_inline_features(item_id, item_features, data)
+            self._add_inline_features(item_id, item_features, data)
             self.save_fn(item_id, item_features, save_path=self.save_path)
 
     def _add_inline_features(self, item_id, item_features, data):
-        item_data = data.get(item_id)
-        if not item_data:
-            return
+        item_data = data.get(item_id) if data is not None else None
         for key in self.inline_keys:
-            item_data[key] = item_features[key]
+            if item_data is not None:
+                item_data[key] = item_features[key]
             del item_features[key]
+        return item_features
 
     def add_dynamic_item(self, func, takes=None, provides=None):
         """Adds a dynamic item to be output
@@ -398,53 +396,3 @@ class Freezer:
     def __exit__(self, exc_type, exc_value, traceback):
         self.freeze()
 
-
-def undo_batch(batch):
-    """Converts a padded batch or a dicitionary to a list of
-    dictionaries. Any instances of PaddedData encountered will
-    be converted to plain tensors
-
-    Arguments
-    ---------
-    batch: dict|speechbrain.dataio.batch.PaddedBatch
-        the batch
-
-    Returns
-    -------
-    result: dict
-        a list of dictionaries with each dictionary as a batch
-        element
-    """
-    if hasattr(batch, "as_dict"):
-        batch = batch.as_dict()
-    keys = batch.keys()
-    return [
-        dict(zip(keys, item))
-        for item in zip(
-            *[_unpack_feature(feature) for feature in batch.values()]
-        )
-    ]
-
-
-def _unpack_feature(feature):
-    """Un-batches a single feature. If a PaddedBatch is provided, it will be converted
-    to a list of unpadded tensors. Otherwise, it will be returned unmodified
-
-    Arguments
-    ---------
-    feature : any
-        The feature to un-batch
-    """
-    if isinstance(feature, PaddedData):
-        device = feature.data.device
-        feature = undo_padding(feature.data, feature.lengths)
-        feature = [torch.tensor(item, device=device) for item in feature]
-    return feature
-
-
-# TODO: This is not elegant. The original implementation had 
-# as_dict() added to PaddedBatch. The benchmark has the limitation
-# of not being able to enhance the core.
-def as_dict(batch):
-    """Converts a batch to a dictionary"""
-    return {key: getattr(batch, key) for key in batch._PaddedBatch__keys}

@@ -1,53 +1,49 @@
 #!/usr/bin/env python3
 """ Recipe for "direct" (speech -> scenario) "Intent" classification using SLURP Dataset.
-18 Scenarios classes are present in SLURP (calendar, email)
-We encode input waveforms into features using a discrete tokens.
-The probing is done using a RNN layer followed by a linear classifier.
+18 Scenarios classes are present in SLURP (calendar, email ...)
+We encode input waveforms into features using a SSL encoder
+The probing is done using time-pooling followed with a linear classifier.
 
 Authors
  * Pooneh Mousavi 2024
 """
 
-
 import os
 import sys
-import torchaudio
-from hyperpyyaml import load_hyperpyyaml
 import speechbrain as sb
+from hyperpyyaml import load_hyperpyyaml
 from speechbrain.utils.distributed import run_on_main
 import torch
+import torchaudio
 
 
 class IntentIdBrain(sb.Brain):
     def compute_forward(self, batch, stage):
-        """Computation pipeline based on a encoder + emotion classifier."""
-
+        """Computation pipeline based on a encoder + scenario classifier.
+        """
         batch = batch.to(self.device)
-        wavs, wav_lens = batch.sig
-
-             # Feature extraction and attention pooling
+        wavs, lens = batch.sig
+        # Feature extraction and attention pooling
         with torch.no_grad():
             self.hparams.codec.to(self.device).eval()
-            tokens, _ = self.hparams.codec(
-                wavs.unsqueeze(1), n_quantizers=self.hparams.num_codebooks
+            tokens, _, _ = self.hparams.codec(
+                wavs, lens, **self.hparams.tokenizer_config
             )
-        embeddings = self.modules.discrete_embedding_layer(
-            tokens.movedim(-2, -1)
-        )
+        embeddings = self.modules.discrete_embedding_layer(tokens)
         att_w = self.modules.attention_mlp(embeddings)
         feats = torch.matmul(att_w.transpose(2, -1), embeddings).squeeze(-2)
         # last dim will be used for AdaptativeAVG pool
-        outputs = self.modules.enc(feats)
-        outputs = self.hparams.avg_pool(outputs, wav_lens)
+        outputs = self.hparams.avg_pool(feats, lens)
         outputs = outputs.view(outputs.shape[0], -1)
         outputs = self.modules.output_mlp(outputs)
-
         outputs = self.hparams.log_softmax(outputs)
         return outputs
 
     def compute_objectives(self, predictions, batch, stage):
-        """Computes the loss using speaker-id as label."""
+        """Computes the loss using speaker-id as label.
+        """
         scenario_id, _ = batch.scenario_encoded
+        # to meet the input form of nll loss
         scenario_id = scenario_id.squeeze(1)
         loss = self.hparams.compute_cost(predictions, scenario_id)
         if stage != sb.Stage.TRAIN:
@@ -107,14 +103,6 @@ class IntentIdBrain(sb.Brain):
                 self.model_optimizer, new_lr
             )
 
-            # (
-            #     old_lr_encoder,
-            #     new_lr_encoder,
-            # ) = self.hparams.lr_annealing_weights(stats["error_rate"])
-            # sb.nnet.schedulers.update_learning_rate(
-            #     self.weights_optimizer, new_lr_encoder
-            # )
-
             # The train_logger writes a summary to stdout and to the logfile.
             self.hparams.train_logger.log_stats(
                 {"Epoch": epoch, "lr": old_lr},
@@ -136,21 +124,14 @@ class IntentIdBrain(sb.Brain):
 
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
-        # self.weights_optimizer = self.hparams.weights_opt_class(
-        #     self.hparams.attention_mlp.parameters()
-        # )
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
         )
         self.optimizers_dict = {
             "model_optimizer": self.model_optimizer,
-            # "weights_optimizer": self.weights_optimizer,
         }
         if self.checkpointer is not None:
             self.checkpointer.add_recoverable("modelopt", self.model_optimizer)
-            # self.checkpointer.add_recoverable(
-            #     "weights_opt", self.weights_optimizer
-            # )
 
 
 def dataio_prep(hparams):
@@ -222,6 +203,7 @@ def dataio_prep(hparams):
         )(sig)
         #         resampled = resampled.unsqueeze(0)
         return resampled
+
     # Initialization of the label encoder. The label encoder assignes to each
     # of the observed label a unique index (e.g, 'spk01': 0, 'spk02': 1, ..)
     label_encoder = sb.dataio.encoder.CategoricalEncoder()
@@ -251,12 +233,11 @@ def dataio_prep(hparams):
     label_encoder.load_or_create(
         path=lab_enc_file, from_didatasets=[datasets[0]], output_key="scenario",
     )
-
     return {"train": datasets[0], "valid": datasets[1], "test": datasets[2]}
 
 
-# RECIPE BEGINS!
 if __name__ == "__main__":
+
     # Reading command line arguments.
     hparams_file, run_opts, overrides = sb.parse_arguments(sys.argv[1:])
 
@@ -291,8 +272,6 @@ if __name__ == "__main__":
     # Data preparation, to be run on only one process.
     # Create dataset objects "train", "valid", and "test".
     datasets = dataio_prep(hparams)
-
-    # freeze the feature extractor part when unfreezing
 
     # Initialize the Brain object to prepare for mask training.
     ic_id_brain = IntentIdBrain(

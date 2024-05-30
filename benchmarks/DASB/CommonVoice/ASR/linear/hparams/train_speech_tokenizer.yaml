@@ -69,7 +69,7 @@ valid_dataloader_opts:
 # Model parameters
 activation: !name:torch.nn.Sigmoid
 dnn_layers: 1
-dnn_neurons: 1024
+dnn_neurons: 2048
 freeze_encoder: True
 # Feature parameters
 encoder_dim: 1024
@@ -124,7 +124,7 @@ enc: !new:speechbrain.lobes.models.VanillaNN.VanillaNN
 
 
 ctc_lin: !new:speechbrain.nnet.linear.Linear
-   input_size: 1024
+   input_size: 2048
    n_neurons: !ref <output_neurons>
 
 log_softmax: !new:speechbrain.nnet.activations.Softmax

@@ -51,7 +51,9 @@ precision: fp32
 number_of_epochs: 15
 batch_size: 8
 lr: 0.001
-lr_final: 0.0001
+base_lr: 0.00000001
+max_lr: !ref <lr>
+step_size: 65000
 mask_length: 10
 mask_prob: 0.65
 original_sample_rate: 16000
@@ -134,10 +136,10 @@ model_opt_class: !name:torch.optim.Adam
     lr: !ref <lr>
     weight_decay: 0.000002
 
-lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
-    initial_value: !ref <lr>
-    final_value: !ref <lr_final>
-    epoch_count: !ref <number_of_epochs>
+lr_annealing: !new:speechbrain.nnet.schedulers.CyclicLRScheduler
+    base_lr: !ref <base_lr>
+    max_lr: !ref <max_lr>
+    step_size: !ref <step_size>
 
 
 # Used to load the SB checkpoint of w2v2

@@ -84,8 +84,6 @@ discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
     num_codebooks: !ref <num_codebooks>
     vocab_size: !ref <vocab_size>
     emb_dim: !ref <encoder_dim>
-    freeze: !ref <freeze_embedding>
-    init: !ref <init_embedding>
 
 attention_mlp: !new:custom_model.AttentionMLP
     input_dim: !ref <encoder_dim>

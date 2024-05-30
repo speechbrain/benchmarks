@@ -18,8 +18,7 @@ train_annotation: !ref <output_folder>/train.csv
 valid_annotation: !ref <output_folder>/dev.csv
 
 ssl_folder: !ref <output_folder>/ssl_checkpoints
-ssl_hub: facebook/wav2vec2-base
-
+ssl_hub: microsoft/wavlm-large
 # Use the following links for the official voxceleb splits:
 # Therefore you cannot use any files in VoxCeleb1 for training
 # if you are using these lists for testing.

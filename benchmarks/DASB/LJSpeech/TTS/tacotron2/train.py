@@ -41,6 +41,8 @@ class Tacotron2Brain(sb.Brain):
         self.last_epoch = 0
         self.last_batch = None
         self.last_loss_stats = {}
+        if self.hparams.squish_layers:
+            self.layer_weights = self._get_squish_layer_weights()
         return super().on_fit_start()
 
     def _get_squish_layer_weights(self):
@@ -48,7 +50,25 @@ class Tacotron2Brain(sb.Brain):
         if isinstance(layer_weights, str):
             layer_weights = [float(weight) for weight in layer_weights.split(",")]
         layer_weights = torch.tensor(layer_weights)[None, None, :, None].to(self.device)
+        layer_weights = layer_weights / layer_weights.sum()
         return layer_weights
+
+    def squish_layers(self, audio_ssl):
+        """Applies layer squishing, if enabled
+
+        Arguments
+        ---------
+        audio_ssl : torch.Tensor
+            SSL features
+
+        Returns
+        -------
+        audio_ssl : torch.Tensor
+            SSL features, squished if enabled
+        """
+        if self.hparams.squish_layers:
+            audio_ssl = (audio_ssl * self.layer_weights).sum(dim=2, keepdim=True)
+        return audio_ssl
 
     def compute_forward(self, batch, stage):
         """Computes the forward pass
@@ -65,12 +85,13 @@ class Tacotron2Brain(sb.Brain):
         the model output
         """
         batch = batch.to(self.device)
-        batch_size, audio_max_len, audio_heads, audio_feat = batch.audio_ssl.data.shape
+        audio_ssl = self.squish_layers(batch.audio_ssl.data)
+        batch_size, audio_max_len, audio_heads, audio_feat = audio_ssl.shape
         tokens_max_len = batch.tokens.data.size(1)
         inputs = (
             batch.tokens.data,
             batch.tokens.lengths * tokens_max_len,
-            batch.audio_ssl.data.view(
+            audio_ssl.view(
                 batch_size, audio_max_len, audio_heads * audio_feat
             ).transpose(-1, -2),
             batch.audio_ssl.data.size(1),
@@ -125,8 +146,9 @@ class Tacotron2Brain(sb.Brain):
             the loss value
         """
         tokens_len = batch.tokens.data.size(1)
-        batch_size, audio_max_len, audio_heads, audio_feat = batch.audio_ssl.data.shape
-        audio = batch.audio_ssl.data.view(
+        audio = self.squish_layers(batch.audio_ssl.data)
+        batch_size, audio_max_len, audio_heads, audio_feat = audio.shape
+        audio = audio.view(
             batch_size, audio_max_len, audio_heads * audio_feat
         ).transpose(-1, -2)
         audio_len = batch.audio_ssl.lengths * audio_max_len

@@ -23,6 +23,7 @@ import sys
 import logging
 from hyperpyyaml import load_hyperpyyaml
 from benchmarks.DASB.utils.preparation import add_prepared_features
+from benchmarks.DASB.utils.hparams import as_list
 from speechbrain.utils.data_utils import scalarize
 from pathlib import Path
 
@@ -43,6 +44,7 @@ class Tacotron2Brain(sb.Brain):
         self.last_loss_stats = {}
         if self.hparams.squish_layers:
             self.layer_weights = self._get_squish_layer_weights()
+        self.layer_idx = self._get_selected_layer_idx()
         return super().on_fit_start()
 
     def _get_squish_layer_weights(self):
@@ -53,7 +55,19 @@ class Tacotron2Brain(sb.Brain):
         layer_weights = layer_weights / layer_weights.sum()
         return layer_weights
 
-    def squish_layers(self, audio_ssl):
+    def _get_selected_layer_idx(self):
+        selected_layers = None
+        if self.hparams.select_layers:
+            layers = as_list(self.hparams.select_layers, dtype=int)
+            model_layers_map = {
+                layer: idx
+                for idx, layer in enumerate(
+                    as_list(self.hparams.ssl_model_layers))
+            }
+            selected_layers = [model_layers_map[layer] for layer in layers]
+        return selected_layers
+
+    def select_layers(self, audio_ssl):
         """Applies layer squishing, if enabled
 
         Arguments
@@ -66,6 +80,8 @@ class Tacotron2Brain(sb.Brain):
         audio_ssl : torch.Tensor
             SSL features, squished if enabled
         """
+        if self.hparams.select_layers:
+            audio_ssl = audio_ssl[:, :, self.layer_idx, :]
         if self.hparams.squish_layers:
             audio_ssl = (audio_ssl * self.layer_weights).sum(dim=2, keepdim=True)
         return audio_ssl
@@ -85,7 +101,7 @@ class Tacotron2Brain(sb.Brain):
         the model output
         """
         batch = batch.to(self.device)
-        audio_ssl = self.squish_layers(batch.audio_ssl.data)
+        audio_ssl = self.select_layers(batch.audio_ssl.data)
         batch_size, audio_max_len, audio_heads, audio_feat = audio_ssl.shape
         tokens_max_len = batch.tokens.data.size(1)
         inputs = (
@@ -146,7 +162,7 @@ class Tacotron2Brain(sb.Brain):
             the loss value
         """
         tokens_len = batch.tokens.data.size(1)
-        audio = self.squish_layers(batch.audio_ssl.data)
+        audio = self.select_layers(batch.audio_ssl.data)
         batch_size, audio_max_len, audio_heads, audio_feat = audio.shape
         audio = audio.view(
             batch_size, audio_max_len, audio_heads * audio_feat

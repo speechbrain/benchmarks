@@ -74,8 +74,7 @@ encoder_dim: 1024
 # If set to True, the encoder_dim should be set to the dim of the tokenizer. For encodec it is 128.
 init_embedding: False 
 freeze_embedding: False
-# Feature parameters
-encoder_dim: 1024
+
 
 # Number of speakers
 out_n_neurons: 1211  #1211 for vox1  # 5994 for vox2, 7205 for vox1+vox2

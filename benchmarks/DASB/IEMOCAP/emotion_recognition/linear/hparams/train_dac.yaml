@@ -36,7 +36,9 @@ sample_rate: 24000
 
 # Feature parameters
 encoder_dim: 1024
-
+# If set to True, the encoder_dim should be set to the dim of the tokenizer. For encodec it is 128.
+init_embedding: False 
+freeze_embedding: False
 
 # different speakers for train, valid and test sets
 different_speakers: True

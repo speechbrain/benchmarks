@@ -65,7 +65,7 @@ audio_tokens_per_step: 1
 
 # Feature Extraction
 extract_features_batch_size: 32
-model_sample_rate: 24000
+model_sample_rate: 16000
 ssl_model_type: hubert
 ssl_model_src: !apply:speechbrain.utils.hparams.choice
     value: !ref <ssl_model_type>

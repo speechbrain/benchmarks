@@ -294,6 +294,7 @@ class Tacotron2Brain(sb.Brain):
                 sample_ssl, length = batch.audio_ssl
                 if self.hparams.vocoder_flat_feats:
                     sample_ssl = sample_ssl.flatten(start_dim=-2)
+                sample_ssl = self.select_layers(sample_ssl)
                 samples = self.modules.vocoder(sample_ssl)
                 samples = samples.squeeze(1)
                 max_len = samples.size(1)

@@ -98,6 +98,7 @@ discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
 
 attention_mlp: !new:custom_model.AttentionMLP
     input_dim: !ref <encoder_dim>
+    hidden_dim: !ref <encoder_dim>
 
 avg_pool: !new:speechbrain.nnet.pooling.StatisticsPooling
     return_std: False

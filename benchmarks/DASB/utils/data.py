@@ -47,9 +47,44 @@ def _unpack_feature(feature):
     """
     if isinstance(feature, PaddedData):
         device = feature.data.device
-        feature = undo_padding(feature.data, feature.lengths)
+        feature = _undo_padding(feature.data, feature.lengths)
         feature = [torch.tensor(item, device=device) for item in feature]
     return feature
+
+
+# NOTE: Similar to the function in speechbrain.utils.data_utils
+# but it keeps values in tensor form
+def _undo_padding(batch, lengths):
+    """Produces Python lists given a batch of sentences with
+    their corresponding relative lengths.
+
+    Arguments
+    ---------
+    batch : torch.Tensor
+        Batch of sentences gathered in a batch.
+    lengths : torch.Tensor
+        Relative length of each sentence in the batch.
+
+    Returns
+    -------
+    as_list : list
+        A python list of the corresponding input tensor.
+
+    Example
+    -------
+    >>> batch=torch.rand([4,100])
+    >>> lengths=torch.tensor([0.5,0.6,0.7,1.0])
+    >>> snt_list=undo_padding(batch, lengths)
+    >>> len(snt_list)
+    4
+    """
+    batch_max_len = batch.shape[1]
+    as_list = []
+    for seq, seq_length in zip(batch, lengths):
+        actual_size = int(torch.round(seq_length * batch_max_len))
+        seq_true = seq[:actual_size, :, :]
+        as_list.append(seq_true)
+    return as_list
 
 
 # TODO: This is not elegant. The original implementation had 

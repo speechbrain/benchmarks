@@ -138,7 +138,7 @@ modules:
 
 
 model: !new:torch.nn.ModuleList
-    - [!ref <output_mlp>, !ref <classifier>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
+    - [!ref <output_mlp>,  !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 log_softmax: !new:speechbrain.nnet.activations.Softmax
     apply_log: True

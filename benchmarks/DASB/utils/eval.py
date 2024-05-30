@@ -471,6 +471,7 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         min_decode_ratio=0.0,
         max_decode_ratio=1.0,
         run_opts=None,
+        unbatch=True,
     ):
         if run_opts is None:
             run_opts = {}
@@ -499,9 +500,33 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
             "device", 
             next(self.model.parameters()).device
         )
+        self.unbatch = unbatch
         self.to(device)
 
     def evaluate_samples(self, wavs, length, text, sample_rate):
+        if self.unbatch:
+            batch_size = len(wavs)
+            length_abs = (length * wavs.size(1)).int()
+            results = [
+                self._evaluate_samples(
+                    wavs[idx:idx + 1, :length_abs[idx].item()],
+                    torch.ones(1, device=wavs.device),
+                    text[idx:idx + 1],
+                    sample_rate
+                )
+                for idx in range(batch_size)
+            ]
+            result = {
+                "wer": torch.stack([result["wer"] for result in results]).squeeze(-1),
+                "cer": torch.stack([result["cer"] for result in results]).squeeze(-1),
+                "pred": [result["pred"][0] for result in results],
+                "target": text
+            }
+            return result
+        else:
+            return self._evaluate_samples(wavs, length, text, sample_rate)
+
+    def _evaluate_samples(self, wavs, length, text, sample_rate):
         if text is None:
             raise ValueError("This evaluator requires ground-truth text")
         wavs = self.resample(wavs, sample_rate)

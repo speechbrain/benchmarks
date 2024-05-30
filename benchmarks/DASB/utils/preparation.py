@@ -11,7 +11,7 @@ import speechbrain as sb
 import concurrent.futures
 import logging
 import re
-from tarfile import TarFile
+import tarfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from speechbrain.dataio.dataloader import make_dataloader
@@ -398,12 +398,19 @@ class Freezer:
             len(file_names),
             self.archive_path,
         )
-        with TarFile.open(self.archive_path, "w") as tar_file:
+        mode = self._get_archive_mode("w")
+        with tarfile.open(self.archive_path, mode) as tar_file:
             for file_name in file_names:
                 tar_file.add(
                     name=file_name,
                     arcname=file_name.relative_to(self.save_path),
                 )
+
+    def _get_archive_mode(self, mode):
+        """Adds a suffix to the archive mode"""
+        if self.archive_path.name.endswith(".gz"):
+            mode = f"{mode}:gz"
+        return mode
 
     def unfreeze(self):
         """Unarchives pretrained files into save_path
@@ -422,7 +429,8 @@ class Freezer:
                 self.archive_path,
                 self.save_path,
             )
-            with TarFile.open(self.archive_path) as tar_file:
+            mode = self._get_archive_mode("r")
+            with tarfile.open(self.archive_path, mode) as tar_file:
                 tar_file.extractall(self.save_path)
             logger.info("Prepared dataset unpacked")
             result = True

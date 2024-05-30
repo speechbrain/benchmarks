@@ -71,6 +71,8 @@ activation: !name:torch.nn.Sigmoid
 dnn_layers: 1
 dnn_neurons: 1024
 freeze_encoder: True
+# Feature parameters
+encoder_dim: 1024
 
 # Outputs
 output_neurons: 100  # BPE size, index(blank/eos/bos) = 0

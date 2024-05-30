@@ -8,9 +8,11 @@ import torch
 import numpy as np
 import math
 import speechbrain as sb
+import concurrent.futures
 import logging
 import re
 from tarfile import TarFile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from speechbrain.dataio.dataloader import make_dataloader
 from speechbrain.dataio.dataset import DynamicItemDataset
@@ -62,6 +64,9 @@ class FeatureExtractor:
         dataloader_opts=None,
         dynamic_items=None,
         description=None,
+        async_save=True,
+        async_save_batch_size=16,
+        async_save_concurrency=8,
     ):
         if not dataloader_opts:
             dataloader_opts = {}
@@ -80,6 +85,11 @@ class FeatureExtractor:
         self.pipeline = DataPipeline(
             static_data_keys=src_keys, dynamic_items=dynamic_items or []
         )
+        self.async_save = async_save
+        self._async_save_futures = {}
+        self.async_save_batch_size = async_save_batch_size
+        self.async_save_concurrency = async_save_concurrency
+        self.save_executor = None
         self.description = description
 
     def extract(self, dataset, data=None):
@@ -95,13 +105,30 @@ class FeatureExtractor:
         if isinstance(dataset, dict):
             dataset = DynamicItemDataset(dataset)
         dataset.set_output_keys(self.src_keys + [self.id_key])
+        if self.async_save:
+            self._init_async_save()
+        try:
+            dataloader = make_dataloader(dataset, **self.dataloader_opts)
+            batch_size = self.dataloader_opts.get("batch_size", 1)
+            batch_count = int(math.ceil(len(dataset) / batch_size))
+            for batch in tqdm(dataloader, total=batch_count, desc=self.description):
+                batch = batch.to(self.device)
+                self.process_batch(batch, data)
+        finally:
+            if self.async_save:
+                self._finish_async_save()
 
-        dataloader = make_dataloader(dataset, **self.dataloader_opts)
-        batch_size = self.dataloader_opts.get("batch_size", 1)
-        batch_count = int(math.ceil(len(dataset) / batch_size))
-        for batch in tqdm(dataloader, total=batch_count, desc=self.description):
-            batch = batch.to(self.device)
-            self.process_batch(batch, data)
+    def _init_async_save(self):
+        self.save_executor = ThreadPoolExecutor(
+            max_workers=self.async_save_concurrency
+        )
+
+    def _finish_async_save(self):
+        try:
+            self.flush()
+        finally:
+            self.save_executor.shutdown()
+            self.save_executor = None
 
     def process_batch(self, batch, data):
         """Processes a batch of data
@@ -117,9 +144,39 @@ class FeatureExtractor:
         ids = batch_dict[self.id_key]
         features = self.pipeline.compute_outputs(batch_dict)
 
-        for item_id, item_features in zip(ids, undo_batch(features)):
+        for idx, (item_id, item_features) in enumerate(zip(ids, undo_batch(features)), start=1):
             self._add_inline_features(item_id, item_features, data)
-            self.save_fn(item_id, item_features, save_path=self.save_path)
+            if self.async_save:
+                future = self.save_executor.submit(
+                    self.save_fn,
+                    item_id,
+                    item_features,
+                    save_path=self.save_path
+                )
+                self._async_save_futures[item_id] = future
+                if idx % self.async_save_batch_size == 0:
+                    self.flush()
+            else:
+                self.save_fn(item_id, item_features, save_path=self.save_path)
+
+    def flush(self):
+        """Flushes all futures that have been accumulated"""
+        concurrent.futures.wait(self._async_save_futures.values())
+        for item_id, future in self._async_save_futures.items():
+            exc = future.exception()
+            if exc is not None:
+                exc_info = (
+                    type(exc),
+                    exc,
+                    exc.__traceback__
+                )
+                logger.warn(
+                    "Saving extracted features for %s could not be completed: %s",
+                    item_id,
+                    str(exc),
+                    exc_info=exc_info
+                )
+        self._async_save_futures.clear()
 
     def _add_inline_features(self, item_id, item_features, data):
         item_data = data.get(item_id) if data is not None else None

@@ -103,7 +103,14 @@ class Separation(sb.Brain):
         )  # [B, N, H]
 
         # Forward encoder
-        hyp_embs = self.modules.encoder.encode(in_embs, in_lens)  # [B, N, H]
+        if type(self.modules.encoder).__name__ == "CRDNN":
+            hyp_embs = self.modules.encoder(in_embs)
+        elif type(self.modules.encoder).__name__ == "TransformerASR":
+            hyp_embs = self.modules.encoder.encode(
+                in_embs, in_lens
+            )  # [B, N, H]
+        else:
+            raise NotImplementedError
 
         # Forward head
         log_probs = (

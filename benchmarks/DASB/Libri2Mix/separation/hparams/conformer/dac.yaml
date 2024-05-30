@@ -3,7 +3,7 @@
 # Authors: Luca Della Libera 2024
 # ###########################################################################################
 
-experiment_name: dac
+experiment_name: conformer/dac
 
 # Seed needs to be set at top of YAML
 seed: 0
@@ -11,11 +11,13 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # Data preparation
 data_folder: !PLACEHOLDER
-train_csv: !ref <save_folder>/trainset_28spk_wav.csv
-valid_csv: !ref <save_folder>/validset_wav.csv
-test_csv: !ref <save_folder>/testset_wav.csv
-splits: [trainset_28spk_wav, validset_wav, testset_wav]
-num_valid_speakers: 2
+train_csv: !ref <save_folder>/train-100.csv
+valid_csv: !ref <save_folder>/dev.csv
+test_csv: !ref <save_folder>/test.csv
+splits: [train-100, dev, test]
+num_speakers: 2
+add_noise: False
+version: wav16k/min
 
 # Output folders
 output_folder: !ref results/<experiment_name>/<seed>
@@ -34,7 +36,7 @@ sorting: random
 use_cache: True
 
 # Training parameters
-num_epochs: 30
+num_epochs: 50
 grad_accumulation_factor: 16
 train_batch_size: 1
 valid_batch_size: 1
@@ -47,6 +49,7 @@ ckpt_interval_minutes: 6000
 keep_checkpoints: 1
 augment: False
 augment_prob: 0.75
+use_pit: True
 
 # Optimizer parameters
 lr: 0.0005
@@ -140,7 +143,7 @@ encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
 
 head: !new:torch.nn.Linear
     in_features: !ref <d_model>
-    out_features: !ref <num_codebooks> * <vocab_size>
+    out_features: !ref <num_speakers> * <num_codebooks> * <vocab_size>
 
 modules:
     embedding: !ref <embedding>

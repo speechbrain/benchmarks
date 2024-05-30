@@ -1,9 +1,9 @@
 # ###########################################################################################
-# Model: Conformer with SpeechTokenizer audio representations
+# Model: CRDNN with continuous WavLM audio representations
 # Authors: Luca Della Libera 2024
 # ###########################################################################################
 
-experiment_name: speech_tokenizer
+experiment_name: crdnn/continuous_wavlm
 
 # Seed needs to be set at top of YAML
 seed: 0
@@ -11,11 +11,13 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # Data preparation
 data_folder: !PLACEHOLDER
-train_csv: !ref <save_folder>/trainset_28spk_wav.csv
-valid_csv: !ref <save_folder>/validset_wav.csv
-test_csv: !ref <save_folder>/testset_wav.csv
-splits: [trainset_28spk_wav, validset_wav, testset_wav]
-num_valid_speakers: 2
+train_csv: !ref <save_folder>/train-100.csv
+valid_csv: !ref <save_folder>/dev.csv
+test_csv: !ref <save_folder>/test.csv
+splits: [train-100, dev, test]
+num_speakers: 2
+add_noise: False
+version: wav16k/min
 
 # Output folders
 output_folder: !ref results/<experiment_name>/<seed>
@@ -31,10 +33,10 @@ train_remove_if_longer: 60.0  # Seconds
 valid_remove_if_longer: 60.0  # Seconds
 test_remove_if_longer: 60.0  # Seconds
 sorting: random
-use_cache: True
+use_cache: False
 
 # Training parameters
-num_epochs: 30
+num_epochs: 50
 grad_accumulation_factor: 16
 train_batch_size: 1
 valid_batch_size: 1
@@ -47,6 +49,7 @@ ckpt_interval_minutes: 6000
 keep_checkpoints: 1
 augment: False
 augment_prob: 0.75
+use_pit: True
 
 # Optimizer parameters
 lr: 0.0005
@@ -55,25 +58,28 @@ improvement_threshold: 0.0025
 annealing_factor: 0.9
 patient: 1
 
-# SpeechTokenizer parameters
+# SSL parameters
 sample_rate: 16000
-vocab_size: 1024
-num_codebooks: 2  # Must be <= 8
-
-# Embedding parameters
-embedding_dim: 1024
-pretrain_embedding: False  # If True, must match the codec's embedding size (1024)
-freeze_embedding: False
+SSL_layers: [1, 3, 7, 12, 18, 23]
+num_codebooks: !apply:len [!ref <SSL_layers>]
+ssl_hub: microsoft/wavlm-large
+vocoder_hub: chaanks/hifigan-wavlm-l1-3-7-12-18-23-LibriTTS  # Must be consistent with ssl_hub/SSL_layers
 
 # Encoder parameters
+embedding_dim: 1024
 dropout: 0.1
-activation: !name:torch.nn.GELU
-d_model: 256
-nhead: 4
-num_layers: 6
-d_ffn: 2048
-max_length: 2000
-causal: False
+activation: !name:torch.nn.LeakyReLU
+rnn_class: !name:speechbrain.nnet.RNN.LSTM
+rnn_layers: 4
+time_pooling_size: 1
+rnn_bidirectional: True
+rnn_neurons: 256
+dnn_blocks: 2
+dnn_neurons: 256
+cnn_blocks: 2
+cnn_channels: (16, 16)
+inter_layer_pooling_size: (2, 2)
+cnn_kernelsize: (3, 3)
 
 # Augmentation
 drop_freq: !new:speechbrain.augment.time_domain.DropFreq
@@ -100,54 +106,61 @@ augmentation: !new:speechbrain.augment.augmenter.Augmenter
     augmentations: [!ref <drop_freq>, !ref <drop_chunk>]
 
 # Modules
-codec: !new:speechbrain.lobes.models.discrete.speechtokenizer_interface.SpeechTokenizer_interface
-    source: fnlp/SpeechTokenizer
-    save_path: !ref <cache_folder>
+ssl_model: !new:utils.SBWav2Vec2ForwardWrapper
+    wav2vec2: !new:speechbrain.lobes.models.huggingface_transformers.wavlm.WavLM
+        source: !ref <ssl_hub>
+        output_norm: False
+        freeze: True
+        freeze_feature_extractor: True
+        output_all_hiddens: True
+        save_path: !ref <cache_folder>
+    layer_ids: !ref <SSL_layers>
 
-embedding: !new:custom_model.Discrete_EmbeddingLayer
-    num_codebooks: !ref <num_codebooks>
-    vocab_size: !ref <vocab_size>
-    emb_dim: !ref <embedding_dim>
-    freeze: !ref <freeze_embedding>
+ssl_vocoder: !apply:speechbrain.inference.vocoders.UnitHIFIGAN.from_hparams
+    source: !ref <vocoder_hub>
+    savedir: !apply:os.path.join [!ref <cache_folder>, !ref <vocoder_hub>]
 
 attention_mlp: !new:custom_model.AttentionMLP
     input_dim: !ref <embedding_dim>
     hidden_dim: !ref <embedding_dim>
 
-encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
-    input_size: !ref <embedding_dim>
-    tgt_vocab: -1
-    d_model: !ref <d_model>
-    nhead: !ref <nhead>
-    num_encoder_layers: !ref <num_layers>
-    num_decoder_layers: 0
-    d_ffn: !ref <d_ffn>
-    dropout: !ref <dropout>
+encoder: !new:speechbrain.lobes.models.CRDNN.CRDNN
+    input_shape: [null, null, !ref <embedding_dim>]
     activation: !ref <activation>
-    max_length: !ref <max_length>
-    encoder_module: conformer
-    normalize_before: True
-    causal: !ref <causal>
+    dropout: !ref <dropout>
+    cnn_blocks: !ref <cnn_blocks>
+    cnn_channels: !ref <cnn_channels>
+    cnn_kernelsize: !ref <cnn_kernelsize>
+    inter_layer_pooling_size: !ref <inter_layer_pooling_size>
+    time_pooling: True
+    using_2d_pooling: False
+    time_pooling_size: !ref <time_pooling_size>
+    rnn_class: !ref <rnn_class>
+    rnn_layers: !ref <rnn_layers>
+    rnn_neurons: !ref <rnn_neurons>
+    rnn_bidirectional: !ref <rnn_bidirectional>
+    dnn_blocks: !ref <dnn_blocks>
+    dnn_neurons: !ref <dnn_neurons>
+    rnn_re_init: True
+    use_rnnp: False
 
 head: !new:torch.nn.Linear
-    in_features: !ref <d_model>
-    out_features: !ref <num_codebooks> * <vocab_size>
+    in_features: !ref <dnn_neurons>
+    # Workaround to bypass HyperPyYAML lack of flexibility
+    out_features: !apply:train_continuous_ssl.len_ [!ref <num_speakers>, !ref <SSL_layers>, !ref <embedding_dim>]
 
 modules:
-    embedding: !ref <embedding>
     attention_mlp: !ref <attention_mlp>
     encoder: !ref <encoder>
     head: !ref <head>
 
 model: !new:torch.nn.ModuleList
-    [[!ref <embedding>,
-      !ref <attention_mlp>,
+    [[!ref <attention_mlp>,
       !ref <encoder>,
       !ref <head>]]
 
 # Loss functions
-ce_loss: !name:speechbrain.nnet.losses.nll_loss
-    label_smoothing: 0.0
+rec_loss: !name:speechbrain.nnet.losses.mse_loss
     allowed_len_diff: 0
     reduction: mean
 
@@ -183,10 +196,6 @@ test_dataloader_kwargs:
     pin_memory: True
 
 # Performance metrics
-ter_computer: !name:speechbrain.utils.metric_stats.MetricStats
-    metric: !name:speechbrain.nnet.losses.classification_error
-        reduction: batch
-
 dnsmos_computer: !name:metrics.dnsmos.DNSMOS
     sample_rate: !ref <sample_rate>
 

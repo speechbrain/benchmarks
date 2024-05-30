@@ -3,7 +3,7 @@
 # Authors: Luca Della Libera 2024
 # ###########################################################################################
 
-experiment_name: encodec
+experiment_name: conformer/encodec
 
 # Seed needs to be set at top of YAML
 seed: 0

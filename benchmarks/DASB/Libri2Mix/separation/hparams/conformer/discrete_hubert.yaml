@@ -1,9 +1,9 @@
 # ###########################################################################################
-# Model: Conformer with DAC audio representations
+# Model: Conformer with discrete HuBERT audio representations
 # Authors: Luca Della Libera 2024
 # ###########################################################################################
 
-experiment_name: dac
+experiment_name: conformer/discrete_hubert
 
 # Seed needs to be set at top of YAML
 seed: 0
@@ -58,17 +58,16 @@ improvement_threshold: 0.0025
 annealing_factor: 0.9
 patient: 1
 
-# DAC parameters
-# sample_rate: [16000, 24000, 44000, 44000]
-# vocab_size: [1024, 1024, 1024, 1024]
-# max_num_codebooks: [12, 32, 9, 18]
-# model_type: [16khz, 24khz, 44khz, 44khz]
-# model_bitrate: [8kbps, 8kbps, 8kbps, 16kbps]
-sample_rate: 24000  # NOTE: must match DAC's model type
-vocab_size: 1024
-num_codebooks: 2  # NOTE: must be smaller or equal to the maximum number of codebooks for the given model type
-model_type: 24khz
-model_bitrate: 8kbps
+# Discrete SSL parameters
+sample_rate: 16000
+num_clusters: 1000
+vocab_size: !ref <num_clusters>
+SSL_layers: [1, 3, 7, 12, 18, 23]
+num_codebooks: !apply:len [!ref <SSL_layers>]
+ssl_hub: facebook/hubert-large-ll60k
+vocoder_hub: chaanks/hifigan-hubert-l1-3-7-12-18-23-k1000-LibriTTS  # Must be consistent with ssl_hub/SSL_layers/num_clusters
+kmeans_repo_id: poonehmousavi/SSL_Quantization
+kmeans_dataset: LibriSpeech-100-360-500
 
 # Embedding parameters
 embedding_dim: 1024
@@ -110,11 +109,26 @@ augmentation: !new:speechbrain.augment.augmenter.Augmenter
     augmentations: [!ref <drop_freq>, !ref <drop_chunk>]
 
 # Modules
-codec: !new:speechbrain.lobes.models.discrete.dac.DAC
-    model_type: !ref <model_type>
-    model_bitrate: !ref <model_bitrate>
-    load_pretrained: True
-    tag: latest
+ssl_model: !new:utils.SBWav2Vec2ForwardWrapper
+    wav2vec2: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
+        source: !ref <ssl_hub>
+        output_norm: False
+        freeze: True
+        freeze_feature_extractor: True
+        output_all_hiddens: True
+        save_path: !ref <cache_folder>
+    layer_ids: !ref <SSL_layers>
+
+codec_quantizer: !new:speechbrain.lobes.models.huggingface_transformers.discrete_ssl.DiscreteSSL
+    save_path: !ref <cache_folder>
+    ssl_model: !ref <ssl_model>
+    kmeans_dataset: !ref <kmeans_dataset>
+    kmeans_repo_id: !ref <kmeans_repo_id>
+    num_clusters: !ref <num_clusters>
+
+codec_vocoder: !apply:speechbrain.inference.vocoders.UnitHIFIGAN.from_hparams
+    source: !ref <vocoder_hub>
+    savedir: !apply:os.path.join [!ref <cache_folder>, !ref <vocoder_hub>]
 
 embedding: !new:custom_model.Discrete_EmbeddingLayer
     num_codebooks: !ref <num_codebooks>
@@ -143,7 +157,8 @@ encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
 
 head: !new:torch.nn.Linear
     in_features: !ref <d_model>
-    out_features: !ref <num_speakers> * <num_codebooks> * <vocab_size>
+    # Workaround to bypass HyperPyYAML lack of flexibility
+    out_features: !apply:train_discrete_ssl.len_ [!ref <num_speakers>, !ref <SSL_layers>, !ref <vocab_size>]
 
 modules:
     embedding: !ref <embedding>

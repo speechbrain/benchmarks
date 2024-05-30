@@ -28,7 +28,7 @@ skip_prep: False
 compute_cost: !name:speechbrain.nnet.losses.nll_loss
 # URL for the encoder2 model, you can change to benchmark diffrenet models
 
-ssl_hub: facebook/wav2vec2-base
+ssl_hub: microsoft/wavlm-large
 ssl_folder: !ref <output_folder>/ssl_checkpoints
 encoder_dim: 1024
 

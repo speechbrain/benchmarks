@@ -12,6 +12,8 @@ import concurrent.futures
 import logging
 import re
 import tarfile
+import shutil
+import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from speechbrain.dataio.dataloader import make_dataloader
@@ -394,17 +396,23 @@ class Freezer:
             return
         file_names = self.get_files()
         logger.info(
-            "Arhiving %d files from the prepared dataset in %s",
+            "Archiving %d files from the prepared dataset in %s",
             len(file_names),
             self.archive_path,
         )
         mode = self._get_archive_mode("w")
-        with tarfile.open(self.archive_path, mode) as tar_file:
+        tmp_archive_path = self.save_path / self.archive_path.name
+        logger.info("Creating a temporary archive: %s", tmp_archive_path)
+        with tarfile.open(tmp_archive_path, mode) as tar_file:
             for file_name in file_names:
                 tar_file.add(
                     name=file_name,
                     arcname=file_name.relative_to(self.save_path),
                 )
+        logger.info("Copying %s to %s", tmp_archive_path, self.archive_path)
+        shutil.copy(tmp_archive_path, self.archive_path)
+        logger.info("Done copying, removing %s", tmp_archive_path)
+        os.remove(tmp_archive_path)
 
     def _get_archive_mode(self, mode):
         """Adds a suffix to the archive mode"""

@@ -1,6 +1,6 @@
 # ########################################
 # Recipe for training an emotion recognition system from speech data
-# only using IEMOCAP and an discrete tokenizer
+# only using IEMOCAP and an SSL feature extractor
 # The system classifies 4 emotions ( anger, happiness, sadness, neutrality)
 # with an ECAPA-TDNN model.
 # Authors
@@ -13,35 +13,21 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # Dataset will be downloaded to the `data_original`
 data_folder: !PLACEHOLDER # e.g., /path/to/IEMOCAP_full_release
-output_folder: !ref results/IEMOCAP/IEMOCAP_full_release/discrete_ssl/<seed>
+output_folder: !ref results/IEMOCAP/IEMOCAP_full_release/linear/speech_tokenizer/<seed>
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 
-### Configuration for  discrete SSL model
-ssl_hub: facebook/hubert-large-ll60k
-ssl_folder: !ref <save_folder>/hubert_checkpoint
-kmeans_repo_id: poonehmousavi/SSL_Quantization
-kmeans_cache_dir: !ref <save_folder>/kmeans_checkpoint
-kmeans_dataset: LibriSpeech-100-360-500
-freeze_ssl: True
-freeze_feature_extractor: True
-num_clusters: 1000
-
+# URL for the ssl encoder  model, you can change to benchmark diffrenet models
+# Important: we use ssl encoder base and not the fine-tuned one with ASR task
+# This allow you to have ~4% improvment
 
 ### Config for Tokenizer
-# Layer number should be among the supported layers for discrete SSL models(kmenas  model should be available for that layer)
-# ssl_layer_num: [3, 7, 12, 23]
-# deduplicate: [False, False, False, False]
-# bpe_tokenizer_path: [null , null,  null, null]
-ssl_layer_num: [1, 3, 7, 12, 18, 23]
-num_codebooks: 6
-deduplicate: [False, False, False, False, False, False]
-bpe_tokenizer_path: [null, null, null, null, null, null]
+vocab_size: 1024
+num_codebooks: 2
 sample_rate: 16000
 
 # Feature parameters
-
-encoder_dim: 768
+encoder_dim: 1024
 
 # different speakers for train, valid and test sets
 different_speakers: True
@@ -86,59 +72,39 @@ test_dataloader_opts:
     batch_size: !ref <test_batch_size>
 
 # Modules
-tokenizer_config:
-    SSL_layers: !ref <ssl_layer_num>
-    deduplicates: !ref <deduplicate>
-    bpe_tokenizers: !ref <bpe_tokenizer_path>
-
-ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
-    source: !ref <ssl_hub>
-    output_norm: False
-    freeze: !ref <freeze_ssl>
-    freeze_feature_extractor: !ref <freeze_feature_extractor>
-    output_all_hiddens: True
-    save_path: !ref <ssl_folder>
-
-codec: !new:speechbrain.lobes.models.huggingface_transformers.discrete_ssl.DiscreteSSL
-    save_path: !ref <kmeans_cache_dir>
-    ssl_model: !ref <ssl_model>
-    kmeans_dataset: !ref <kmeans_dataset>
-    kmeans_repo_id: !ref <kmeans_repo_id>
-    num_clusters: !ref <num_clusters>
+codec: !new:speechbrain.lobes.models.discrete.speechtokenizer_interface.SpeechTokenizer_interface
+    source: fnlp/SpeechTokenizer  # Only the 24kHz version supports mono audio
+    save_path: !ref <save_folder>
 
 discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
     num_codebooks: !ref <num_codebooks>
-    vocab_size: !ref <num_clusters>
+    vocab_size: !ref <vocab_size>
     emb_dim: !ref <encoder_dim>
 
 attention_mlp: !new:custom_model.AttentionMLP
     input_dim: !ref <encoder_dim>
     hidden_dim: !ref <encoder_dim>
 
-embedding_model: !new:speechbrain.lobes.models.ECAPA_TDNN.ECAPA_TDNN
-    input_size: !ref <encoder_dim>
-    channels: [1024, 1024, 1024, 1024, 3072]
-    kernel_sizes: [5, 3, 3, 3, 1]
-    dilations: [1, 2, 3, 4, 1]
-    attention_channels: 64
-    lin_neurons: 192
+avg_pool: !new:speechbrain.nnet.pooling.StatisticsPooling
+    return_std: False
 
-classifier: !new:speechbrain.lobes.models.ECAPA_TDNN.Classifier
-    input_size: 192
-    out_neurons: !ref <out_n_neurons>
+output_mlp: !new:speechbrain.nnet.linear.Linear
+    input_size: !ref <encoder_dim>
+    n_neurons: !ref <out_n_neurons>
+    bias: False
 
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
     limit: !ref <number_of_epochs>
 
 modules:
-    classifier: !ref <classifier>
-    embedding_model: !ref <embedding_model>
+    output_mlp: !ref <output_mlp>
     attention_mlp: !ref <attention_mlp>
     codec: !ref <codec>
     discrete_embedding_layer: !ref <discrete_embedding_layer>
 
+
 model: !new:torch.nn.ModuleList
-    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
+    - [!ref <output_mlp>, !ref <classifier>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 log_softmax: !new:speechbrain.nnet.activations.Softmax
     apply_log: True
@@ -167,5 +133,4 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
         attention_mlp: !ref <attention_mlp>
         codec: !ref <codec>
         discrete_embedding_layer: !ref <discrete_embedding_layer>
-        classifier: !ref <classifier>
         counter: !ref <epoch_counter>

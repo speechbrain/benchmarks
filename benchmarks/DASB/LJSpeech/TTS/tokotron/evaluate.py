@@ -182,7 +182,8 @@ class TokotronEvaluator:
         with torch.no_grad():
             batch = batch.to(self.device)
             tokens, tokens_length = batch.tokens
-            self.modules.vocoder.model.device = self.device
+            if hasattr(self.modules.vocoder, "model"):
+                self.modules.vocoder.model.device = self.device
             infer_out = self.modules.model.infer(
                 input_tokens=tokens, input_length=tokens_length
             )

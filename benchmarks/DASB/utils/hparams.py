@@ -15,7 +15,7 @@ def as_list(value, dtype=None):
     Arguments
     ---------
     value : object
-        the orihginal value
+        the original value
     dtype : str | callable
         "int" for integers
         "float" for floating-point values
@@ -26,14 +26,14 @@ def as_list(value, dtype=None):
     value: list
         the provided value, as a list
     """
+    if dtype in _DTYPE_CONVERT:
+        dtype = _DTYPE_CONVERT[dtype]        
     if dtype and isinstance(value, dtype):
         value = [value]
     else:
         if isinstance(value, str):
             value = [item.strip() for item in value.split(",")]
         if dtype is not None:
-            if dtype in _DTYPE_CONVERT:
-                dtype = _DTYPE_CONVERT[dtype]        
             value = [dtype(item) for item in value]
     return value if isinstance(value, list) else list(value)
 

@@ -82,7 +82,7 @@ def _undo_padding(batch, lengths):
     as_list = []
     for seq, seq_length in zip(batch, lengths):
         actual_size = int(torch.round(seq_length * batch_max_len))
-        seq_true = seq[:actual_size, :, :]
+        seq_true = seq[:actual_size]
         as_list.append(seq_true)
     return as_list
 

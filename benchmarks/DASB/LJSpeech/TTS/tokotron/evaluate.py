@@ -91,9 +91,11 @@ class TokotronEvaluator:
         """
         logger.info("Recovering the checkpoint")
         ckpt = self.hparams.checkpointer.recover_if_possible()
-        #if not ckpt:
-        #    raise ValueError("Unable to recover the checkpoint")
+        if not ckpt:
+            raise ValueError("Unable to recover the checkpoint")
         self.modules.model.eval()
+        if self.hparams.eval_samples is not None:
+            dataset = dataset.filtered_sorted(select_n=self.hparams.eval_samples)
         loader = sb.dataio.dataloader.make_dataloader(dataset, batch_size=self.hparams.batch_size)
         loader_it = iter(loader)
         self.create_reports()

@@ -630,11 +630,16 @@ class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
         script="predict.py",
         python="python",
         use_python=True,
-        batch_size=8
+        batch_size=8,
+        tmp_folder=None
     ):
         self.output_folder = Path(output_folder)
         rand = torch.randint(1, 999999999, (1,)).item()
-        self.eval_path = (self.output_folder / f"eval_{rand}").absolute()
+        if tmp_folder is None:
+            tmp_folder = self.output_folder
+        else:
+            tmp_folder = Path(tmp_folder)
+        self.eval_path = (tmp_folder / f"eval_{rand}").absolute()
         self.model_path = Path(model_path).absolute()
         script = self.model_path / script
         self.script = script

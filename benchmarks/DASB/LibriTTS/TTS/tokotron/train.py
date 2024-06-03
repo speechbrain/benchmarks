@@ -28,6 +28,7 @@ from benchmarks.DASB.utils.audio_tokens import (
     use_silence_padding,
     feature_pad_to,
 )
+from benchmarks.DASB.utils.hparams import as_list
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,7 @@ class TokotronBrain(sb.Brain):
         audio_tokens, audio_tokens_length = batch.audio_tokens_bos
         if self.compression:
             audio_tokens = self.compression_model.compress(audio_tokens)
+        audio_tokens = self.select_layers(audio_tokens)
         predictions = self.modules.model(
             input_tokens=tokens,
             input_length=tokens_length,
@@ -69,6 +71,36 @@ class TokotronBrain(sb.Brain):
         )
 
         return predictions
+
+    def _get_selected_layer_idx(self):
+        selected_layers = None
+        if self.hparams.select_layers:
+            layers = as_list(self.hparams.select_layers, dtype=int)
+            model_layers_map = {
+                layer: idx
+                for idx, layer in enumerate(
+                    as_list(self.hparams.token_model_layers))
+            }
+            selected_layers = [model_layers_map[layer] for layer in layers]
+        return selected_layers
+
+    # TODO: Move this elsewhere
+    def select_layers(self, audio_ssl):
+        """Applies layer squishing, if enabled
+
+        Arguments
+        ---------
+        audio_ssl : torch.Tensor
+            SSL features
+
+        Returns
+        -------
+        audio_ssl : torch.Tensor
+            SSL features, squished if enabled
+        """
+        if self.hparams.select_layers:
+            audio_ssl = audio_ssl[:, :, self.layer_idx]
+        return audio_ssl
 
     def compute_objectives(self, predictions, batch, stage):
         """Computes the loss given the predicted and targeted outputs. We here
@@ -93,6 +125,7 @@ class TokotronBrain(sb.Brain):
         audio_tokens, audio_tokens_length = batch.audio_tokens_pad
         if self.compression:
             audio_tokens = self.compression_model.compress(audio_tokens)
+        audio_tokens = self.select_layers(audio_tokens)
         loss_details = self.hparams.compute_cost(
             predictions=predictions,
             audio_tokens=audio_tokens,
@@ -124,6 +157,7 @@ class TokotronBrain(sb.Brain):
         """
         if hasattr(self.modules.vocoder, "model"):
             self.modules.vocoder.model.device = self.device
+        self.layer_idx = self._get_selected_layer_idx()
         self.create_perfect_samples()
         self.loss_metric = sb.utils.metric_stats.MultiMetricStats(
             metric=self.hparams.compute_cost, batch_eval=True,
@@ -242,6 +276,7 @@ class TokotronBrain(sb.Brain):
             for batch in sample_loader:
                 batch = batch.to(self.device)
                 sample_tokens, length = batch.audio_tokens_pad
+                sample_tokens = self.select_layers(sample_tokens)
                 vocoder_out = self.vocoder(
                     sample_tokens,
                     length,
@@ -332,7 +367,7 @@ def dataio_prepare(hparams):
         return label_encoder.encode_sequence_torch(label)
 
     use_silence_padding = hparams.get("use_silence_padding", True)
-    audio_tokens_per_step = hparams["audio_tokens_per_step"]
+    audio_tokens_per_step = len(as_list(hparams["token_model_layers"]))
     if use_silence_padding:
         silence_token, _ = get_silence_token(
             hparams["token_model"],
@@ -355,7 +390,7 @@ def dataio_prepare(hparams):
     @sb.utils.data_pipeline.takes("audio_tokens")
     @sb.utils.data_pipeline.provides("audio_tokens_pad", "audio_tokens_bos")
     def audio_pipeline(audio_tokens):
-        audio_tokens = torch.from_numpy(audio_tokens)[:, :audio_tokens_per_step]
+        audio_tokens = torch.from_numpy(audio_tokens)
         audio_tokens_pad = feature_pad_to(
             audio_tokens, len(audio_tokens) + silence_padding_len, silence_token
         )
@@ -381,15 +416,11 @@ def dataio_prepare(hparams):
             ],
         )
 
-        prepared_features = ["audio_tokens", "spk_emb"]
-        if hparams["input"] == "phonemes":
-            prepared_features.append("phn")
-
         add_prepared_features(
             dataset=dynamic_dataset,
             save_path=Path(hparams["prepare_save_folder"]) / "features",
             id_key="uttid",
-            features=prepared_features,
+            features=["audio_tokens", "spk_emb"],
         )
 
         datasets[dataset] = dynamic_dataset

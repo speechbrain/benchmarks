@@ -52,7 +52,8 @@ token_model_src: !apply:speechbrain.utils.hparams.choice
 g2p_src: flexthink/soundchoice-g2p
 token_model_kmeans_src: poonehmousavi/SSL_Quantization
 token_model_kmeans_dataset: LibriSpeech-100-360-500
-token_model_layers: [1, 3, 7, 12, 18, 23] 
+token_model_layers: [1, 3, 7, 12, 18, 23]
+select_layers: null
 token_offset: 1
 vocoder_src:  !apply:speechbrain.utils.hparams.choice
     value: !ref <ssl_model_type>
@@ -270,7 +271,11 @@ vocoder: !new:benchmarks.DASB.model.custom_model.HierarchicalUnitWrapper
         value: !ref <vocoder_available_layers>
         dtype: int
     layers: !apply:benchmarks.DASB.utils.hparams.as_list
-        value: !ref <token_model_layers>
+        value: !apply:speechbrain.utils.hparams.choice
+            value: !ref <select_layers>
+            default: !ref <select_layers>
+            choices:
+                null: !ref <token_model_layers>
         dtype: int
     num_units: !ref <audio_num_tokens>
     offset: !ref <token_offset>

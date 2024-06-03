@@ -641,7 +641,6 @@ def prepare_features(
     feature_keys = [key for key in features if key not in INLINE_FEATURES]
     inline_keys = [key for key in features if key in INLINE_FEATURES]
     feature_extractor.set_output_features(feature_keys, inline_keys=inline_keys)
-    feature_extractor.extract(dataset, data)
     with torch.no_grad():
         feature_extractor.extract(dataset)
 

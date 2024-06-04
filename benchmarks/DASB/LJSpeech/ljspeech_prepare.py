@@ -363,9 +363,12 @@ def split_sets(data_folder, splits, split_ratio, frozen_split_path):
     if frozen_split_path is not None:
         frozen_split_path = Path(frozen_split_path)
         if frozen_split_path.exists():
+            logger.info("Using frozen split at %s", str(frozen_split_path))
             with open(frozen_split_path, "r") as frozen_split_file:
                 data_split = json.load(frozen_split_file)
             return data_split, meta_csv
+        else:
+            logger.info("Frozen split %s does not exist", str(frozen_split_path))
 
     index_for_sessions = []
     session_id_start = "LJ001"

@@ -34,6 +34,7 @@ utmos_ckpt_name: epoch=3-step=7459.ckpt
 utmos_ckpt_path: !ref <utmos_model_path>/<utmos_ckpt_name>
 utmos_use_python: True
 utmos_script: predict.py
+tmp_folder: null
 
 train_json: !ref <prepare_save_folder>/train.json
 valid_json: !ref <prepare_save_folder>/valid.json

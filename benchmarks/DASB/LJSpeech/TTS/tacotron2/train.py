@@ -294,8 +294,8 @@ class Tacotron2Brain(sb.Brain):
                 sample_ssl, length = batch.audio_ssl
                 if self.hparams.vocoder_flat_feats:
                     sample_ssl = sample_ssl.flatten(start_dim=-2)
-                sample_ssl = self.select_layers(sample_ssl)
                 samples = self.modules.vocoder(sample_ssl)
+                sample_ssl = self.select_layers(sample_ssl)
                 samples = samples.squeeze(1)
                 max_len = samples.size(1)
                 samples_length_abs = (batch.audio_ssl.lengths * max_len).int()
@@ -329,10 +329,16 @@ def dataio_prepare(hparams):
     label_encoder = hparams["label_encoder"]
 
     @sb.utils.data_pipeline.takes("label")
+    @sb.utils.data_pipeline.provides("label_norm")
+    def label_norm_pipeline(label):
+        """Processes the transcriptions to generate proper labels"""
+        return label.upper()
+
+    @sb.utils.data_pipeline.takes("label_norm")
     @sb.utils.data_pipeline.provides("tokens", "tokens_len")
     def tokens_pipeline(label):
         """Processes the transcriptions to generate proper labels"""
-        tokens = label_encoder.encode_sequence_torch(label.upper())
+        tokens = label_encoder.encode_sequence_torch(label)
         yield tokens
         yield len(tokens)
 
@@ -341,7 +347,7 @@ def dataio_prepare(hparams):
     for dataset in hparams["splits"]:
         dynamic_dataset = sb.dataio.dataset.DynamicItemDataset.from_json(
             json_path=data_info[dataset],
-            dynamic_items=[tokens_pipeline],
+            dynamic_items=[label_norm_pipeline, tokens_pipeline],
             replacements={"data_root": hparams["data_folder"]},
             output_keys=["uttid", "audio_ssl", "tokens"],
         )

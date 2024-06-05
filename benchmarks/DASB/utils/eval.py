@@ -669,7 +669,7 @@ class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
                 "--inp_dir",
                 str(self.eval_path),
                 "--out_path",
-                result_path,
+                str(result_path),
                 "--ckpt_path",
                 str(self.ckpt_path),
             ]

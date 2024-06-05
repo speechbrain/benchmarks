@@ -180,13 +180,10 @@ class TokotronEvaluator:
         batch : speechbrain.dataio.batch.PaddedBatch
             the batch to be evaluated"""
         with torch.no_grad():
-            if hasattr(self.modules.vocoder, "model"):
-                self.modules.vocoder.model.device = self.device
-
+            if hasattr(self.modules.vocoder, "device"):
+                self.modules.vocoder.device = self.device
             batch = batch.to(self.device)
             tokens, tokens_length = batch.tokens
-            if hasattr(self.modules.vocoder, "model"):
-                self.modules.vocoder.model.device = self.device
             tokens, tokens_length = batch.tokens
             tokens_max_len = tokens.size(1)
             audio_ssl, audio_lengths, alignments = self.modules.model.infer(

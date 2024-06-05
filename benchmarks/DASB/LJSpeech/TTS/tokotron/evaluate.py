@@ -461,8 +461,6 @@ if __name__ == "__main__":
 
     from ljspeech_prepare import prepare_ljspeech
 
-    # Select the dataset to use in evaluation
-    eval_dataset_key = hparams.get("eval_dataset", "valid")
 
     # Data Preparation
     if not hparams["skip_prep"]:
@@ -472,7 +470,7 @@ if __name__ == "__main__":
                 kwargs={
                     "data_folder": hparams["data_folder"],
                     "save_folder": hparams["prepare_save_folder"],
-                    "splits": [eval_dataset_key],
+                    "splits": hparams["splits"],
                     "split_ratio": hparams["split_ratio"],
                     "seed": hparams["seed"],
                     "extract_features": ["audio_tokens"],
@@ -488,6 +486,9 @@ if __name__ == "__main__":
 
     # Reading command line arguments
     datasets, _ = dataio_prepare(hparams)
+
+    # Select the dataset to use in evaluation
+    eval_dataset_key = hparams.get("eval_dataset", "valid")
 
     eval_dataset = datasets[eval_dataset_key]
     eval_dataset.add_dynamic_item(label_norm_pipeline)

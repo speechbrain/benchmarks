@@ -62,6 +62,7 @@ eval_asr: !apply:speechbrain.utils.hparams.choice
     whisper: !name:benchmarks.DASB.utils.eval.WhisperASRSpeechEvaluator
       source: !ref <eval_asr_source>
       sample_rate: !ref <eval_sample_rate>
+      savedir: !ref <pretrained_model_save_folder>
 
 evaluators:
     asr: !ref <eval_asr>

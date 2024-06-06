@@ -4,6 +4,9 @@ Authors
 * Artem Ploujnikov 2024
 """
 
+#TODO: There are too many evaluation scripts. Refactor to extract common
+# features
+
 import speechbrain as sb
 import json
 import logging
@@ -44,6 +47,9 @@ class TokotronEvaluator:
         self.output_folder = Path(self.hparams.output_folder) / eval_folder
         self.samples_folder = self.output_folder / "samples"
         self.samples_folder.mkdir(parents=True, exist_ok=True)
+        self.spk_emb_model = self.hparams.spk_emb_model(
+            run_opts={"device": device}
+        )
         self.modules.model.vocoder = None
         self.vocoder_has_details = hasattr(
             self.modules.vocoder,
@@ -91,8 +97,8 @@ class TokotronEvaluator:
         """
         logger.info("Recovering the checkpoint")
         ckpt = self.hparams.checkpointer.recover_if_possible()
-#        if not ckpt:
-#            raise ValueError("Unable to recover the checkpoint")
+        if not ckpt:
+            raise ValueError("Unable to recover the checkpoint")
         self.modules.model.eval()
         if self.hparams.eval_samples is not None:
             dataset = dataset.filtered_sorted(select_n=self.hparams.eval_samples)
@@ -184,8 +190,17 @@ class TokotronEvaluator:
             tokens, tokens_length = batch.tokens
             if hasattr(self.modules.vocoder, "device"):
                 self.modules.vocoder.device = self.device
+            mel_spec = mel_spec = self.spk_emb_model.mel_spectogram(
+                audio=batch.sig.data
+            )
+            spk_emb = self.spk_emb_model.encode_mel_spectrogram_batch(
+                mel_spec, batch.sig.lengths
+            ).squeeze(1)
             infer_out = self.modules.model.infer(
-                input_tokens=tokens, input_length=tokens_length
+                input_tokens=tokens, input_length=tokens_length,
+                emb={
+                    "spk": spk_emb
+                }
             )
             if self.vocoder_has_details:
                 wav, details = self.modules.vocoder.decode_batch_with_details(
@@ -463,7 +478,7 @@ if __name__ == "__main__":
     # Data preparation, to be run on only one process.
     if not hparams["skip_prep"]:
         with hparams["freezer"]:
-            extract_features = ["audio_tokens", "spk_emb"]
+            extract_features = []
             if hparams["input"] == "phonemes":
                 extract_features.append("phn")
             run_on_main(

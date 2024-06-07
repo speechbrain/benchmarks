@@ -691,3 +691,19 @@ class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
             os.chdir(current_path)
             shutil.rmtree(self.eval_path)
 
+
+def vocoder_to_device(vocoder, device):
+    """A fix for vocoders that do not properly handle
+    the .to() function and require the device to be set manually
+
+    Arguments
+    ---------
+    vocoder : torch.nn.Module
+        a vocoder
+    device : str | torch.Device
+        the target device
+    """
+    if hasattr(vocoder, "model") and hasattr(vocoder.model, "device"):
+        vocoder.model.device = device
+    elif hasattr(vocoder, "device"):
+        vocoder.device = device

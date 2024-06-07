@@ -413,6 +413,68 @@ def init_sequence_encoder(hparams):
     encoder.expect_len(len(tokens) + SPECIAL_TOKEN_COUNT)
     return encoder
 
+def apply_overfit_test(hparams, dataset):
+    """Helper for applying an overfit test conditionally based
+    on hyperparameters:
+
+    `overfit_test`: whether or not to apply an overfit test
+    `overfit_test_sample_count`: the number of samples to use from the
+        original dataset
+    `overfit_test_epoch_data_count`: the number of samples per epoch
+
+    The function will accept datasets, (train, valid, test) tuples
+    or dictionaries of the form:
+    {"train": dataset1, "valid": dataset2, "test": dataset3}
+
+    If a tuple or dictionary is used, the training dataset will be of length
+    overfit_test_epoch_data_count wheres the evaluation dataset will be of
+    length overfit_test_sample_count.
+
+    Arguments
+    ---------
+    hparams: dict
+        parsed hyperparameters
+    dataset: DynamicItemDataset|tuple|dict
+        One of the following
+        a dataset
+        a dictionary ({"train": dataset1, "valid": dataset2, "test": dataset3})
+        a (train, valid, test)  tuple of datasets
+
+    Returns
+    -------
+    result: DynamicItemDataset|tuple|dict
+        a dataset or collection of datasets suitable for
+        an overfitting test - in the same format as the
+        dataset argument (single dataset, dictionary and tuple)
+    """
+    if hparams["overfit_test"]:
+        if isinstance(dataset, tuple):
+            dataset_train, _, _ = dataset
+            dataset_train = apply_overfit_test(hparams, dataset_train)
+            dataset_eval = dataset_train.filtered_sorted(
+                select_n=hparams["overfit_test_sample_count"]
+            )
+            result = dataset_train, dataset_eval, dataset_eval
+        elif isinstance(dataset, dict):
+            dataset_train = apply_overfit_test(hparams, dataset["train"])
+            dataset_eval = dataset_train.filtered_sorted(
+                select_n=hparams["overfit_test_sample_count"]
+            )
+            result = {
+                "train": dataset_train,
+                "valid": dataset_eval,
+                "test": dataset_eval,
+                "sample": dataset_eval,
+            }
+        else:
+            result = dataset.overfit_test(
+                hparams["overfit_test_sample_count"],
+                hparams["overfit_test_epoch_data_count"],
+            )
+    else:
+        result = dataset
+    return result
+
 
 def read_token_list(file_name):
     """Reads a simple text file with tokens (e.g. characters or phonemes) listed
@@ -477,6 +539,9 @@ if __name__ == "__main__":
             )
 
     datasets = dataio_prepare(hparams)
+    # Apply overfit test settings
+    datasets = apply_overfit_test(hparams, datasets)
+
 
     # Brain class initialization
     tacotron2_brain = Tacotron2Brain(

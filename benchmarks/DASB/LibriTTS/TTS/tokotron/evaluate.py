@@ -22,6 +22,7 @@ from types import SimpleNamespace
 from torch.nn import ModuleDict
 from tqdm.auto import tqdm
 from benchmarks.DASB.utils.data import undo_batch
+from benchmarks.DASB.utils.eval import vocoder_to_device
 from speechbrain.utils.distributed import run_on_main
 
 logger = logging.getLogger(__name__)
@@ -188,6 +189,7 @@ class TokotronEvaluator:
         with torch.no_grad():
             batch = batch.to(self.device)
             tokens, tokens_length = batch.tokens
+            vocoder_to_device(self.modules.vocoder, self.device)
             if hasattr(self.modules.vocoder, "device"):
                 self.modules.vocoder.device = self.device
             mel_spec = mel_spec = self.spk_emb_model.mel_spectogram(

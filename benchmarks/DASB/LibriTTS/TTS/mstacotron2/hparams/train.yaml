@@ -57,6 +57,9 @@ test_split: ["test-clean"]
 frozen_split_path: null
 
 skip_prep: False
+overfit_test: False
+overfit_test_sample_count: !ref <batch_size>
+overfit_test_epoch_data_count: 1000
 
 
 

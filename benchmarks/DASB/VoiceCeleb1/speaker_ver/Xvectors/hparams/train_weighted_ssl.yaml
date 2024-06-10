@@ -78,8 +78,8 @@ embedding_model: !new:speechbrain.lobes.models.Xvector.Xvector
     activation: !name:torch.nn.LeakyReLU
     tdnn_blocks: 5
     tdnn_channels: [1024, 1024, 1024, 1024, 3072]
-    tdnn_kernel_sizes: [5, 3, 3, 1, 1]
-    tdnn_dilations: [1, 2, 3, 1, 1]
+    tdnn_kernel_sizes: [5, 3, 3, 3, 1]
+    tdnn_dilations: [1, 2, 3, 4, 1]
     lin_neurons: 192
 
 classifier: !new:speechbrain.lobes.models.Xvector.Classifier

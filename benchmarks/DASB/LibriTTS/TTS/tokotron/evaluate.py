@@ -23,6 +23,7 @@ from torch.nn import ModuleDict
 from tqdm.auto import tqdm
 from benchmarks.DASB.utils.data import undo_batch
 from benchmarks.DASB.utils.eval import vocoder_to_device
+from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
 from speechbrain.utils.distributed import run_on_main
 
 logger = logging.getLogger(__name__)
@@ -442,6 +443,37 @@ def descriptive_statistics(items, key):
     }
 
 
+def select_subset(dataset, hparams):
+    """Selects a subset of the dataset provided, if specified.
+    The selection is controlled by a hyperparameter named
+    eval_subset, which is expected to list the IDs of the
+    data items on which evaluation will take place, one per line
+
+    Arguments
+    ---------
+    dataset : speechbrain.dataio.dataset.DynamicItemDataset
+        A dataset
+    hparams : dict
+        A hyperparameters file
+
+    Returns
+    -------
+    subset : dataset
+        The dataset, filtered down if applicable
+    """
+    eval_subset_path = hparams.get("eval_subset")
+    if eval_subset_path is not None:
+        eval_subset_path = Path(eval_subset_path)
+        if not eval_subset_path.exists():
+            raise ValueError(f"eval_subset {eval_subset_path} does not exist")
+        with open(eval_subset_path) as eval_subset_file:
+            eval_subset_ids = [line.strip() for line in eval_subset_file]
+        subset = FilteredSortedDynamicItemDataset(dataset, eval_subset_ids)
+    else:
+        subset = dataset
+    return subset
+
+
 if __name__ == "__main__":
     # Parse arguments
     hparams_file, run_opts, overrides = sb.parse_arguments(sys.argv[1:])
@@ -516,6 +548,7 @@ if __name__ == "__main__":
     eval_dataset_key = hparams.get("eval_dataset", "valid")
 
     eval_dataset = datasets[eval_dataset_key]
+    eval_dataset = select_subset(eval_dataset, hparams)
     eval_dataset.add_dynamic_item(label_norm_pipeline)
     eval_dataset.add_dynamic_item(audio_ref_pipeline)
     eval_dataset.set_output_keys(

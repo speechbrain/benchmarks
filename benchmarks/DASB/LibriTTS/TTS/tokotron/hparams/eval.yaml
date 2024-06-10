@@ -2,6 +2,7 @@ eval_dataset: valid
 eval_suffix: ""
 eval_sample_rate: 16000
 eval_samples: null
+eval_subset: null
 eval_asr_type: encoder_decoder
 eval_asr_source: !apply:speechbrain.utils.hparams.choice
   value: !ref <eval_asr_type>

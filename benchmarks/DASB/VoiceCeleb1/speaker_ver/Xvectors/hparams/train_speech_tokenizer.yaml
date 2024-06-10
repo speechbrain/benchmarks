@@ -51,9 +51,7 @@ precision: fp32
 number_of_epochs: 15
 batch_size: 8
 lr: 0.001
-base_lr: 0.00000001
-max_lr: !ref <lr>
-step_size: 65000
+lr_final: 0.0001
 mask_length: 10
 mask_prob: 0.65
 original_sample_rate: 16000
@@ -92,20 +90,21 @@ attention_mlp: !new:custom_model.AttentionMLP
     hidden_dim: !ref <encoder_dim>
 
 embedding_model: !new:speechbrain.lobes.models.Xvector.Xvector
-    in_channels: !ref <encoder_dim>
-    activation: !name:torch.nn.LeakyReLU
-    tdnn_blocks: 5
-    tdnn_channels: [1024, 1024, 1024, 1024, 3072]
-    tdnn_kernel_sizes: [5, 3, 3, 1, 1]
-    tdnn_dilations: [1, 2, 3, 1, 1]
-    lin_neurons: 192
+  in_channels: !ref <encoder_dim>
+  activation: !name:torch.nn.LeakyReLU
+  tdnn_blocks: 5
+  tdnn_channels: [512, 512, 512, 512, 1500]
+  tdnn_kernel_sizes: [5, 3, 3, 1, 1]
+  tdnn_dilations: [1, 2, 3, 1, 1]
+  lin_neurons: 512
 
 classifier: !new:speechbrain.lobes.models.Xvector.Classifier
-    input_shape: [null, null, 192]
-    activation: !name:torch.nn.LeakyReLU
-    lin_blocks: 1
-    lin_neurons: 192
-    out_neurons: !ref <out_n_neurons>
+  input_shape: [null, null, 512]
+  activation: !name:torch.nn.LeakyReLU
+  lin_blocks: 1
+  lin_neurons: 512
+  out_neurons: !ref <out_n_neurons>
+
 
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
     limit: !ref <number_of_epochs>
@@ -123,22 +122,23 @@ model: !new:torch.nn.ModuleList
 
 
 # Cost + optimization
+compute_cost: !name:speechbrain.nnet.losses.nll_loss
 compute_error: !name:speechbrain.nnet.losses.classification_error
-
-compute_cost: !new:speechbrain.nnet.losses.LogSoftmaxWrapper
-    loss_fn: !new:speechbrain.nnet.losses.AdditiveAngularMargin
-        margin: 0.2
-        scale: 30
-
 
 model_opt_class: !name:torch.optim.Adam
     lr: !ref <lr>
     weight_decay: 0.000002
 
-lr_annealing: !new:speechbrain.nnet.schedulers.CyclicLRScheduler
-    base_lr: !ref <base_lr>
-    max_lr: !ref <max_lr>
-    step_size: !ref <step_size>
+lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
+  initial_value: !ref <lr>
+  final_value: !ref <lr_final>
+  epoch_count: 21
+
+lr_annealing_weights: !new:speechbrain.nnet.schedulers.NewBobScheduler
+  initial_value: 0.01
+  improvement_threshold: 0.0025
+  annealing_factor: 0.9
+  patient: 0
 
 
 # Used to load the SB checkpoint of w2v2

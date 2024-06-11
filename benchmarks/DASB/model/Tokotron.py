@@ -981,7 +981,7 @@ class TokotronTransformerModel(nn.Module):
         audio_token_shift=0,
         decoder_mode=DecoderMode.AUTOREGRESSIVE,
         scale_factor=5.0,
-        emb=None
+        emb=None,
     ):
         super().__init__()
         self.in_emb = Embedding(
@@ -1059,12 +1059,14 @@ class TokotronTransformerModel(nn.Module):
         if emb is not None:
             self.emb_proj = self._build_emb_proj(emb)
             self.vocoder_emb = [
-                key for key, emb_config in emb.items()
-                if emb_config.get("vocoder")]
+                key
+                for key, emb_config in emb.items()
+                if emb_config.get("vocoder")
+            ]
 
     def _build_emb_proj(self, emb):
         """Builds the embedding projection
-        
+
         Arguments
         ---------
         emb : torch.Tensor
@@ -1074,15 +1076,15 @@ class TokotronTransformerModel(nn.Module):
             kind = emb_config.get("kind", "learned")
             if kind == "pretrained":
                 emb_mod = Linear(
-                    input_size=emb_config.get("dim", self.d_model) + self.d_model,
-                    n_neurons=self.d_model
+                    input_size=emb_config.get("dim", self.d_model)
+                    + self.d_model,
+                    n_neurons=self.d_model,
                 )
             elif kind == "learned":
                 emb_count = emb_config["count"]
                 emb_dim = emb_config.get("dim", self.d_model)
                 emb_mod = Embedding(
-                    num_embeddings=emb_count,
-                    embedding_dim=emb_dim
+                    num_embeddings=emb_count, embedding_dim=emb_dim
                 )
             else:
                 raise ValueError(f"Invallid embedding kind: {kind}")
@@ -1204,7 +1206,7 @@ class TokotronTransformerModel(nn.Module):
             dec_attn=dec_out.dec_attn,
             alignments=dec_out.alignments,
         )
-    
+
     def add_emb(self, src, emb):
         """Adds embedding projections to the source tensor
 
@@ -1220,14 +1222,11 @@ class TokotronTransformerModel(nn.Module):
             for key, emb_t in emb.items():
                 batch_size, seq_len, feat_size = src.shape
                 emb_size = emb_t.size(-1)
-                emb_t_norm = nn.functional.layer_norm(
-                    emb_t,
-                    emb_t.shape
+                emb_t_norm = nn.functional.layer_norm(emb_t, emb_t.shape)
+                emb_exp = emb_t_norm.unsqueeze(1).expand(
+                    batch_size, seq_len, emb_size
                 )
-                emb_exp = emb_t_norm.unsqueeze(1).expand(batch_size, seq_len, emb_size)
-                src_norm = nn.functional.layer_norm(
-                    src, src.shape
-                )
+                src_norm = nn.functional.layer_norm(src, src.shape)
                 src_with_emb = torch.cat([src_norm, emb_exp], dim=-1)
                 result = self.emb_proj[key](src_with_emb)
         return result
@@ -1334,9 +1333,7 @@ class TokotronTransformerModel(nn.Module):
                     if key in self.vocoder_emb
                 }
             vocoder_out = self.vocoder(
-                audio_tokens,
-                dec_out.length,
-                **vocoder_emb
+                audio_tokens, dec_out.length, **vocoder_emb
             )
             if isinstance(vocoder_out, tuple):
                 wav, wav_length = vocoder_out
@@ -1538,9 +1535,7 @@ class TokotronLoss(nn.Module):
             # for the benchmark
             features = [item.float() for item in features]
             audio_tokens, audio_length = concat_padded_features(
-                features,
-                [audio_length, padding_lengths],
-                dim=1,
+                features, [audio_length, padding_lengths], dim=1,
             )
             audio_tokens = audio_tokens
 

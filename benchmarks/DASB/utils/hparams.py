@@ -27,7 +27,7 @@ def as_list(value, dtype=None):
         the provided value, as a list
     """
     if dtype in _DTYPE_CONVERT:
-        dtype = _DTYPE_CONVERT[dtype]        
+        dtype = _DTYPE_CONVERT[dtype]
     if dtype and isinstance(value, dtype):
         value = [value]
     else:

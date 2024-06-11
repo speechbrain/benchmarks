@@ -6,7 +6,6 @@ Authors
 
 import torch
 from speechbrain.dataio.batch import PaddedData
-from speechbrain.utils.data_utils import undo_padding
 
 
 def undo_batch(batch):
@@ -87,7 +86,7 @@ def _undo_padding(batch, lengths):
     return as_list
 
 
-# TODO: This is not elegant. The original implementation had 
+# TODO: This is not elegant. The original implementation had
 # as_dict() added to PaddedBatch. The benchmark has the limitation
 # of not being able to enhance the core.
 def as_dict(batch):

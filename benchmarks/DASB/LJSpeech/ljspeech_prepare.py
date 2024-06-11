@@ -368,7 +368,9 @@ def split_sets(data_folder, splits, split_ratio, frozen_split_path):
                 data_split = json.load(frozen_split_file)
             return data_split, meta_csv
         else:
-            logger.info("Frozen split %s does not exist", str(frozen_split_path))
+            logger.info(
+                "Frozen split %s does not exist", str(frozen_split_path)
+            )
 
     index_for_sessions = []
     session_id_start = "LJ001"
@@ -868,7 +870,9 @@ def prepare_features(
         device=device,
     )
     token_model_kwargs = options.get("token_model_kwargs", {})
-    ssl_layers = options.get("ssl_model_layers") or options.get("token_model_layers")
+    ssl_layers = options.get("ssl_model_layers") or options.get(
+        "token_model_layers"
+    )
 
     @sb.utils.data_pipeline.takes("wav")
     @sb.utils.data_pipeline.provides("sig")
@@ -914,9 +918,7 @@ def prepare_features(
     @sb.utils.data_pipeline.takes("sig_resampled")
     @sb.utils.data_pipeline.provides("audio_ssl", "audio_ssl_len")
     def ssl_pipeline(sig):
-        ssl_raw = context.ssl_model(
-            sig.data, sig.lengths
-        )
+        ssl_raw = context.ssl_model(sig.data, sig.lengths)
         ssl = ssl_raw[ssl_layers].permute(1, 2, 0, 3)
         yield PaddedData(ssl, sig.lengths)
         yield (sig.lengths * ssl.size(1)).tolist()

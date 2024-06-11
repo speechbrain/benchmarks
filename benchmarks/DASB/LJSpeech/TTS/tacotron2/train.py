@@ -50,8 +50,12 @@ class Tacotron2Brain(sb.Brain):
     def _get_squish_layer_weights(self):
         layer_weights = self.hparams.squish_layers_weights
         if isinstance(layer_weights, str):
-            layer_weights = [float(weight) for weight in layer_weights.split(",")]
-        layer_weights = torch.tensor(layer_weights)[None, None, :, None].to(self.device)
+            layer_weights = [
+                float(weight) for weight in layer_weights.split(",")
+            ]
+        layer_weights = torch.tensor(layer_weights)[None, None, :, None].to(
+            self.device
+        )
         layer_weights = layer_weights / layer_weights.sum()
         return layer_weights
 
@@ -62,7 +66,8 @@ class Tacotron2Brain(sb.Brain):
             model_layers_map = {
                 layer: idx
                 for idx, layer in enumerate(
-                    as_list(self.hparams.ssl_model_layers))
+                    as_list(self.hparams.ssl_model_layers)
+                )
             }
             selected_layers = [model_layers_map[layer] for layer in layers]
         return selected_layers
@@ -83,7 +88,9 @@ class Tacotron2Brain(sb.Brain):
         if self.hparams.select_layers:
             audio_ssl = audio_ssl[:, :, self.layer_idx, :]
         if self.hparams.squish_layers:
-            audio_ssl = (audio_ssl * self.layer_weights).sum(dim=2, keepdim=True)
+            audio_ssl = (audio_ssl * self.layer_weights).sum(
+                dim=2, keepdim=True
+            )
         return audio_ssl
 
     def compute_forward(self, batch, stage):
@@ -111,14 +118,11 @@ class Tacotron2Brain(sb.Brain):
                 batch_size, audio_max_len, audio_heads * audio_feat
             ).transpose(-1, -2),
             batch.audio_ssl.data.size(1),
-            batch.audio_ssl.lengths * audio_max_len
+            batch.audio_ssl.lengths * audio_max_len,
         )
 
         max_input_length = batch.tokens.data.size(1)
-        return self.modules.model(
-            inputs,
-            alignments_dim=max_input_length
-        )
+        return self.modules.model(inputs, alignments_dim=max_input_length)
 
     def on_fit_batch_end(self, batch, outputs, loss, should_step):
         """At the end of the optimizer step, apply noam annealing."""
@@ -177,7 +181,7 @@ class Tacotron2Brain(sb.Brain):
             (audio, gate_targets),
             batch.tokens.lengths * tokens_len,
             audio_len,
-            self.last_epoch
+            self.last_epoch,
         )
         self.last_loss_stats[stage] = scalarize(loss_stats)
         return loss_stats.loss
@@ -267,19 +271,23 @@ class Tacotron2Brain(sb.Brain):
             tokens, tokens_length = batch.tokens
             tokens_max_len = tokens.size(1)
             audio_ssl, audio_lengths, alignments = self.modules.model.infer(
-                inputs=tokens,
-                input_lengths=tokens_length * tokens_max_len
+                inputs=tokens, input_lengths=tokens_length * tokens_max_len
             )
             audio_ssl = audio_ssl.transpose(-1, -2)
             batch_size, max_len, feat_dim = audio_ssl.shape
-            audio_ssl = audio_ssl.view(batch_size, max_len, self.hparams.audio_tokens_per_step, self.hparams.audio_dim)
+            audio_ssl = audio_ssl.view(
+                batch_size,
+                max_len,
+                self.hparams.audio_tokens_per_step,
+                self.hparams.audio_dim,
+            )
             wav = self.modules.vocoder(audio_ssl).squeeze(1)
             self.hparams.progress_report.write(
                 ids=batch.uttid,
                 audio=wav,
                 length_pred=audio_lengths,
                 length=batch.audio_ssl.lengths,
-                alignments=alignments
+                alignments=alignments,
             )
 
     def create_perfect_samples(self):
@@ -359,8 +367,7 @@ def dataio_prepare(hparams):
             features=["audio_ssl"],
         )
         dynamic_dataset = dynamic_dataset.filtered_sorted(
-            sort_key="tokens_len",
-            reverse=True
+            sort_key="tokens_len", reverse=True
         )
         datasets[dataset] = dynamic_dataset
 
@@ -370,7 +377,7 @@ def dataio_prepare(hparams):
         .filtered_sorted(
             select_n=hparams["num_audio_samples"],
             sort_key="tokens_len",
-            reverse=True
+            reverse=True,
         )
     )
 
@@ -422,6 +429,7 @@ def read_token_list(file_name):
         raise ValueError(f"Token file {file_name} not found")
     with open(file_name) as token_file:
         return [line.strip("\r\n") for line in token_file if line]
+
 
 if __name__ == "__main__":
     # Load hyperparameters file with command-line overrides

@@ -26,9 +26,7 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 RE_PUNCTUATION = re.compile(
-    "|".join(
-        re.escape(char) for char in string.punctuation
-    )
+    "|".join(re.escape(char) for char in string.punctuation)
 )
 
 
@@ -45,6 +43,7 @@ class SpeechEvaluator:
     sample_rate : int
         The audio sample rate this evaluator expects
     """
+
     def __init__(self, sample_rate=16000):
         self.sample_rate = sample_rate
 
@@ -121,7 +120,15 @@ class SpeechEvaluator:
         audio, audio_sample_rate = torchaudio.load(str(file_name))
         return self.resample(audio, audio_sample_rate)
 
-    def evaluate(self, wavs, length, text=None, wavs_ref=None, wavs_length_ref=None, sample_rate=None):
+    def evaluate(
+        self,
+        wavs,
+        length,
+        text=None,
+        wavs_ref=None,
+        wavs_length_ref=None,
+        sample_rate=None,
+    ):
         """Evaluates samples
 
         Arguments
@@ -170,9 +177,7 @@ class SpeechEvaluator:
         """
         if sample_rate is not None and sample_rate != self.sample_rate:
             audio = torchaudio.functional.resample(
-                audio,
-                orig_freq=sample_rate,
-                new_freq=self.sample_rate
+                audio, orig_freq=sample_rate, new_freq=self.sample_rate
             )
         return audio
 
@@ -228,7 +233,16 @@ class RegressionModelSpeechEvaluator(SpeechEvaluator):
             source, *args, **kwargs
         )
 
-    def evaluate(self, wavs, length, text=None, wavs_ref=None, length_ref=None, sample_rate=None, sample_rate_ref=None):
+    def evaluate(
+        self,
+        wavs,
+        length,
+        text=None,
+        wavs_ref=None,
+        length_ref=None,
+        sample_rate=None,
+        sample_rate_ref=None,
+    ):
         """Evaluates a batch of waveforms
 
         Arguments
@@ -272,7 +286,16 @@ class RegressionModelSpeechEvaluator(SpeechEvaluator):
 
 
 class ASRSpeechEvaluator(SpeechEvaluator):
-    def evaluate(self, wavs, length, text=None, wavs_ref=None, length_ref=None, sample_rate=None, sample_rate_ref=None):
+    def evaluate(
+        self,
+        wavs,
+        length,
+        text=None,
+        wavs_ref=None,
+        length_ref=None,
+        sample_rate=None,
+        sample_rate_ref=None,
+    ):
         """Evaluates samples
 
         Arguments
@@ -308,34 +331,23 @@ class ASRSpeechEvaluator(SpeechEvaluator):
             for each item
         """
         details = self.evaluate_samples(
-            wavs=wavs,
-            length=length,
-            text=text,
-            sample_rate=sample_rate
+            wavs=wavs, length=length, text=text, sample_rate=sample_rate
         )
         if wavs_ref is not None:
             details_ref = self.evaluate_samples(
                 wavs=wavs_ref,
                 length=length_ref,
                 text=text,
-                sample_rate=sample_rate_ref
+                sample_rate=sample_rate_ref,
             )
             details.update(
-                {
-                    f"{key}_ref": value
-                    for key, value in details_ref.items()
-                }
+                {f"{key}_ref": value for key, value in details_ref.items()}
             )
             # Redundant: it is the same
             del details["target_ref"]
-            details.update(
-                self.compute_diff_rate(details, device=wavs.device)
-            )
+            details.update(self.compute_diff_rate(details, device=wavs.device))
 
-        return SpeechEvaluationResult(
-            score=details["wer"],
-            details=details,
-        )
+        return SpeechEvaluationResult(score=details["wer"], details=details,)
 
     def compute_diff_rate(self, details, device):
         ids = range(1, len(details["pred"]) + 1)
@@ -345,12 +357,10 @@ class ASRSpeechEvaluator(SpeechEvaluator):
         wer_metric.append(ids, pred, pred_ref)
         cer_metric.append(ids, pred, pred_ref)
         dwer = torch.tensor(
-            [score["WER"] for score in wer_metric.scores],
-            device=device
+            [score["WER"] for score in wer_metric.scores], device=device
         )
         dcer = torch.tensor(
-            [score["WER"] for score in cer_metric.scores],
-            device=device
+            [score["WER"] for score in cer_metric.scores], device=device
         )
         return {"dwer": dwer, "dcer": dcer}
 
@@ -366,13 +376,12 @@ class EncoderDecoderASRSpeechEvaluator(ASRSpeechEvaluator):
     Arguments
     ---------
     sample_rate : int
-        The audio sample rate this evaluator expects    
+        The audio sample rate this evaluator expects
     """
+
     def __init__(self, source, sample_rate=None, *args, **kwargs):
         super().__init__(sample_rate=sample_rate)
-        self.asr = EncoderDecoderASR.from_hparams(
-            source, *args, **kwargs
-        )
+        self.asr = EncoderDecoderASR.from_hparams(source, *args, **kwargs)
         self.device = next(self.asr.mods.parameters()).device
 
     def evaluate_samples(self, wavs, length, text, sample_rate):
@@ -387,12 +396,10 @@ class EncoderDecoderASRSpeechEvaluator(ASRSpeechEvaluator):
         wer_metric.append(ids, predicted_words, text)
         cer_metric.append(ids, predicted_words, text)
         wer = torch.tensor(
-            [score["WER"] for score in wer_metric.scores],
-            device=wavs.device
+            [score["WER"] for score in wer_metric.scores], device=wavs.device
         )
         cer = torch.tensor(
-            [score["WER"] for score in cer_metric.scores],
-            device=wavs.device
+            [score["WER"] for score in cer_metric.scores], device=wavs.device
         )
         prob_mean = log_probs.exp().mean(dim=-1)
         return {
@@ -479,11 +486,7 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         if savedir is None:
             savedir = "."
         self.model = Whisper(
-            source,
-            savedir,
-            sample_rate,
-            freeze=True,
-            freeze_encoder=True,
+            source, savedir, sample_rate, freeze=True, freeze_encoder=True,
         )
         self.model.tokenizer.set_prefix_tokens("english", "transcribe", False)
         self.searcher = S2SWhisperGreedySearch(
@@ -496,10 +499,7 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         self.searcher.set_decoder_input_tokens(
             self.model.tokenizer.prefix_tokens
         )
-        device = run_opts.get(
-            "device", 
-            next(self.model.parameters()).device
-        )
+        device = run_opts.get("device", next(self.model.parameters()).device)
         self.unbatch = unbatch
         self.to(device)
 
@@ -509,18 +509,22 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
             length_abs = (length * wavs.size(1)).int()
             results = [
                 self._evaluate_samples(
-                    wavs[idx:idx + 1, :length_abs[idx].item()],
+                    wavs[idx : idx + 1, : length_abs[idx].item()],
                     torch.ones(1, device=wavs.device),
-                    text[idx:idx + 1],
-                    sample_rate
+                    text[idx : idx + 1],
+                    sample_rate,
                 )
                 for idx in range(batch_size)
             ]
             result = {
-                "wer": torch.stack([result["wer"] for result in results]).squeeze(-1),
-                "cer": torch.stack([result["cer"] for result in results]).squeeze(-1),
+                "wer": torch.stack(
+                    [result["wer"] for result in results]
+                ).squeeze(-1),
+                "cer": torch.stack(
+                    [result["cer"] for result in results]
+                ).squeeze(-1),
                 "pred": [result["pred"][0] for result in results],
-                "target": text
+                "target": text,
             }
             return result
         else:
@@ -530,30 +534,21 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         if text is None:
             raise ValueError("This evaluator requires ground-truth text")
         wavs = self.resample(wavs, sample_rate)
-        enc_out = self.model.forward_encoder(
-            wavs
-        )
-        predicted_words, _, _, _  = self.searcher(
-            enc_out, length
-        )
+        enc_out = self.model.forward_encoder(wavs)
+        predicted_words, _, _, _ = self.searcher(enc_out, length)
         predicted_words = self.model.tokenizer.batch_decode(
             predicted_words, skip_special_tokens=True
         )
-        predicted_words = [
-            self.normalize(text)
-            for text in predicted_words
-        ]
+        predicted_words = [self.normalize(text) for text in predicted_words]
         ids = range(1, len(wavs) + 1)
         wer_metric, cer_metric = init_asr_metrics()
         wer_metric.append(ids, predicted_words, text)
         cer_metric.append(ids, predicted_words, text)
         wer = torch.tensor(
-            [score["WER"] for score in wer_metric.scores],
-            device=wavs.device
+            [score["WER"] for score in wer_metric.scores], device=wavs.device
         )
         cer = torch.tensor(
-            [score["WER"] for score in cer_metric.scores],
-            device=wavs.device
+            [score["WER"] for score in cer_metric.scores], device=wavs.device
         )
         return {
             "wer": wer,
@@ -631,7 +626,7 @@ class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
         python="python",
         use_python=True,
         batch_size=8,
-        tmp_folder=None
+        tmp_folder=None,
     ):
         self.output_folder = Path(output_folder)
         rand = torch.randint(1, 999999999, (1,)).item()
@@ -674,7 +669,7 @@ class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
                 str(self.ckpt_path),
             ]
             if self.use_python:
-                cmd = [self.python] + cmd   
+                cmd = [self.python] + cmd
 
             output = subprocess.check_output(cmd)
             logger.info("Evaluation finished, output: %s", output)
@@ -683,10 +678,11 @@ class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
                 scores = [float(line.strip()) for line in result_path]
             score_map = dict(zip(file_names, scores))
             scores_ordered = [
-                score_map[Path(file_name).name]
-                for file_name in file_names
+                score_map[Path(file_name).name] for file_name in file_names
             ]
-            return SpeechEvaluationResult(scores_ordered, {"utmos": scores_ordered})
+            return SpeechEvaluationResult(
+                scores_ordered, {"utmos": scores_ordered}
+            )
         finally:
             os.chdir(current_path)
             shutil.rmtree(self.eval_path)

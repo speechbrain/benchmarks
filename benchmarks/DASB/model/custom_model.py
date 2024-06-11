@@ -10,9 +10,7 @@ from huggingface_hub import snapshot_download
 try:
     from speechtokenizer import SpeechTokenizer
 except ImportError:
-    logging.warning(
-        "speechtokenizer is not available"
-    )
+    logging.warning("speechtokenizer is not available")
 
 
 class AttentionMLP(torch.nn.Module):
@@ -209,7 +207,13 @@ class HierarchicalUnitWrapper(torch.nn.Module):
     """
 
     def __init__(
-        self, model, available_layers, num_units, layers=None, offset=0, use_length=False
+        self,
+        model,
+        available_layers,
+        num_units,
+        layers=None,
+        offset=0,
+        use_length=False,
     ):
         super().__init__()
         self.model = model
@@ -261,6 +265,7 @@ class EncodecVocoder(nn.Module):
     encodec: speechbrain.lobes.models.huggingface_transformers.Encodec
         An Encodec model
     """
+
     def __init__(self, encodec):
         super().__init__()
         self.encodec = encodec
@@ -287,19 +292,20 @@ class DACVocoder(nn.Module):
     """A vocoder adapter for DAC. Please keep in mind that that to obtain
     audio of the highest quality, it might be necessary to train a
     different vocoder adapted to the task
-    
+
     Arguments
     ---------
     dac : DAC
         a DAC model
     """
+
     def __init__(self, dac):
         super().__init__()
         self.dac = dac
 
     def forward(self, tokens, length):
         """Decodes tokens into audio
-        
+
         Arguments
         ---------
         tokens : torch.Tensor
@@ -328,6 +334,7 @@ class DACFeatureExtractor(nn.Module):
     dac : DAC
         a DAC model
     """
+
     def __init__(self, dac, n_quantizers):
         super().__init__()
         self.dac = dac
@@ -356,7 +363,9 @@ class DACFeatureExtractor(nn.Module):
         """
         if inputs.dim() < 3:
             inputs = inputs.unsqueeze(1)
-        emb, codes, _, _, _ = self.dac.encode(inputs, n_quantizers=self.n_quantizers)
+        emb, codes, _, _, _ = self.dac.encode(
+            inputs, n_quantizers=self.n_quantizers
+        )
         emb.transpose_(1, 2)
         codes.transpose_(1, 2)
         max_len = emb.size(1)
@@ -364,7 +373,7 @@ class DACFeatureExtractor(nn.Module):
             length * max_len, max_len, device=inputs.device
         ).unsqueeze(-1)
         return codes * mask, emb * mask
-    
+
     def forward(self, inputs, length):
         """Encodes a raw audio sample using DAC
 
@@ -442,11 +451,7 @@ class SpeechTokenizerInterface(nn.Module):
     """
 
     def __init__(
-        self,
-        source,
-        save_path,
-        codebooks=None,
-        shape="raw",
+        self, source, save_path, codebooks=None, shape="raw",
     ):
         super().__init__()
 
@@ -505,7 +510,7 @@ class SpeechTokenizerInterface(nn.Module):
         with torch.no_grad():
             codes = self.model.encode(wav.unsqueeze(1))  # codes: (n_q, B, T)
             if self.codebooks is not None:
-                codes = codes[:self.codebooks]
+                codes = codes[: self.codebooks]
             if self.shape == "compat":
                 codes = codes.permute(1, 2, 0)
         return codes
@@ -543,12 +548,13 @@ class SpeechTokenizerInterface(nn.Module):
 
 class SpeechTokenizerVocoder(nn.Module):
     """A vocoder wrapper for SpeechTokenizer
-    
+
     Arguments
     ---------
     tokenizer: SpeechTokenizerInterface
         a speech tokenizer model
     """
+
     def __init__(self, tokenizer):
         super().__init__()
         self.tokenizer = tokenizer

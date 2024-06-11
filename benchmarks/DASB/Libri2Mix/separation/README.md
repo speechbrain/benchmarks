@@ -6,11 +6,11 @@ This [SpeechBrain](https://speechbrain.github.io) recipe includes scripts to tra
 
 ## ⚡ Datasets
 
-### LibriMix
+### Libri2Mix
 
 Follow the instructions from the [official repository](https://github.com/JorisCos/LibriMix).
 
-Expected folder structure: `LibriMix/Libri<N>Mix/wav16k/min/{train-100, train-360, dev, test}/{mix_both, mix_clean, noise, s1, ..., s<N>}`
+Expected folder structure: `LibriMix/Libri2Mix/wav16k/min/{train-100, dev, test}/{mix_clean, s1, s2}`
 
 ---------------------------------------------------------------------------------------------------------
 
@@ -35,7 +35,7 @@ python train_<model>.py hparams/<path-to-config>.yaml --data_folder <path-to-dat
 ### Examples
 
 ```bash
-python train_encodec.py hparams/encodec.yaml --data_folder data/LibriMix
+python train_encodec.py hparams/conformer/encodec.yaml --data_folder data/LibriMix
 ```
 
 ---------------------------------------------------------------------------------------------------------

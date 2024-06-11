@@ -36,14 +36,14 @@ sorting: random
 use_cache: False
 
 # Training parameters
-num_epochs: 50
+num_epochs: 70
 grad_accumulation_factor: 16
 train_batch_size: 1
 valid_batch_size: 1
 test_batch_size: 1
 dataloader_workers: 4
 nonfinite_patience: 10
-max_grad_norm: 5.0
+max_grad_norm: 0.01
 precision: fp32
 ckpt_interval_minutes: 6000
 keep_checkpoints: 1
@@ -52,7 +52,7 @@ augment_prob: 0.75
 use_pit: True
 
 # Optimizer parameters
-lr: 0.0005
+lr: 0.00005
 weight_decay: 0.01
 improvement_threshold: 0.0025
 annealing_factor: 0.9

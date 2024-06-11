@@ -42,7 +42,7 @@ python train_<model>.py hparams/<path-to-config>.yaml --data_folder <path-to-dat
 ### Examples
 
 ```bash
-python train_encodec.py hparams/encodec.yaml --data_folder data/VoiceBank
+python train_encodec.py hparams/conformer/encodec.yaml --data_folder data/VoiceBank
 ```
 
 ---------------------------------------------------------------------------------------------------------

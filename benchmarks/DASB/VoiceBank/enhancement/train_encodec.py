@@ -20,12 +20,6 @@ from speechbrain.dataio.dataio import write_audio
 from speechbrain.utils.distributed import if_main_process, run_on_main
 
 
-warnings.filterwarnings(
-    "ignore",
-    message="The private method `_normalize` is deprecated and will be removed in v5 of Transformers.You can normalize "
-    "an input string using the Whisper English normalizer using the `normalize` method.",
-)
-
 _CACHE = {}
 
 
@@ -260,6 +254,10 @@ if __name__ == "__main__":
     hparams_file, run_opts, overrides = sb.parse_arguments(sys.argv[1:])
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
+
+    # Filter warnings
+    warnings.filterwarnings("once")
+    warnings.filterwarnings("ignore", module="torch")
 
     # If --distributed_launch then create ddp_init_group with the right communication protocol
     sb.utils.distributed.ddp_init_group(run_opts)

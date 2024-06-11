@@ -11,6 +11,7 @@ Authors
 
 import os
 import sys
+import warnings
 
 import speechbrain as sb
 import torch
@@ -45,6 +46,10 @@ if __name__ == "__main__":
     hparams_file, run_opts, overrides = sb.parse_arguments(sys.argv[1:])
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
+
+    # Filter warnings
+    warnings.filterwarnings("once")
+    warnings.filterwarnings("ignore", module="torch")
 
     # If --distributed_launch then create ddp_init_group with the right communication protocol
     sb.utils.distributed.ddp_init_group(run_opts)

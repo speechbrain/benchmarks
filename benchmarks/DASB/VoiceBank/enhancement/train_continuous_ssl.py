@@ -21,11 +21,6 @@ from speechbrain.dataio.dataio import write_audio
 from speechbrain.utils.distributed import if_main_process, run_on_main
 
 
-warnings.filterwarnings(
-    "ignore",
-    message="Support for mismatched key_padding_mask and attn_mask is deprecated. Use same type for both instead.",
-)
-
 _CACHE = {}
 
 
@@ -275,6 +270,10 @@ if __name__ == "__main__":
     hparams_file, run_opts, overrides = sb.parse_arguments(sys.argv[1:])
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
+
+    # Filter warnings
+    warnings.filterwarnings("once")
+    warnings.filterwarnings("ignore", module="torch")
 
     # If --distributed_launch then create ddp_init_group with the right communication protocol
     sb.utils.distributed.ddp_init_group(run_opts)

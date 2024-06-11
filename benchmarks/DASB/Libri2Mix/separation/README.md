@@ -35,7 +35,11 @@ python train_<model>.py hparams/<path-to-config>.yaml --data_folder <path-to-dat
 ### Examples
 
 ```bash
-python train_encodec.py hparams/conformer/encodec.yaml --data_folder data/LibriMix
+python train_encodec.py hparams/conformer/encodec.yaml --data_folder data/LibriMix --num_codebooks 2
+```
+
+```bash
+python train_discrete_ssl.py hparams/conformer/discrete_wavlm.yaml --data_folder data/LibriMix --SSL_layers [1, 3, 7, 12, 18, 23]
 ```
 
 ---------------------------------------------------------------------------------------------------------

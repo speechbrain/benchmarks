@@ -113,7 +113,9 @@ class FeatureExtractor:
             dataloader = make_dataloader(dataset, **self.dataloader_opts)
             batch_size = self.dataloader_opts.get("batch_size", 1)
             batch_count = int(math.ceil(len(dataset) / batch_size))
-            for batch in tqdm(dataloader, total=batch_count, desc=self.description):
+            for batch in tqdm(
+                dataloader, total=batch_count, desc=self.description
+            ):
                 batch = batch.to(self.device)
                 self.process_batch(batch, data)
         finally:
@@ -146,14 +148,16 @@ class FeatureExtractor:
         ids = batch_dict[self.id_key]
         features = self.pipeline.compute_outputs(batch_dict)
 
-        for idx, (item_id, item_features) in enumerate(zip(ids, undo_batch(features)), start=1):
+        for idx, (item_id, item_features) in enumerate(
+            zip(ids, undo_batch(features)), start=1
+        ):
             self._add_inline_features(item_id, item_features, data)
             if self.async_save:
                 future = self.save_executor.submit(
                     self.save_fn,
                     item_id,
                     item_features,
-                    save_path=self.save_path
+                    save_path=self.save_path,
                 )
                 self._async_save_futures[item_id] = future
                 if idx % self.async_save_batch_size == 0:
@@ -167,16 +171,12 @@ class FeatureExtractor:
         for item_id, future in self._async_save_futures.items():
             exc = future.exception()
             if exc is not None:
-                exc_info = (
-                    type(exc),
-                    exc,
-                    exc.__traceback__
-                )
+                exc_info = (type(exc), exc, exc.__traceback__)
                 logger.warn(
                     "Saving extracted features for %s could not be completed: %s",
                     item_id,
                     str(exc),
-                    exc_info=exc_info
+                    exc_info=exc_info,
                 )
         self._async_save_futures.clear()
 
@@ -468,4 +468,3 @@ class Freezer:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.freeze()
-

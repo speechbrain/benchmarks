@@ -54,8 +54,6 @@ frozen_split_path: null
 
 skip_prep: False
 
-
-
 ################################
 # Audio Parameters             #
 ################################
@@ -76,7 +74,7 @@ ssl_model_src: !apply:speechbrain.utils.hparams.choice
 ssl_model_layers: [1, 3, 7, 12, 18, 23]
 
 # Vocoder Parameters
-vocoder_src:  !apply:speechbrain.utils.hparams.choice
+vocoder_src: !apply:speechbrain.utils.hparams.choice
     value: !ref <ssl_model_type>
     choices:
         wavlm: chaanks/hifigan-wavlm-l1-3-7-12-18-23-LibriTTS
@@ -84,7 +82,7 @@ vocoder_src:  !apply:speechbrain.utils.hparams.choice
         wav2vec2: chaanks/hifigan-wav2vec-l1-3-7-12-18-23-LibriTTS
 
 vocoder_available_layers: [1, 3, 7, 12, 18, 23]
-vocoder_flat_feats: false
+vocoder_flat_feats: False
 vocoder_model_name: !ref unithifigan-<ssl_model_type>-continuous-dasb
 vocoder_model_path: !ref <pretrained_model_save_folder>/<vocoder_model_name>
 squish_layers: False
@@ -127,8 +125,6 @@ extract_features_opts:
     model_sample_rate: !ref <model_sample_rate>
 
 
-
-
 ################################
 # Optimization Hyperparameters #
 ################################
@@ -144,18 +140,18 @@ guided_attention_hard_stop: 50
 gate_loss_weight: 1.0
 
 train_dataloader_opts:
-  batch_size: !ref <batch_size>
-  drop_last: False  #True #False
-  shuffle: False
-  num_workers: !ref <num_workers>
+    batch_size: !ref <batch_size>
+    drop_last: False  #True #False
+    shuffle: False
+    num_workers: !ref <num_workers>
 
 valid_dataloader_opts:
-  batch_size: !ref <batch_size>
-  num_workers: !ref <num_workers>
+    batch_size: !ref <batch_size>
+    num_workers: !ref <num_workers>
 
 test_dataloader_opts:
-  batch_size: !ref <batch_size>
-  num_workers: !ref <num_workers>
+    batch_size: !ref <batch_size>
+    num_workers: !ref <num_workers>
 
 sample_dataloader_opts:
     batch_size: !ref <batch_size>
@@ -199,58 +195,58 @@ postnet_n_convolutions: 5
 
 #model
 model: !new:speechbrain.lobes.models.Tacotron2.Tacotron2
-  mask_padding: !ref <mask_padding>
-  n_mel_channels: !ref <audio_tokens_per_step> * <audio_dim>
-  # symbols
-  n_symbols: !ref <n_symbols>
-  symbols_embedding_dim: !ref <symbols_embedding_dim>
-  # encoder
-  encoder_kernel_size: !ref <encoder_kernel_size>
-  encoder_n_convolutions: !ref <encoder_n_convolutions>
-  encoder_embedding_dim: !ref <encoder_embedding_dim>
-  # attention
-  attention_rnn_dim: !ref <attention_rnn_dim>
-  attention_dim: !ref <attention_dim>
-  # attention location
-  attention_location_n_filters: !ref <attention_location_n_filters>
-  attention_location_kernel_size: !ref <attention_location_kernel_size>
-  # decoder
-  n_frames_per_step: !ref <n_frames_per_step>
-  decoder_rnn_dim: !ref <decoder_rnn_dim>
-  prenet_dim: !ref <prenet_dim>
-  max_decoder_steps: !ref <max_decoder_steps>
-  gate_threshold: !ref <gate_threshold>
-  p_attention_dropout: !ref <p_attention_dropout>
-  p_decoder_dropout: !ref <p_decoder_dropout>
-  # postnet
-  postnet_embedding_dim: !ref <postnet_embedding_dim>
-  postnet_kernel_size: !ref <postnet_kernel_size>
-  postnet_n_convolutions: !ref <postnet_n_convolutions>
-  decoder_no_early_stopping: !ref <decoder_no_early_stopping>
+    mask_padding: !ref <mask_padding>
+    n_mel_channels: !ref <audio_tokens_per_step> * <audio_dim>
+    # symbols
+    n_symbols: !ref <n_symbols>
+    symbols_embedding_dim: !ref <symbols_embedding_dim>
+    # encoder
+    encoder_kernel_size: !ref <encoder_kernel_size>
+    encoder_n_convolutions: !ref <encoder_n_convolutions>
+    encoder_embedding_dim: !ref <encoder_embedding_dim>
+    # attention
+    attention_rnn_dim: !ref <attention_rnn_dim>
+    attention_dim: !ref <attention_dim>
+    # attention location
+    attention_location_n_filters: !ref <attention_location_n_filters>
+    attention_location_kernel_size: !ref <attention_location_kernel_size>
+    # decoder
+    n_frames_per_step: !ref <n_frames_per_step>
+    decoder_rnn_dim: !ref <decoder_rnn_dim>
+    prenet_dim: !ref <prenet_dim>
+    max_decoder_steps: !ref <max_decoder_steps>
+    gate_threshold: !ref <gate_threshold>
+    p_attention_dropout: !ref <p_attention_dropout>
+    p_decoder_dropout: !ref <p_decoder_dropout>
+    # postnet
+    postnet_embedding_dim: !ref <postnet_embedding_dim>
+    postnet_kernel_size: !ref <postnet_kernel_size>
+    postnet_n_convolutions: !ref <postnet_n_convolutions>
+    decoder_no_early_stopping: !ref <decoder_no_early_stopping>
 
 guided_attention_scheduler: !new:speechbrain.nnet.schedulers.StepScheduler
-  initial_value: !ref <guided_attention_weight>
-  half_life: !ref <guided_attention_weight_half_life>
+    initial_value: !ref <guided_attention_weight>
+    half_life: !ref <guided_attention_weight_half_life>
 
 criterion: !new:speechbrain.lobes.models.Tacotron2.Loss
-  gate_loss_weight: !ref <gate_loss_weight>
-  guided_attention_weight: !ref <guided_attention_weight>
-  guided_attention_sigma: !ref <guided_attention_sigma>
-  guided_attention_scheduler: !ref <guided_attention_scheduler>
-  guided_attention_hard_stop: !ref <guided_attention_hard_stop>
-  
+    gate_loss_weight: !ref <gate_loss_weight>
+    guided_attention_weight: !ref <guided_attention_weight>
+    guided_attention_sigma: !ref <guided_attention_sigma>
+    guided_attention_scheduler: !ref <guided_attention_scheduler>
+    guided_attention_hard_stop: !ref <guided_attention_hard_stop>
+
 vocoder: !apply:speechbrain.inference.vocoders.HIFIGAN.from_hparams
     source: !ref <vocoder_src>
     savedir: !ref <vocoder_model_path>
 
 modules:
-  model: !ref <model>
-  vocoder: !ref <vocoder>
+    model: !ref <model>
+    vocoder: !ref <vocoder>
 
 #optimizer
 opt_class: !name:torch.optim.Adam
-  lr: !ref <learning_rate>
-  weight_decay: !ref <weight_decay>
+    lr: !ref <learning_rate>
+    weight_decay: !ref <weight_decay>
 
 # freezer
 freezer: !new:benchmarks.DASB.utils.preparation.Freezer
@@ -259,28 +255,28 @@ freezer: !new:benchmarks.DASB.utils.preparation.Freezer
 
 #epoch object
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
-  limit: !ref <epochs>
+    limit: !ref <epochs>
 
 train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
-  save_file: !ref <train_log>
+    save_file: !ref <train_log>
 
 #annealing_function
 lr_annealing: !new:speechbrain.nnet.schedulers.IntervalScheduler
-  intervals:
-    - steps: 6000
-      lr: 0.0005
-    - steps: 8000
-      lr: 0.0003
-    - steps: 10000
-      lr: 0.0001
+    intervals:
+        - steps: 6000
+          lr: 0.0005
+        - steps: 8000
+          lr: 0.0003
+        - steps: 10000
+          lr: 0.0001
 
 #checkpointer
 checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
-  checkpoints_dir: !ref <save_folder>
-  recoverables:
-    model: !ref <model>
-    counter: !ref <epoch_counter>
-    scheduler: !ref <lr_annealing>
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        model: !ref <model>
+        counter: !ref <epoch_counter>
+        scheduler: !ref <lr_annealing>
 
 #infer: !name:speechbrain.lobes.models.Tacotron2.infer
 
@@ -294,4 +290,3 @@ progress_report: !new:benchmarks.DASB.utils.tts.TTSProgressReport
     logger: !ref <progress_logger>
     sample_rate: !ref <model_sample_rate>
     eos_threshold: !ref <gate_threshold>
-

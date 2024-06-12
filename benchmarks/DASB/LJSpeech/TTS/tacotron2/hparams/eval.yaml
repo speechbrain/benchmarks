@@ -48,8 +48,8 @@ mos_source: flexthink/ttseval-wavlm-transformer
 vocoder_model: speechbrain/tts-hifigan-libritts-16kHz
 
 vocoder: !name:speechbrain.inference.vocoders.HIFIGAN.from_hparams
-    source: !ref <vocoder_model>
-    savedir: !ref <pretrained_model_save_folder>/vocoder
+  source: !ref <vocoder_model>
+  savedir: !ref <pretrained_model_save_folder>/vocoder
 
 eval_asr: !apply:speechbrain.utils.hparams.choice
   value: !ref <eval_asr_type>
@@ -65,7 +65,7 @@ eval_asr: !apply:speechbrain.utils.hparams.choice
       savedir: !ref <pretrained_model_save_folder>
 
 evaluators:
-    asr: !ref <eval_asr>
+  asr: !ref <eval_asr>
 
 bulk_evaluators:
   utmos: !name:benchmarks.DASB.utils.eval.UTMOSSpeechEvaluator
@@ -79,9 +79,9 @@ bulk_evaluators:
 
 
 output_files:
-    mos: !ref <output_folder>/mos.csv
-    asr: !ref <output_folder>/asr.csv
-    summary: !ref <output_folder>/summary.json
+  mos: !ref <output_folder>/mos.csv
+  asr: !ref <output_folder>/asr.csv
+  summary: !ref <output_folder>/summary.json
 
 eval_summary:
   asr:

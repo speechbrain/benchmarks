@@ -151,8 +151,8 @@ transformer_dropout: 0.2
 target_dropout: 0.2
 activation: !name:torch.nn.GELU
 audio_num_tokens: 1024
-audio_emb_size: 128
-audio_emb_freeze: True
+audio_emb_size: 1024
+audio_emb_freeze: False
 audio_emb_pretrained: False
 text_num_tokens: 39
 phn_num_tokens: 52

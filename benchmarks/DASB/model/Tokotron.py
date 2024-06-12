@@ -117,6 +117,8 @@ class TokotronTransformerDecoder(nn.Module):
         The number of layers
     audio_emb : torch.nn.Module, optional
         The audio embedding to be used
+    audio_emb_size : int
+        The size of the audio embeddings (if learned)
     activation : torch.nn.Module, optional
         The activation function to be used
     use_tgt_padding_mask : bool, optional
@@ -125,11 +127,6 @@ class TokotronTransformerDecoder(nn.Module):
         Whether audio embeddings should be frozen
     max_decoder_steps : int, optional
         The maximum number of decoder steps used during training
-    infer_max_decoder_steps : int, optional
-        The maximum number of steps during autoregressive
-        decoding (defaults to max_decoder_steps)
-    bos_idx : int
-        The index of the BOS token
     gate_threshold : int
         The minimum gate value (post-sigmoid) to consider the sequence
         as complete during auto-regressive inference
@@ -138,8 +135,6 @@ class TokotronTransformerDecoder(nn.Module):
         stops. By default, inference stops immediately. This parameter is useful
         for "soft" gate implementations where the gate starts outputting positive
         probabilities before actual EOS
-    show_inference_progress : bool, optional
-        Whether to show inference progress in the console
     """
 
     def __init__(
@@ -159,8 +154,6 @@ class TokotronTransformerDecoder(nn.Module):
         use_tgt_padding_mask=False,
         audio_emb_freeze=False,
         max_decoder_steps=1000,
-        infer_max_decoder_steps=None,
-        bos_idx=0,
         bos_width=1,
         gate_threshold=0.5,
         gate_offset=0,
@@ -205,13 +198,9 @@ class TokotronTransformerDecoder(nn.Module):
         self.target_dropout = target_dropout
         self.audio_emb = audio_emb
         self.max_decoder_steps = max_decoder_steps
-        if infer_max_decoder_steps is None:
-            infer_max_decoder_steps = max_decoder_steps
-        self.infer_max_decoder_steps = infer_max_decoder_steps
         self.attention_type = attention_type
         self.use_tgt_padding_mask = use_tgt_padding_mask
         self.audio_emb_freeze = audio_emb_freeze
-        self.bos_idx = bos_idx
         self.bos_width = bos_width
         self.gate_threshold = gate_threshold
         self.gate_offset = gate_offset
@@ -232,6 +221,35 @@ class TokotronTransformerDecoder(nn.Module):
         tgt_key_padding_mask=None,
         pos_embs_src=None,
     ):
+        """Performs a decode step
+
+        Arguments
+        ---------
+        enc_out : torch.Tensor
+            The raw encoder outputs
+        tgt : torch.Tensor, optional
+            Targets (i.e. the parts of the audio sequence that have
+            already been decoded)
+        src_length : torch.Tensor, optional
+            Relative length of input sequences
+        src_key_padding_mask : torch.Tensor, optional
+            Key padding mask for the tensor (if pre-computed)
+        tgt_length : torch.Tensor, optional
+            The target relative length
+        tgt_key_padding_mask : torch.Tensor, optional
+            The target key padding mask (if pre-computed)
+        pos_emb_src : torch.Tensor, optional
+            The target positional embeddings
+
+        Returns
+        -------
+        dec_out : torch.Tensor
+            Decoder outputs
+        dec_self_attn : list
+            Decorder self-attentions (list of tensors)
+        dec_attn : list
+            Decoder attention (list of tensors)
+        """
         if src_length is not None and src_key_padding_mask is None:
             src_max_len = enc_out.size(1)
             src_key_padding_mask = length_to_mask(
@@ -301,8 +319,30 @@ class TokotronTransformerDecoder(nn.Module):
             Target lengths
         pos_embs_src : dict
             Source positional embeddings
+
+        Returns
+        -------
+        result : TokotronDecoderOutput
+            The model output
+
+            out : torch.Tensor
+                The outputs - token probabilities
+                Batch x Length x Head x Token
+            gate_out : torch.Tensor
+                The gate activation tesnsor
+                Batch x Length
+            dec_self_attn : list
+                Decoder self-attentions
+            dec_attn : list
+                Decoder multi-head attentions
+            alignments : torch.Tensor
+                Decoder multi-head attentions, concatenated
+                as a single tensor
+            context : dict
+                An empty dictionary (not used in this decoder)
         """
         tgt_shift = torch.zeros((1, tgt.size(1), 1), device=tgt.device)
+
         tgt_shift[:, self.bos_width :, :] += self.audio_token_shift
         dec_out, dec_self_attn, dec_attn = self.decode(
             enc_out,
@@ -981,7 +1021,7 @@ class TokotronTransformerModel(nn.Module):
         audio_token_shift=0,
         decoder_mode=DecoderMode.AUTOREGRESSIVE,
         scale_factor=5.0,
-        emb=None
+        emb=None,
     ):
         super().__init__()
         self.in_emb = Embedding(
@@ -1021,11 +1061,8 @@ class TokotronTransformerModel(nn.Module):
             audio_emb_size=audio_emb_size,
             audio_emb_freeze=audio_emb_freeze,
             max_decoder_steps=max_audio_length,
-            infer_max_decoder_steps=infer_max_audio_length or max_audio_length,
-            bos_idx=bos_idx,
             gate_threshold=gate_threshold,
             gate_offset=gate_offset,
-            show_inference_progress=show_inference_progress,
             audio_token_shift=audio_token_shift,
             multihead_input=self.decoder_mode == DecoderMode.AUTOREGRESSIVE,
         )
@@ -1049,7 +1086,7 @@ class TokotronTransformerModel(nn.Module):
                 bos_idx=bos_idx,
                 max_steps=infer_max_audio_length,
                 audio_token_shift=self.audio_token_shift,
-                show_inference_progress=self.show_inference_progress,
+                show_inference_progress=show_inference_progress,
             )
         elif callable(inference) and not isinstance(inference, nn.Module):
             inference = inference()
@@ -1059,30 +1096,37 @@ class TokotronTransformerModel(nn.Module):
         if emb is not None:
             self.emb_proj = self._build_emb_proj(emb)
             self.vocoder_emb = [
-                key for key, emb_config in emb.items()
-                if emb_config.get("vocoder")]
+                key
+                for key, emb_config in emb.items()
+                if emb_config.get("vocoder")
+            ]
 
     def _build_emb_proj(self, emb):
         """Builds the embedding projection
-        
+
         Arguments
         ---------
-        emb : torch.Tensor
-            """
+        emb : dict
+            Embedding configuration
+
+        Returns
+        -------
+        emb_proj : torch.nn.ModuleDict
+            embedding projections for each embedding"""
         emb_proj = {}
         for key, emb_config in emb.items():
             kind = emb_config.get("kind", "learned")
             if kind == "pretrained":
                 emb_mod = Linear(
-                    input_size=emb_config.get("dim", self.d_model) + self.d_model,
-                    n_neurons=self.d_model
+                    input_size=emb_config.get("dim", self.d_model)
+                    + self.d_model,
+                    n_neurons=self.d_model,
                 )
             elif kind == "learned":
                 emb_count = emb_config["count"]
                 emb_dim = emb_config.get("dim", self.d_model)
                 emb_mod = Embedding(
-                    num_embeddings=emb_count,
-                    embedding_dim=emb_dim
+                    num_embeddings=emb_count, embedding_dim=emb_dim
                 )
             else:
                 raise ValueError(f"Invallid embedding kind: {kind}")
@@ -1140,16 +1184,6 @@ class TokotronTransformerModel(nn.Module):
         """The number of steps following gate activation to include"""
         self.decoder.gate_offset = value
 
-    @property
-    def show_inference_progress(self):
-        """Whether inference progress is displayed"""
-        return self.decoder.show_inference_progress
-
-    @show_inference_progress.setter
-    def show_inference_progress(self, value):
-        """Enables or disables progress display"""
-        self.decoder.show_inference_progress = value
-
     def forward(
         self, input_tokens, input_length, audio_tokens, audio_length, emb=None
     ):
@@ -1169,6 +1203,26 @@ class TokotronTransformerModel(nn.Module):
         emb : dict
             a [str, tensor] dictionary of embeddings (e.g. speaker, language,
             etc)
+
+        Returns
+        -------
+        result : TokotronOutput
+            Forward step outputs
+            out : torch.Tensor
+                The outputs - token probabilities
+                Batch x Length x Head x Token
+            gate_out : torch.Tensor
+                The gate activation tesnsor
+                Batch x Length
+            dec_self_attn : list
+                Encoder self-attentions
+            dec_self_attn : list
+                Decoder self-attentions
+            dec_attn : list
+                Decoder multi-head attentions
+            alignments : torch.Tensor
+                Decoder multi-head attentions, concatenated
+                as a single tensor
         """
 
         src, src_key_padding_mask, pos_embs_encoder = self.process_inputs(
@@ -1204,32 +1258,35 @@ class TokotronTransformerModel(nn.Module):
             dec_attn=dec_out.dec_attn,
             alignments=dec_out.alignments,
         )
-    
+
     def add_emb(self, src, emb):
         """Adds embedding projections to the source tensor
 
         Arguments
         ---------
         src : torch.Tensor
-            the source tensor
+            The source tensor
         emb : dict
-            the embedding dictionary
+            The embedding dictionary
+
+        Arguments
+        ---------
+        result : torch.Tensor
+            The resulting tensor, with embeddings incorporated
         """
         result = src
         if emb is not None:
             for key, emb_t in emb.items():
                 batch_size, seq_len, feat_size = src.shape
                 emb_size = emb_t.size(-1)
-                emb_t_norm = nn.functional.layer_norm(
-                    emb_t,
-                    emb_t.shape
+                emb_t_norm = nn.functional.layer_norm(emb_t, emb_t.shape)
+                emb_exp = emb_t_norm.unsqueeze(1).expand(
+                    batch_size, seq_len, emb_size
                 )
-                emb_exp = emb_t_norm.unsqueeze(1).expand(batch_size, seq_len, emb_size)
-                src_norm = nn.functional.layer_norm(
-                    src, src.shape
-                )
+                src_norm = nn.functional.layer_norm(src, src.shape)
                 src_with_emb = torch.cat([src_norm, emb_exp], dim=-1)
                 result = self.emb_proj[key](src_with_emb)
+                src = result
         return result
 
     def process_inputs(self, input_tokens, input_length):
@@ -1334,9 +1391,7 @@ class TokotronTransformerModel(nn.Module):
                     if key in self.vocoder_emb
                 }
             vocoder_out = self.vocoder(
-                audio_tokens,
-                dec_out.length,
-                **vocoder_emb
+                audio_tokens, dec_out.length, **vocoder_emb
             )
             if isinstance(vocoder_out, tuple):
                 wav, wav_length = vocoder_out
@@ -1520,6 +1575,23 @@ class TokotronLoss(nn.Module):
         input_length,
         reduction="mean",
     ):
+        """Computes the loss, with details
+
+        Arguments
+        ---------
+        predictions : TokotronOutput
+            the raw predictions, from the model
+        audio_tokens : torch.Tensor
+            target audio tokens
+        audio_length : torch.Tensor
+            relative lengths of target audio, for masking
+        input_tokens : torch.Tensor
+            input tokens (text of phonemes)
+        input_length : torch.Tensor
+            relative lengths of input tokens, for masking
+        reduction : str
+            loss reduction (see speechbrain.nnet.losses)
+        """
         p_seq = predictions.out.log_softmax(dim=-1)
         batch_size, out_len, heads, tok_dim = p_seq.shape
         max_len = out_len - 1
@@ -1533,14 +1605,9 @@ class TokotronLoss(nn.Module):
                 batch_size, self.eos_width, heads
             )
             features = [audio_tokens + self.audio_token_shift, audio_eos]
-            # TODO: Fix concat_padded_features to use the correct dtype
-            # Adding a workaround here because the core cannot be modified
-            # for the benchmark
             features = [item.float() for item in features]
             audio_tokens, audio_length = concat_padded_features(
-                features,
-                [audio_length, padding_lengths],
-                dim=1,
+                features, [audio_length, padding_lengths], dim=1,
             )
             audio_tokens = audio_tokens
 
@@ -1628,7 +1695,13 @@ def scale(seq, factor):
     seq : torch.Tensor
         The sequence to be scaled
     factor : torch.Tensor
-        The factor by which teh """
+        The factor by which the inputs will be scaled
+
+    Returns
+    -------
+    result : torch.Tensor
+        The input, scaled by the specified factor
+    """
     return F.interpolate(
         seq.unsqueeze(1), scale_factor=(factor, 1), mode="nearest",
     ).squeeze(1)

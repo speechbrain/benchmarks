@@ -194,6 +194,27 @@ class TokotronBrain(sb.Brain):
             self.create_samples()
 
     def fit_batch(self, batch):
+        """Fit one batch, override to do multiple updates.
+
+        The default implementation depends on a few methods being defined
+        with a particular behavior:
+
+        * ``compute_forward()``
+        * ``compute_objectives()``
+        * ``optimizers_step()``
+
+        Also depends on having optimizers passed at initialization.
+
+        Arguments
+        ---------
+        batch : list of torch.Tensors
+            Batch of data to use for training. Default implementation assumes
+            this batch has two elements: inputs and targets.
+
+        Returns
+        -------
+        detached loss
+        """
         loss = super().fit_batch(batch)
         if self.hparams.lr_annealing_mode == "step":
             self.hparams.lr_annealing(self.optimizer)

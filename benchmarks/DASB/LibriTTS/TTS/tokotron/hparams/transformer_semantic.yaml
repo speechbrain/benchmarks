@@ -16,7 +16,8 @@ data_folder_alignments: null
 prepare_save_folder: !ref <data_folder>/prepared
 pretrained_model_save_folder: !ref <prepare_save_folder>
 ssl_model_type: wavlm
-vocoder_model_name: !ref unithifigan-dasb-<ssl_model_type>-ms
+representation_mode: discrete
+vocoder_model_name: !ref unithifigan-dasb-<ssl_model_type>-<representation_mode>-ms
 vocoder_model_path: !ref <pretrained_model_save_folder>/<vocoder_model_name>
 prepare_archive_path: null
 prepare_skip_ignore_folders: False
@@ -52,15 +53,27 @@ token_model_src: !apply:speechbrain.utils.hparams.choice
 g2p_src: flexthink/soundchoice-g2p
 token_model_kmeans_src: poonehmousavi/SSL_Quantization
 token_model_kmeans_dataset: LibriSpeech-100-360-500
-token_model_layers: [1, 3, 7, 12, 18, 23]
+ssl_model_layers: [1, 3, 7, 12, 18, 23]
+token_model_layers: !ref <ssl_model_layers>
 select_layers: null
 token_offset: 1
-vocoder_src:  !apply:speechbrain.utils.hparams.choice
+vocoder_src_discrete: !apply:speechbrain.utils.hparams.choice
     value: !ref <ssl_model_type>
     choices:
         wavlm: chaanks/hifigan-wavlm-l1-3-7-12-18-23-k1000-LibriTTS
         hubert: chaanks/hifigan-hubert-l1-3-7-12-18-23-k1000-LibriTTS
         wav2vec2: chaanks/hifigan-wav2vec-l1-3-7-12-18-23-k1000-LibriTTS
+vocoder_src_continous: !apply:speechbrain.utils.hparams.choice
+    value: !ref <ssl_model_type>
+    choices:
+        wavlm: chaanks/hifigan-wavlm-l1-3-7-12-18-23-LibriTTS
+        hubert: chaanks/hifigan-hubert-l1-3-7-12-18-23-LibriTTS
+        wav2vec2: chaanks/hifigan-wav2vec-l1-3-7-12-18-23-LibriTTS
+vocoder_src: !apply:speechbrain.utils.hparams.choice
+    value: !ref <representation_mode>
+    choices:
+        discrete: !ref <vocoder_src_discrete>
+        continuous: !ref <vocoder_src_continous>
 vocoder_available_layers: [1, 3, 7, 12, 18, 23]
 vocoder_takes_spk_emb: True
 spk_emb_src: speechbrain/spkrec-ecapa-voxceleb-mel-spec
@@ -229,6 +242,11 @@ extract_features_opts:
         num_workers: !ref <num_workers>
     token_model: !ref <token_model>
     token_model_kwargs: !ref <token_model_kwargs>
+    ssl_model: !ref <ssl_model>
+    ssl_model_layers: !apply:benchmarks.DASB.utils.hparams.as_list
+        value: !ref <ssl_model_layers>
+        dtype: int
+    token_model_layers: !ref <token_model_layers>
     sample_rate: !ref <sample_rate>
     model_sample_rate: !ref <model_sample_rate>
     spk_emb_model: !ref <spk_emb_model>
@@ -246,6 +264,7 @@ transformer_dropout: 0.2
 target_dropout: 0.2
 activation: !name:torch.nn.GELU
 audio_num_tokens: 1000
+audio_dim: 1024
 audio_emb_size: 128
 audio_emb_freeze: True
 audio_emb_pretrained: False
@@ -265,20 +284,32 @@ hifigan: !apply:speechbrain.inference.vocoders.UnitHIFIGAN.from_hparams
     source: !ref <vocoder_src>
     savedir: !ref <vocoder_model_path>
 
-vocoder: !new:benchmarks.DASB.model.custom_model.HierarchicalUnitWrapper
-    model: !ref <hifigan>
-    available_layers: !apply:benchmarks.DASB.utils.hparams.as_list
-        value: !ref <vocoder_available_layers>
-        dtype: int
-    layers: !apply:benchmarks.DASB.utils.hparams.as_list
+vocoder_discrete: !name:benchmarks.DASB.model.custom_model.HierarchicalUnitWrapper
+  model: !name:speechbrain.inference.vocoders.UnitHIFIGAN.from_hparams
+    source: !ref <vocoder_src>
+    savedir: !ref <vocoder_model_path>
+  available_layers: !ref <vocoder_available_layers>
+  layers: !apply:benchmarks.DASB.utils.hparams.as_list
         value: !apply:speechbrain.utils.hparams.choice
             value: !ref <select_layers>
             default: !ref <select_layers>
             choices:
                 null: !ref <token_model_layers>
         dtype: int
-    num_units: !ref <audio_num_tokens>
-    offset: !ref <token_offset>
+  num_units: !ref <audio_num_tokens>
+  offset: !ref <token_offset>
+
+vocoder_continuous: !name:benchmarks.DASB.model.custom_model.VocoderWrapper
+    model: !name:speechbrain.inference.vocoders.HIFIGAN.from_hparams
+        source: !ref <vocoder_src>
+        savedir: !ref <vocoder_model_path>
+
+vocoder: !apply:benchmarks.DASB.utils.hparams.choice
+    value: !ref <representation_mode>
+    apply: True
+    choices:
+        discrete: !ref <vocoder_discrete>
+        continuous: !ref <vocoder_continuous>
 
 inference_search: !new:benchmarks.DASB.model.Tokotron.TokotronSearchInference
     bos_index: !ref <bos_index>
@@ -294,6 +325,7 @@ inference_forward: !new:benchmarks.DASB.model.Tokotron.TokotronForwardInference
     scale_factor: !ref <scale_factor>
     gate_threshold: !ref <gate_threshold>
     eos_mode: !ref <eos_mode>
+    representation_mode: !ref <representation_mode>
 
 inference: !apply:speechbrain.utils.hparams.choice
     value: !ref <inference_mode>
@@ -332,6 +364,7 @@ model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel # yamllint d
     audio_token_shift: !ref <audio_token_shift>
     decoder_mode: !ref <decoder_mode>
     scale_factor: !ref <scale_factor>
+    representation_mode: !ref <representation_mode>
     emb: !ref <emb>
 
 modules:
@@ -356,6 +389,7 @@ compute_cost: !new:benchmarks.DASB.model.Tokotron.TokotronLoss
     eos_width: !ref <eos_width>
     audio_tokens_per_step: !ref <audio_tokens_per_step>
     audio_token_shift: !ref <audio_token_shift>
+    representation_mode: !ref <representation_mode>
 
 
 lr_annealing: !new:speechbrain.nnet.schedulers.NoamScheduler

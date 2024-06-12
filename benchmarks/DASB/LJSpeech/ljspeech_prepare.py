@@ -870,9 +870,7 @@ def prepare_features(
         device=device,
     )
     token_model_kwargs = options.get("token_model_kwargs", {})
-    ssl_layers = options.get("ssl_model_layers") or options.get(
-        "token_model_layers"
-    )
+    ssl_layers = options.get("ssl_model_layers")
 
     @sb.utils.data_pipeline.takes("wav")
     @sb.utils.data_pipeline.provides("sig")

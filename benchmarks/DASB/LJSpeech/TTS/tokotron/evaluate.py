@@ -196,12 +196,12 @@ class TokotronEvaluator:
             )
             if self.vocoder_has_details:
                 wav, details = self.modules.vocoder.decode_batch_with_details(
-                    infer_out.audio_tokens,
+                    infer_out.audio,
                 )
                 length = infer_out.length
             else:
                 result = self.modules.vocoder(
-                    infer_out.audio_tokens, infer_out.length,
+                    infer_out.audio, infer_out.length,
                 )
                 if torch.is_tensor(result):
                     wav, length = result, infer_out.length

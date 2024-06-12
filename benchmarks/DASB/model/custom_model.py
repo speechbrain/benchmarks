@@ -192,7 +192,7 @@ class HierarchicalUnitWrapper(torch.nn.Module):
 
     Arguments
     ---------
-    model : torch.nn.Module | Pretrained
+    model : torch.nn.Module | Pretrained | callable
         A model
     available_layers : list
         The list of available layers
@@ -216,6 +216,8 @@ class HierarchicalUnitWrapper(torch.nn.Module):
         use_length=False,
     ):
         super().__init__()
+        if callable(model) and not isinstance(model, nn.Module):
+            model = model()
         self.model = model
         self.device = next(iter(param for param in model.parameters())).device
         self.available_layers = as_list(available_layers)
@@ -255,6 +257,47 @@ class HierarchicalUnitWrapper(torch.nn.Module):
         else:
             result = self.model(units_with_offset, **kwargs)
         return result
+
+
+class VocoderWrapper(nn.Module):
+    """A wrapper for continuous vocoders
+
+    Arguments
+    ---------
+    model : nn.Module | callable
+        The vocoder model
+    use_length : bool
+        Whether or not the vocoder takes a lengths argument
+    """
+    def __init__(self, model, use_length=False):
+        super().__init__()
+        if callable(model) and not isinstance(model, nn.Module):
+            model = model()
+        self.model = model
+        self.use_length = use_length
+
+    def forward(self, audio, length=None, **kwargs):
+        """Invokes the vocoder
+
+        Arguments
+        ---------
+        audio : torch.Tensor
+            The audio representation
+        length : torch.Tensor
+            Relative lengths
+
+        Returns
+        -------
+        wav : torch.Tensor
+            The raw waveform
+        """
+        if self.use_length:
+            wav = self.model(audio, length)
+        else:
+            wav = self.model(audio)
+        if length is not None:
+            clean_padding_(wav, length)
+        return wav
 
 
 class EncodecVocoder(nn.Module):

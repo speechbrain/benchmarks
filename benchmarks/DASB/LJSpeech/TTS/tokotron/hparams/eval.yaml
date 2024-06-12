@@ -10,6 +10,7 @@ eval_asr_source: !apply:speechbrain.utils.hparams.choice
     whisper: openai/whisper-small
 evaluations: utmos,asr
 output_folder: !PLACEHOLDER
+pretrained_model_save_folder: null
 tmp_folder: null
 utmos_batch_size: 8
 utmos_model_path: null

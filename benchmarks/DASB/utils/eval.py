@@ -286,6 +286,8 @@ class RegressionModelSpeechEvaluator(SpeechEvaluator):
 
 
 class ASRSpeechEvaluator(SpeechEvaluator):
+    """A superclass for ASR speech evaluators"""
+
     def evaluate(
         self,
         wavs,
@@ -350,6 +352,28 @@ class ASRSpeechEvaluator(SpeechEvaluator):
         return SpeechEvaluationResult(score=details["wer"], details=details,)
 
     def compute_diff_rate(self, details, device):
+        """Computes the differential token rate
+
+        Arguments
+        ---------
+        details : dict
+            The evaluation details
+            Keys:
+                "pred": ASR predictions for the TTS sample
+                "pred_ref": ASR predictions for the ground
+                truth
+
+        Returns
+        -------
+        result: dict
+            A dictionary with the following keys
+
+            dwer : torch.Tensor
+                The differential Word Error Rate (dWER)
+            dcer : torch.Tensor
+                The differential Character Error Rate (dCER)
+
+        """
         ids = range(1, len(details["pred"]) + 1)
         wer_metric, cer_metric = init_asr_metrics()
         pred = self._replace_blanks(details["pred"])
@@ -365,6 +389,12 @@ class ASRSpeechEvaluator(SpeechEvaluator):
         return {"dwer": dwer, "dcer": dcer}
 
     def _replace_blanks(self, preds):
+        """Replaces blanks with single spaces, preventing an exception
+        in the case of an unintelligible sample
+
+        Arguments
+        ---------
+        """
         return [" " if item == "" else item for item in preds]
 
 
@@ -468,6 +498,33 @@ class EncoderDecoderASRSpeechEvaluator(ASRSpeechEvaluator):
 
 
 class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
+    """A speech evaluator implementation based on Whisper ASR
+
+    Arguments
+    ---------
+    source : str
+        The source directory
+    savedir : str, optional
+        The path where Whisper will be saved
+    sample_rate: int, optional
+        The audio sample rate
+    bos_index : int, optional
+        The index of the BOS token
+    eos_index : int, optional
+        The index of the EOS token
+    min_decode_ratio : float, optional
+        The minimum decode ratio
+    run_opts : dict, optional
+        Run options for the Whisper model
+    unbatch : bool, optional
+        If enabled, which is the default, the implementation
+        will evaluate samples one by one with a batch size of
+        1 and then "reassemble" the original batch. This is
+        sometimes needed because batched inference has been
+        found to result in decreased performance, primarily
+        due to masks not being applied to convolutional layers
+    """
+
     def __init__(
         self,
         source,
@@ -480,9 +537,9 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         run_opts=None,
         unbatch=True,
     ):
+        super().__init__(sample_rate=sample_rate)
         if run_opts is None:
             run_opts = {}
-        super().__init__(sample_rate=sample_rate)
         if savedir is None:
             savedir = "."
         self.model = Whisper(
@@ -612,11 +669,66 @@ def init_asr_metrics():
 
 
 class BulkSpeechEvaluator:
+    """A base class for a speech evaluator that is invoked for a series of filesystem files
+    rather than one batch at a time. This is useful for implementing wrappers around
+    command-line tools that would be impractical to run for each batch because of
+    long initialization time (to load models, etc)"""
+
     def evaluate_files(self, file_names, text=None, file_names_ref=None):
+        """Evaluates multiple files
+
+        Arguments
+        ---------
+        file_names : list
+            A list of files
+
+        text : list, optional
+            File transcripts (not required for all evaluators)
+
+        file_names_ref : list, optional
+            A list of reference files / ground truths (if applicable)
+
+        Returns
+        -------
+        result : SpeechEvaluationResult
+            a consolidated evaluation result
+        """
         raise NotImplementedError()
 
 
 class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
+    """An evaluation wrapper for UTMOS
+
+    Github: https://github.com/sarulab-speech/UTMOS22
+    HuggingFace: https://huggingface.co/spaces/sarulab-speech/UTMOS-demo
+
+    Arguments
+    ---------
+    model_path : str | path-like
+        The path where the HuggingFace repository was extracted
+    output_folder : str | path-like
+        The folder where results will be output
+    ckpt_path : str | path-like
+        The path to the checkpoint to be used
+    script : str | path-like
+        The path to the evaluation script, defaults to the bundled
+        predict.py
+    python : str | path-like, optional
+        The path to the Python interpreter to be used, defaults to
+        "python". Depending on the environment, it might need to be
+        changed (e.g. to "python3" or an absolute path to the interpreter)
+    use_python : bool
+        Whether to launch the script using python. This flag will need to be
+        set to False in environments where running UTMOS requires a wrapper shell
+        script (e.g. to initialize a different Python virtual environment from
+        the one in which SpeechBrain is running)
+    tmp_folder : str | path-like, optional
+        The temporary folder where files will be copied for evaluation. If
+        omitted, it will be set to output_folder. This can be useful on
+        compute environments that provide fast local storage (e.g. certain
+        compute clusters)
+    """
+
     def __init__(
         self,
         model_path,
@@ -644,6 +756,26 @@ class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
         self.use_python = use_python
 
     def evaluate_files(self, file_names, text, file_names_ref=None):
+        """Evaluates multiple files
+
+        Arguments
+        ---------
+        file_names : list
+            A list of files
+
+        text : list
+            File transcripts (not required for all evaluators)
+            Not used in this evaluator
+
+        file_names_ref : list, optional
+            A list of reference files / ground truths (if applicable)
+            Not used in this evaluator
+
+        Returns
+        -------
+        result : SpeechEvaluationResult
+            a consolidated evaluation result
+        """
         current_path = os.getcwd()
         try:
             self.eval_path.mkdir(parents=True, exist_ok=True)

@@ -48,8 +48,21 @@ def as_list(value, dtype=None):
 
 
 def repeat_for_layers(layers, value):
-    """Repeats the same value """
-    num_layers = layers if isinstance(layers, int) else len(as_list(layers))
+    """Repeats the same value for each layer
+
+    Arguments
+    ---------
+    layers : list | int | str
+        a list of layers or a single identifier
+    value : object
+        the value to repeat
+
+    Returns
+    -------
+    result : list
+        The value repeated for the correct number
+        of layers"""
+    num_layers = len(as_list(layers))
     return [value] * num_layers
 
 

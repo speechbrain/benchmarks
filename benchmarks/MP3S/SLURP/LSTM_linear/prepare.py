@@ -56,7 +56,7 @@ def prepare_SLURP(
             shutil.unpack_archive(zip_location, data_folder)
 
     splits = [
-        "train_real",
+        "train",
         "train_synthetic",
         "devel",
         "test",

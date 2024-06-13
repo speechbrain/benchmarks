@@ -3,6 +3,7 @@
 Authors
  * Artem Ploujnikov 2024
 """
+from numbers import Number
 
 _DTYPE_CONVERT = {"int": int, "float": float}
 
@@ -27,7 +28,7 @@ def as_list(value, dtype=None):
         the provided value, as a list
     """
     if dtype in _DTYPE_CONVERT:
-        dtype = _DTYPE_CONVERT[dtype]
+        dtype = _DTYPE_CONVERT[dtype]        
     if dtype and isinstance(value, dtype):
         value = [value]
     else:
@@ -35,7 +36,15 @@ def as_list(value, dtype=None):
             value = [item.strip() for item in value.split(",")]
         if dtype is not None:
             value = [dtype(item) for item in value]
-    return value if isinstance(value, list) else list(value)
+    if (
+        (dtype is not None and isinstance(value, dtype))
+        or isinstance(value, Number)
+    ):
+        value = [value]
+    elif not isinstance(value, list):
+        value = list(value)
+
+    return value
 
 
 def repeat_for_layers(layers, value):

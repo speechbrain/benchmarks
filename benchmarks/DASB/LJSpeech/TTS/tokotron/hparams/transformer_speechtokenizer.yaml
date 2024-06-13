@@ -41,7 +41,7 @@ ckpt_interval_minutes: 30 # save checkpoint every N min
 
 # Training parameters
 input: text
-number_of_epochs: 1000
+number_of_epochs: 150
 batch_size: 16
 grad_accumulation_factor: 1
 max_grad_norm: 5.0

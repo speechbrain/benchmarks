@@ -183,10 +183,6 @@ def unzip_buckeye(buckeye_dir):
     ---------
     buckeye_dir : str
         Path to the folder containing the Buckeye zipped folders.
-
-    Returns
-    -------
-    None
     """
     files = os.listdir(buckeye_dir)
     for zip_fil in files:
@@ -220,10 +216,6 @@ def prepare_csv(buckeye_dir, save_folder, csv_file, prefixes):
         Name of the file that will be saved (corresponding to the split)
     prefixes: list
         List of prefixes of recordings defining the elements that go into this split
-
-    Returns
-    -------
-    None
     """
     csv_lines = [
         ["ID", "duration", "wav", "spk_id", "start_seg", "end_seg", "wrd"]

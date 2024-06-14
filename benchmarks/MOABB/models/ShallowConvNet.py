@@ -5,6 +5,7 @@ Its design is based on the filter bank common spatial pattern (FBCSP) algorithm.
 Authors
  * Davide Borra, 2021
 """
+
 import torch
 import speechbrain as sb
 
@@ -105,14 +106,12 @@ class ShallowConvNet(torch.nn.Module):
         self.conv_module.add_module(
             "bnorm_1",
             sb.nnet.normalization.BatchNorm2d(
-                input_size=cnn_spatial_kernels, momentum=0.1, affine=True,
+                input_size=cnn_spatial_kernels, momentum=0.1, affine=True
             ),
         )
         # Square-pool-log-dropout
         # conv non-lin
-        self.conv_module.add_module(
-            "square_1", Square(),
-        )
+        self.conv_module.add_module("square_1", Square())
         self.conv_module.add_module(
             "pool_1",
             sb.nnet.pooling.Pooling2d(
@@ -123,12 +122,8 @@ class ShallowConvNet(torch.nn.Module):
             ),
         )
         # pool non-lin
-        self.conv_module.add_module(
-            "log_1", Log(),
-        )
-        self.conv_module.add_module(
-            "dropout_1", torch.nn.Dropout(p=dropout),
-        )
+        self.conv_module.add_module("log_1", Log())
+        self.conv_module.add_module("dropout_1", torch.nn.Dropout(p=dropout))
         # Shape of intermediate feature maps
         out = self.conv_module(
             torch.ones((1,) + tuple(input_shape[1:-1]) + (1,))
@@ -136,13 +131,11 @@ class ShallowConvNet(torch.nn.Module):
         dense_input_size = self._num_flat_features(out)
         # DENSE MODULE
         self.dense_module = torch.nn.Sequential()
-        self.dense_module.add_module(
-            "flatten", torch.nn.Flatten(),
-        )
+        self.dense_module.add_module("flatten", torch.nn.Flatten())
         self.dense_module.add_module(
             "fc_out",
             sb.nnet.linear.Linear(
-                input_size=dense_input_size, n_neurons=dense_n_neurons,
+                input_size=dense_input_size, n_neurons=dense_n_neurons
             ),
         )
         self.dense_module.add_module("act_out", torch.nn.LogSoftmax(dim=1))
@@ -154,6 +147,11 @@ class ShallowConvNet(torch.nn.Module):
         ---------
         x : torch.Tensor
             Input feature map.
+
+        Returns
+        -------
+        num_features : int
+            Count of all features in input.
         """
 
         size = x.size()[1:]  # all dimensions except the batch dimension
@@ -169,6 +167,11 @@ class ShallowConvNet(torch.nn.Module):
         ---------
         x : torch.Tensor (batch, time, EEG channel, channel)
             Input to convolve. 4d tensors are expected.
+
+        Returns
+        -------
+        x : torch.Tensor
+            The convolved output.
         """
         x = self.conv_module(x)
         x = self.dense_module(x)

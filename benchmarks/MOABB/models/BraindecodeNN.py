@@ -27,6 +27,11 @@ class BraindecodeNN(torch.nn.Module):
         ---------
         x : torch.Tensor (batch, time, EEG channel, channel)
             Input to convolve. 4d tensors are expected.
+
+        Returns
+        -------
+        x : torch.Tensor
+            The processed outputs.
         """
         # (batch, time_, EEG channel, channel) ->  # (batch, EEG channel, time_, channel)
         x = torch.transpose(x, 1, 2)

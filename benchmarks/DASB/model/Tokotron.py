@@ -1630,6 +1630,8 @@ class TokotronLoss(nn.Module):
         eos_width=1,
         audio_tokens_per_step=1,
         representation_mode=RepresentationMode.DISCRETE,
+        audio_clip_min=-10.0,
+        audio_clip_max=10.0,
     ):
         super().__init__()
         self.guided_attention_weight = guided_attention_weight
@@ -1656,6 +1658,8 @@ class TokotronLoss(nn.Module):
                 torch.ones(eos_width, audio_tokens_per_step).long() * eos_index
             )
             self.register_buffer("audio_eos", audio_eos)
+        self.audio_clip_min = audio_clip_min
+        self.audio_clip_max = audio_clip_max
 
     def forward(
         self,
@@ -1714,6 +1718,12 @@ class TokotronLoss(nn.Module):
                 batch_size * heads, max_len, audio_dim
             )
             audio_reshaped = bipolar_compression(audio_reshaped)
+            if self.audio_clip_min is not None or self.audio_clip_max is not None:
+                audio_reshaped = audio_reshaped.clip(
+                    min=self.audio_clip_min,
+                    max=self.audio_clip_max,
+                )
+
         audio_reshaped = audio_reshaped[:, :max_len]
         lengths_reshaped = (
             audio_length.unsqueeze(-1)

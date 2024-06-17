@@ -352,7 +352,7 @@ compute_cost: !new:benchmarks.DASB.model.Tokotron.TokotronLoss
     eos_index: !ref <eos_index>
     eos_width: !ref <eos_width>
     audio_tokens_per_step: !ref <audio_tokens_per_step>
-    audio_token_shift: !ref <audio_token_shift>\
+    audio_token_shift: !ref <audio_token_shift>
     representation_mode: !ref <representation_mode>
 
 

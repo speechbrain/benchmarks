@@ -1,0 +1,6 @@
+huggingface-hub>=0.21.3
+librosa>=0.9.2
+onnxruntime>=1.16.3
+speechbrain>=1.0.0
+speechtokenizer>=0.1.2
+transformers>=4.31.0

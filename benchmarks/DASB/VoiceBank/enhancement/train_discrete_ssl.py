@@ -48,8 +48,6 @@ class Enhancement(EnhancementEncodec):
 
         # Add offset for embedding layer
         all_layer_ids = self.hparams.codec_quantizer.ssl_layer_ids
-        # TODO: remove after testing
-        assert tuple(all_layer_ids) == (1, 3, 7, 12, 18, 23)
         offsets = torch.arange(
             0,
             len(all_layer_ids) * self.hparams.vocab_size,

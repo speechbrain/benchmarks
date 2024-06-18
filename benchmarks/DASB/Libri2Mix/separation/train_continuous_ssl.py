@@ -49,8 +49,6 @@ class Separation(sb.Brain):
         # Handle missing codebooks
         match = re.search(r"-l([\d-]+)-", self.hparams.vocoder_hub)
         all_layer_ids = list(map(int, match.group(1).split("-")))
-        # TODO: remove after testing
-        assert tuple(all_layer_ids) == (1, 3, 7, 12, 18, 23)
         if len(self.hparams.SSL_layers) < len(all_layer_ids):
             offset_idxes = [
                 all_layer_ids.index(x) for x in self.hparams.SSL_layers
@@ -158,7 +156,7 @@ class Separation(sb.Brain):
         out_sig, out_lens = batch.out_sig
 
         if not self.hparams.use_pit:
-            # Cross-entropy loss
+            # Reconstruction loss
             loss = self.hparams.rec_loss(
                 hyp_embs.flatten(start_dim=1, end_dim=-2),  # [B, NSK, H]
                 out_embs.flatten(start_dim=1, end_dim=-2),  # [B, NSK, H]

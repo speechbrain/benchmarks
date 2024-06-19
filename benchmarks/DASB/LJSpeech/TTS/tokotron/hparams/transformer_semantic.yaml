@@ -244,7 +244,11 @@ target_dropout: 0.2
 activation: !name:torch.nn.GELU
 audio_num_tokens: 1000
 audio_dim: 1024
-audio_emb_size: 1024
+audio_emb_size: !apply:speechbrain.utils.hparams.choice
+    value: !ref <representation_mode>
+    choices:
+        discrete: 1024
+        continuous: 128
 audio_emb_freeze: False
 audio_emb_pretrained: False
 text_num_tokens: 39

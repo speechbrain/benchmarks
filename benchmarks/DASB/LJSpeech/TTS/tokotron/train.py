@@ -178,7 +178,7 @@ class TokotronBrain(sb.Brain):
 
             if self.hparams.lr_annealing_mode == "epoch":
                 _, new_lr = self.hparams.lr_annealing(stage_loss)
-                sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr)
+                sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr, param_group=0)
 
             lr = self.optimizer.param_groups[0]["lr"]
 
@@ -288,6 +288,25 @@ class TokotronBrain(sb.Brain):
                         "perfect_samples_created"
                     ] = True
                     self.hparams.progress_logger.clear()
+
+    def init_optimizers(self):
+        """Custom optimizer initialization
+        """
+        representation_mode = RepresentationMode(self.hparams.representation_mode)
+        if representation_mode == RepresentationMode.CONTINUOUS:
+            audio_emb_params = self.modules.model.decoder.audio_emb.parameters()
+            audio_emb_params_set = set(audio_emb_params)
+            model_params = [
+                param for param in self.modules.parameters()
+                if param not in audio_emb_params_set
+            ]
+            self.optimizer = self.opt_class([
+                {"params": model_params},
+                {"params": audio_emb_params, "lr": self.hparams.audio_emb_lr,
+                 "weight_decay": self.hparams.audio_emb_weight_decay}]
+            )
+        else:
+            self.optimizer = self.opt_class(self.model.parameters(), lr=self.hparams.lr)
 
 
 INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phonemes"}

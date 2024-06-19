@@ -251,6 +251,8 @@ audio_emb_size: !apply:speechbrain.utils.hparams.choice
         continuous: 128
 audio_emb_freeze: False
 audio_emb_pretrained: False
+audio_emb_lr: 0.00001
+audio_emb_weight_decay: 0.001
 text_num_tokens: 39
 phn_num_tokens: 52
 input_num_tokens: !apply:speechbrain.utils.hparams.choice
@@ -360,9 +362,10 @@ compute_cost: !new:benchmarks.DASB.model.Tokotron.TokotronLoss
     representation_mode: !ref <representation_mode>
 
 
-lr_annealing: !new:speechbrain.nnet.schedulers.NoamScheduler
-    lr_initial: !ref <lr>
+lr_annealing: !new:benchmarks.DASB.model.Tokotron.TargetedNoamScheduler
+    lr_initial: [!ref <lr>, !ref <audio_emb_lr>] 
     n_warmup_steps: !ref <lr_warmup_steps>
+    param_group: 0
 
 checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
     checkpoints_dir: !ref <save_folder>

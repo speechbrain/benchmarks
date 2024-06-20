@@ -3,7 +3,12 @@
 Authors
  * Artem Ploujnikov 2023
 """
+
+import csv
 import logging
+import torch
+from contextlib import ExitStack
+from io import StringIO
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +39,44 @@ class TTSProgressReport:
         self.logger = logger
         self.sample_rate = sample_rate
         self.eos_threshold = eos_threshold
+        self._exit_stack = ExitStack()
+        self._writing = False
+        self._clear()
+
+    def __enter__(self):
+        self._clear()
+        self._exit_stack.enter_context(self.logger)
+        self._writing = True
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._write_length_report()
+        self._write_details_file()
+        self._exit_stack.close()
+        self._writing = False
+        self._clear()
+
+    def _clear(self):
+        """Clears accumulator variables"""
+        self.ids = []
+        self.length_pred = []
+        self.length = []
+        self.details = None
+
+    def _ensure_writing(self):
+        """Throws ContextError if invoked without first entering the
+        context"""
+        if not self._writing:
+            raise ContextError()
 
     def write(
-        self, ids, audio, length_pred, length, alignments=None, p_eos=None,
+        self,
+        ids,
+        audio,
+        length_pred,
+        length=None,
+        tgt_max_length=None,
+        alignments=None,
+        p_eos=None,
     ):
         """Reports TTS inferents results
 
@@ -50,23 +90,25 @@ class TTSProgressReport:
             A tensor of predicted relative lengths
         length : torch.Tensor
             A tensor of ground truth relative lengths
-
+        tgt_max_length : int
+            The maximum length of audio targets
         alignments : torch.Tensor, optional
             Attention alignments
         p_eos : torch.Tensor
             A (Batch x Length) tensor of end-of-sequence
             probabilities
         """
-        with self.logger:
-            self.write_audio(ids, audio, length_pred)
-            self.write_details(ids, alignments, p_eos)
-            if plt is not None:
-                if alignments is not None:
-                    self.write_alignments(ids, alignments)
-                if p_eos is not None:
-                    self.write_eos(ids, p_eos, length)
+        self._ensure_writing()
+        self.ids.extend(ids)
+        self._write_audio(ids, audio, length_pred)
+        self._write_details(ids, alignments, p_eos)
+        if plt is not None:
+            if alignments is not None:
+                self._write_alignments(ids, alignments)
+            if p_eos is not None:
+                self._write_eos(ids, p_eos, length, tgt_max_length)
 
-    def write_audio(self, ids, audio, length):
+    def _write_audio(self, ids, audio, length):
         """Saves the raw audio
 
         Arguments
@@ -88,7 +130,7 @@ class TTSProgressReport:
                 samplerate=self.sample_rate,
             )
 
-    def write_alignments(self, ids, alignments):
+    def _write_alignments(self, ids, alignments):
         """Outputs a plot of attention alignments
 
         Arguments
@@ -115,7 +157,7 @@ class TTSProgressReport:
             finally:
                 plt.close(fig)
 
-    def write_eos(self, ids, p_eos, length):
+    def _write_eos(self, ids, p_eos, length, tgt_max_length):
         """Outputs a plot of end-of-sequence gate outputs
 
         Arguments
@@ -125,10 +167,23 @@ class TTSProgressReport:
         p_eos : torch.Tensor
             A (Batch x Length) tensor of end-of-sequence
             probabilities
+        length : torch.Tensor
+            Ground truth lengths (relative)
+        tgt_max_length : torch.Tensor
+            Teh maximum length of the targets
         """
         p_eos, length = [x.detach().cpu() for x in [p_eos, length]]
         max_len = p_eos.size(1)
-        length_abs = length * max_len
+        length_abs = length * tgt_max_length
+        gate_act = (p_eos >= self.eos_threshold)
+        length_pred = torch.where(
+            gate_act.sum(dim=-1) == 0,
+            max_len,
+            gate_act.int().argmax(dim=-1)
+        )
+
+        self.length.extend(length_abs.tolist())
+        self.length_pred.extend(length_pred.tolist())
         for item_id, item_length, item_p_eos in zip(ids, length_abs, p_eos):
             fig, ax = plt.subplots(figsize=(8, 2))
             try:
@@ -149,7 +204,33 @@ class TTSProgressReport:
             finally:
                 plt.close(fig)
 
-    def write_details(self, ids, alignments, p_eos):
+    def _write_length_report(self):
+        """Outputs the length report"""
+        with StringIO() as length_report:
+            csv_writer = csv.DictWriter(length_report, ["uttid", "length_pred", "length", "length_diff"])
+            csv_writer.writeheader()
+            for uttid, length_pred, length in zip(
+                self.ids, self.length_pred, self.length
+            ):
+                csv_writer.writerow(
+                    {
+                        "uttid": uttid,
+                        "length_pred": length_pred,
+                        "length": length,
+                        "length_diff": length_pred - length
+                    }
+                )
+            self.logger.save(name="length.csv", content=length_report.getvalue(), mode="text")
+
+    def _write_details_file(self):
+        """Outputs the concatenated details file"""
+        details = {
+            key: _concat(value)
+            for key, value in self.details.items()
+        }
+        self.logger.save(name="details.pt", content=details, mode="tensor")
+
+    def _write_details(self, ids, alignments, p_eos):
         """Writes raw details (alignments, p_eos) as a
         PyTorch file
 
@@ -165,7 +246,33 @@ class TTSProgressReport:
         """
         details = {
             "ids": ids,
-            "alignments": alignments,
-            "p_eos": p_eos,
+            "alignments": list(alignments),
+            "p_eos": list(p_eos),
         }
-        self.logger.save(name="details.pt", content=details, mode="tensor")
+        if self.details is None:
+            self.details = details
+        else:
+            for key, value in self.details.items():
+                value.extend(details[key])
+
+
+def _concat(items):
+    """Concatenates the items if they are tensors
+
+    Arguments
+    ---------
+    items : list
+        A list of tensors or other items
+
+    Returns
+    -------
+    result : list | tesnor"""
+    if torch.is_tensor(items[0]):
+        items = torch.cat(items, dim=0)
+    return items
+
+
+class ContextError(Exception):
+    """Thrown when the various write methods are called without a context"""
+    def __init__(self):
+        super("TTSProgressReport must be used in a context (with report: report.write(...))")

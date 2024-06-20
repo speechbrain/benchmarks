@@ -266,29 +266,31 @@ class Tacotron2Brain(sb.Brain):
         sample_loader = sb.dataio.dataloader.make_dataloader(
             self.sample_data, **self.hparams.sample_dataloader_opts,
         )
-        for batch in sample_loader:
-            batch = batch.to(self.device)
-            tokens, tokens_length = batch.tokens
-            tokens_max_len = tokens.size(1)
-            audio_ssl, audio_lengths, alignments = self.modules.model.infer(
-                inputs=tokens, input_lengths=tokens_length * tokens_max_len
-            )
-            audio_ssl = audio_ssl.transpose(-1, -2)
-            batch_size, max_len, feat_dim = audio_ssl.shape
-            audio_ssl = audio_ssl.view(
-                batch_size,
-                max_len,
-                self.hparams.audio_tokens_per_step,
-                self.hparams.audio_dim,
-            )
-            wav = self.modules.vocoder(audio_ssl).squeeze(1)
-            self.hparams.progress_report.write(
-                ids=batch.uttid,
-                audio=wav,
-                length_pred=audio_lengths,
-                length=batch.audio_ssl.lengths,
-                alignments=alignments,
-            )
+        with self.hparams.progress_report:
+            for batch in sample_loader:
+                batch = batch.to(self.device)
+                tokens, tokens_length = batch.tokens
+                tokens_max_len = tokens.size(1)
+                audio_ssl, audio_lengths, alignments = self.modules.model.infer(
+                    inputs=tokens, input_lengths=tokens_length * tokens_max_len
+                )
+                audio_ssl = audio_ssl.transpose(-1, -2)
+                batch_size, max_len, feat_dim = audio_ssl.shape
+                audio_ssl = audio_ssl.view(
+                    batch_size,
+                    max_len,
+                    self.hparams.audio_tokens_per_step,
+                    self.hparams.audio_dim,
+                )
+                wav = self.modules.vocoder(audio_ssl).squeeze(1)
+                self.hparams.progress_report.write(
+                    ids=batch.uttid,
+                    audio=wav,
+                    length_pred=audio_lengths,
+                    length=batch.audio_ssl.lengths,
+                    tgt_max_length=batch.audio_ssl.data.size(1),
+                    alignments=alignments,
+                )
 
     def create_perfect_samples(self):
         """Creates the best samples that can be created using

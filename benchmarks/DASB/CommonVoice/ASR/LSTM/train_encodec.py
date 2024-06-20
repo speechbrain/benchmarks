@@ -231,8 +231,12 @@ if __name__ == "__main__":
         hyperparams_to_save=hparams_file,
         overrides=overrides,
     )
-    if hparams['discrete_embedding_layer'].init:
-        hparams['discrete_embedding_layer'].init_embedding(hparams['codec'].vocabulary[:hparams['num_codebooks'],:,:].flatten(0,1))   
+    if hparams["discrete_embedding_layer"].init:
+        hparams["discrete_embedding_layer"].init_embedding(
+            hparams["codec"]
+            .vocabulary[: hparams["num_codebooks"], :, :]
+            .flatten(0, 1)
+        )
 
     # Dataset preparation
     from common_voice_prepare import prepare_common_voice  # noqa

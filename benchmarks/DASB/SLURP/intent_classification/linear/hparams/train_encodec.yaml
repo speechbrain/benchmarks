@@ -41,7 +41,7 @@ sample_rate: 24000
 # Feature parameters
 encoder_dim: 1024
 # If set to True, the encoder_dim should be set to the dim of the tokenizer. For encodec it is 128.
-init_embedding: False 
+init_embedding: False
 freeze_embedding: False
 
 # Training parameters
@@ -91,24 +91,24 @@ epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
 # Modules
 # EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
 codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
-    source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
-    save_path: !ref <save_folder>
-    sample_rate: !ref <sample_rate>
-    bandwidth: !ref <bandwidth>
-    flat_embeddings: False
-    freeze: True
-    renorm_embeddings: False
+   source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
+   save_path: !ref <save_folder>
+   sample_rate: !ref <sample_rate>
+   bandwidth: !ref <bandwidth>
+   flat_embeddings: False
+   freeze: True
+   renorm_embeddings: False
 
 discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
-    num_codebooks: !ref <num_codebooks>
-    vocab_size: !ref <vocab_size>
-    emb_dim: !ref <encoder_dim>
-    freeze: !ref <freeze_embedding>
-    init: !ref <init_embedding>
+   num_codebooks: !ref <num_codebooks>
+   vocab_size: !ref <vocab_size>
+   emb_dim: !ref <encoder_dim>
+   freeze: !ref <freeze_embedding>
+   init: !ref <init_embedding>
 
 attention_mlp: !new:custom_model.AttentionMLP
-    input_dim: !ref <encoder_dim>
-    hidden_dim: !ref <encoder_dim>
+   input_dim: !ref <encoder_dim>
+   hidden_dim: !ref <encoder_dim>
 
 avg_pool: !new:speechbrain.nnet.pooling.StatisticsPooling
    return_std: False
@@ -119,7 +119,7 @@ output_mlp: !new:speechbrain.nnet.linear.Linear
    bias: False
 
 model: !new:torch.nn.ModuleList
-   - [!ref <output_mlp>, !ref <discrete_embedding_layer>,!ref <attention_mlp>]
+   - [!ref <output_mlp>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 modules:
    avg_pool: !ref <avg_pool>

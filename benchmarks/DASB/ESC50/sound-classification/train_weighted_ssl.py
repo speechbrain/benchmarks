@@ -21,7 +21,6 @@ import sys
 import numpy as np
 import torch
 import torchaudio
-import torchvision
 from hyperpyyaml import load_hyperpyyaml
 from sklearn.metrics import confusion_matrix
 
@@ -43,7 +42,6 @@ class ESC50Brain(sb.core.Brain):
 
         # Extract features
         feats = self.modules.weighted_ssl_model(wavs)
-
 
         # Embeddings + sound classifier
         # if hasattr(self.modules.embedding_model, "config"):
@@ -68,7 +66,7 @@ class ESC50Brain(sb.core.Brain):
         #     else:
         #         raise NotImplementedError
         # else:
-            # SpeechBrain model
+        # SpeechBrain model
         embeddings = self.modules.embedding_model(feats)
         if embeddings.ndim == 4:
             embeddings = embeddings.mean((-1, -2))
@@ -209,7 +207,6 @@ class ESC50Brain(sb.core.Brain):
         if stage == sb.Stage.VALID:
             old_lr, new_lr = self.hparams.lr_annealing(epoch)
             sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr)
-
 
             # The train_logger writes a summary to stdout and to the log file
             self.hparams.train_logger.log_stats(

@@ -52,7 +52,6 @@ class SpeakerBrain(sb.core.Brain):
         uttid = batch.id
         command, _ = batch.command_encoded
 
-
         # compute the cost function
         loss = self.hparams.compute_cost(predictions, command, lens)
 
@@ -60,7 +59,7 @@ class SpeakerBrain(sb.core.Brain):
             self.error_metrics.append(uttid, predictions, command, lens)
 
         return loss
-    
+
     def on_stage_start(self, stage, epoch=None):
         """Gets called at the beginning of each epoch.
         Arguments
@@ -144,7 +143,7 @@ class SpeakerBrain(sb.core.Brain):
     def init_optimizers(self):
         "Initializes the weights optimizer and model optimizer"
         self.weights_optimizer = self.hparams.weights_opt_class(
-             [self.modules.weighted_ssl_model.weights]
+            [self.modules.weighted_ssl_model.weights]
         )
         self.model_optimizer = self.hparams.model_opt_class(
             self.hparams.model.parameters()
@@ -159,6 +158,7 @@ class SpeakerBrain(sb.core.Brain):
             self.checkpointer.add_recoverable(
                 "weights_opt", self.weights_optimizer
             )
+
 
 def dataio_prep(hparams):
     "Creates the datasets and their data processing pipelines."
@@ -217,9 +217,7 @@ def dataio_prep(hparams):
     # Load or compute the label encoder (with multi-GPU DDP support)
     lab_enc_file = os.path.join(hparams["save_folder"], "label_encoder.txt")
     label_encoder.load_or_create(
-        path=lab_enc_file,
-        from_didatasets=[train_data],
-        output_key="command",
+        path=lab_enc_file, from_didatasets=[train_data], output_key="command",
     )
 
     # 4. Set output:

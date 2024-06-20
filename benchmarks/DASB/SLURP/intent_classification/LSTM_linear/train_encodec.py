@@ -218,6 +218,7 @@ def dataio_prep(hparams):
         )(sig)
         #         resampled = resampled.unsqueeze(0)
         return resampled
+
     # Initialization of the label encoder. The label encoder assignes to each
     # of the observed label a unique index (e.g, 'spk01': 0, 'spk02': 1, ..)
     label_encoder = sb.dataio.encoder.CategoricalEncoder()
@@ -270,8 +271,12 @@ if __name__ == "__main__":
         overrides=overrides,
     )
 
-    if hparams['discrete_embedding_layer'].init:
-        hparams['discrete_embedding_layer'].init_embedding(hparams['codec'].vocabulary[:hparams['num_codebooks'],:,:].flatten(0,1))   
+    if hparams["discrete_embedding_layer"].init:
+        hparams["discrete_embedding_layer"].init_embedding(
+            hparams["codec"]
+            .vocabulary[: hparams["num_codebooks"], :, :]
+            .flatten(0, 1)
+        )
     from slurp_prepare import prepare_SLURP  # noqa
 
     # multi-gpu (ddp) save data preparation

@@ -100,33 +100,33 @@ epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
 
 # Modules
 tokenizer_config:
-    SSL_layers: !ref <ssl_layer_num>
-    deduplicates: !ref <deduplicate>
-    bpe_tokenizers: !ref <bpe_tokenizer_path>
+   SSL_layers: !ref <ssl_layer_num>
+   deduplicates: !ref <deduplicate>
+   bpe_tokenizers: !ref <bpe_tokenizer_path>
 
 ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
-    source: !ref <ssl_hub>
-    output_norm: False
-    freeze: !ref <freeze_ssl>
-    freeze_feature_extractor: !ref <freeze_feature_extractor>
-    output_all_hiddens: True
-    save_path: !ref <ssl_folder>
+   source: !ref <ssl_hub>
+   output_norm: False
+   freeze: !ref <freeze_ssl>
+   freeze_feature_extractor: !ref <freeze_feature_extractor>
+   output_all_hiddens: True
+   save_path: !ref <ssl_folder>
 
 codec: !new:speechbrain.lobes.models.huggingface_transformers.discrete_ssl.DiscreteSSL
-    save_path: !ref <kmeans_cache_dir>
-    ssl_model: !ref <ssl_model>
-    kmeans_dataset: !ref <kmeans_dataset>
-    kmeans_repo_id: !ref <kmeans_repo_id>
-    num_clusters: !ref <num_clusters>
+   save_path: !ref <kmeans_cache_dir>
+   ssl_model: !ref <ssl_model>
+   kmeans_dataset: !ref <kmeans_dataset>
+   kmeans_repo_id: !ref <kmeans_repo_id>
+   num_clusters: !ref <num_clusters>
 
 discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
-    num_codebooks: !ref <num_codebooks>
-    vocab_size: !ref <num_clusters>
-    emb_dim: !ref <encoder_dim>
+   num_codebooks: !ref <num_codebooks>
+   vocab_size: !ref <num_clusters>
+   emb_dim: !ref <encoder_dim>
 
 attention_mlp: !new:custom_model.AttentionMLP
-    input_dim: !ref <encoder_dim>
-    hidden_dim: !ref <encoder_dim>
+   input_dim: !ref <encoder_dim>
+   hidden_dim: !ref <encoder_dim>
 
 avg_pool: !new:speechbrain.nnet.pooling.StatisticsPooling
    return_std: False
@@ -137,7 +137,7 @@ output_mlp: !new:speechbrain.nnet.linear.Linear
    bias: False
 
 model: !new:torch.nn.ModuleList
-   - [!ref <output_mlp>, !ref <discrete_embedding_layer>,!ref <attention_mlp>]
+   - [!ref <output_mlp>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 modules:
    avg_pool: !ref <avg_pool>

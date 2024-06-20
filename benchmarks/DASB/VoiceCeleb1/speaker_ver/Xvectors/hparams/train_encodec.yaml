@@ -72,7 +72,7 @@ sample_rate: 24000
 # Feature parameters
 encoder_dim: 1024
 # If set to True, the encoder_dim should be set to the dim of the tokenizer. For encodec it is 128.
-init_embedding: False 
+init_embedding: False
 freeze_embedding: False
 
 
@@ -107,20 +107,20 @@ attention_mlp: !new:custom_model.AttentionMLP
     hidden_dim: !ref <encoder_dim>
 
 embedding_model: !new:speechbrain.lobes.models.Xvector.Xvector
-  in_channels: !ref <encoder_dim>
-  activation: !name:torch.nn.LeakyReLU
-  tdnn_blocks: 5
-  tdnn_channels: [512, 512, 512, 512, 1500]
-  tdnn_kernel_sizes: [5, 3, 3, 1, 1]
-  tdnn_dilations: [1, 2, 3, 1, 1]
-  lin_neurons: 512
+    in_channels: !ref <encoder_dim>
+    activation: !name:torch.nn.LeakyReLU
+    tdnn_blocks: 5
+    tdnn_channels: [512, 512, 512, 512, 1500]
+    tdnn_kernel_sizes: [5, 3, 3, 1, 1]
+    tdnn_dilations: [1, 2, 3, 1, 1]
+    lin_neurons: 512
 
 classifier: !new:speechbrain.lobes.models.Xvector.Classifier
-  input_shape: [null, null, 512]
-  activation: !name:torch.nn.LeakyReLU
-  lin_blocks: 1
-  lin_neurons: 512
-  out_neurons: !ref <out_n_neurons>
+    input_shape: [null, null, 512]
+    activation: !name:torch.nn.LeakyReLU
+    lin_blocks: 1
+    lin_neurons: 512
+    out_neurons: !ref <out_n_neurons>
 
 
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
@@ -147,15 +147,15 @@ model_opt_class: !name:torch.optim.Adam
     weight_decay: 0.000002
 
 lr_annealing: !new:speechbrain.nnet.schedulers.LinearScheduler
-  initial_value: !ref <lr>
-  final_value: !ref <lr_final>
-  epoch_count: 21
+    initial_value: !ref <lr>
+    final_value: !ref <lr_final>
+    epoch_count: 21
 
 lr_annealing_weights: !new:speechbrain.nnet.schedulers.NewBobScheduler
-  initial_value: 0.01
-  improvement_threshold: 0.0025
-  annealing_factor: 0.9
-  patient: 0
+    initial_value: 0.01
+    improvement_threshold: 0.0025
+    annealing_factor: 0.9
+    patient: 0
 
 
 # Used to load the SB checkpoint of w2v2

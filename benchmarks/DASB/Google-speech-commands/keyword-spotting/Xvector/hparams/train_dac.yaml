@@ -115,7 +115,7 @@ epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
     limit: !ref <number_of_epochs>
 
 model: !new:torch.nn.ModuleList
-    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>,!ref <attention_mlp>]
+    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 
 modules:

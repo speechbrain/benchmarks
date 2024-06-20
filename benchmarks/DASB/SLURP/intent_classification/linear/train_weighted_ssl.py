@@ -255,7 +255,7 @@ if __name__ == "__main__":
         overrides=overrides,
     )
 
-    from slurp_prepare import prepare_SLURP   # noqa
+    from slurp_prepare import prepare_SLURP  # noqa
 
     # multi-gpu (ddp) save data preparation
     run_on_main(

@@ -68,10 +68,9 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
         self.embedding = torch.nn.Embedding(
             num_codebooks * vocab_size, emb_dim
         ).requires_grad_(not self.freeze)
-        self.init= init
+        self.init = init
 
-    
-    def init_embedding(self,weights):
+    def init_embedding(self, weights):
         with torch.no_grad():
             self.embedding.weight = torch.nn.Parameter(weights)
 

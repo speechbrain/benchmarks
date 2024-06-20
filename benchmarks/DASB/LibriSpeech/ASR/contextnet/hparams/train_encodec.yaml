@@ -43,7 +43,7 @@ sample_rate: 24000
 # Feature parameters
 encoder_dim: 1024
 # If set to True, the encoder_dim should be set to the dim of the tokenizer. For encodec it is 128.
-init_embedding: False 
+init_embedding: False
 freeze_embedding: False
 
 # Training parameters
@@ -156,8 +156,6 @@ lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
    improvement_threshold: 0.0025
    annealing_factor: 0.8
    patient: 0
-
-
 
 label_encoder: !new:speechbrain.dataio.encoder.CTCTextEncoder
 checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer

@@ -81,17 +81,17 @@ epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
 
 # Modules
 codec: !new:speechbrain.lobes.models.discrete.speechtokenizer_interface.SpeechTokenizer_interface
-    source: fnlp/SpeechTokenizer  # Only the 24kHz version supports mono audio
-    save_path: !ref <save_folder>
+   source: fnlp/SpeechTokenizer  # Only the 24kHz version supports mono audio
+   save_path: !ref <save_folder>
 
 discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
-    num_codebooks: !ref <num_codebooks>
-    vocab_size: !ref <vocab_size>
-    emb_dim: !ref <encoder_dim>
+   num_codebooks: !ref <num_codebooks>
+   vocab_size: !ref <vocab_size>
+   emb_dim: !ref <encoder_dim>
 
 attention_mlp: !new:custom_model.AttentionMLP
-    input_dim: !ref <encoder_dim>
-    hidden_dim: !ref <encoder_dim>
+   input_dim: !ref <encoder_dim>
+   hidden_dim: !ref <encoder_dim>
 
 avg_pool: !new:speechbrain.nnet.pooling.StatisticsPooling
    return_std: False
@@ -102,7 +102,7 @@ output_mlp: !new:speechbrain.nnet.linear.Linear
    bias: False
 
 model: !new:torch.nn.ModuleList
-   - [!ref <output_mlp>, !ref <discrete_embedding_layer>,!ref <attention_mlp>]
+   - [!ref <output_mlp>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 modules:
    avg_pool: !ref <avg_pool>

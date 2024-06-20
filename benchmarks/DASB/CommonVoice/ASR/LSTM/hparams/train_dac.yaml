@@ -147,7 +147,7 @@ modules:
    attention_mlp: !ref <attention_mlp>
    codec: !ref <codec>
    discrete_embedding_layer: !ref <discrete_embedding_layer>
-  
+
 
 model: !new:torch.nn.ModuleList
    - [!ref <enc>, !ref <ctc_lin>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]

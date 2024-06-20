@@ -101,7 +101,6 @@ class EmoIdBrain(sb.Brain):
                 self.model_optimizer, new_lr
             )
 
-
             # The train_logger writes a summary to stdout and to the logfile.
             self.hparams.train_logger.log_stats(
                 {"Epoch": epoch, "lr": old_lr},
@@ -165,6 +164,7 @@ def dataio_prep(hparams):
         )(sig)
         #         resampled = resampled.unsqueeze(0)
         return resampled
+
     # Initialization of the label encoder. The label encoder assignes to each
     # of the observed label a unique index (e.g, 'spk01': 0, 'spk02': 1, ..)
     label_encoder = sb.dataio.encoder.CategoricalEncoder()

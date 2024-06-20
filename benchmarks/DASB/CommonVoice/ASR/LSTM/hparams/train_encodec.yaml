@@ -98,7 +98,7 @@ sample_rate: 24000
 # Feature parameters
 encoder_dim: 1024
 # If set to True, the encoder_dim should be set to the dim of the tokenizer. For encodec it is 128.
-init_embedding: False 
+init_embedding: False
 freeze_embedding: False
 
 # Functions and classes
@@ -154,7 +154,7 @@ modules:
    discrete_embedding_layer: !ref <discrete_embedding_layer>
 
 model: !new:torch.nn.ModuleList
-   - [!ref <enc>, !ref <ctc_lin>, !ref <discrete_embedding_layer>,!ref <attention_mlp>]
+   - [!ref <enc>, !ref <ctc_lin>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
 
 model_opt_class: !name:torch.optim.Adam
    lr: !ref <lr>

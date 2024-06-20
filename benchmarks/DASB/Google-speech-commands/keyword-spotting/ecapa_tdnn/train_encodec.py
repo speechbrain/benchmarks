@@ -57,7 +57,6 @@ class SpeakerBrain(sb.core.Brain):
         uttid = batch.id
         command, _ = batch.command_encoded
 
-
         # compute the cost function
         loss = self.hparams.compute_cost(predictions, command, lens)
 
@@ -65,7 +64,7 @@ class SpeakerBrain(sb.core.Brain):
             self.error_metrics.append(uttid, predictions, command, lens)
 
         return loss
-    
+
     def on_stage_start(self, stage, epoch=None):
         """Gets called at the beginning of each epoch.
         Arguments
@@ -165,6 +164,7 @@ class SpeakerBrain(sb.core.Brain):
             #     "weights_opt", self.weights_optimizer
             # )
 
+
 def dataio_prep(hparams):
     "Creates the datasets and their data processing pipelines."
 
@@ -222,9 +222,7 @@ def dataio_prep(hparams):
     # Load or compute the label encoder (with multi-GPU DDP support)
     lab_enc_file = os.path.join(hparams["save_folder"], "label_encoder.txt")
     label_encoder.load_or_create(
-        path=lab_enc_file,
-        from_didatasets=[train_data],
-        output_key="command",
+        path=lab_enc_file, from_didatasets=[train_data], output_key="command",
     )
 
     # 4. Set output:
@@ -255,9 +253,13 @@ if __name__ == "__main__":
         hyperparams_to_save=hparams_file,
         overrides=overrides,
     )
-    
-    if hparams['discrete_embedding_layer'].init:
-        hparams['discrete_embedding_layer'].init_embedding(hparams['codec'].vocabulary[:hparams['num_codebooks'],:,:].flatten(0,1))   
+
+    if hparams["discrete_embedding_layer"].init:
+        hparams["discrete_embedding_layer"].init_embedding(
+            hparams["codec"]
+            .vocabulary[: hparams["num_codebooks"], :, :]
+            .flatten(0, 1)
+        )
     # Dataset prep (parsing GSC and annotation into csv files)
     from prepare_GSC import prepare_GSC
 

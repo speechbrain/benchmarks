@@ -265,8 +265,12 @@ if __name__ == "__main__":
         overrides=overrides,
     )
 
-    if hparams['discrete_embedding_layer'].init:
-        hparams['discrete_embedding_layer'].init_embedding(hparams['codec'].vocabulary[:hparams['num_codebooks'],:,:].flatten(0,1))   
+    if hparams["discrete_embedding_layer"].init:
+        hparams["discrete_embedding_layer"].init_embedding(
+            hparams["codec"]
+            .vocabulary[: hparams["num_codebooks"], :, :]
+            .flatten(0, 1)
+        )
 
     # Dataset prep (parsing Librispeech)
     from librispeech_prepare import prepare_librispeech  # noqa

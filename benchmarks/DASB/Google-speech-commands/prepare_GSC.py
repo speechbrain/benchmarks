@@ -242,7 +242,7 @@ def prepare_GSC(
         new_df.to_csv(new_filename, index=False)
 
 
-MAX_NUM_WAVS_PER_CLASS = 2**27 - 1  # ~134M
+MAX_NUM_WAVS_PER_CLASS = 2 ** 27 - 1  # ~134M
 
 
 def which_set(filename, validation_percentage, testing_percentage):

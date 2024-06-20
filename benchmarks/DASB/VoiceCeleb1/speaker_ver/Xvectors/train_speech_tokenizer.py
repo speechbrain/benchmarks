@@ -7,7 +7,7 @@ Authors
 """
 
 import os
-from tqdm import tqdm   
+from tqdm import tqdm
 import sys
 import logging
 import random

@@ -398,8 +398,12 @@ if __name__ == "__main__":
     )
     download_file(hparams["verification_file"], veri_file_path)
 
-    if hparams['discrete_embedding_layer'].init:
-        hparams['discrete_embedding_layer'].init_embedding(hparams['codec'].vocabulary[:hparams['num_codebooks'],:,:].flatten(0,1))   
+    if hparams["discrete_embedding_layer"].init:
+        hparams["discrete_embedding_layer"].init_embedding(
+            hparams["codec"]
+            .vocabulary[: hparams["num_codebooks"], :, :]
+            .flatten(0, 1)
+        )
 
     # Dataset prep (parsing VoxCeleb and annotation into csv files)
     from voxceleb_prepare import prepare_voxceleb  # noqa

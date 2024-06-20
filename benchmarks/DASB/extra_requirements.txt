@@ -1,0 +1,5 @@
+beartype
+jsonlines
+scikit-learn
+speechtokenizer
+tensorboard

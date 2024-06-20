@@ -1,0 +1,172 @@
+# ################################
+# Recipe for training an dac-based ctc ASR system with librispeech.
+# Decoding is performed with ctc greedy or LM-rescored decoder.
+#
+# Authors
+# * pooneh Mousavi 2024
+# ################################
+
+# Seed needs to be set at top of yaml, before objects with parameters are made
+seed: 1986
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+output_folder: !ref results/MP3S-contextnet/dac/<seed>
+output_wer_folder: !ref <output_folder>/
+save_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/train_log.txt
+
+# Data files
+data_folder: !PLACEHOLDER # e,g./path/to/LibriSpeech
+# noise/ris dataset will automatically be downloaded
+# data_folder_rirs: !ref <data_folder>
+train_splits: ["train-clean-100"]
+dev_splits: ["dev-clean"]
+test_splits: ["test-clean", "test-other"]
+skip_prep: False
+ckpt_interval_minutes: 25 # save checkpoint every N min
+train_csv: !ref <output_folder>/train-clean-100.csv
+valid_csv: !ref <output_folder>/dev-clean.csv
+test_csv:
+   - !ref <output_folder>/test-clean.csv
+   - !ref <output_folder>/test-other.csv
+
+num_layers_ssl: 25  #Number of layers in the SSL model (should be 25 for large)
+### Config for Tokenizer
+# DAC parameters
+# model_type: [16khz, 24khz, 44khz, 44khz]
+# vocab_size: [1024, 1024, 1024, 1024]
+# model_bitrate: [8kbps, 8kbps, 8kbps, 16kbps]
+# max_num_codebooks: [12, 32, 9, 18]
+# embedding_dim: [1024, 1024, 1024, 128]
+model_type: 24khz
+vocab_size: 1024
+model_bitrate: 8kbps
+num_codebooks: 2  # NOTE: must be smaller or equal to the maximum number of codebooks for the given model type
+sample_rate: 24000
+encoder_dim: 1024
+
+
+# Training parameters
+number_of_epochs: 20
+lr: 0.0002
+sorting: ascending
+precision: fp32
+
+# With data_parallel batch_size is split into N jobs
+# With DDP batch_size is multiplied by N jobs
+# Must be 3 per GPU to fit 32GB of VRAM
+batch_size: 4
+test_batch_size: 1
+
+# Dataloader options
+train_dataloader_opts:
+   batch_size: !ref <batch_size>
+
+valid_dataloader_opts:
+   batch_size: !ref <batch_size>
+
+test_dataloader_opts:
+   batch_size: !ref <test_batch_size>
+
+# Model parameters
+activation: !name:torch.nn.Sigmoid
+dnn_layers: 1
+dnn_neurons: 640
+freeze_encoder: True
+
+# Outputs
+output_neurons: 30
+
+# Decoding parameters
+blank_index: 0
+unk_index: 1
+
+test_beam_search:
+   beam_size: 143
+   topk: 1
+   blank_index: !ref <blank_index>
+   space_token: ' ' # make sure this is the same as the one used in the tokenizer
+   beam_prune_logp: -12.0
+   token_prune_min_logp: -1.2
+   prune_history: True
+   alpha: 0.8
+   beta: 1.2
+   # can be downloaded from here https://www.openslr.org/11/ or trained with kenLM
+   # It can either be a .bin or .arpa ; note: .arpa is much slower at loading
+   # If you don't want to use an LM, comment it out or set it to null
+   kenlm_model_path: null
+
+# Functions and classes
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+   limit: !ref <number_of_epochs>
+
+# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
+codec: !new:speechbrain.lobes.models.discrete.dac.DAC
+   model_type: !ref <model_type>
+   model_bitrate: !ref <model_bitrate>
+   load_pretrained: True
+   tag: latest
+
+discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
+   num_codebooks: !ref <num_codebooks>
+   vocab_size: !ref <vocab_size>
+   emb_dim: !ref <encoder_dim>
+
+attention_mlp: !new:custom_model.AttentionMLP
+   input_dim: !ref <encoder_dim>
+   hidden_dim: !ref <encoder_dim>
+
+enc: !new:speechbrain.lobes.models.ContextNet.ContextNet
+   input_shape: [null, null, !ref <encoder_dim>]
+   strides: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+# only unitary strides to keep the frame rate
+
+
+ctc_lin: !new:speechbrain.nnet.linear.Linear
+   input_size: 640
+   n_neurons: !ref <output_neurons>
+
+log_softmax: !new:speechbrain.nnet.activations.Softmax
+   apply_log: True
+
+ctc_cost: !name:speechbrain.nnet.losses.ctc_loss
+   blank_index: !ref <blank_index>
+
+modules:
+   enc: !ref <enc>
+   ctc_lin: !ref <ctc_lin>
+   attention_mlp: !ref <attention_mlp>
+   codec: !ref <codec>
+   discrete_embedding_layer: !ref <discrete_embedding_layer>
+
+model: !new:torch.nn.ModuleList
+   - [!ref <enc>, !ref <ctc_lin>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
+
+model_opt_class: !name:torch.optim.Adam
+   lr: !ref <lr>
+
+lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
+   initial_value: !ref <lr>
+   improvement_threshold: 0.0025
+   annealing_factor: 0.8
+   patient: 0
+
+label_encoder: !new:speechbrain.dataio.encoder.CTCTextEncoder
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+   checkpoints_dir: !ref <save_folder>
+   recoverables:
+      model: !ref <model>
+      attention_mlp: !ref <attention_mlp>
+      codec: !ref <codec>
+      discrete_embedding_layer: !ref <discrete_embedding_layer>
+      scheduler_model: !ref <lr_annealing_model>
+      counter: !ref <epoch_counter>
+      tokenizer: !ref <label_encoder>
+
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+   save_file: !ref <train_log>
+
+error_rate_computer: !name:speechbrain.utils.metric_stats.ErrorRateStats
+
+cer_computer: !name:speechbrain.utils.metric_stats.ErrorRateStats
+   split_tokens: True

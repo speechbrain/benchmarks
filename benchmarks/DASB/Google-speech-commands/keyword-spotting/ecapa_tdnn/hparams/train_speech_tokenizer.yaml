@@ -1,0 +1,146 @@
+# ########################################
+# Recipe for training an keyword spotting model from speech data
+# only using Google Speech Command and an discrete tokenizer
+# with an xvector model.
+# Authors
+# * Pooneh Mousavi 2024
+# ########################################
+
+# Basic parameters
+seed: 1986
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+
+# Use 12 for V2 12 task and 35 for V2 35 task
+number_of_commands: 12
+output_folder: !ref results/ks/xvect_<number_of_commands>/ecapa_tdnn/speech_tokenizer/<seed>
+save_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/train_log.txt
+
+
+# Data files
+# Data files
+data_folder: !PLACEHOLDER  # e.g. /path/to/GSC
+train_annotation: !ref <output_folder>/train.csv
+valid_annotation: !ref <output_folder>/valid.csv
+test_annotation: !ref <output_folder>/test.csv
+
+
+### Config for Tokenizer
+vocab_size: 1024
+num_codebooks: 2
+sample_rate: 16000
+
+# Feature parameters
+encoder_dim: 1024
+
+
+# Percentage of files used for validation and test
+validation_percentage: 10
+testing_percentage: 10
+
+# Percentage of unknown and silence examples
+# (relative to total of known word samples) to include
+percentage_unknown: 10 # Set this to 0 for the V2 35 task
+percentage_silence: 10 # Set this to 0 for the V2 35 task
+
+skip_prep: False
+ckpt_interval_minutes: 15 # save checkpoint every N min
+
+####################### Training Parameters ####################################
+number_of_epochs: 50
+batch_size: 32
+lr: 0.001
+
+shuffle: True
+
+
+# Feature parameters
+n_features: 24
+
+# Number of classes (i.e. different commands)
+out_n_neurons: !ref <number_of_commands>  #includes core commands & auxiliary words
+
+num_workers: 4
+dataloader_options:
+    batch_size: !ref <batch_size>
+    shuffle: !ref <shuffle>
+    num_workers: !ref <num_workers>
+
+
+# Modules
+codec: !new:speechbrain.lobes.models.discrete.speechtokenizer_interface.SpeechTokenizer_interface
+    source: fnlp/SpeechTokenizer  # Only the 24kHz version supports mono audio
+    save_path: !ref <save_folder>
+discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
+    num_codebooks: !ref <num_codebooks>
+    vocab_size: !ref <vocab_size>
+    emb_dim: !ref <encoder_dim>
+
+attention_mlp: !new:custom_model.AttentionMLP
+    input_dim: !ref <encoder_dim>
+    hidden_dim: !ref <encoder_dim>
+
+embedding_model: !new:speechbrain.lobes.models.ECAPA_TDNN.ECAPA_TDNN
+    input_size: !ref <encoder_dim>
+    channels: [1024, 1024, 1024, 1024, 3072]
+    kernel_sizes: [5, 3, 3, 3, 1]
+    dilations: [1, 2, 3, 4, 1]
+    groups: [1, 1, 1, 1, 1]
+    attention_channels: 128
+    lin_neurons: 192
+
+classifier: !new:speechbrain.lobes.models.ECAPA_TDNN.Classifier
+    input_size: 192
+    out_neurons: !ref <out_n_neurons>
+
+
+softmax: !new:speechbrain.nnet.activations.Softmax
+    apply_log: True
+
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <number_of_epochs>
+
+model: !new:torch.nn.ModuleList
+    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
+
+
+modules:
+    embedding_model: !ref <embedding_model>
+    classifier: !ref <classifier>
+    softmax: !ref <softmax>
+    attention_mlp: !ref <attention_mlp>
+    codec: !ref <codec>
+    discrete_embedding_layer: !ref <discrete_embedding_layer>
+
+
+# Cost + optimization
+compute_cost: !name:speechbrain.nnet.losses.nll_loss
+
+model_opt_class: !name:torch.optim.Adam
+    lr: !ref <lr>
+
+lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
+    initial_value: !ref <lr>
+    improvement_threshold: 0.0025
+    annealing_factor: 0.9
+    patient: 0
+
+
+# Logging + checkpoints
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <train_log>
+
+error_stats: !name:speechbrain.utils.metric_stats.MetricStats
+    metric: !name:speechbrain.nnet.losses.classification_error
+        reduction: batch
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        embedding_model: !ref <embedding_model>
+        classifier: !ref <classifier>
+        scheduler_model: !ref <lr_annealing_model>
+        attention_mlp: !ref <attention_mlp>
+        codec: !ref <codec>
+        discrete_embedding_layer: !ref <discrete_embedding_layer>
+        counter: !ref <epoch_counter>

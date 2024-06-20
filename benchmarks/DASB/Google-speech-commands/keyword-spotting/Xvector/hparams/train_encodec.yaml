@@ -1,0 +1,164 @@
+# ########################################
+# Recipe for training an keyword spotting model from speech data
+# only using Google Speech Command and an discrete tokenizer
+# with an xvector model.
+# Authors
+# * Pooneh Mousavi 2024
+# ########################################
+
+# Basic parameters
+seed: 1986
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+
+# Use 12 for V2 12 task and 35 for V2 35 task
+number_of_commands: 12
+output_folder: !ref results/ks/xvect_<number_of_commands>/enocdec/<seed>
+save_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/train_log.txt
+
+
+# Data files
+# Data files
+data_folder: !PLACEHOLDER  # e.g. /path/to/GSC
+train_annotation: !ref <output_folder>/train.csv
+valid_annotation: !ref <output_folder>/valid.csv
+test_annotation: !ref <output_folder>/test.csv
+
+
+### Config for Tokenizer
+# EnCodec parameters
+# sample_rate: [24000, 24000, 24000, 24000]
+# vocab_size: [1024, 1024, 1024, 1024]
+# bandwidth: [1.5, 3.0, 6.0, 12.0, 24.0]
+# num_codebooks: [2, 4, 8, 16, 32]
+vocab_size: 1024
+bandwidth: 1.5
+num_codebooks: 2
+sample_rate: 24000
+# Feature parameters
+encoder_dim: 1024
+# If set to True, the encoder_dim should be set to the dim of the tokenizer. For encodec it is 128.
+init_embedding: False
+freeze_embedding: False
+
+
+# Percentage of files used for validation and test
+validation_percentage: 10
+testing_percentage: 10
+
+# Percentage of unknown and silence examples
+# (relative to total of known word samples) to include
+percentage_unknown: 10 # Set this to 0 for the V2 35 task
+percentage_silence: 10 # Set this to 0 for the V2 35 task
+
+skip_prep: False
+ckpt_interval_minutes: 15 # save checkpoint every N min
+
+####################### Training Parameters ####################################
+number_of_epochs: 50
+batch_size: 32
+lr: 0.001
+shuffle: True
+
+
+# Feature parameters
+n_features: 24
+
+# Number of classes (i.e. different commands)
+out_n_neurons: !ref <number_of_commands>  #includes core commands & auxiliary words
+
+num_workers: 4
+dataloader_options:
+    batch_size: !ref <batch_size>
+    shuffle: !ref <shuffle>
+    num_workers: !ref <num_workers>
+
+
+# Modules
+# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
+codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
+    source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
+    save_path: !ref <save_folder>
+    sample_rate: !ref <sample_rate>
+    bandwidth: !ref <bandwidth>
+    flat_embeddings: False
+    freeze: True
+    renorm_embeddings: False
+
+discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
+    num_codebooks: !ref <num_codebooks>
+    vocab_size: !ref <vocab_size>
+    emb_dim: !ref <encoder_dim>
+    freeze: !ref <freeze_embedding>
+    init: !ref <init_embedding>
+
+attention_mlp: !new:custom_model.AttentionMLP
+    input_dim: !ref <encoder_dim>
+    hidden_dim: !ref <encoder_dim>
+
+embedding_model: !new:speechbrain.lobes.models.Xvector.Xvector
+    in_channels: !ref <encoder_dim>
+    activation: !name:torch.nn.LeakyReLU
+    tdnn_blocks: 5
+    tdnn_channels: [1024, 1024, 1024, 1024, 3072]
+    tdnn_kernel_sizes: [5, 3, 3, 1, 1]
+    tdnn_dilations: [1, 2, 3, 1, 1]
+    lin_neurons: 512
+
+classifier: !new:speechbrain.lobes.models.Xvector.Classifier
+    input_shape: [null, null, 512]
+    activation: !name:torch.nn.LeakyReLU
+    lin_blocks: 1
+    lin_neurons: 512
+    out_neurons: !ref <out_n_neurons>
+
+softmax: !new:speechbrain.nnet.activations.Softmax
+    apply_log: True
+
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <number_of_epochs>
+
+model: !new:torch.nn.ModuleList
+    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
+
+
+modules:
+    embedding_model: !ref <embedding_model>
+    classifier: !ref <classifier>
+    softmax: !ref <softmax>
+    attention_mlp: !ref <attention_mlp>
+    codec: !ref <codec>
+    discrete_embedding_layer: !ref <discrete_embedding_layer>
+
+
+# Cost + optimization
+compute_cost: !name:speechbrain.nnet.losses.nll_loss
+
+model_opt_class: !name:torch.optim.Adam
+    lr: !ref <lr>
+
+lr_annealing_model: !new:speechbrain.nnet.schedulers.NewBobScheduler
+    initial_value: !ref <lr>
+    improvement_threshold: 0.0025
+    annealing_factor: 0.9
+    patient: 0
+
+
+# Logging + checkpoints
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <train_log>
+
+error_stats: !name:speechbrain.utils.metric_stats.MetricStats
+    metric: !name:speechbrain.nnet.losses.classification_error
+        reduction: batch
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        embedding_model: !ref <embedding_model>
+        classifier: !ref <classifier>
+        scheduler_model: !ref <lr_annealing_model>
+        attention_mlp: !ref <attention_mlp>
+        codec: !ref <codec>
+        discrete_embedding_layer: !ref <discrete_embedding_layer>
+        counter: !ref <epoch_counter>

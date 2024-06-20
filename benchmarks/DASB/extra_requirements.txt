@@ -1,3 +1,5 @@
 scikit-learn
 speechtokenizer
+beartype
+tensorboard
 jsonlines

@@ -1231,10 +1231,10 @@ class TokotronTransformerModel(nn.Module):
         """
         state_dict = _filter_state_dict(state_dict)
         try:
-            return super().load_state_dict(state_dict, strict, assign)
+            return super().load_state_dict(state_dict, False, assign)
         except TypeError:
             # NOTE: Older versions of PyTorch don't have the assign parameter
-            return super().load_state_dict(state_dict, strict)
+            return super().load_state_dict(state_dict, False)
 
     @property
     def gate_offset(self):

@@ -338,9 +338,33 @@ class TokotronBrain(sb.Brain):
         self.init_optimizers()
 
         # Load latest checkpoint to resume training if interrupted
+        self._restore_checkpoint()
+
+    def on_evaluate_start(self, max_key=None, min_key=None):
+        """Gets called at the beginning of ``evaluate()``
+
+        Default implementation loads the best-performing checkpoint for
+        evaluation, based on stored metrics.
+
+        Arguments
+        ---------
+        max_key : str
+            Key to use for finding best checkpoint (higher is better).
+            By default, passed to ``self.checkpointer.recover_if_possible()``.
+        min_key : str
+            Key to use for finding best checkpoint (lower is better).
+            By default, passed to ``self.checkpointer.recover_if_possible()``.
+        """
+
+        # Recover best checkpoint for evaluation
+        self._restore_checkpoint(max_key=max_key, min_key=min_key)
+
+    def _restore_checkpoint(self, min_key=None, max_key=None):
         if self.checkpointer is not None:
             optimizer_rec = None
-            ckpt = self.checkpointer.find_checkpoint()
+            ckpt = self.checkpointer.find_checkpoint(
+                max_key=max_key, min_key=min_key
+            )
             if (
                 "optimizer" in self.checkpointer.recoverables
                 and "optimizer" not in ckpt.paramfiles
@@ -348,7 +372,7 @@ class TokotronBrain(sb.Brain):
                 logger.warn("Optimizer not found in the checkpoint, recovering without it")
                 optimizer_rec = self.checkpointer.recoverables["optimizer"]
                 del self.checkpointer.recoverables["optimizer"]
-            self.checkpointer.recover_if_possible()
+            self.checkpointer.recover_if_possible(min_key=min_key, max_key=max_key)
             if optimizer_rec is not None:
                 self.checkpointer.recoverables["optimizer"] = optimizer_rec
 

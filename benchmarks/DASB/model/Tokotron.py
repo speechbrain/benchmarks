@@ -1794,6 +1794,7 @@ def _filter_state_dict(state_dict):
             key.startswith(ignored_key + ".")
             for ignored_key in IGNORE_IN_STATE_DICT
         )
+        and not key.endswith(".pe")
     }
 
 

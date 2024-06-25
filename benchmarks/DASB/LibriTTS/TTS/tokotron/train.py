@@ -320,6 +320,38 @@ class TokotronBrain(sb.Brain):
             **vocoder_kwargs
         )
 
+    def on_fit_start(self):
+        """Gets called at the beginning of ``fit()``, on multiple processes
+        if ``distributed_count > 0`` and backend is ddp.
+
+        Default implementation compiles the jit modules, initializes
+        optimizers, and loads the latest checkpoint to resume training.
+        """
+        # Run this *after* starting all processes since jit/compiled modules
+        # cannot be pickled.
+        self._compile()
+
+        # Wrap modules with parallel backend after jit
+        self._wrap_distributed()
+
+        # Initialize optimizers after parameters are configured
+        self.init_optimizers()
+
+        # Load latest checkpoint to resume training if interrupted
+        if self.checkpointer is not None:
+            optimizer_rec = None
+            ckpt = self.checkpointer.find_checkpoint()
+            if (
+                "optimizer" in self.checkpointer.recoverables
+                and "optimizer" not in ckpt.paramfiles
+            ):
+                logger.warn("Optimizer not found in the checkpoint, recovering without it")
+                optimizer_rec = self.checkpointer.recoverables["optimizer"]
+                del self.checkpointer.recoverables["optimizer"]
+            self.checkpointer.recover_if_possible()
+            if optimizer_rec is not None:
+                self.checkpointer.recoverables["optimizer"] = optimizer_rec
+
 
 INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phn"}
 

@@ -17,7 +17,7 @@ from torch.nn import functional as F
 from speechbrain.lobes.models.transformer.Transformer import (
     TransformerEncoder,
     TransformerDecoder,
-    PositionalEncoding,
+    PositionalEncoding as TransformerPositionalEncoding,
     get_lookahead_mask,
 )
 from speechbrain.dataio.dataio import clean_padding_
@@ -2206,3 +2206,11 @@ class TargetedNoamScheduler(NoamScheduler):
         self.current_lr = current_lr
         lr = opt.param_groups[0]["lr"]
         return current_lr, lr
+
+
+class PositionalEncoding(TransformerPositionalEncoding):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def load_state_dict(self, state_dict, strict=True, assign=False):
+        pass

@@ -225,7 +225,7 @@ class TTSProgressReport:
     def _write_details_file(self):
         """Outputs the concatenated details file"""
         details = {
-            key: _concat(value)
+            key: value
             for key, value in self.details.items()
         }
         self.logger.save(name="details.pt", content=details, mode="tensor")
@@ -255,21 +255,6 @@ class TTSProgressReport:
             for key, value in self.details.items():
                 value.extend(details[key])
 
-
-def _concat(items):
-    """Concatenates the items if they are tensors
-
-    Arguments
-    ---------
-    items : list
-        A list of tensors or other items
-
-    Returns
-    -------
-    result : list | tesnor"""
-    if torch.is_tensor(items[0]):
-        items = torch.cat(items, dim=0)
-    return items
 
 
 class ContextError(Exception):

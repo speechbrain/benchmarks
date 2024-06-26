@@ -63,6 +63,8 @@ vocoder_src: !apply:speechbrain.utils.hparams.choice
     choices:
         discrete: !ref <vocoder_src_discrete>
         continuous: !ref <vocoder_src_continous>
+spk_emb_src: speechbrain/spkrec-ecapa-voxceleb-mel-spec
+use_spk_emb: False
 
 vocoder_available_layers: [1, 3, 7, 12, 18, 23]
 
@@ -176,6 +178,10 @@ token_model: !new:speechbrain.lobes.models.huggingface_transformers.discrete_ssl
         value: !ref <token_model_layers>
         dtype: int
 
+spk_emb_model: !name:speechbrain.inference.encoders.MelSpectrogramEncoder.from_hparams
+    source: !ref <spk_emb_src>
+    savedir: !ref <pretrained_model_save_folder>/ecapa
+
 # Dataloader options
 train_dataloader_opts:
     batch_size: !ref <batch_size>
@@ -230,6 +236,7 @@ extract_features_opts:
     token_model_layers: !ref <token_model_layers>
     sample_rate: !ref <sample_rate>
     model_sample_rate: !ref <model_sample_rate>
+    spk_emb_model: !ref <spk_emb_model>
 
 
 ####################### Model parameters ###########################
@@ -310,6 +317,12 @@ inference: !apply:speechbrain.utils.hparams.choice
         search: !ref <inference_search>
         forward: !ref <inference_forward>
 
+emb:
+  spk:
+    kind: "pretrained"
+    dim: 192
+    vocoder: True
+
 model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel # yamllint disable-line rule:line-length
     input_num_tokens: !ref <input_num_tokens>
     audio_num_tokens: !ref <audio_num_tokens>
@@ -336,6 +349,12 @@ model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel # yamllint d
     decoder_mode: !ref <decoder_mode>
     scale_factor: !ref <scale_factor>
     representation_mode: !ref <representation_mode>
+    emb: !apply:speechbrain.utils.hparams.choice
+        value: !ref <use_spk_emb>
+        choices: 
+            True: !ref <emb>
+            False: null
+
 
 modules:
     model: !ref <model>

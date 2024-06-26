@@ -61,11 +61,16 @@ class TokotronBrain(sb.Brain):
         audio, audio_length = batch.audio_bos
         if self.compression:
             audio = self.compression_model.compress(audio)
+        emb = None
+        if self.use_spk_emb:
+            emb = {"spk": batch.spk_emb.data.squeeze(1)}
+
         predictions = self.modules.model(
             input_tokens=tokens,
             input_length=tokens_length,
             audio=audio,
             audio_length=audio_length,
+            emb=emb
         )
 
         return predictions
@@ -153,6 +158,10 @@ class TokotronBrain(sb.Brain):
             )
             self.modules.model.compression_model = self.compression_model
 
+        # Speaker embeddings are optional and are used only to pretrain
+        # multispeaker models
+        self.use_spk_emb = getattr(self.hparams, "use_spk_emb", False)
+
     def on_stage_end(self, stage, stage_loss, epoch):
         """Gets called at the end of an epoch.
 
@@ -238,9 +247,13 @@ class TokotronBrain(sb.Brain):
         for batch in sample_loader:
             batch = batch.to(self.device)
             tokens, tokens_length = batch.tokens
+            emb = None
+            if self.use_spk_emb:
+                emb = {"spk": batch.spk_emb.data.squeeze(1)}
             with torch.no_grad():
                 infer_out = self.modules.model.infer(
-                    input_tokens=tokens, input_length=tokens_length
+                    input_tokens=tokens, input_length=tokens_length,
+                    emb=emb
                 )
             self.hparams.progress_report.write(
                 ids=batch.uttid,
@@ -399,25 +412,31 @@ def dataio_prepare(hparams):
     dynamic_items = [text_pipeline, tokens_pipeline, audio_pipeline]
 
     init_sequence_encoder(hparams)
+    use_spk_emb = hparams.get("use_spk_emb", False)
+    prepared_features = [audio_features]
+    output_keys = [
+        "uttid",
+        "tokens",
+        "audio_pad",
+        "audio_bos",
+    ]
+    if use_spk_emb:
+        prepared_features.append("spk_emb")
+        output_keys.append("spk_emb")
 
     for dataset in data_info:
         dynamic_dataset = sb.dataio.dataset.DynamicItemDataset.from_json(
             json_path=data_info[dataset],
             replacements={"data_root": data_folder},
             dynamic_items=dynamic_items,
-            output_keys=[
-                "uttid",
-                "tokens",
-                "audio_pad",
-                "audio_bos",
-            ],
+            output_keys=output_keys,
         )
 
         add_prepared_features(
             dataset=dynamic_dataset,
             save_path=Path(hparams["prepare_save_folder"]) / "features",
             id_key="uttid",
-            features=[audio_features],
+            features=prepared_features,
         )
 
         datasets[dataset] = dynamic_dataset
@@ -625,6 +644,10 @@ if __name__ == "__main__":
         hparams.get("representation_mode", RepresentationMode.DISCRETE)
     )
     audio_features = "audio_tokens" if representation_mode == RepresentationMode.DISCRETE else "audio_ssl"
+    extract_features = [audio_features]
+    if hparams.get("use_spk_emb", False):
+        extract_features.append("spk_emb")
+
     if not hparams["skip_prep"]:
         with hparams["freezer"]:
             run_on_main(
@@ -635,7 +658,7 @@ if __name__ == "__main__":
                     "splits": hparams["splits"],
                     "split_ratio": hparams["split_ratio"],
                     "seed": hparams["seed"],
-                    "extract_features": [audio_features],
+                    "extract_features": extract_features,
                     "extract_features_opts": hparams["extract_features_opts"],
                     "extract_phonemes": hparams["input"] == "phonemes",
                     "model_name": "tokotron",

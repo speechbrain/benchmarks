@@ -17,7 +17,7 @@ from torch.nn import functional as F
 from speechbrain.lobes.models.transformer.Transformer import (
     TransformerEncoder,
     TransformerDecoder,
-    PositionalEncoding,
+    PositionalEncoding as TransformerPositionalEncoding,
     get_lookahead_mask,
 )
 from speechbrain.dataio.dataio import clean_padding_
@@ -30,6 +30,7 @@ from speechbrain.dataio.dataio import length_to_mask
 from speechbrain.dataio.batch import PaddedBatch
 from speechbrain.decoders.seq2seq import S2STransformerBeamSearcher
 from speechbrain.utils.data_utils import concat_padded_features
+from speechbrain.nnet.schedulers import NoamScheduler
 
 from enum import Enum
 from collections import namedtuple
@@ -1230,10 +1231,10 @@ class TokotronTransformerModel(nn.Module):
         """
         state_dict = _filter_state_dict(state_dict)
         try:
-            return super().load_state_dict(state_dict, strict, assign)
+            return super().load_state_dict(state_dict, False, assign)
         except TypeError:
             # NOTE: Older versions of PyTorch don't have the assign parameter
-            return super().load_state_dict(state_dict, strict)
+            return super().load_state_dict(state_dict, False)
 
     @property
     def gate_offset(self):
@@ -1630,6 +1631,8 @@ class TokotronLoss(nn.Module):
         eos_width=1,
         audio_tokens_per_step=1,
         representation_mode=RepresentationMode.DISCRETE,
+        audio_clip_min=-10.0,
+        audio_clip_max=10.0,
     ):
         super().__init__()
         self.guided_attention_weight = guided_attention_weight
@@ -1656,6 +1659,8 @@ class TokotronLoss(nn.Module):
                 torch.ones(eos_width, audio_tokens_per_step).long() * eos_index
             )
             self.register_buffer("audio_eos", audio_eos)
+        self.audio_clip_min = audio_clip_min
+        self.audio_clip_max = audio_clip_max
 
     def forward(
         self,
@@ -1714,6 +1719,12 @@ class TokotronLoss(nn.Module):
                 batch_size * heads, max_len, audio_dim
             )
             audio_reshaped = bipolar_compression(audio_reshaped)
+            if self.audio_clip_min is not None or self.audio_clip_max is not None:
+                audio_reshaped = audio_reshaped.clip(
+                    min=self.audio_clip_min,
+                    max=self.audio_clip_max,
+                )
+
         audio_reshaped = audio_reshaped[:, :max_len]
         lengths_reshaped = (
             audio_length.unsqueeze(-1)
@@ -1783,6 +1794,7 @@ def _filter_state_dict(state_dict):
             key.startswith(ignored_key + ".")
             for ignored_key in IGNORE_IN_STATE_DICT
         )
+        and not key.endswith(".pe")
     }
 
 
@@ -2144,3 +2156,62 @@ def bipolar_compression_inv(x):
         x.exp() - 1.,
         1. - (-x).exp()
     )
+
+
+class TargetedNoamScheduler(NoamScheduler):
+    """A customization of NoamScheduler that does not assume all parameter groups have the same
+    learning rate
+
+    Arguments
+    ---------
+    lr_initial : list
+        Initial learning rate (i.e. the lr used at epoch 0), for each parameter group
+    n_warmup_steps : int
+        number of warm-up steps
+    model_size : int
+        size of transformer embed_dim. It is used to scale the maximum learning rate value reached
+        by the scheduler. It is divided by model_size ** (0.5).
+        If not specified the maximum learning rate value is instead multiplied by warmup_steps ** (0.5).
+    """
+    def __init__(self, lr_initial, n_warmup_steps, model_size=None, param_group=None):
+        super().__init__(
+            lr_initial=lr_initial,
+            n_warmup_steps=n_warmup_steps,
+            model_size=model_size
+        )
+        self.param_group = param_group
+
+    def __call__(self, opt):
+        """
+        Arguments
+        ---------
+        opt : optimizer
+            The optimizer to update using this scheduler.
+
+        Returns
+        -------
+        current_lr : float
+            The learning rate before the update.
+        lr : float
+            The learning rate after the update.
+        """
+        self.n_steps += 1
+
+        current_lr = opt.param_groups[0]["lr"]
+
+        # Changing the learning rate within the optimizer
+        for param_group, lr_initial in zip(opt.param_groups, self.lr_initial):
+            lr = lr_initial * self._get_lr_scale()
+            param_group["lr"] = lr
+
+        self.current_lr = current_lr
+        lr = opt.param_groups[0]["lr"]
+        return current_lr, lr
+
+
+class PositionalEncoding(TransformerPositionalEncoding):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def load_state_dict(self, state_dict, strict=True, assign=False):
+        pass

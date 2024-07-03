@@ -870,7 +870,9 @@ def prepare_features(
         device=device,
     )
     token_model_kwargs = options.get("token_model_kwargs", {})
-    ssl_layers = options.get("ssl_model_layers")
+    ssl_layers = options.get("ssl_model_layers") or options.get(
+        "token_model_layers"
+    )
 
     @sb.utils.data_pipeline.takes("wav")
     @sb.utils.data_pipeline.provides("sig")
@@ -912,6 +914,13 @@ def prepare_features(
                 tokens = tokens.unsqueeze(-1)
             yield PaddedData(tokens, sig.lengths)
             yield PaddedData(emb, sig.lengths)
+    
+    @sb.utils.data_pipeline.takes("sig_resampled")
+    @sb.utils.data_pipeline.provides("spk_emb")
+    def spk_emb_pipeline(sig):
+        mel_spec = context.spk_emb_model.mel_spectogram(audio=sig.data)
+        return context.spk_emb_model.encode_mel_spectrogram_batch(
+            mel_spec, sig.lengths)
 
     @sb.utils.data_pipeline.takes("sig_resampled")
     @sb.utils.data_pipeline.provides("audio_ssl", "audio_ssl_len")
@@ -921,9 +930,15 @@ def prepare_features(
         yield PaddedData(ssl, sig.lengths)
         yield (sig.lengths * ssl.size(1)).tolist()
 
-    feature_extractor.add_dynamic_item(resample_pipeline)
-    feature_extractor.add_dynamic_item(token_pipeline)
-    feature_extractor.add_dynamic_item(ssl_pipeline)
+    dynamic_items = [
+        resample_pipeline,
+        token_pipeline,
+        ssl_pipeline,
+        spk_emb_pipeline,
+    ]
+    for dynamic_item in dynamic_items:
+        feature_extractor.add_dynamic_item(dynamic_item)
+
     feature_keys = [key for key in features if key not in INLINE_FEATURES]
     inline_keys = [key for key in features if key in INLINE_FEATURES]
     feature_extractor.set_output_features(feature_keys, inline_keys=inline_keys)
@@ -956,4 +971,9 @@ def get_context(extract_features, extract_features_opts, device):
         context["token_model"] = extract_features_opts["token_model"].to(device)
     if "audio_ssl" in extract_features:
         context["ssl_model"] = extract_features_opts["ssl_model"].to(device)
+    if "spk_emb" in extract_features:
+        context["spk_emb_model"] = extract_features_opts["spk_emb_model"](
+            run_opts={"device": device}
+        )
+
     return SimpleNamespace(**context)

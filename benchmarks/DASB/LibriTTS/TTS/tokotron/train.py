@@ -188,6 +188,16 @@ class TokotronBrain(sb.Brain):
             )
             self.modules.model.compression_model = self.compression_model
 
+        # Reset the learning rate - if supported. This is useful when fine-tuning
+        # a model pre-trained on another dataset
+        if (
+            stage == sb.Stage.TRAIN
+            and self.hparams.reset_annealing_epoch is not None
+            and epoch is not None
+            and epoch == self.hparams.reset_annealing_epoch
+        ):
+            self.hparams.lr_annealing.n_steps = 0
+
     def on_stage_end(self, stage, stage_loss, epoch):
         """Gets called at the end of an epoch.
 

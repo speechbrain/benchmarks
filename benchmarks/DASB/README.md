@@ -108,7 +108,7 @@ We present the performance results for discriminative and generative tasks using
 
 | **Models/Tasks**        | **ASR-En (WER ↓)** |               | **ASR-multiling (WER ↓)** |               | **ER (ACC ↑)** | **IC (ACC ↑)** | **KS (ACC ↑)** | **SI (ACC ↑)** | **SV (EER ↓)** |
 |-------------------------|--------------------|---------------|---------------------------|---------------|----------------|----------------|----------------|----------------|----------------|
-|                         | **Clean**          | **Other**     | **Welsh**                 | **Basque**    |                |                |                |                |                |
+|                         | **Clean**          | **Other**     | **Welsh**                 | **Basque**          |                |                |                |                |                |
 |          |                    |               |                           |       <span style="background-color: #FFD700; color: black;">**Low Bitrate**</span>        |                |                |                |                |                |
 | Discrete Hubert         | **8.99**           | **21.14**     | **58.50**                 | **26.83**     | 57.20          | 68.70          | 90.54          | 0.90           | 24.99          |
 | Discrete WavLM          | 11.72              | 27.56         | 60.37                     | 28.63         | **59.80**      | 73.40          | **97.94**      | 0.70           | 26.02          |

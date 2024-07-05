@@ -150,10 +150,10 @@ We present the performance results for discriminative and generative tasks using
 | EnCodec                 | 3.10              | 19.07        | 0.885        | 3.09             | 48.57        | 0.906        | 1.50              | 9.46         |
 | DAC                     | 3.49              | 31.14        | **0.906**    | 3.26             | 55.43        | **0.924**    | 1.71              | 71.26        |
 | SpeechTokenizer         | 3.49              | 23.44        | 0.876        | 3.42             | 60.75        | 0.906        | 1.96              | 53.26        |
-|         |                   |              |              |      <span style="background-color: #32CD32; color: black;">**High Bitrate**</span>               |              |              |       
+|         |                   |              |              |      <span style="background-color: #32CD32; color: black;">**High Bitrate**</span>               |              |              |
 | EnCodec                 | 2.87              | 68.22        | 0.814        | **2.95**         | **97.73**    | **0.839**    | N.C               | N.C          |
 | DAC                     | **2.95**          | **46.07**    | **0.860**    | 2.53             | 208          | 0.784        | N.C               | N.C          |
-|         |                   |              |              |      <span style="background-color: #FF4500; color: black;">**Continuous Baseline**</span>               |              |              |       
+|         |                   |              |              |      <span style="background-color: #FF4500; color: black;">**Continuous Baseline**</span>               |              |              |
 | SSL                     | 3.49              | 4.92         | 0.928        | 3.68             | 9.97         | 0.939        | 3.71              | 2.94         |
 
 

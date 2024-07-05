@@ -4,7 +4,7 @@
 #
 # It is used for creating discrete audio representations from IEMOCAP data.
 #
-# Author: Pooneh Mousavi (2023)
+# Author: Pooneh Mousavi (2024)
 ################################
 # Seed needs to be set at top of yaml, before objects with parameters are made
 seed: 1986

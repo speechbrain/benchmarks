@@ -38,8 +38,8 @@ sorting: descending
 
 # Dataloader options
 train_dataloader_opts:
-   batch_size: !ref <batch_size>
-   drop_last: True
+    batch_size: !ref <batch_size>
+    drop_last: True
 
 ssl_model: !apply:speechbrain.utils.hparams.choice
     value: !ref <ssl_model_type>

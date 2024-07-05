@@ -22,9 +22,12 @@ train_log: !ref <output_folder>/train_log.txt
 # This allow you to have ~4% improvment
 
 ### Configuration for  discrete SSL model
+# ssl_model_type: hubert, wavlm, wav2vec2
+# ssl_hub: facebook/hubert-large-ll60k, microsoft/wavlm-large,  facebook/wav2vec2-large
+ssl_model_type: hubert # hubert, wavml or wav2vec2
 ssl_hub: facebook/hubert-large-ll60k
-ssl_folder: !ref <save_folder>/hubert_checkpoint
-kmeans_repo_id: poonehmousavi/SSL_Quantization
+ssl_folder: !ref <save_folder>/ssl_checkpoint
+kmeans_repo_id: speechbrain/SSL_Quantization
 kmeans_cache_dir: !ref <save_folder>/kmeans_checkpoint
 kmeans_dataset: LibriSpeech-100-360-500
 freeze_ssl: True
@@ -95,13 +98,30 @@ tokenizer_config:
     deduplicates: !ref <deduplicate>
     bpe_tokenizers: !ref <bpe_tokenizer_path>
 
-ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
-    source: !ref <ssl_hub>
-    output_norm: False
-    freeze: !ref <freeze_ssl>
-    freeze_feature_extractor: !ref <freeze_feature_extractor>
-    output_all_hiddens: True
-    save_path: !ref <ssl_folder>
+ssl_model: !apply:speechbrain.utils.hparams.choice
+    value: !ref <ssl_model_type>
+    choices:
+        wavlm: !new:speechbrain.lobes.models.huggingface_transformers.wavlm.WavLM
+            source: !ref <ssl_hub>
+            output_norm: False
+            freeze: !ref <freeze_ssl>
+            freeze_feature_extractor: !ref <freeze_feature_extractor>
+            output_all_hiddens: True
+            save_path: !ref <ssl_folder>
+        hubert: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
+            source: !ref <ssl_hub>
+            output_norm: False
+            freeze: !ref <freeze_ssl>
+            freeze_feature_extractor: !ref <freeze_feature_extractor>
+            output_all_hiddens: True
+            save_path: !ref <ssl_folder>
+        wav2vec2: !new:speechbrain.lobes.models.huggingface_transformers.wav2vec2.Wav2Vec2
+            source: !ref <ssl_hub>
+            output_norm: False
+            freeze: !ref <freeze_ssl>
+            freeze_feature_extractor: !ref <freeze_feature_extractor>
+            output_all_hiddens: True
+            save_path: !ref <ssl_folder>
 
 codec: !new:speechbrain.lobes.models.huggingface_transformers.discrete_ssl.DiscreteSSL
     save_path: !ref <kmeans_cache_dir>

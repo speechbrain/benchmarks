@@ -25,10 +25,13 @@ sample_rate: 16000
 # longer sentences certainly correspond to "open microphones".
 avoid_if_longer_than: 10.0
 
+# ssl_model_type: hubert, wavlm, wav2vec2
+# ssl_hub: facebook/hubert-large-ll60k, microsoft/wavlm-large,  facebook/wav2vec2-large
+ssl_model_type: hubert # hubert, wavml or wav2vec2
 ssl_hub: facebook/hubert-large-ll60k
 freeze_feature_extractor: True
 freeze_ssl: True
-ssl_folder: !ref <save_folder>/hubert_checkpoint
+ssl_folder: !ref <save_folder>/ssl_checkpoint
 ssl_layer_num: 7
 batch_size: 128 # batch_size for loading and extracting features. It is different from kmeans_batch_size.
 dataloader_num_workers: 8
@@ -42,13 +45,30 @@ dataloader_options:
     num_workers: !ref <dataloader_num_workers>
     drop_last: True
 
-ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
-    source: !ref <ssl_hub>
-    output_norm: False
-    freeze: !ref <freeze_ssl>
-    freeze_feature_extractor: !ref <freeze_feature_extractor>
-    output_all_hiddens: True
-    save_path: !ref <ssl_folder>
+ssl_model: !apply:speechbrain.utils.hparams.choice
+    value: !ref <ssl_model_type>
+    choices:
+        wavlm: !new:speechbrain.lobes.models.huggingface_transformers.wavlm.WavLM
+            source: !ref <ssl_hub>
+            output_norm: False
+            freeze: !ref <freeze_ssl>
+            freeze_feature_extractor: !ref <freeze_feature_extractor>
+            output_all_hiddens: True
+            save_path: !ref <ssl_folder>
+        hubert: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
+            source: !ref <ssl_hub>
+            output_norm: False
+            freeze: !ref <freeze_ssl>
+            freeze_feature_extractor: !ref <freeze_feature_extractor>
+            output_all_hiddens: True
+            save_path: !ref <ssl_folder>
+        wav2vec2: !new:speechbrain.lobes.models.huggingface_transformers.wav2vec2.Wav2Vec2
+            source: !ref <ssl_hub>
+            output_norm: False
+            freeze: !ref <freeze_ssl>
+            freeze_feature_extractor: !ref <freeze_feature_extractor>
+            output_all_hiddens: True
+            save_path: !ref <ssl_folder>
 
 
 ####################

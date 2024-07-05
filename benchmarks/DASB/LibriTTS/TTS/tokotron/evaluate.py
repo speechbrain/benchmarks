@@ -22,7 +22,7 @@ from types import SimpleNamespace
 from torch.nn import ModuleDict
 from tqdm.auto import tqdm
 from benchmarks.DASB.utils.data import undo_batch
-from benchmarks.DASB.utils.eval import vocoder_to_device
+from benchmarks.DASB.utils.eval import vocoder_to_device, Tracker
 from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
 from speechbrain.utils.distributed import run_on_main
 
@@ -102,18 +102,23 @@ class TokotronEvaluator:
         if not ckpt:
             raise ValueError("Unable to recover the checkpoint")
         self.modules.model.eval()
+        self.tracker = Tracker(
+            file_name=self.get_tracker_file_name()
+        )
         if self.hparams.eval_samples is not None:
             dataset = dataset.filtered_sorted(select_n=self.hparams.eval_samples)
+        dataset = self.tracker.filter(dataset)
         loader = sb.dataio.dataloader.make_dataloader(dataset, batch_size=self.hparams.batch_size)
         loader_it = iter(loader)
         self.create_reports()
         self.modules.model.show_inference_progress = False
-        self.item_ids = []
+        self.item_ids = self.tracker.get_processed()
         details_keys = list(self.evaluators.keys()) + list(self.bulk_evaluators.keys())
         self.details = {
             evaluator_key: []
             for evaluator_key in details_keys
         }
+        self.read_reports()
         self.sample_text = []
         self.sample_file_names = []
         self.ref_file_names = []
@@ -134,11 +139,32 @@ class TokotronEvaluator:
         for evaluator_key in self.enabled_evaluators:
             columns = self.get_report_columns(evaluator_key)
             file_name = self.output_folder / f"{evaluator_key}.csv"
-            report_file = open(file_name, "w")
+            resume = file_name.exists() and file_name.stat().st_size > 0
+            report_file = open(file_name, "a+")
             self.report_files[evaluator_key] = report_file
             writer = csv.DictWriter(report_file, columns)
-            writer.writeheader()
+            if not resume:
+                writer.writeheader()
             self.report_writers[evaluator_key] = writer
+
+    def read_reports(self):
+        """Invoked when resuming"""
+        for evaluator_key in self.enabled_evaluators:
+            file_name = self.output_folder / f"{evaluator_key}.csv"
+            if file_name.exists():
+                logger.info("%s exists, reading")
+                with open(file_name) as report_file:
+                    reader = csv.DictReader(report_file)
+                    for row in reader:
+                        del row["uttid"]
+                        row = {key : handle_number(value) for key, value in row.items()}
+                        self.details[evaluator_key].append(row)
+
+    def get_tracker_file_name(self):
+        """Determines the file name of the tracker file"""
+        suffix = f"_{self.hparams.eval_suffix}" if self.hparams.eval_suffix else ""
+        file_name = f"tracker_{self.hparams.eval_dataset}{suffix}.txt"
+        return self.output_folder / file_name
 
     def get_report_columns(self, evaluator_key):
         """Returns the columns for the specified evaluator
@@ -240,8 +266,10 @@ class TokotronEvaluator:
                 details = undo_batch(result.details)
                 self.write_result(evaluator_key, batch.uttid, details)
                 self.details[evaluator_key].extend(details)
+            self.tracker.mark_processed(batch.uttid)
 
     def evaluate_bulk(self):
+        """Performs bulk evaluation"""
         for evaluator_key, evaluator in self.bulk_evaluators.items():
             result = evaluator.evaluate_files(
                 file_names=self.sample_file_names,
@@ -308,6 +336,7 @@ class TokotronEvaluator:
             json.dump(summary, output_file, indent=4)
 
     def write_attn(self):
+        """Outputs attention details"""
         attn_file_name = self.output_folder / "attn.pt"
         torch.save(self.attention, attn_file_name)
         attn_summary_file_name = self.output_folder / "attn_summary.json"
@@ -472,6 +501,19 @@ def select_subset(dataset, hparams):
     else:
         subset = dataset
     return subset
+
+
+RE_INTEGER = re.compile(r"^-?\d+$")
+RE_FLOAT = re.compile(r"^-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?$")
+
+
+def handle_number(value):
+    """Converts a value to a number, if applicable"""
+    if RE_INTEGER.match(value):
+        value = int(value)
+    elif RE_FLOAT.match(value):
+        value = float(value)
+    return value
 
 
 if __name__ == "__main__":

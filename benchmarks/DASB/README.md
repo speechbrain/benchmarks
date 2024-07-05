@@ -107,7 +107,7 @@ We present the performance results for discriminative and generative tasks using
 ## Benchmarking Results for Discriminative Tasks
 
 | **Models/Tasks**        | **ASR-En (WER ↓)** |               | **ASR-multiling (WER ↓)** |               | **ER (ACC ↑)** | **IC (ACC ↑)** | **KS (ACC ↑)** | **SI (ACC ↑)** | **SV (EER ↓)** |
-|-------------------------|--------------------|---------------|---------------------------|---------------|----------------|----------------|----------------|----------------|----------------|
+|-------------------------|--------------------|---------------|---------------------------|------------------|----------------|----------------|----------------|----------------|----------------|
 |                         | **Clean**          | **Other**     | **Welsh**                 | **Basque**                |                |                |                |                |                |
 |          |                    |               |                           |      <span style="background-color: #FFD700; color: black;">**Low Bitrate**</span>             |                |                |                |                |                |
 | Discrete Hubert         | **8.99**           | **21.14**     | **58.50**                 | **26.83**     | 57.20          | 68.70          | 90.54          | 0.90           | 24.99          |
@@ -116,7 +116,7 @@ We present the performance results for discriminative and generative tasks using
 | EnCodec                 | 52.37              | 77.04         | 92.01                     | 58.20         | 44.70          | 31.50          | 86.00          | **58.30**      | **17.40**      |
 | DAC                     | 63.96              | 83.61         | 94.86                     | 66.29         | 49.20          | 22.10          | 81.00          | 45.10          | 20.62          |
 | SpeechTokenizer         | 19.77              | 43.12         | 76.67                     | 47.92         | 49.10          | 57.90          | 95.09          | 47.40          | 20.41          |
-|          |                    |               |                                 <span style="background-color: #00BFFF; color: black;">**Medium Bitrate**</span>              |                |                |                |                |                |
+|          |                    |               |                           |      <span style="background-color: #00BFFF; color: black;">**Medium Bitrate**</span>             |                |                |                |                |      
 | Discrete Hubert         | **7.91**           | **18.95**     | 54.77                     | 23.63         | **62.10**      | 70.50          | 94.69          | 67.40          | 15.71          |
 | Discrete WavLM          | 8.52               | 20.35         | **54.22**                 | **22.06**     | 57.60          | **78.00**      | **98.09**      | 80.80          | **8.00**       |
 | Discrete Wav2Vec2       | 8.76               | 21.32         | 60.39                     | 26.64         | 59.10          | 75.10          | 96.64          | 65.47          | 17.64          |

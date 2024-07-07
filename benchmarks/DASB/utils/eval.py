@@ -9,6 +9,7 @@ Authors:
 from speechbrain.inference.interfaces import Pretrained
 from speechbrain.inference.ASR import EncoderDecoderASR
 from speechbrain.lobes.models.huggingface_transformers import Whisper
+from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
 from speechbrain.decoders.seq2seq import S2SWhisperGreedySearch
 from speechbrain.dataio.batch import PaddedBatch
 from speechbrain.utils.metric_stats import ErrorRateStats
@@ -835,3 +836,80 @@ def vocoder_to_device(vocoder, device):
         vocoder.model.device = device
     elif hasattr(vocoder, "device"):
         vocoder.device = device
+
+
+class Tracker:
+    """A tracker that makes it possible to resume evaluation
+    
+    Arguments
+    ---------
+    file_name : str | path-like
+        The path to the tracker file"""
+    def __init__(self, file_name):
+        self.file_name = Path(file_name)
+
+    def mark_processed(self, item_id):
+        """Marks the specified file as processed
+
+        Arguments
+        ---------
+        item_id : str|enumerable
+            The item ID or a list of IDS
+        """
+        if isinstance(item_id, str):
+            item_id = [item_id]
+        with open(self.file_name, "a+") as tracker_file:
+            for item in item_id:
+                print(item, file=tracker_file)
+
+    def filter(self, dataset):
+        """Filters a dataset using the tracker file
+
+        Arguments
+        ---------
+        dataset : speechbrain.dataio.dataset.DynamicItemDataset
+            A dataset
+
+        Returns
+        -------
+        dataset : speechbrain.dataio.dataset.DynamicItemDataset
+            The dataset, possibly filtered
+        """
+        if self.file_name.exists():
+            with open(self.file_name) as tracker_file:
+                processed_ids = set(
+                    line.strip()
+                    for line in tracker_file
+                )
+                remaining_ids = [
+                    data_id for data_id in dataset.data_ids
+                    if data_id not in processed_ids
+                ]
+                logger.info(
+                    "Tracker %s already exists, %d items already processed, %d items remaining",
+                    self.file_name,
+                    len(processed_ids),
+                    len(remaining_ids)
+                )
+                dataset = FilteredSortedDynamicItemDataset(dataset, remaining_ids)
+        else:
+            logger.info("Tracker %s does not exist, evaluating from the beginning")
+        return dataset
+
+    def get_processed(self):
+        """Retrieves the IDs of items that have been processed
+
+        Returns
+        -------
+        processed_ids : list
+            The list of file IDs
+        """
+        if self.file_name.exists():
+            with open(self.file_name, "r") as tracker_file:
+                processed_ids = [
+                    line.strip()
+                    for line in tracker_file
+                ]
+        else:
+            processed_ids = []
+        return processed_ids

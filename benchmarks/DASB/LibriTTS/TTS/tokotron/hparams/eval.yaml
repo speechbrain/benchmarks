@@ -4,6 +4,7 @@ eval_sample_rate: 16000
 eval_samples: null
 eval_subset: null
 eval_asr_type: encoder_decoder
+eval_asr_beam_size: 66
 eval_asr_source: !apply:speechbrain.utils.hparams.choice
   value: !ref <eval_asr_type>
   choices:
@@ -29,6 +30,7 @@ eval_asr: !apply:speechbrain.utils.hparams.choice
       sample_rate: !ref <eval_sample_rate>
       overrides:
         lm_weight: 0.0
+        test_beam_size: !ref <eval_asr_beam_size>
     whisper: !name:benchmarks.DASB.utils.eval.WhisperASRSpeechEvaluator
       source: !ref <eval_asr_source>
       sample_rate: !ref <eval_sample_rate>

@@ -265,36 +265,38 @@ class Tacotron2Brain(sb.Brain):
         sample_loader = sb.dataio.dataloader.make_dataloader(
             self.sample_data, **self.hparams.sample_dataloader_opts,
         )
-        for batch in sample_loader:
-            batch = batch.to(self.device)
-            tokens, tokens_length = batch.tokens
-            tokens_max_len = tokens.size(1)
-            audio_ssl, audio_lengths, alignments = self.modules.model.infer(
-                inputs=tokens,
-                input_lengths=tokens_length * tokens_max_len,
-                spk_embs=batch.spk_emb.data.squeeze(1)
-            )
-            batch_size, _, audio_max_len = audio_ssl.shape
-            if not self.hparams.vocoder_flat_feats:
-                audio_ssl = audio_ssl.reshape(
-                    batch_size,
-                    self.hparams.audio_tokens_per_step,
-                    self.hparams.audio_dim,
-                    audio_max_len
+        with self.hparams.progress_report:
+            for batch in sample_loader:
+                batch = batch.to(self.device)
+                tokens, tokens_length = batch.tokens
+                tokens_max_len = tokens.size(1)
+                audio_ssl, audio_lengths, alignments = self.modules.model.infer(
+                    inputs=tokens,
+                    input_lengths=tokens_length * tokens_max_len,
+                    spk_embs=batch.spk_emb.data.squeeze(1)
                 )
-                if not self.hparams.vocoder_feats_first:
-                    audio_ssl = audio_ssl.permute(0, 3, 1, 2)
-            elif not self.hparams.vocoder_feats_first:
-                audio_ssl = audio_ssl.transpose(-1, -2)
+                batch_size, _, audio_max_len = audio_ssl.shape
+                if not self.hparams.vocoder_flat_feats:
+                    audio_ssl = audio_ssl.reshape(
+                        batch_size,
+                        self.hparams.audio_tokens_per_step,
+                        self.hparams.audio_dim,
+                        audio_max_len
+                    )
+                    if not self.hparams.vocoder_feats_first:
+                        audio_ssl = audio_ssl.permute(0, 3, 1, 2)
+                elif not self.hparams.vocoder_feats_first:
+                    audio_ssl = audio_ssl.transpose(-1, -2)
 
-            wav = self.modules.vocoder(audio_ssl).squeeze(1)
-            self.hparams.progress_report.write(
-                ids=batch.uttid,
-                audio=wav,
-                length_pred=audio_lengths,
-                length=batch.audio_ssl.lengths,
-                alignments=alignments
-            )
+                wav = self.modules.vocoder(audio_ssl).squeeze(1)
+                self.hparams.progress_report.write(
+                    ids=batch.uttid,
+                    audio=wav,
+                    length_pred=audio_lengths,
+                    length=batch.audio_ssl.lengths,
+                    tgt_max_length=batch.audio_ssl.data.size(1),
+                    alignments=alignments,
+                )
 
     def create_perfect_samples(self):
         """Creates the best samples that can be created using

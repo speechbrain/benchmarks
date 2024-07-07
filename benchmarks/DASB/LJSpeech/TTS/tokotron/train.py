@@ -319,7 +319,7 @@ class TokotronBrain(sb.Brain):
                  "weight_decay": self.hparams.audio_emb_weight_decay}]
             )
         else:
-            self.optimizer = self.opt_class(self.model.parameters(), lr=self.hparams.lr)
+            self.optimizer = self.opt_class(self.modules.model.parameters(), lr=self.hparams.lr)
 
 
 INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phonemes"}

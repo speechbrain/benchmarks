@@ -260,4 +260,4 @@ class TTSProgressReport:
 class ContextError(Exception):
     """Thrown when the various write methods are called without a context"""
     def __init__(self):
-        super("TTSProgressReport must be used in a context (with report: report.write(...))")
+        super.__init__("TTSProgressReport must be used in a context (with report: report.write(...))")

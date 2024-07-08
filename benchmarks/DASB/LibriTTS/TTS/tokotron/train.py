@@ -259,24 +259,25 @@ class TokotronBrain(sb.Brain):
         sample_loader = sb.dataio.dataloader.make_dataloader(
             self.sample_data, **self.hparams.sample_dataloader_opts,
         )
-        for batch in sample_loader:
-            batch = batch.to(self.device)
-            tokens, tokens_length = batch.tokens
-            infer_out = self.modules.model.infer(
-                input_tokens=tokens,
-                input_length=tokens_length,
-                emb={
-                    "spk": batch.spk_emb.data.squeeze(1)
-                }
-            )
-            self.hparams.progress_report.write(
-                ids=batch.uttid,
-                audio=infer_out.wav,
-                length_pred=infer_out.wav_length,
-                length=batch.audio_pad.lengths,
-                alignments=infer_out.alignments,
-                p_eos=infer_out.p_eos,
-            )
+        with self.hparams.progress_report:
+            for batch in sample_loader:
+                batch = batch.to(self.device)
+                tokens, tokens_length = batch.tokens
+                infer_out = self.modules.model.infer(
+                    input_tokens=tokens,
+                    input_length=tokens_length,
+                    emb={
+                        "spk": batch.spk_emb.data.squeeze(1)
+                    }
+                )
+                self.hparams.progress_report.write(
+                    ids=batch.uttid,
+                    audio=infer_out.wav,
+                    length_pred=infer_out.wav_length,
+                    length=batch.audio_pad.lengths,
+                    alignments=infer_out.alignments,
+                    p_eos=infer_out.p_eos,
+                )
 
     def create_perfect_samples(self):
         """Creates the best samples that can be created using

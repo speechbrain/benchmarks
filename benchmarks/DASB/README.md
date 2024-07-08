@@ -22,7 +22,17 @@ For detailed information, refer to [paper](https://arxiv.org/pdf/2406.14294):
 
 # Table of Contents
 
-
+- [Table of Contents](#table-of-contents)
+- [Installation](#-installation)
+- [Discrete Audio Encoder](#-Discrete-Audio-Encoder)
+- [Datasets and Recipes](#-Datasets-and-Recipes)
+- [Quickstart](#-quickstart)
+  - [Running a single task](#Running-a-single-task)
+  - [Running multiple tasks](#Runnin-multiple-tasks)
+- [‍Incorporating Your Audio Tokenizer](#-Incorporating-Your-Audio-Tokenizer)
+- [Results](#-results)
+- [Contact](#-contact)
+- [Citing](#-citing)
 
 # 🛠️ Installation
 
@@ -78,28 +88,45 @@ To set up SpeechBrain-DASB, follow these steps:
 
 ### Running a single task
 
-To perform a downstream evaluation using a specific discrete  model (e.g., encodec), run the following command:
+If you have specific discrete model and want to benchmark it for a specific task, you need to run the following command:
    ```
-   TODO
+   python LibriSpeech/ASR/LSTM/train_[tokenzier_name].py LibriSpeech/ASR/LSTM/hparams/train_[tokenzier_name].yaml --output_folder my-output-folder --data_folder mypath/to/LibriSpeech
    ```
 
-### Running a single task with your SSL model
+### Running multiple tasks
 
-If you have your own discrete model and want to benchmark it for a specific task, you need to follow these instructions:
+To run all tasks, make the following changes:
 
-1. Make sure your model is available on [HuggingFace](https://huggingface.co/) (our recipes will fetch it from the specified HF path).
-2. Assume your model is located at `mygroup/mySSLModel` on [HuggingFace](https://huggingface.co/).
+1. Edit the `run_discriminative_benchmark.sh` and `run_genarative_benchmark.sh` files and modify tokenizer related valuesfor example the bitrate , number of codebooks, and etc.
+2. Choose a set of tasks from the provided list and, for each task, select a downstream architecture from the available options (see list below).
+3. Update the variables defined in `run_benchmark.sh` with two lists of equal size. In the `ConsideredTasks` list, specify the tasks you want to run (e.g., `'LibriSpeechASR' 'LibriSpeechASR' 'IEMOCAP'`). In the `Downstreams` list, specify the corresponding downstream architecture for each task (e.g., `'BiLSTM'`, `contextnet`, `'ecapa_tdnn'`).
+
+   For example, if you set `ConsideredTasks=('LibriSpeechASR' 'LibriSpeechASR' 'IEMOCAP')` and `Downstreams=('BiLSTM', 'contextnet', 'ecapa_tdnn')`, the benchmark will be executed as follows:
+   - LibriSpeechASR with BiLSTM as the probing head
+   - LibriSpeechASR with contextnet as the probing head
+   - IEMOCAP with ecapa_tdnn as the probing head.
+
 3. Run the following command:
    ```
-   TODO
+   bash run_discriminative_benchmark.sh [tokenzier_name]
+   bash run_genarative_benchmark.sh [tokenzier_name]
    ```
+# 📝 ‍Incorporating Your Audio Tokenizer
 
+Let's now assume you've designed a audio and speech tokenizer in PyTorch and wish to integrate it into our benchmark.
+You're in luck because we've made this step as simple as possible for you!
+Here are the steps you should follow:
 
+1. Write your model's code in a Python library saved in `benchmarks/DASB/model` (e.g., `benchmarks/MOABB/models/my_model.py`).
 
+2. Create a YAML and PY file for each task you want to experiment with. Thankfully, you don't have to start from scratch. For example, if you're working with LibriSpeech/ASR/LSTM, copy `benchmarks/DASB/LibriSpeech/ASR/contextnet/hparams/train_encodec.yaml` and save it in the same folder with a different name (e.g., `train_my_model.yaml` and `train_my_model.py`).
 
-The n-gram-based language model used during decoding for the English ASR experiments can be downloaded here: https://www.openslr.org/resources/11/4-gram.arpa.gz.
+3. Edit the relevant section of your `train_my_model.yaml` and `train_my_model.py`. Redefine the `codec:` to reference your custom model (e.g., `model: !new:models.my_model.my_model`).
 
-After downloading, to use it, you need to specify its path in the `ngram_lm_path` variable and activate language modeling during decoding by passing `language_modelling` True.
+4. Ensure you include the hyperparameters specific to your model.
+
+5. Now, follow the instructions above to run an experiments across tasks.
+**Note**: If you're not familiar with YAML, you can refer to our [HyperPyYAML tutorial](https://speechbrain.github.io/tutorial_basics.html) on the SpeechBrain website for guidance.
 
 # 📈 Results
 We present the performance results for discriminative and generative tasks using two different downstream architectures. Each value in the table reflects the best performance achieved with either architecture. We also categorize the results into three distinct bitrate ranges: low (0-1.5 kbps), medium (2.9-6 kbps), and high (24 kbps).
@@ -161,7 +188,7 @@ We present the performance results for discriminative and generative tasks using
 
 # 📧 Contact
 
-For any questions or inquiries, feel free to reach Pooneh Mousavi, Ph.D. Student, University of Concordia/Mila ([mousavi.pooneh@gmail.com](mailto:mousavi.pooneh@gmail.com)).
+For any questions or inquiries, feel free to reach Pooneh Mousavi, Ph.D. Student, Concordia/Mila University([mousavi.pooneh@gmail.com](mailto:mousavi.pooneh@gmail.com)).
 <!-- ############################################################################################################### -->
 # 📖 Citing
 
@@ -181,6 +208,14 @@ If you use SpeechBrain-DASB for your research or business, please cite:
 Please also cite SpeechBrain:
 
 ```bibtex
+
+@article{ravanelli2024open,
+  title={Open-Source Conversational AI with SpeechBrain 1.0},
+  author={Ravanelli, Mirco and Parcollet, Titouan and Moumen, Adel and de Langen, Sylvain and Subakan, Cem and Plantinga, Peter and Wang, Yingzhi and Mousavi, Pooneh and Della Libera, Luca and Ploujnikov, Artem and others},
+  journal={arXiv preprint arXiv:2407.00463},
+  year={2024}
+}
+
 @misc{speechbrain,
   title={{SpeechBrain}: A General-Purpose Speech Toolkit},
   author={Mirco Ravanelli and Titouan Parcollet and Peter Plantinga and Aku Rouhe and Samuele Cornell and Loren Lugosch and Cem Subakan and Nauman Dawalatabad and Abdelwahab Heba and Jianyuan Zhong and Ju-Chieh Chou and Sung-Lin Yeh and Szu-Wei Fu and Chien-Feng Liao and Elena Rastorgueva and François Grondin and William Aris and Hwidong Na and Yan Gao and Renato De Mori and Yoshua Bengio},

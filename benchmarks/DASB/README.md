@@ -184,7 +184,7 @@ We present the performance results for discriminative and generative tasks using
 | SSL                     | 3.49              | 4.92         | 0.928        | 3.68             | 9.97         | 0.939        | 3.71              | 2.94         |
 
 
-
+You can find the full experiment folder (i.e., checkpoints, logs, etc) [here](https://www.dropbox.com/scl/fo/qoo5ofhqc2x2jdkr1veoh/ABm2CXF6Q7_0pL7fEXMtTqQ?rlkey=78a1mmxnvz7ta8r6i43qpr55c&st=pt6belnn&dl=0).
 
 # 📧 Contact
 

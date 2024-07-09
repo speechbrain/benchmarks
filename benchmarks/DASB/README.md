@@ -41,9 +41,9 @@ To set up SpeechBrain-DASB, follow these steps:
 
 1. Clone the benchmark repository and install SpeechBrain:
    ```shell
-   git clone https://github.com/speechbrain/benchmarks.git
+   git clone --branch DASB https://github.com/speechbrain/benchmarks.git
    cd benchmarks
-   git submodule update --init --recursive
+   git clone https://github.com/speechbrain/speechbrain/
    cd speechbrain
    pip install -r requirements.txt
    pip install -e .

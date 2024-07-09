@@ -59,8 +59,6 @@ To set up SpeechBrain-DASB, follow these steps:
    These commands will install the necessary dependencies for the benchmark, including both the base requirements and the additional requirements.
 
 # 🎌 Discrete Audio Encoder
-## Features of the Considered Discrete Audio Encoders
-
 | **Model**                                                                 | **Dataset**                                                                                       | **Repo**                                                         |
 |--------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------|
 | [Discrete Hubert](https://arxiv.org/abs/2406.10735)                      | LibriSpeech960                                                                                     | [huggingface.co/speechbrain/SSL_Quantization](https://huggingface.co/poonehmousavi/SSL_Quantization)  |
@@ -84,20 +82,20 @@ To set up SpeechBrain-DASB, follow these steps:
 | Libri2Mix                                | Speech Separation                    | Conformer                   | CRDNN                         | [github.com/JorisCos/LibriMix](https://github.com/JorisCos/LibriMix)                  |
 | LJSpeech                                 | Text-to-Speech                       | Shallow Transformer         | Deep Transformer              | [keithito.com/LJ-Speech-Dataset/](https://keithito.com/LJ-Speech-Dataset/)            |
 
-## ▶️ Quickstart
+# ▶️ Quickstart
 
-### Running a single task
+## Running a single task
 
 If you have specific discrete model and want to benchmark it for a specific task, you need to run the following command:
    ```
    python LibriSpeech/ASR/LSTM/train_[tokenzier_name].py LibriSpeech/ASR/LSTM/hparams/train_[tokenzier_name].yaml --output_folder my-output-folder --data_folder mypath/to/LibriSpeech
    ```
 
-### Running multiple tasks
+## Running multiple tasks
 
 To run all tasks, make the following changes:
 
-1. Edit the `run_discriminative_benchmark.sh` and `run_genarative_benchmark.sh` files and modify tokenizer related valuesfor example the bitrate , number of codebooks, and etc.
+1. Edit the `run_discriminative_benchmark.sh` and `run_genarative_benchmark.sh` files and modify tokenizer related values for example the bitrate , number of codebooks, and etc.
 2. Choose a set of tasks from the provided list and, for each task, select a downstream architecture from the available options (see list below).
 3. Update the variables defined in `run_benchmark.sh` with two lists of equal size. In the `ConsideredTasks` list, specify the tasks you want to run (e.g., `'LibriSpeechASR' 'LibriSpeechASR' 'IEMOCAP'`). In the `Downstreams` list, specify the corresponding downstream architecture for each task (e.g., `'BiLSTM'`, `contextnet`, `'ecapa_tdnn'`).
 
@@ -119,9 +117,9 @@ Here are the steps you should follow:
 
 1. Write your model's code in a Python library saved in `benchmarks/DASB/model` (e.g., `benchmarks/MOABB/models/my_model.py`).
 
-2. Create a YAML and PY file for each task you want to experiment with. Thankfully, you don't have to start from scratch. For example, if you're working with LibriSpeech/ASR/LSTM, copy `benchmarks/DASB/LibriSpeech/ASR/contextnet/hparams/train_encodec.yaml` and save it in the same folder with a different name (e.g., `train_my_model.yaml` and `train_my_model.py`).
+2. Create a YAML and py file for each task you want to experiment with. Thankfully, you don't have to start from scratch. For example, if you're working with LibriSpeech/ASR/LSTM, copy `benchmarks/DASB/LibriSpeech/ASR/contextnet/hparams/train_encodec.yaml` and save it in the same folder with a different name (e.g., `train_my_model.yaml` and `train_my_model.py`).
 
-3. Edit the relevant section of your `train_my_model.yaml` and `train_my_model.py`. Redefine the `codec:` to reference your custom model (e.g., `model: !new:models.my_model.my_model`).
+3. Edit the relevant section of your `train_my_model.yaml` and `train_my_model.py`. Redefine the `codec:` to reference your custom model (e.g., `codec: !new:models.my_model.my_model`).
 
 4. Ensure you include the hyperparameters specific to your model.
 

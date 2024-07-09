@@ -1,4 +1,4 @@
-mne
+mne==1.6.1
 moabb
 orion
 orion[profet]

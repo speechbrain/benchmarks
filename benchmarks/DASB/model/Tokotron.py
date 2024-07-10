@@ -73,8 +73,6 @@ TokotronInfernceOutput = namedtuple(
     [
         "audio",
         "length",
-        "wav",
-        "wav_length",
         "enc_self_attn",
         "dec_self_attn",
         "dec_attn",
@@ -82,9 +80,6 @@ TokotronInfernceOutput = namedtuple(
         "p_eos",
     ],
 )
-
-IGNORE_IN_STATE_DICT = {"vocoder", "compression_model"}
-
 
 class EosMode(Enum):
     GATE = "gate"
@@ -968,8 +963,6 @@ class TokotronTransformerModel(nn.Module):
         The number of audio tokens
     audio_tokens_per_step : int, optional
         The number of output audio tokens per tranformer step.
-        When using Vocodec, this corresponds to the number of
-        quantizers in the model used
     d_model : int, optional
         The number of expected features in the encoder/decoder inputs (default=512).
     d_ffn : int, optional
@@ -1009,10 +1002,6 @@ class TokotronTransformerModel(nn.Module):
         Whether audio embeddings should be frozen
     show_inference_progress : bool, optional
         Whether to show inference progress in the console
-    vocoder : nn.Module
-        The vocoder module
-    compression_model : nn.Module
-        The token compression model to be used
     eos_mode : EosMode | str, optional
         the way the end of sequence is computed
     inference : TokotronInference, optional
@@ -1068,8 +1057,6 @@ class TokotronTransformerModel(nn.Module):
         audio_emb_size=128,
         audio_emb_freeze=False,
         show_inference_progress=True,
-        vocoder=None,
-        compression_model=None,
         eos_mode=EosMode.GATE,
         inference=None,
         audio_token_shift=0,
@@ -1125,7 +1112,6 @@ class TokotronTransformerModel(nn.Module):
             audio_dim=audio_dim,
         )
         self.bos_idx = bos_idx
-        self.vocoder = vocoder
         self.attention_type = attention_type
         self.gate_offset = gate_offset
         if attention_type == "RelPosMHAXL":
@@ -1134,7 +1120,6 @@ class TokotronTransformerModel(nn.Module):
             self.positional_encoding = PositionalEncoding(
                 d_model, max_audio_length
             )
-        self.compression_model = compression_model
 
         if inference is None:
             inference = TokotronTransformerAutoregressiveInference(
@@ -1157,11 +1142,6 @@ class TokotronTransformerModel(nn.Module):
         self.audio_dim = audio_dim
         if emb is not None:
             self.emb_proj = self._build_emb_proj(emb)
-            self.vocoder_emb = [
-                key
-                for key, emb_config in emb.items()
-                if emb_config.get("vocoder")
-            ]
 
     def _build_emb_proj(self, emb):
         """Builds the embedding projection
@@ -1194,22 +1174,6 @@ class TokotronTransformerModel(nn.Module):
                 raise ValueError(f"Invallid embedding kind: {kind}")
             emb_proj[key] = emb_mod
         return nn.ModuleDict(emb_proj)
-
-    def __setattr__(self, name, value):
-        """Prevents the vocoder from being saved in state_dict() - it is not typically fine-tuned
-        and fine-tuning it would not be trivial
-
-        Arguments
-        ---------
-        name : str
-            The attribute name
-        value : any
-            The attribute value
-        """
-        if name in IGNORE_IN_STATE_DICT:
-            self.__dict__[name] = value
-        else:
-            super().__setattr__(name, value)
 
     def load_state_dict(self, state_dict, strict=True, assign=False):
         """Copy parameters and buffers from :attr:`state_dict` into this module and its descendants.
@@ -1413,10 +1377,6 @@ class TokotronTransformerModel(nn.Module):
             A (Batch x Length x Tokens) tensor of audio tokens
         length : torch.Tensor
             Inferred relative lengths
-        wav : torch.Tensor
-            Synthesized waveforms, if a vocoder is provided
-        wav_length : torch.Tensor
-            Waveform lengths
         enc_self_attn : torch.Tensor
             Encoder self-attentions
         dec_self_attn : torch.Tensor
@@ -1441,35 +1401,9 @@ class TokotronTransformerModel(nn.Module):
         enc_out = self.add_emb(enc_out, emb)
         dec_out = self.inference(enc_out, input_length)
         audio, audio_length = dec_out.audio, dec_out.length
-        wav, wav_length = None, None
-        if self.compression_model is not None:
-            audio = self.compression_model.decompress(
-                audio, audio_length
-            )
-        if self.vocoder is not None:
-            if emb is None:
-                vocoder_emb = {}
-            else:
-                vocoder_emb = {
-                    key: value
-                    for key, value in emb.items()
-                    if key in self.vocoder_emb
-                }
-            vocoder_out = self.vocoder(
-                audio, dec_out.length, **vocoder_emb
-            )
-            if isinstance(vocoder_out, tuple):
-                wav, wav_length = vocoder_out
-            else:
-                wav, wav_length = vocoder_out, dec_out.length
-            if wav.dim() == 3:
-                wav = wav.squeeze(1)
-            clean_padding_(wav, wav_length)
         return TokotronInfernceOutput(
             audio=audio,
             length=audio_length,
-            wav=wav,
-            wav_length=wav_length,
             enc_self_attn=enc_self_attn,
             dec_self_attn=dec_out.dec_self_attn,
             dec_attn=dec_out.dec_attn,
@@ -1790,11 +1724,7 @@ def _filter_state_dict(state_dict):
     return {
         key: value
         for key, value in state_dict.items()
-        if not any(
-            key.startswith(ignored_key + ".")
-            for ignored_key in IGNORE_IN_STATE_DICT
-        )
-        and not key.endswith(".pe")
+        if not key.endswith(".pe")
     }
 
 

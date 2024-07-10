@@ -2,23 +2,26 @@
 # Model: Tokenized TTS (WhisperSpeech-inspired)
 # Authors:  Artem Ploujnikov
 # ############################################################################
-# Seed needs to be set at top of yaml, before objects with parameters are made
 
+experiment_name: tokotron/continuous_ssl
+
+# Seed needs to be set at top of yaml, before objects with parameters are made
 seed: 74443
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref results/transformer/<seed>
+output_folder: !ref results/<experiment_name>/<seed>
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 
-token_model_src: "fnlp/SpeechTokenizer"
-g2p_src: flexthink/soundchoice-g2p
-vocoder_type: encodec
-vocoder_src: "charactr/vocos-encodec-24khz"
+# Model type
+ssl_model_type: wavlm
+representation_mode: continuous
 
 # Data files
 data_folder: !PLACEHOLDER # e.g., /path/to/LibriSpeech
-prepare_save_folder: !ref <data_folder>/prepared
+prepare_save_folder: !ref <data_folder>/prepared/continuous-<ssl_model_type>
 pretrained_model_save_folder: !ref <prepare_save_folder>
+vocoder_model_name: !ref unithifigan-dasb-<ssl_model_type>-continuous
+vocoder_model_path: !ref <pretrained_model_save_folder>/<vocoder_model_name>
 prepare_archive_path: null
 prepare_skip_ignore_folders: False
 train_json: !ref <prepare_save_folder>/train.json
@@ -33,6 +36,28 @@ progress_meta: !ref <progress_folder>/meta.yaml
 num_audio_samples: 32
 samples_interval: 5
 
+freeze_ssl_model: True
+ssl_model_src: !apply:speechbrain.utils.hparams.choice
+    value: !ref <ssl_model_type>
+    choices:
+        wavlm: microsoft/wavlm-large
+        hubert: facebook/hubert-large-ll60k
+        wav2vec2: facebook/wav2vec2-large-960h-lv60-self
+
+g2p_src: speechbrain/soundchoice-g2p
+ssl_model_layers: [1, 3, 7, 12, 18, 23]
+token_offset: 1
+vocoder_src: !apply:speechbrain.utils.hparams.choice
+    value: !ref <ssl_model_type>
+    choices:
+        wavlm: chaanks/hifigan-wavlm-l1-3-7-12-18-23-LibriTTS
+        hubert: chaanks/hifigan-hubert-l1-3-7-12-18-23-LibriTTS
+        wav2vec2: chaanks/hifigan-wav2vec-l1-3-7-12-18-23-LibriTTS
+spk_emb_src: speechbrain/spkrec-ecapa-voxceleb-mel-spec
+use_spk_emb: False
+
+vocoder_available_layers: [1, 3, 7, 12, 18, 23]
+
 splits: ["train", "valid", "test"]
 split_ratio: [90, 5, 5]
 
@@ -41,10 +66,10 @@ ckpt_interval_minutes: 30 # save checkpoint every N min
 
 # Training parameters
 input: text
-number_of_epochs: 150
+number_of_epochs: 50
 batch_size: 16
 grad_accumulation_factor: 1
-max_grad_norm: 5.0
+max_grad_norm: 0.01
 sorting: random
 num_workers: 4
 skip_prep: False
@@ -57,9 +82,12 @@ overfit_test_epoch_data_count: 1000
 pad_index: 0
 bos_index: 0
 bos_width: 1
+eos_index: 0
+eos_width: 1
+audio_token_shift: 0
 
 # stages related parameters
-lr: 0.001
+lr: 0.0005
 lr_warmup_steps: 10000
 lr_annealing_mode: step
 guided_attention_weight: 50.0
@@ -69,6 +97,18 @@ gate_threshold: 0.5
 gate_loss_beta: 0.2
 gate_loss_gamma: 0.01
 gate_loss_max_weight: 1.
+
+# Inference parameters
+inference_mode: autoregressive
+eos_mode: gate
+decoder_mode: autoregressive
+scale_factor: 4
+
+# Beam Search-specific parameters
+min_decode_ratio: 1.0
+max_decode_ratio: 10.0
+beam_size: 5
+
 
 # Feature parameters
 sample_rate: 22050
@@ -94,13 +134,32 @@ gate_offset: !apply:benchmarks.DASB.model.Tokotron.distance_diff_loss_ramp
     max_weight: !ref <gate_loss_max_weight>
 
 silence_padding: !ref <gate_offset>
+use_silence_padding: True
+
 
 # Token model (pretrained)
-token_model: !new:benchmarks.DASB.model.custom_model.SpeechTokenizerInterface
-    source: !ref <token_model_src>
-    save_path: !ref <pretrained_model_save_folder>
-    shape: compat
-    codebooks: !ref <audio_tokens_per_step>
+ssl_model: !apply:speechbrain.utils.hparams.choice
+    value: !ref <ssl_model_type>
+    choices:
+        wavlm: !new:speechbrain.lobes.models.huggingface_transformers.wavlm.WavLM
+            source: !ref <ssl_model_src>
+            save_path: !ref <pretrained_model_save_folder>
+            freeze: !ref <freeze_ssl_model>
+            output_all_hiddens: True
+        hubert: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
+            source: !ref <ssl_model_src>
+            save_path: !ref <pretrained_model_save_folder>
+            freeze: !ref <freeze_ssl_model>
+            output_all_hiddens: True
+        wav2vec2: !new:speechbrain.lobes.models.huggingface_transformers.wav2vec2.Wav2Vec2
+            source: !ref <ssl_model_src>
+            save_path: !ref <pretrained_model_save_folder>
+            freeze: !ref <freeze_ssl_model>
+            output_all_hiddens: True
+
+spk_emb_model: !name:speechbrain.inference.encoders.MelSpectrogramEncoder.from_hparams
+    source: !ref <spk_emb_src>
+    savedir: !ref <pretrained_model_save_folder>/ecapa
 
 # Dataloader options
 train_dataloader_opts:
@@ -135,9 +194,11 @@ sample_dataloader_opts:
 extract_features_opts:
     dataloader_opts:
         batch_size: !ref <batch_size>
-    token_model: !ref <token_model>
+    ssl_model: !ref <ssl_model>
+    ssl_model_layers: !ref <ssl_model_layers>
     sample_rate: !ref <sample_rate>
     model_sample_rate: !ref <model_sample_rate>
+    spk_emb_model: !ref <spk_emb_model>
 
 
 ####################### Model parameters ###########################
@@ -150,10 +211,13 @@ d_ffn: 2048
 transformer_dropout: 0.2
 target_dropout: 0.2
 activation: !name:torch.nn.GELU
-audio_num_tokens: 1024
-audio_emb_size: 1024
+audio_num_tokens: 1000
+audio_dim: 1024
+audio_emb_size: 128
 audio_emb_freeze: False
-audio_emb_pretrained: True
+audio_emb_pretrained: False
+audio_emb_lr: 0.00001
+audio_emb_weight_decay: 0.001
 text_num_tokens: 39
 phn_num_tokens: 52
 input_num_tokens: !apply:speechbrain.utils.hparams.choice
@@ -161,16 +225,16 @@ input_num_tokens: !apply:speechbrain.utils.hparams.choice
     choices:
         text: !ref <text_num_tokens>
         phonemes: !ref <phn_num_tokens>
-audio_tokens_per_step: 2
-bandwidth: 1.5
+audio_tokens_per_step: 6
 attention_type: regularMHA
 
 ############################## models ################################
 
-vocoder: !new:benchmarks.DASB.model.custom_model.SpeechTokenizerVocoder
-    tokenizer: !ref <token_model>
+vocoder: !apply:speechbrain.inference.vocoders.HIFIGAN.from_hparams
+    source: !ref <vocoder_src>
+    savedir: !ref <vocoder_model_path>
 
-model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel  # yamllint disable-line rule:line-length
+model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel # yamllint disable-line rule:line-length
     input_num_tokens: !ref <input_num_tokens>
     audio_num_tokens: !ref <audio_num_tokens>
     audio_tokens_per_step: !ref <audio_tokens_per_step>
@@ -183,17 +247,23 @@ model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel  # yamllint 
     target_dropout: !ref <target_dropout>
     activation: !ref <activation>
     attention_type: !ref <attention_type>
-    vocoder: !ref <vocoder>
     gate_threshold: !ref <gate_threshold>
     gate_offset: !ref <gate_offset>
     audio_emb_size: !ref <audio_emb_size>
     audio_emb_freeze: !ref <audio_emb_freeze>
     max_audio_length: !ref <max_audio_length>
+    eos_mode: !ref <eos_mode>
     infer_max_audio_length: !ref <infer_max_audio_length>
+    audio_token_shift: !ref <audio_token_shift>
+    decoder_mode: !ref <decoder_mode>
+    scale_factor: !ref <scale_factor>
+    representation_mode: continuous
+
 
 modules:
     model: !ref <model>
     vocoder: !ref <vocoder>
+    compute_cost: !ref <compute_cost>
 
 # define two optimizers here for two-stage training
 opt_class: !name:torch.optim.Adam
@@ -207,10 +277,18 @@ compute_cost: !new:benchmarks.DASB.model.Tokotron.TokotronLoss
     gate_gamma: !ref <gate_loss_gamma>
     gate_max_weight: !ref <gate_loss_max_weight>
     silence_padding: !ref <silence_padding>
+    eos_mode: !ref <eos_mode>
+    eos_index: !ref <eos_index>
+    eos_width: !ref <eos_width>
+    audio_tokens_per_step: !ref <audio_tokens_per_step>
+    audio_token_shift: !ref <audio_token_shift>
+    representation_mode: continuous
 
-lr_annealing: !new:speechbrain.nnet.schedulers.NoamScheduler
-    lr_initial: !ref <lr>
+
+lr_annealing: !new:benchmarks.DASB.model.Tokotron.TargetedNoamScheduler
+    lr_initial: [!ref <lr>, !ref <audio_emb_lr>] 
     n_warmup_steps: !ref <lr_warmup_steps>
+    param_group: 0
 
 checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
     checkpoints_dir: !ref <save_folder>

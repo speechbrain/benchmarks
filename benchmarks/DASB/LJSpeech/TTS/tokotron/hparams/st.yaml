@@ -2,22 +2,24 @@
 # Model: Tokenized TTS (WhisperSpeech-inspired)
 # Authors:  Artem Ploujnikov
 # ############################################################################
-# Seed needs to be set at top of yaml, before objects with parameters are made
 
+experiment_name: tokotron/discrete_ssl
+
+# Seed needs to be set at top of yaml, before objects with parameters are made
 seed: 74443
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
 output_folder: !ref results/transformer/<seed>
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 
-token_model_src: "facebook/encodec_24khz"
+token_model_src: "fnlp/SpeechTokenizer"
 g2p_src: flexthink/soundchoice-g2p
 vocoder_type: encodec
 vocoder_src: "charactr/vocos-encodec-24khz"
 
 # Data files
 data_folder: !PLACEHOLDER # e.g., /path/to/LibriSpeech
-prepare_save_folder: !ref <data_folder>/prepared
+prepare_save_folder: !ref <data_folder>/prepared/st
 pretrained_model_save_folder: !ref <prepare_save_folder>
 prepare_archive_path: null
 prepare_skip_ignore_folders: False
@@ -72,7 +74,7 @@ gate_loss_max_weight: 1.
 
 # Feature parameters
 sample_rate: 22050
-model_sample_rate: 24000
+model_sample_rate: 16000
 max_audio_length: 1000
 infer_max_audio_length: !ref <max_audio_length>
 debug_infer_max_audio_length: 10
@@ -96,11 +98,11 @@ gate_offset: !apply:benchmarks.DASB.model.Tokotron.distance_diff_loss_ramp
 silence_padding: !ref <gate_offset>
 
 # Token model (pretrained)
-token_model: !new:speechbrain.lobes.models.huggingface_transformers.Encodec
+token_model: !new:benchmarks.DASB.model.custom_model.SpeechTokenizerInterface
     source: !ref <token_model_src>
     save_path: !ref <pretrained_model_save_folder>
-    bandwidth: !ref <bandwidth>
-    flat_embeddings: True
+    shape: compat
+    codebooks: !ref <audio_tokens_per_step>
 
 # Dataloader options
 train_dataloader_opts:
@@ -153,7 +155,7 @@ activation: !name:torch.nn.GELU
 audio_num_tokens: 1024
 audio_emb_size: 1024
 audio_emb_freeze: False
-audio_emb_pretrained: False
+audio_emb_pretrained: True
 text_num_tokens: 39
 phn_num_tokens: 52
 input_num_tokens: !apply:speechbrain.utils.hparams.choice
@@ -166,15 +168,6 @@ bandwidth: 1.5
 attention_type: regularMHA
 
 ############################## models ################################
-
-vocoder: !apply:speechbrain.utils.hparams.choice
-    value: !ref <vocoder_type>
-    choices:
-        encodec: !new:benchmarks.DASB.model.custom_model.EncodecVocoder
-            encodec: !ref <token_model>
-        vocos: !new:speechbrain.lobes.models.huggingface_transformers.vocos.Vocos
-            source: !ref <vocoder_src>
-            save_path: !ref <pretrained_model_save_folder>
 
 model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel  # yamllint disable-line rule:line-length
     input_num_tokens: !ref <input_num_tokens>
@@ -189,7 +182,6 @@ model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel  # yamllint 
     target_dropout: !ref <target_dropout>
     activation: !ref <activation>
     attention_type: !ref <attention_type>
-    vocoder: !ref <vocoder>
     gate_threshold: !ref <gate_threshold>
     gate_offset: !ref <gate_offset>
     audio_emb_size: !ref <audio_emb_size>
@@ -199,7 +191,7 @@ model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel  # yamllint 
 
 modules:
     model: !ref <model>
-    vocoder: !ref <vocoder>
+    token_model: !ref <token_model>
 
 # define two optimizers here for two-stage training
 opt_class: !name:torch.optim.Adam

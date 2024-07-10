@@ -22,7 +22,6 @@ from pathlib import Path
 from hyperpyyaml import load_hyperpyyaml
 from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
 from speechbrain.utils.distributed import run_on_main
-from benchmarks.DASB.utils.hparams import as_list
 from benchmarks.DASB.utils.preparation import add_prepared_features
 from benchmarks.DASB.utils.audio_tokens import (
     get_silence_token,
@@ -127,8 +126,6 @@ class TokotronBrain(sb.Brain):
             The currently-starting epoch. This is passed
             `None` during the test stage.
         """
-        if hasattr(self.modules.vocoder, "model"):
-            self.modules.vocoder.model.device = self.device
         self.create_perfect_samples()
         self.loss_metric = sb.utils.metric_stats.MultiMetricStats(
             metric=self.hparams.compute_cost, batch_eval=True,
@@ -256,11 +253,16 @@ class TokotronBrain(sb.Brain):
                         input_tokens=tokens, input_length=tokens_length,
                         emb=emb
                     )
+                    wav = self.create_waveform(
+                        audio=infer_out.audio,
+                        length=infer_out.length
+                    )
                 self.hparams.progress_report.write(
                     ids=batch.uttid,
-                    audio=infer_out.wav,
-                    length_pred=infer_out.wav_length,
+                    audio=wav,
+                    length_pred=infer_out.length,
                     length=batch.audio_pad.lengths,
+                    tgt_max_length=batch.audio_pad.data.size(1),
                     alignments=infer_out.alignments,
                     p_eos=infer_out.p_eos,
                 )
@@ -276,16 +278,11 @@ class TokotronBrain(sb.Brain):
                 batch = batch.to(self.device)
                 sample_audio, length = batch.audio_pad
                 with torch.no_grad():
-                    vocoder_out = self.modules.vocoder(sample_audio, length)
-                if isinstance(vocoder_out, tuple):
-                    samples, samples_length = vocoder_out
-                else:
-                    samples = vocoder_out
-                    samples_length = length
+                    samples = self.create_waveform(sample_audio, length)
                 if samples.dim() == 3:
                     samples = samples.squeeze(1)
                 max_len = samples.size(1)
-                samples_length_abs = (samples_length * max_len).int()
+                samples_length_abs = (length * max_len).int()
                 with self.hparams.progress_logger:
                     for item_id, item_wav, item_length in zip(
                         batch.uttid, samples, samples_length_abs
@@ -306,7 +303,8 @@ class TokotronBrain(sb.Brain):
     def init_optimizers(self):
         """Custom optimizer initialization
         """
-        representation_mode = RepresentationMode(self.hparams.representation_mode)
+        representation_mode = getattr(self.hparams, "representation_mode", RepresentationMode.DISCRETE)
+        representation_mode = RepresentationMode(representation_mode)
         if representation_mode == RepresentationMode.CONTINUOUS:
             audio_emb_params = self.modules.model.decoder.audio_emb.parameters()
             audio_emb_params_set = set(audio_emb_params)
@@ -321,6 +319,23 @@ class TokotronBrain(sb.Brain):
             )
         else:
             self.optimizer = self.opt_class(self.modules.model.parameters(), lr=self.hparams.lr)
+
+    def create_waveform(self, audio, length):
+        """Creates a waveform from a discrete or continuous audio
+        representation
+
+        Arguments
+        ---------
+        audio : torch.Tensor
+            An audio tensor (Batch x Length x Heads or Batch x Length x Heads x Features)
+        lengths : torch.Tensor
+            A 1-D tensor
+
+        Returns
+        -------
+        wav : torch.Tensor
+        """
+        raise NotImplementedError()
 
 
 INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phonemes"}
@@ -375,10 +390,23 @@ def dataio_prepare(hparams):
         return label_encoder.encode_sequence_torch(label)
 
     use_silence_padding = hparams.get("use_silence_padding", True)
-    audio_tokens_per_step = len(as_list(hparams["token_model_layers"]))
+
+    if representation_mode == RepresentationMode.DISCRETE:
+        layers_key = "token_model_layers"
+        model_key = "token_model"
+        audio_features = "audio_tokens"
+    else:
+        layers_key = "ssl_model_layers"
+        model_key = "ssl_model"
+        audio_features = "audio_ssl"
+
+    audio_tokens_per_step = (
+        len(hparams[layers_key]) if layers_key in hparams
+        else hparams["audio_tokens_per_step"]
+    )
     if use_silence_padding:
         silence_token, silence_emb = get_silence_token(
-            hparams["token_model"],
+            hparams[model_key],
             extract_emb=representation_mode == RepresentationMode.CONTINUOUS,
             model_kwargs=hparams.get("token_model_kwargs"),
         )
@@ -391,7 +419,6 @@ def dataio_prepare(hparams):
     silence_padding = silence_token if representation_mode == RepresentationMode.DISCRETE else silence_emb
     silence_padding_len = int(math.ceil(hparams["silence_padding"]))
     bos_width = hparams.get("bos_width", 1)
-    audio_features = "audio_tokens" if representation_mode == RepresentationMode.DISCRETE else "audio_ssl"
     audio_bos_prefix = (
         torch.ones(bos_width, audio_tokens_per_step)
         * hparams["bos_index"]
@@ -619,8 +646,7 @@ def apply_overfit_test(hparams, dataset):
     return result
 
 
-if __name__ == "__main__":
-
+def run_experiment(brain_cls):
     # Reading command line arguments
     hparams_file, run_opts, overrides = sb.parse_arguments(sys.argv[1:])
 
@@ -680,7 +706,7 @@ if __name__ == "__main__":
     audio_keys = ["audio_pad", "audio_bos"]
 
     # Trainer initialization
-    tts_brain = TokotronBrain(
+    tts_brain = brain_cls(
         modules=hparams["modules"],
         opt_class=hparams["opt_class"],
         hparams=hparams,
@@ -706,7 +732,7 @@ if __name__ == "__main__":
     )
 
     # Load best checkpoint for evaluation
-    test_stats = tts_brain.evaluate(
+    tts_brain.evaluate(
         test_set=datasets["test"],
         min_key="loss",
         test_loader_kwargs=use_silence_padding(

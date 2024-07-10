@@ -967,7 +967,10 @@ def get_context(extract_features, extract_features_opts, device):
         The context object
     """
     context = {}
-    if any(key in extract_features for key in ["audio_tokens", "audio_emb"]):
+    if (
+        any(key in extract_features for key in ["audio_tokens", "audio_emb"])
+        and "token_model" in extract_features_opts
+    ):
         context["token_model"] = extract_features_opts["token_model"].to(device)
     if "audio_ssl" in extract_features:
         context["ssl_model"] = extract_features_opts["ssl_model"].to(device)

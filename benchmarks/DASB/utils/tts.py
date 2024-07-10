@@ -224,11 +224,12 @@ class TTSProgressReport:
 
     def _write_details_file(self):
         """Outputs the concatenated details file"""
-        details = {
-            key: value
-            for key, value in self.details.items()
-        }
-        self.logger.save(name="details.pt", content=details, mode="tensor")
+        if self.details is not None:
+            details = {
+                key: value
+                for key, value in self.details.items()
+            }
+            self.logger.save(name="details.pt", content=details, mode="tensor")
 
     def _write_details(self, ids, alignments, p_eos):
         """Writes raw details (alignments, p_eos) as a
@@ -254,7 +255,6 @@ class TTSProgressReport:
         else:
             for key, value in self.details.items():
                 value.extend(details[key])
-
 
 
 class ContextError(Exception):

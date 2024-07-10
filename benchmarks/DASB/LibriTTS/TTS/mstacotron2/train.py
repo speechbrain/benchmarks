@@ -25,6 +25,7 @@ from hyperpyyaml import load_hyperpyyaml
 from benchmarks.DASB.utils.preparation import add_prepared_features
 from benchmarks.DASB.utils.hparams import as_list
 from speechbrain.utils.data_utils import scalarize
+from speechbrain.utils.distributed import run_on_main
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -45,18 +46,14 @@ class Tacotron2Brain(sb.Brain):
         if self.hparams.squish_layers:
             self.layer_weights = self._get_squish_layer_weights()
         self.layer_idx = self._get_selected_layer_idx()
+
         return super().on_fit_start()
 
     def _get_squish_layer_weights(self):
         layer_weights = self.hparams.squish_layers_weights
         if isinstance(layer_weights, str):
-            layer_weights = [
-                float(weight) for weight in layer_weights.split(",")
-            ]
-        layer_weights = torch.tensor(layer_weights)[None, None, :, None].to(
-            self.device
-        )
-        layer_weights = layer_weights / layer_weights.sum()
+            layer_weights = [float(weight) for weight in layer_weights.split(",")]
+        layer_weights = torch.tensor(layer_weights)[None, None, :, None].to(self.device)
         return layer_weights
 
     def _get_selected_layer_idx(self):
@@ -66,11 +63,10 @@ class Tacotron2Brain(sb.Brain):
             model_layers_map = {
                 layer: idx
                 for idx, layer in enumerate(
-                    as_list(self.hparams.ssl_model_layers)
-                )
+                    as_list(self.hparams.ssl_model_layers))
             }
             selected_layers = [model_layers_map[layer] for layer in layers]
-        return selected_layers
+        return selected_layers    
 
     def select_layers(self, audio_ssl):
         """Applies layer squishing, if enabled
@@ -88,9 +84,7 @@ class Tacotron2Brain(sb.Brain):
         if self.hparams.select_layers:
             audio_ssl = audio_ssl[:, :, self.layer_idx, :]
         if self.hparams.squish_layers:
-            audio_ssl = (audio_ssl * self.layer_weights).sum(
-                dim=2, keepdim=True
-            )
+            audio_ssl = (audio_ssl * self.layer_weights).sum(dim=2, keepdim=True)
         return audio_ssl
 
     def compute_forward(self, batch, stage):
@@ -118,11 +112,15 @@ class Tacotron2Brain(sb.Brain):
                 batch_size, audio_max_len, audio_heads * audio_feat
             ).transpose(-1, -2),
             batch.audio_ssl.data.size(1),
-            batch.audio_ssl.lengths * audio_max_len,
+            batch.audio_ssl.lengths * audio_max_len
         )
 
         max_input_length = batch.tokens.data.size(1)
-        return self.modules.model(inputs, alignments_dim=max_input_length)
+        return self.modules.model(
+            inputs,
+            spk_embs=batch.spk_emb.data.squeeze(1),
+            alignments_dim=max_input_length
+        )
 
     def on_fit_batch_end(self, batch, outputs, loss, should_step):
         """At the end of the optimizer step, apply noam annealing."""
@@ -181,7 +179,8 @@ class Tacotron2Brain(sb.Brain):
             (audio, gate_targets),
             batch.tokens.lengths * tokens_len,
             audio_len,
-            self.last_epoch,
+            batch.spk_emb,
+            self.last_epoch
         )
         self.last_loss_stats[stage] = scalarize(loss_stats)
         return loss_stats.loss
@@ -272,16 +271,23 @@ class Tacotron2Brain(sb.Brain):
                 tokens, tokens_length = batch.tokens
                 tokens_max_len = tokens.size(1)
                 audio_ssl, audio_lengths, alignments = self.modules.model.infer(
-                    inputs=tokens, input_lengths=tokens_length * tokens_max_len
+                    inputs=tokens,
+                    input_lengths=tokens_length * tokens_max_len,
+                    spk_embs=batch.spk_emb.data.squeeze(1)
                 )
-                audio_ssl = audio_ssl.transpose(-1, -2)
-                batch_size, max_len, feat_dim = audio_ssl.shape
-                audio_ssl = audio_ssl.view(
-                    batch_size,
-                    max_len,
-                    self.hparams.audio_tokens_per_step,
-                    self.hparams.audio_dim,
-                )
+                batch_size, _, audio_max_len = audio_ssl.shape
+                if not self.hparams.vocoder_flat_feats:
+                    audio_ssl = audio_ssl.reshape(
+                        batch_size,
+                        self.hparams.audio_tokens_per_step,
+                        self.hparams.audio_dim,
+                        audio_max_len
+                    )
+                    if not self.hparams.vocoder_feats_first:
+                        audio_ssl = audio_ssl.permute(0, 3, 1, 2)
+                elif not self.hparams.vocoder_feats_first:
+                    audio_ssl = audio_ssl.transpose(-1, -2)
+
                 wav = self.modules.vocoder(audio_ssl).squeeze(1)
                 self.hparams.progress_report.write(
                     ids=batch.uttid,
@@ -302,10 +308,12 @@ class Tacotron2Brain(sb.Brain):
             for batch in sample_loader:
                 batch = batch.to(self.device)
                 sample_ssl, length = batch.audio_ssl
+                sample_ssl = self.select_layers(sample_ssl)
                 if self.hparams.vocoder_flat_feats:
                     sample_ssl = sample_ssl.flatten(start_dim=-2)
+                if self.hparams.vocoder_feats_first:
+                    sample_ssl = sample_ssl.transpose(-1, -2)
                 samples = self.modules.vocoder(sample_ssl)
-                sample_ssl = self.select_layers(sample_ssl)
                 samples = samples.squeeze(1)
                 max_len = samples.size(1)
                 samples_length_abs = (batch.audio_ssl.lengths * max_len).int()
@@ -339,16 +347,10 @@ def dataio_prepare(hparams):
     label_encoder = hparams["label_encoder"]
 
     @sb.utils.data_pipeline.takes("label")
-    @sb.utils.data_pipeline.provides("label_norm")
-    def label_norm_pipeline(label):
-        """Processes the transcriptions to generate proper labels"""
-        return label.upper()
-
-    @sb.utils.data_pipeline.takes("label_norm")
     @sb.utils.data_pipeline.provides("tokens", "tokens_len")
     def tokens_pipeline(label):
         """Processes the transcriptions to generate proper labels"""
-        tokens = label_encoder.encode_sequence_torch(label)
+        tokens = label_encoder.encode_sequence_torch(label.upper())
         yield tokens
         yield len(tokens)
 
@@ -357,19 +359,20 @@ def dataio_prepare(hparams):
     for dataset in hparams["splits"]:
         dynamic_dataset = sb.dataio.dataset.DynamicItemDataset.from_json(
             json_path=data_info[dataset],
-            dynamic_items=[label_norm_pipeline, tokens_pipeline],
+            dynamic_items=[tokens_pipeline],
             replacements={"data_root": hparams["data_folder"]},
-            output_keys=["uttid", "audio_ssl", "tokens"],
+            output_keys=["uttid", "audio_ssl", "tokens", "spk_emb"],
         )
 
         add_prepared_features(
             dataset=dynamic_dataset,
             save_path=Path(hparams["prepare_save_folder"]) / "features",
             id_key="uttid",
-            features=["audio_ssl"],
+            features=["audio_ssl", "spk_emb"],
         )
         dynamic_dataset = dynamic_dataset.filtered_sorted(
-            sort_key="tokens_len", reverse=True
+            sort_key="tokens_len",
+            reverse=True
         )
         datasets[dataset] = dynamic_dataset
 
@@ -379,7 +382,7 @@ def dataio_prepare(hparams):
         .filtered_sorted(
             select_n=hparams["num_audio_samples"],
             sort_key="tokens_len",
-            reverse=True,
+            reverse=True
         )
     )
 
@@ -411,6 +414,68 @@ def init_sequence_encoder(hparams):
     encoder.update_from_iterable(tokens, sequence_input=False)
     encoder.expect_len(len(tokens) + SPECIAL_TOKEN_COUNT)
     return encoder
+
+def apply_overfit_test(hparams, dataset):
+    """Helper for applying an overfit test conditionally based
+    on hyperparameters:
+
+    `overfit_test`: whether or not to apply an overfit test
+    `overfit_test_sample_count`: the number of samples to use from the
+        original dataset
+    `overfit_test_epoch_data_count`: the number of samples per epoch
+
+    The function will accept datasets, (train, valid, test) tuples
+    or dictionaries of the form:
+    {"train": dataset1, "valid": dataset2, "test": dataset3}
+
+    If a tuple or dictionary is used, the training dataset will be of length
+    overfit_test_epoch_data_count wheres the evaluation dataset will be of
+    length overfit_test_sample_count.
+
+    Arguments
+    ---------
+    hparams: dict
+        parsed hyperparameters
+    dataset: DynamicItemDataset|tuple|dict
+        One of the following
+        a dataset
+        a dictionary ({"train": dataset1, "valid": dataset2, "test": dataset3})
+        a (train, valid, test)  tuple of datasets
+
+    Returns
+    -------
+    result: DynamicItemDataset|tuple|dict
+        a dataset or collection of datasets suitable for
+        an overfitting test - in the same format as the
+        dataset argument (single dataset, dictionary and tuple)
+    """
+    if hparams["overfit_test"]:
+        if isinstance(dataset, tuple):
+            dataset_train, _, _ = dataset
+            dataset_train = apply_overfit_test(hparams, dataset_train)
+            dataset_eval = dataset_train.filtered_sorted(
+                select_n=hparams["overfit_test_sample_count"]
+            )
+            result = dataset_train, dataset_eval, dataset_eval
+        elif isinstance(dataset, dict):
+            dataset_train = apply_overfit_test(hparams, dataset["train"])
+            dataset_eval = dataset_train.filtered_sorted(
+                select_n=hparams["overfit_test_sample_count"]
+            )
+            result = {
+                "train": dataset_train,
+                "valid": dataset_eval,
+                "test": dataset_eval,
+                "sample": dataset_eval,
+            }
+        else:
+            result = dataset.overfit_test(
+                hparams["overfit_test_sample_count"],
+                hparams["overfit_test_epoch_data_count"],
+            )
+    else:
+        result = dataset
+    return result
 
 
 def read_token_list(file_name):
@@ -450,31 +515,35 @@ if __name__ == "__main__":
         overrides=overrides,
     )
 
-    from ljspeech_prepare import prepare_ljspeech
+    from libritts_prepare import prepare_libritts
 
+    # Data preparation, to be run on only one process.
     if not hparams["skip_prep"]:
         with hparams["freezer"]:
-            sb.utils.distributed.run_on_main(
-                prepare_ljspeech,
+            run_on_main(
+                prepare_libritts,
                 kwargs={
                     "data_folder": hparams["data_folder"],
                     "save_folder": hparams["prepare_save_folder"],
-                    "splits": hparams["splits"],
-                    "split_ratio": hparams["split_ratio"],
+                    "save_json_train": hparams["train_json"],
+                    "save_json_valid": hparams["valid_json"],
+                    "save_json_test": hparams["test_json"] if "test" in hparams["splits"] else None,
+                    "sample_rate": hparams["sample_rate"],
+                    "train_split": hparams["train_split"],
+                    "valid_split": hparams["valid_split"],
+                    "test_split": hparams["test_split"] if "test" in hparams["splits"] else None,
+                    "extract_features": ["audio_ssl", "spk_emb"],
                     "seed": hparams["seed"],
-                    "skip_prep": hparams["skip_prep"],
-                    "extract_features": ["audio_ssl", "audio_ssl_len"],
                     "extract_features_opts": hparams["extract_features_opts"],
-                    "frozen_split_path": hparams.get("frozen_split_path"),
-                    "model_name": "Tacotron2SSL",
-                    "skip_ignore_folders": hparams[
-                        "prepare_skip_ignore_folders"
-                    ],
+                    "model_name": hparams["model"].__class__.__name__,
                     "device": run_opts.get("device", "cpu"),
                 },
             )
 
     datasets = dataio_prepare(hparams)
+    # Apply overfit test settings
+    datasets = apply_overfit_test(hparams, datasets)
+
 
     # Brain class initialization
     tacotron2_brain = Tacotron2Brain(

@@ -4,6 +4,9 @@ Authors
 * Artem Ploujnikov 2024
 """
 
+#TODO: There are too many evaluation scripts. Refactor to extract common
+# features
+
 import speechbrain as sb
 import json
 import logging
@@ -19,7 +22,8 @@ from types import SimpleNamespace
 from torch.nn import ModuleDict
 from tqdm.auto import tqdm
 from benchmarks.DASB.utils.data import undo_batch
-from benchmarks.DASB.utils.eval import vocoder_to_device
+from benchmarks.DASB.utils.eval import vocoder_to_device, Tracker
+from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
 from speechbrain.utils.distributed import run_on_main
 
 logger = logging.getLogger(__name__)
@@ -27,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 class TokotronEvaluator:
     """An evaluator class for the TTS model
-
+    
     Arguments
     ---------
     hparams: dict
@@ -35,22 +39,23 @@ class TokotronEvaluator:
     device : str | torch.device
         the device
     """
-
     def __init__(self, hparams, device):
         self.hparams = SimpleNamespace(**hparams)
         self.device = device
         modules = self.hparams.modules
         self.modules = ModuleDict(modules).to(self.device)
-        suffix = (
-            f"_{self.hparams.eval_suffix}" if self.hparams.eval_suffix else ""
-        )
+        suffix = f"_{self.hparams.eval_suffix}" if self.hparams.eval_suffix else ""
         eval_folder = f"eval_{self.hparams.eval_dataset}{suffix}"
         self.output_folder = Path(self.hparams.output_folder) / eval_folder
         self.samples_folder = self.output_folder / "samples"
         self.samples_folder.mkdir(parents=True, exist_ok=True)
+        self.spk_emb_model = self.hparams.spk_emb_model(
+            run_opts={"device": device}
+        )
         self.modules.model.vocoder = None
         self.vocoder_has_details = hasattr(
-            self.modules.vocoder, "decode_batch_with_details"
+            self.modules.vocoder,
+            "decode_batch_with_details"
         )
         self.enabled_evaluators = set(self.hparams.evaluations.split(","))
         evaluators = hparams.get("evaluators", {})
@@ -74,9 +79,7 @@ class TokotronEvaluator:
             self.bulk_evaluators = {}
 
         if not self.evaluators and not self.bulk_evaluators:
-            logger.warn(
-                "No evaluators were defined - this run will produce samples only"
-            )
+            logger.warn("No evaluators were defined - this run will produce samples only")
 
         self.attention = []
         self.compression = getattr(self.hparams, "compression", False)
@@ -99,21 +102,23 @@ class TokotronEvaluator:
         if not ckpt:
             raise ValueError("Unable to recover the checkpoint")
         self.modules.model.eval()
-        if self.hparams.eval_samples is not None:
-            dataset = dataset.filtered_sorted(
-                select_n=self.hparams.eval_samples
-            )
-        loader = sb.dataio.dataloader.make_dataloader(
-            dataset, batch_size=self.hparams.batch_size
+        self.tracker = Tracker(
+            file_name=self.get_tracker_file_name()
         )
+        if self.hparams.eval_samples is not None:
+            dataset = dataset.filtered_sorted(select_n=self.hparams.eval_samples)
+        dataset = self.tracker.filter(dataset)
+        loader = sb.dataio.dataloader.make_dataloader(dataset, batch_size=self.hparams.batch_size)
         loader_it = iter(loader)
         self.create_reports()
         self.modules.model.show_inference_progress = False
-        self.item_ids = []
-        details_keys = list(self.evaluators.keys()) + list(
-            self.bulk_evaluators.keys()
-        )
-        self.details = {evaluator_key: [] for evaluator_key in details_keys}
+        self.item_ids = self.tracker.get_processed()
+        details_keys = list(self.evaluators.keys()) + list(self.bulk_evaluators.keys())
+        self.details = {
+            evaluator_key: []
+            for evaluator_key in details_keys
+        }
+        self.read_reports()
         self.sample_text = []
         self.sample_file_names = []
         self.ref_file_names = []
@@ -134,11 +139,32 @@ class TokotronEvaluator:
         for evaluator_key in self.enabled_evaluators:
             columns = self.get_report_columns(evaluator_key)
             file_name = self.output_folder / f"{evaluator_key}.csv"
-            report_file = open(file_name, "w")
+            resume = file_name.exists() and file_name.stat().st_size > 0
+            report_file = open(file_name, "a+")
             self.report_files[evaluator_key] = report_file
             writer = csv.DictWriter(report_file, columns)
-            writer.writeheader()
+            if not resume:
+                writer.writeheader()
             self.report_writers[evaluator_key] = writer
+
+    def read_reports(self):
+        """Invoked when resuming"""
+        for evaluator_key in self.enabled_evaluators:
+            file_name = self.output_folder / f"{evaluator_key}.csv"
+            if file_name.exists():
+                logger.info("%s exists, reading")
+                with open(file_name) as report_file:
+                    reader = csv.DictReader(report_file)
+                    for row in reader:
+                        del row["uttid"]
+                        row = {key : handle_number(value) for key, value in row.items()}
+                        self.details[evaluator_key].append(row)
+
+    def get_tracker_file_name(self):
+        """Determines the file name of the tracker file"""
+        suffix = f"_{self.hparams.eval_suffix}" if self.hparams.eval_suffix else ""
+        file_name = f"tracker_{self.hparams.eval_dataset}{suffix}.txt"
+        return self.output_folder / file_name
 
     def get_report_columns(self, evaluator_key):
         """Returns the columns for the specified evaluator
@@ -154,7 +180,7 @@ class TokotronEvaluator:
             a list of column headers
         """
         bogus_wavs = torch.randn(2, 10000, device=self.device)
-        bogus_length = torch.tensor([1.0, 1.0], device=self.device)
+        bogus_length = torch.tensor([1., 1.], device=self.device)
         if evaluator_key in self.evaluators:
             evaluator = self.evaluators[evaluator_key]
             result = evaluator.evaluate(
@@ -191,8 +217,19 @@ class TokotronEvaluator:
             batch = batch.to(self.device)
             tokens, tokens_length = batch.tokens
             vocoder_to_device(self.modules.vocoder, self.device)
+            if hasattr(self.modules.vocoder, "device"):
+                self.modules.vocoder.device = self.device
+            mel_spec = mel_spec = self.spk_emb_model.mel_spectogram(
+                audio=batch.sig.data
+            )
+            spk_emb = self.spk_emb_model.encode_mel_spectrogram_batch(
+                mel_spec, batch.sig.lengths
+            ).squeeze(1)
             infer_out = self.modules.model.infer(
-                input_tokens=tokens, input_length=tokens_length
+                input_tokens=tokens, input_length=tokens_length,
+                emb={
+                    "spk": spk_emb
+                }
             )
             if self.vocoder_has_details:
                 wav, details = self.modules.vocoder.decode_batch_with_details(
@@ -201,7 +238,8 @@ class TokotronEvaluator:
                 length = infer_out.length
             else:
                 result = self.modules.vocoder(
-                    infer_out.audio, infer_out.length,
+                    infer_out.audio,
+                    infer_out.length,
                 )
                 if torch.is_tensor(result):
                     wav, length = result, infer_out.length
@@ -223,13 +261,15 @@ class TokotronEvaluator:
                     wavs_ref=batch.sig.data,
                     length_ref=batch.sig.lengths,
                     sample_rate_ref=self.hparams.sample_rate,
-                    sample_rate=self.hparams.model_sample_rate,
+                    sample_rate=self.hparams.model_sample_rate
                 )
                 details = undo_batch(result.details)
                 self.write_result(evaluator_key, batch.uttid, details)
                 self.details[evaluator_key].extend(details)
+            self.tracker.mark_processed(batch.uttid)
 
     def evaluate_bulk(self):
+        """Performs bulk evaluation"""
         for evaluator_key, evaluator in self.bulk_evaluators.items():
             result = evaluator.evaluate_files(
                 file_names=self.sample_file_names,
@@ -258,7 +298,9 @@ class TokotronEvaluator:
                 "uttid": uttid,
                 **details_item,
             }
-            writer.writerow(ascii_only(flatten(report_details)))
+            writer.writerow(
+                ascii_only(flatten(report_details))
+            )
         self.report_files[evaluator_key].flush()
 
     def save_samples(self, batch, wav, length):
@@ -277,12 +319,12 @@ class TokotronEvaluator:
         for item_id, infer_wav, wav_length in zip(
             batch.uttid, wav, wav_length_abs
         ):
-            file_name = str(self.samples_folder / f"{item_id}_pred.wav")
-            infer_wav_cut = infer_wav[: wav_length.item()].cpu()
+            file_name = str(
+                self.samples_folder / f"{item_id}_pred.wav"
+            )
+            infer_wav_cut = infer_wav[:wav_length.item()].cpu()
             sb.dataio.dataio.write_audio(
-                file_name,
-                infer_wav_cut,
-                samplerate=self.hparams.model_sample_rate,
+                file_name, infer_wav_cut, samplerate=self.hparams.model_sample_rate
             )
             self.sample_file_names.append(file_name)
 
@@ -294,14 +336,19 @@ class TokotronEvaluator:
             json.dump(summary, output_file, indent=4)
 
     def write_attn(self):
+        """Outputs attention details"""
         attn_file_name = self.output_folder / "attn.pt"
         torch.save(self.attention, attn_file_name)
         attn_summary_file_name = self.output_folder / "attn_summary.json"
-        attn_concat = torch.cat(self.attention, dim=0)
+        attn_concat = torch.cat(
+            self.attention,
+            dim=0
+        )
         attn_average = attn_concat.squeeze(-1).mean(0)
         attn_summary_data = {
             "layers": {
-                idx + 1: value.item() for idx, value in enumerate(attn_average)
+                idx + 1 : value.item()
+                for idx, value in enumerate(attn_average)
             }
         }
         with open(attn_summary_file_name, "w") as attn_summary_file:
@@ -313,11 +360,10 @@ class TokotronEvaluator:
             f"{evaluator_key}_{stat_key}": value
             for evaluator_key in self.enabled_evaluators
             if evaluator_key in self.details
-            for metric_key in self.hparams.eval_summary[evaluator_key][
-                "descriptive"
-            ]
+            for metric_key in self.hparams.eval_summary[evaluator_key]["descriptive"]
             for stat_key, value in descriptive_statistics(
-                items=self.details[evaluator_key], key=metric_key,
+                items=self.details[evaluator_key],
+                key=metric_key,
             ).items()
         }
 
@@ -342,15 +388,18 @@ def flatten(value):
 
 
 RE_PUNCTUATION = re.compile(
-    "|".join(re.escape(char) for char in string.punctuation)
+    "|".join(
+        re.escape(char) for char in string.punctuation
+    )
 )
 
-RE_NON_ASCII = re.compile(r"[^\x00-\x7F]+")
+RE_NON_ASCII = re.compile(r'[^\x00-\x7F]+')
 
 
 def ascii_only(values):
     return {
-        key: RE_NON_ASCII.sub("", value) if isinstance(value, str) else value
+        key: RE_NON_ASCII.sub('', value) if isinstance(value, str)
+        else value
         for key, value in values.items()
     }
 
@@ -397,7 +446,7 @@ def audio_ref_pipeline(wav):
 
 def descriptive_statistics(items, key):
     """Computes descriptive statistics for the summary
-
+    
     Arguments
     ---------
     items : list
@@ -418,8 +467,53 @@ def descriptive_statistics(items, key):
         "iqr": q3 - q1,
     }
     return {
-        f"{key}_{stat_key}": value.item() for stat_key, value in stats.items()
+        f"{key}_{stat_key}": value.item()
+        for stat_key, value in stats.items()
     }
+
+
+def select_subset(dataset, hparams):
+    """Selects a subset of the dataset provided, if specified.
+    The selection is controlled by a hyperparameter named
+    eval_subset, which is expected to list the IDs of the
+    data items on which evaluation will take place, one per line
+
+    Arguments
+    ---------
+    dataset : speechbrain.dataio.dataset.DynamicItemDataset
+        A dataset
+    hparams : dict
+        A hyperparameters file
+
+    Returns
+    -------
+    subset : dataset
+        The dataset, filtered down if applicable
+    """
+    eval_subset_path = hparams.get("eval_subset")
+    if eval_subset_path is not None:
+        eval_subset_path = Path(eval_subset_path)
+        if not eval_subset_path.exists():
+            raise ValueError(f"eval_subset {eval_subset_path} does not exist")
+        with open(eval_subset_path) as eval_subset_file:
+            eval_subset_ids = [line.strip() for line in eval_subset_file]
+        subset = FilteredSortedDynamicItemDataset(dataset, eval_subset_ids)
+    else:
+        subset = dataset
+    return subset
+
+
+RE_INTEGER = re.compile(r"^-?\d+$")
+RE_FLOAT = re.compile(r"^-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?$")
+
+
+def handle_number(value):
+    """Converts a value to a number, if applicable"""
+    if RE_INTEGER.match(value):
+        value = int(value)
+    elif RE_FLOAT.match(value):
+        value = float(value)
+    return value
 
 
 if __name__ == "__main__":
@@ -441,7 +535,8 @@ if __name__ == "__main__":
         eval_hparams_file = Path(hparams_file).parent / "eval.yaml"
     if eval_hparams_file.exists():
         logger.info(
-            "Using evaluation hyperparameters from %s", eval_hparams_file
+            "Using evaluation hyperparameters from %s",
+            eval_hparams_file
         )
         eval_hparams = load_hyperpyyaml(
             eval_hparams_file, overrides, overrides_must_match=False
@@ -450,31 +545,40 @@ if __name__ == "__main__":
     else:
         logger.info(
             "%s not found - not using evaluation hyperparameters",
-            eval_hparams_file,
+            eval_hparams_file
         )
 
-    from ljspeech_prepare import prepare_ljspeech
-
     # Data Preparation
+    from libritts_prepare import prepare_libritts
+
+    # Data preparation, to be run on only one process.
     if not hparams["skip_prep"]:
         with hparams["freezer"]:
+            extract_features = []
+            if hparams["input"] == "phonemes":
+                extract_features.append("phn")
             run_on_main(
-                prepare_ljspeech,
+                prepare_libritts,
                 kwargs={
                     "data_folder": hparams["data_folder"],
                     "save_folder": hparams["prepare_save_folder"],
-                    "splits": hparams["splits"],
-                    "split_ratio": hparams["split_ratio"],
+                    "save_json_train": hparams["train_json"],
+                    "save_json_valid": hparams["valid_json"],
+                    "save_json_test": (
+                        hparams["test_json"] if "test" in hparams["splits"]
+                        else None
+                    ),
+                    "sample_rate": hparams["sample_rate"],
+                    "train_split": hparams["train_split"],
+                    "valid_split": hparams["valid_split"],
+                    "test_split": (
+                        hparams["test_split"] if "test" in hparams["splits"]
+                        else None
+                    ),
+                    "extract_features": extract_features,
                     "seed": hparams["seed"],
-                    "extract_features": ["audio_tokens"],
                     "extract_features_opts": hparams["extract_features_opts"],
-                    "extract_phonemes": hparams["input"] == "phonemes",
-                    "model_name": "tokotron",
-                    "g2p_src": hparams["g2p_src"],
-                    "skip_ignore_folders": hparams[
-                        "prepare_skip_ignore_folders"
-                    ],
-                    "frozen_split_path": hparams.get("frozen_split_path"),
+                    "model_name": hparams["model"].__class__.__name__,
                     "device": run_opts.get("device", "cpu"),
                 },
             )
@@ -486,9 +590,12 @@ if __name__ == "__main__":
     eval_dataset_key = hparams.get("eval_dataset", "valid")
 
     eval_dataset = datasets[eval_dataset_key]
+    eval_dataset = select_subset(eval_dataset, hparams)
     eval_dataset.add_dynamic_item(label_norm_pipeline)
     eval_dataset.add_dynamic_item(audio_ref_pipeline)
-    eval_dataset.set_output_keys(["uttid", "label_norm_eval", "tokens", "sig"])
+    eval_dataset.set_output_keys(
+        ["uttid", "label_norm_eval", "tokens", "sig"]
+    )
 
     # Create the evaluator
     eval = TokotronEvaluator(hparams, device=run_opts["device"])

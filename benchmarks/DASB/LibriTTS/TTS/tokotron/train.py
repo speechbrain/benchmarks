@@ -22,7 +22,6 @@ from pathlib import Path
 from hyperpyyaml import load_hyperpyyaml
 from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
 from speechbrain.utils.distributed import run_on_main
-from benchmarks.DASB.utils.hparams import as_list
 from benchmarks.DASB.utils.preparation import add_prepared_features
 from benchmarks.DASB.utils.audio_tokens import (
     get_silence_token,
@@ -30,6 +29,7 @@ from benchmarks.DASB.utils.audio_tokens import (
     feature_pad_to,
 )
 from benchmarks.DASB.model.Tokotron import RepresentationMode
+from benchmarks.DASB.utils.hparams import as_list
 
 
 logger = logging.getLogger(__name__)
@@ -61,19 +61,48 @@ class TokotronBrain(sb.Brain):
         audio, audio_length = batch.audio_bos
         if self.compression:
             audio = self.compression_model.compress(audio)
-        emb = None
-        if self.use_spk_emb:
-            emb = {"spk": batch.spk_emb.data.squeeze(1)}
-
+        audio = self.select_layers(audio)
         predictions = self.modules.model(
             input_tokens=tokens,
             input_length=tokens_length,
             audio=audio,
             audio_length=audio_length,
-            emb=emb
+            emb={
+                "spk": batch.spk_emb.data.squeeze(1)
+            }
         )
 
         return predictions
+
+    def _get_selected_layer_idx(self):
+        selected_layers = None
+        if self.hparams.select_layers:
+            layers = as_list(self.hparams.select_layers, dtype=int)
+            model_layers_map = {
+                layer: idx
+                for idx, layer in enumerate(
+                    as_list(self.hparams.token_model_layers))
+            }
+            selected_layers = [model_layers_map[layer] for layer in layers]
+        return selected_layers
+
+    # TODO: Move this elsewhere
+    def select_layers(self, audio_ssl):
+        """Applies layer squishing, if enabled
+
+        Arguments
+        ---------
+        audio_ssl : torch.Tensor
+            SSL features
+
+        Returns
+        -------
+        audio_ssl : torch.Tensor
+            SSL features, squished if enabled
+        """
+        if self.hparams.select_layers:
+            audio_ssl = audio_ssl[:, :, self.layer_idx]
+        return audio_ssl
 
     def compute_objectives(self, predictions, batch, stage):
         """Computes the loss given the predicted and targeted outputs. We here
@@ -98,6 +127,7 @@ class TokotronBrain(sb.Brain):
         audio, audio_length = batch.audio_pad
         if self.compression:
             audio = self.compression_model.compress(audio)
+        audio = self.select_layers(audio)
         loss_details = self.hparams.compute_cost(
             predictions=predictions,
             audio=audio,
@@ -129,6 +159,7 @@ class TokotronBrain(sb.Brain):
         """
         if hasattr(self.modules.vocoder, "model"):
             self.modules.vocoder.model.device = self.device
+        self.layer_idx = self._get_selected_layer_idx()
         self.create_perfect_samples()
         self.loss_metric = sb.utils.metric_stats.MultiMetricStats(
             metric=self.hparams.compute_cost, batch_eval=True,
@@ -138,7 +169,7 @@ class TokotronBrain(sb.Brain):
             and epoch == 1
             and stage == sb.Stage.TRAIN
         ):
-            vocabulary = None
+            # TODO: Clean this up
             if hasattr(self.hparams.token_model, "vocabulary"):
                 vocabulary = self.hparams.token_model.vocabulary
             elif hasattr(self.hparams.token_model, "vocabularies"):
@@ -148,8 +179,7 @@ class TokotronBrain(sb.Brain):
                         for voc in self.hparams.token_model.vocabularies
                     ]
                 )
-            if vocabulary is not None:
-                self.modules.model.init_audio_emb(vocabulary)
+            self.modules.model.init_audio_emb(vocabulary)
         # Load the compression model only if compression is enables
         self.compression = getattr(self.hparams, "compression", False)
         if self.compression:
@@ -158,9 +188,15 @@ class TokotronBrain(sb.Brain):
             )
             self.modules.model.compression_model = self.compression_model
 
-        # Speaker embeddings are optional and are used only to pretrain
-        # multispeaker models
-        self.use_spk_emb = getattr(self.hparams, "use_spk_emb", False)
+        # Reset the learning rate - if supported. This is useful when fine-tuning
+        # a model pre-trained on another dataset
+        if (
+            stage == sb.Stage.TRAIN
+            and self.hparams.reset_annealing_epoch is not None
+            and epoch is not None
+            and epoch == self.hparams.reset_annealing_epoch
+        ):
+            self.hparams.lr_annealing.n_steps = 0
 
     def on_stage_end(self, stage, stage_loss, epoch):
         """Gets called at the end of an epoch.
@@ -187,7 +223,7 @@ class TokotronBrain(sb.Brain):
 
             if self.hparams.lr_annealing_mode == "epoch":
                 _, new_lr = self.hparams.lr_annealing(stage_loss)
-                sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr, param_group=0)
+                sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr)
 
             lr = self.optimizer.param_groups[0]["lr"]
 
@@ -206,27 +242,6 @@ class TokotronBrain(sb.Brain):
             self.create_samples()
 
     def fit_batch(self, batch):
-        """Fit one batch, override to do multiple updates.
-
-        The default implementation depends on a few methods being defined
-        with a particular behavior:
-
-        * ``compute_forward()``
-        * ``compute_objectives()``
-        * ``optimizers_step()``
-
-        Also depends on having optimizers passed at initialization.
-
-        Arguments
-        ---------
-        batch : list of torch.Tensors
-            Batch of data to use for training. Default implementation assumes
-            this batch has two elements: inputs and targets.
-
-        Returns
-        -------
-        detached loss
-        """
         loss = super().fit_batch(batch)
         if self.hparams.lr_annealing_mode == "step":
             self.hparams.lr_annealing(self.optimizer)
@@ -248,14 +263,13 @@ class TokotronBrain(sb.Brain):
             for batch in sample_loader:
                 batch = batch.to(self.device)
                 tokens, tokens_length = batch.tokens
-                emb = None
-                if self.use_spk_emb:
-                    emb = {"spk": batch.spk_emb.data.squeeze(1)}
-                with torch.no_grad():
-                    infer_out = self.modules.model.infer(
-                        input_tokens=tokens, input_length=tokens_length,
-                        emb=emb
-                    )
+                infer_out = self.modules.model.infer(
+                    input_tokens=tokens,
+                    input_length=tokens_length,
+                    emb={
+                        "spk": batch.spk_emb.data.squeeze(1)
+                    }
+                )
                 self.hparams.progress_report.write(
                     ids=batch.uttid,
                     audio=infer_out.wav,
@@ -274,9 +288,13 @@ class TokotronBrain(sb.Brain):
             )
             for batch in sample_loader:
                 batch = batch.to(self.device)
-                sample_audio, length = batch.audio_pad
-                with torch.no_grad():
-                    vocoder_out = self.modules.vocoder(sample_audio, length)
+                sample_tokens, length = batch.audio_pad
+                sample_tokens = self.select_layers(sample_tokens)
+                vocoder_out = self.vocoder(
+                    sample_tokens,
+                    length,
+                    spk=batch.spk_emb.data.squeeze(1)
+                )
                 if isinstance(vocoder_out, tuple):
                     samples, samples_length = vocoder_out
                 else:
@@ -303,6 +321,72 @@ class TokotronBrain(sb.Brain):
                     ] = True
                     self.hparams.progress_logger.clear()
 
+    def vocoder(self, audio, length, spk):
+        vocoder_kwargs = {}
+        if self.hparams.vocoder_takes_spk_emb:
+            vocoder_kwargs["spk"] = spk
+        return self.modules.vocoder(
+            audio,
+            length,
+            **vocoder_kwargs
+        )
+
+    def on_fit_start(self):
+        """Gets called at the beginning of ``fit()``, on multiple processes
+        if ``distributed_count > 0`` and backend is ddp.
+
+        Default implementation compiles the jit modules, initializes
+        optimizers, and loads the latest checkpoint to resume training.
+        """
+        # Run this *after* starting all processes since jit/compiled modules
+        # cannot be pickled.
+        self._compile()
+
+        # Wrap modules with parallel backend after jit
+        self._wrap_distributed()
+
+        # Initialize optimizers after parameters are configured
+        self.init_optimizers()
+
+        # Load latest checkpoint to resume training if interrupted
+        self._restore_checkpoint()
+
+    def on_evaluate_start(self, max_key=None, min_key=None):
+        """Gets called at the beginning of ``evaluate()``
+
+        Default implementation loads the best-performing checkpoint for
+        evaluation, based on stored metrics.
+
+        Arguments
+        ---------
+        max_key : str
+            Key to use for finding best checkpoint (higher is better).
+            By default, passed to ``self.checkpointer.recover_if_possible()``.
+        min_key : str
+            Key to use for finding best checkpoint (lower is better).
+            By default, passed to ``self.checkpointer.recover_if_possible()``.
+        """
+
+        # Recover best checkpoint for evaluation
+        self._restore_checkpoint(max_key=max_key, min_key=min_key)
+
+    def _restore_checkpoint(self, min_key=None, max_key=None):
+        if self.checkpointer is not None:
+            optimizer_rec = None
+            ckpt = self.checkpointer.find_checkpoint(
+                max_key=max_key, min_key=min_key
+            )
+            if (
+                "optimizer" in self.checkpointer.recoverables
+                and "optimizer" not in ckpt.paramfiles
+            ):
+                logger.warn("Optimizer not found in the checkpoint, recovering without it")
+                optimizer_rec = self.checkpointer.recoverables["optimizer"]
+                del self.checkpointer.recoverables["optimizer"]
+            self.checkpointer.recover_if_possible(min_key=min_key, max_key=max_key)
+            if optimizer_rec is not None:
+                self.checkpointer.recoverables["optimizer"] = optimizer_rec
+
     def init_optimizers(self):
         """Custom optimizer initialization
         """
@@ -323,7 +407,8 @@ class TokotronBrain(sb.Brain):
             self.optimizer = self.opt_class(self.modules.model.parameters(), lr=self.hparams.lr)
 
 
-INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phonemes"}
+
+INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phn"}
 
 
 def dataio_prepare(hparams):
@@ -346,12 +431,12 @@ def dataio_prepare(hparams):
         the token used for silence
     """
 
+    # Define datasets from json data manifest file
+    # Define datasets sorted by ascending lengths for efficiency
     representation_mode = RepresentationMode(
         hparams.get("representation_mode", RepresentationMode.DISCRETE)
     )
 
-    # Define datasets from json data manifest file
-    # Define datasets sorted by ascending lengths for efficiency
     datasets = {}
     data_folder = hparams["data_folder"]
     data_info = {
@@ -379,22 +464,22 @@ def dataio_prepare(hparams):
     if use_silence_padding:
         silence_token, silence_emb = get_silence_token(
             hparams["token_model"],
-            extract_emb=representation_mode == RepresentationMode.CONTINUOUS,
+            extract_emb=True,
             model_kwargs=hparams.get("token_model_kwargs"),
         )
     else:
         silence_token = (
-            torch.ones(hparams["audio_tokens_per_step"], dtype=torch.int64)
+            torch.ones(audio_tokens_per_step, dtype=torch.int64)
             * hparams["eos_index"]
         )
-    silence_token = silence_token.cpu()
+
     silence_padding = silence_token if representation_mode == RepresentationMode.DISCRETE else silence_emb
+    silence_padding = silence_padding.cpu()
     silence_padding_len = int(math.ceil(hparams["silence_padding"]))
     bos_width = hparams.get("bos_width", 1)
     audio_features = "audio_tokens" if representation_mode == RepresentationMode.DISCRETE else "audio_ssl"
     audio_bos_prefix = (
-        torch.ones(bos_width, audio_tokens_per_step)
-        * hparams["bos_index"]
+        torch.ones(bos_width, audio_tokens_per_step) * hparams["bos_index"]
     )
     if representation_mode == RepresentationMode.CONTINUOUS:
         audio_bos_prefix = audio_bos_prefix.unsqueeze(-1).repeat(1, 1, hparams["audio_dim"])
@@ -413,31 +498,26 @@ def dataio_prepare(hparams):
     dynamic_items = [text_pipeline, tokens_pipeline, audio_pipeline]
 
     init_sequence_encoder(hparams)
-    use_spk_emb = hparams.get("use_spk_emb", False)
-    prepared_features = [audio_features]
-    output_keys = [
-        "uttid",
-        "tokens",
-        "audio_pad",
-        "audio_bos",
-    ]
-    if use_spk_emb:
-        prepared_features.append("spk_emb")
-        output_keys.append("spk_emb")
 
     for dataset in data_info:
         dynamic_dataset = sb.dataio.dataset.DynamicItemDataset.from_json(
             json_path=data_info[dataset],
             replacements={"data_root": data_folder},
             dynamic_items=dynamic_items,
-            output_keys=output_keys,
+            output_keys=[
+                "uttid",
+                "tokens",
+                "audio_pad",
+                "audio_bos",
+                "spk_emb"
+            ],
         )
 
         add_prepared_features(
             dataset=dynamic_dataset,
             save_path=Path(hparams["prepare_save_folder"]) / "features",
             id_key="uttid",
-            features=prepared_features,
+            features=[audio_features, "spk_emb"],
         )
 
         datasets[dataset] = dynamic_dataset
@@ -638,36 +718,40 @@ if __name__ == "__main__":
         overrides=overrides,
     )
 
-    from ljspeech_prepare import prepare_ljspeech
+    from libritts_prepare import prepare_libritts
 
     # Data preparation, to be run on only one process.
     representation_mode = RepresentationMode(
         hparams.get("representation_mode", RepresentationMode.DISCRETE)
     )
     audio_features = "audio_tokens" if representation_mode == RepresentationMode.DISCRETE else "audio_ssl"
-    extract_features = [audio_features]
-    if hparams.get("use_spk_emb", False):
-        extract_features.append("spk_emb")
-
     if not hparams["skip_prep"]:
         with hparams["freezer"]:
+            extract_features = [audio_features, "spk_emb"]
+            if hparams["input"] == "phonemes":
+                extract_features.append("phn")
             run_on_main(
-                prepare_ljspeech,
+                prepare_libritts,
                 kwargs={
                     "data_folder": hparams["data_folder"],
                     "save_folder": hparams["prepare_save_folder"],
-                    "splits": hparams["splits"],
-                    "split_ratio": hparams["split_ratio"],
-                    "seed": hparams["seed"],
+                    "save_json_train": hparams["train_json"],
+                    "save_json_valid": hparams["valid_json"],
+                    "save_json_test": (
+                        hparams["test_json"] if "test" in hparams["splits"]
+                        else None
+                    ),
+                    "sample_rate": hparams["sample_rate"],
+                    "train_split": hparams["train_split"],
+                    "valid_split": hparams["valid_split"],
+                    "test_split": (
+                        hparams["test_split"] if "test" in hparams["splits"]
+                        else None
+                    ),
                     "extract_features": extract_features,
+                    "seed": hparams["seed"],
                     "extract_features_opts": hparams["extract_features_opts"],
-                    "extract_phonemes": hparams["input"] == "phonemes",
-                    "model_name": "tokotron",
-                    "g2p_src": hparams["g2p_src"],
-                    "skip_ignore_folders": hparams[
-                        "prepare_skip_ignore_folders"
-                    ],
-                    "frozen_split_path": hparams.get("frozen_split_path"),
+                    "model_name": hparams["model"].__class__.__name__,
                     "device": run_opts.get("device", "cpu"),
                 },
             )

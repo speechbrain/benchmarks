@@ -226,14 +226,3 @@ epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
 
 train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
     save_file: !ref <train_log>
-
-progress_logger: !new:benchmarks.DASB.utils.train_logger.ArchiveTrainLogger
-    current_path: !ref <progress_current>
-    archive_path: !ref <progress_archive>
-    meta_path: !ref <progress_meta>
-    epoch_counter: !ref <epoch_counter>
-
-progress_report: !new:benchmarks.DASB.utils.tts.TTSProgressReport
-    logger: !ref <progress_logger>
-    sample_rate: !ref <model_sample_rate>
-    eos_threshold: !ref <gate_threshold>

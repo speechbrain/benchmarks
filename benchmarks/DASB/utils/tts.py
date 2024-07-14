@@ -175,11 +175,9 @@ class TTSProgressReport:
         p_eos, length = [x.detach().cpu() for x in [p_eos, length]]
         max_len = p_eos.size(1)
         length_abs = length * tgt_max_length
-        gate_act = (p_eos >= self.eos_threshold)
+        gate_act = p_eos >= self.eos_threshold
         length_pred = torch.where(
-            gate_act.sum(dim=-1) == 0,
-            max_len,
-            gate_act.int().argmax(dim=-1)
+            gate_act.sum(dim=-1) == 0, max_len, gate_act.int().argmax(dim=-1)
         )
 
         self.length.extend(length_abs.tolist())
@@ -207,7 +205,9 @@ class TTSProgressReport:
     def _write_length_report(self):
         """Outputs the length report"""
         with StringIO() as length_report:
-            csv_writer = csv.DictWriter(length_report, ["uttid", "length_pred", "length", "length_diff"])
+            csv_writer = csv.DictWriter(
+                length_report, ["uttid", "length_pred", "length", "length_diff"]
+            )
             csv_writer.writeheader()
             for uttid, length_pred, length in zip(
                 self.ids, self.length_pred, self.length
@@ -217,18 +217,17 @@ class TTSProgressReport:
                         "uttid": uttid,
                         "length_pred": length_pred,
                         "length": length,
-                        "length_diff": length_pred - length
+                        "length_diff": length_pred - length,
                     }
                 )
-            self.logger.save(name="length.csv", content=length_report.getvalue(), mode="text")
+            self.logger.save(
+                name="length.csv", content=length_report.getvalue(), mode="text"
+            )
 
     def _write_details_file(self):
         """Outputs the concatenated details file"""
         if self.details is not None:
-            details = {
-                key: value
-                for key, value in self.details.items()
-            }
+            details = {key: value for key, value in self.details.items()}
             self.logger.save(name="details.pt", content=details, mode="tensor")
 
     def _write_details(self, ids, alignments, p_eos):
@@ -259,5 +258,8 @@ class TTSProgressReport:
 
 class ContextError(Exception):
     """Thrown when the various write methods are called without a context"""
+
     def __init__(self):
-        super.__init__("TTSProgressReport must be used in a context (with report: report.write(...))")
+        super.__init__(
+            "TTSProgressReport must be used in a context (with report: report.write(...))"
+        )

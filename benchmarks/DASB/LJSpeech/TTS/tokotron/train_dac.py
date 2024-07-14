@@ -33,7 +33,9 @@ class TokotronDACBrain(TokotronBrain):
         -------
         wav : torch.Tensor
         """
-        z, _, _ = self.modules.dac.quantizer.from_codes(audio.transpose(1, 2).int())
+        z, _, _ = self.modules.dac.quantizer.from_codes(
+            audio.transpose(1, 2).int()
+        )
         wav = self.modules.dac.decode(z).squeeze(1)
         clean_padding_(wav, length)
         return wav

@@ -914,13 +914,14 @@ def prepare_features(
                 tokens = tokens.unsqueeze(-1)
             yield PaddedData(tokens, sig.lengths)
             yield PaddedData(emb, sig.lengths)
-    
+
     @sb.utils.data_pipeline.takes("sig_resampled")
     @sb.utils.data_pipeline.provides("spk_emb")
     def spk_emb_pipeline(sig):
         mel_spec = context.spk_emb_model.mel_spectogram(audio=sig.data)
         return context.spk_emb_model.encode_mel_spectrogram_batch(
-            mel_spec, sig.lengths)
+            mel_spec, sig.lengths
+        )
 
     @sb.utils.data_pipeline.takes("sig_resampled")
     @sb.utils.data_pipeline.provides("audio_ssl", "audio_ssl_len")

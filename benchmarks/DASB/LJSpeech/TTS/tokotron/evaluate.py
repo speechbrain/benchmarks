@@ -7,20 +7,14 @@ Authors
 import speechbrain as sb
 import json
 import logging
-import math
-import sys
 import csv
 import torch
-import string
 import re
 from pathlib import Path
-from hyperpyyaml import load_hyperpyyaml
 from types import SimpleNamespace
 from torch.nn import ModuleDict
-from tqdm.auto import tqdm
 from benchmarks.DASB.utils.data import undo_batch
 from benchmarks.DASB.utils.eval import vocoder_to_device
-from speechbrain.utils.distributed import run_on_main
 
 logger = logging.getLogger(__name__)
 
@@ -32,22 +26,19 @@ class TokotronEvaluator:
     ---------
     hparams: dict
         hyperparameters (as a dictionary)
+    create_waveform_fn : callable
+        the function that will be used to create
+        waveforms (not unified across all implementations)
     device : str | torch.device
         the device
     """
 
-    def __init__(self, hparams, device):
+    def __init__(self, hparams, create_waveform_fn, device):
         self.hparams = SimpleNamespace(**hparams)
+        self.create_waveform_fn = create_waveform_fn
         self.device = device
         modules = self.hparams.modules
         self.modules = ModuleDict(modules).to(self.device)
-        suffix = (
-            f"_{self.hparams.eval_suffix}" if self.hparams.eval_suffix else ""
-        )
-        eval_folder = f"eval_{self.hparams.eval_dataset}{suffix}"
-        self.output_folder = Path(self.hparams.output_folder) / eval_folder
-        self.samples_folder = self.output_folder / "samples"
-        self.samples_folder.mkdir(parents=True, exist_ok=True)
         self.modules.model.vocoder = None
         self.vocoder_has_details = hasattr(
             self.modules.vocoder, "decode_batch_with_details"
@@ -86,27 +77,27 @@ class TokotronEvaluator:
             )
             self.modules.model.compression_model = self.compression_model
 
-    def evaluate(self, dataset):
-        """Runs evaluation on a dataset
+    def on_evaluate_start(self, stage, epoch):
+        """Invoked when evaluation starts
 
         Arguments
         ---------
-        dataset : speechbrain.dataio.dataset.DynamicItemDataset
-            a dataset
+
+        stage : sb.Stage
+            One of sb.Stage.TRAIN, sb.Stage.VALID, or sb.Stage.TEST.
+        epoch : int
+            The currently-starting epoch. This is passed
+            `None` during the test stage.
         """
-        logger.info("Recovering the checkpoint")
-        ckpt = self.hparams.checkpointer.recover_if_possible()
-        if not ckpt:
-            raise ValueError("Unable to recover the checkpoint")
-        self.modules.model.eval()
-        if self.hparams.eval_samples is not None:
-            dataset = dataset.filtered_sorted(
-                select_n=self.hparams.eval_samples
-            )
-        loader = sb.dataio.dataloader.make_dataloader(
-            dataset, batch_size=self.hparams.batch_size
+        self.stage = stage
+        self.epoch = epoch
+        self.output_folder = self.get_output_folder(stage, epoch)
+        self.samples_folder = self.output_folder / "samples"
+        self.samples_folder.mkdir(parents=True, exist_ok=True)
+        logger.info(
+            "Starting evaluation, results will be saved in %s",
+            self.output_folder,
         )
-        loader_it = iter(loader)
         self.create_reports()
         self.modules.model.show_inference_progress = False
         self.item_ids = []
@@ -117,14 +108,42 @@ class TokotronEvaluator:
         self.sample_text = []
         self.sample_file_names = []
         self.ref_file_names = []
-        logger.info("Starting evaluation")
-        batch_count = math.ceil(len(dataset) / self.hparams.batch_size)
-        for batch in tqdm(loader_it, desc="Evaluation", total=batch_count):
-            self.evaluate_batch(batch)
+
+    def get_output_folder(self, stage, epoch):
+        """Computes the output folder of evaluation results
+        for the specified stage and epoch.
+
+        If the folder does not exists, it will be created.
+
+        Arguments
+        ---------
+        stage : sb.Stage
+            One of sb.Stage.TRAIN, sb.Stage.VALID, or sb.Stage.TEST.
+        epoch : int
+            The currently-starting epoch. This is passed
+            `None` during the test stage.
+
+        Returns
+        -------
+        """
+        output_folder = (
+            Path(self.hparams.output_folder) / "eval" / stage.name.lower()
+        )
+        if epoch is not None:
+            output_folder = output_folder / str(epoch)
+        output_folder.mkdir(parents=True, exist_ok=True)
+        return output_folder
+
+    def on_evaluate_end(self):
+        """Runs evaluation on a dataset
+
+        Arguments
+        ---------
+        dataset : speechbrain.dataio.dataset.DynamicItemDataset
+            a dataset
+        """
         self.evaluate_bulk()
         self.write_summary()
-        if self.vocoder_has_details:
-            self.write_attn()
         logger.info("Evaluation done")
 
     def create_reports(self):
@@ -194,31 +213,13 @@ class TokotronEvaluator:
             infer_out = self.modules.model.infer(
                 input_tokens=tokens, input_length=tokens_length
             )
-            if self.vocoder_has_details:
-                wav, details = self.modules.vocoder.decode_batch_with_details(
-                    infer_out.audio,
-                )
-                length = infer_out.length
-            else:
-                result = self.modules.vocoder(
-                    infer_out.audio, infer_out.length,
-                )
-                if torch.is_tensor(result):
-                    wav, length = result, infer_out.length
-                else:
-                    wav, length = result
-                details = {}
-            if wav.dim() > 2:
-                wav = wav.squeeze(1)
-            if "attn" in details:
-                self.attention.append(details["attn"])
-
+            wav = self.create_waveform_fn(infer_out.audio, infer_out.length)
             self.save_samples(batch, wav, infer_out.length)
             self.item_ids.extend(batch.uttid)
             for evaluator_key, evaluator in self.evaluators.items():
                 result = evaluator.evaluate(
                     wavs=wav,
-                    length=length,
+                    length=infer_out.length,
                     text=batch.label_norm_eval,
                     wavs_ref=batch.sig.data,
                     length_ref=batch.sig.lengths,
@@ -230,6 +231,8 @@ class TokotronEvaluator:
                 self.details[evaluator_key].extend(details)
 
     def evaluate_bulk(self):
+        """Runs all configured bulk evaluators, which evaluate a directory
+        of files - rather than one file at a time"""
         for evaluator_key, evaluator in self.bulk_evaluators.items():
             result = evaluator.evaluate_files(
                 file_names=self.sample_file_names,
@@ -293,20 +296,6 @@ class TokotronEvaluator:
         with open(file_name, "w") as output_file:
             json.dump(summary, output_file, indent=4)
 
-    def write_attn(self):
-        attn_file_name = self.output_folder / "attn.pt"
-        torch.save(self.attention, attn_file_name)
-        attn_summary_file_name = self.output_folder / "attn_summary.json"
-        attn_concat = torch.cat(self.attention, dim=0)
-        attn_average = attn_concat.squeeze(-1).mean(0)
-        attn_summary_data = {
-            "layers": {
-                idx + 1: value.item() for idx, value in enumerate(attn_average)
-            }
-        }
-        with open(attn_summary_file_name, "w") as attn_summary_file:
-            json.dump(attn_summary_data, attn_summary_file, indent=4)
-
     def compute_summary(self):
         """Computes the summarized statistics"""
         return {
@@ -341,58 +330,15 @@ def flatten(value):
     }
 
 
-RE_PUNCTUATION = re.compile(
-    "|".join(re.escape(char) for char in string.punctuation)
-)
-
 RE_NON_ASCII = re.compile(r"[^\x00-\x7F]+")
 
 
 def ascii_only(values):
+    """Removes non-ASCII characters"""
     return {
         key: RE_NON_ASCII.sub("", value) if isinstance(value, str) else value
         for key, value in values.items()
     }
-
-
-@sb.utils.data_pipeline.takes("label_norm")
-@sb.utils.data_pipeline.provides("label_norm_eval")
-def label_norm_pipeline(label):
-    """Normalizes labels for ASR comparison, converting to uppercase and removing
-    punctuation
-
-    Arguments
-    ---------
-    label : str
-        The unnormalized label
-
-    Returns
-    -------
-    result : str
-        The normalized label
-    """
-    label = label.upper()
-    label = RE_PUNCTUATION.sub("", label)
-    return label
-
-
-@sb.utils.data_pipeline.takes("wav")
-@sb.utils.data_pipeline.provides("sig")
-def audio_ref_pipeline(wav):
-    """The audio loading pipeline for references
-
-    Arguments
-    ---------
-    wav : str
-        The file path
-
-    Returns
-    -------
-    sig : torch.Tensor
-        The waveform
-    """
-    sig = sb.dataio.dataio.read_audio(wav)
-    return sig
 
 
 def descriptive_statistics(items, key):
@@ -420,79 +366,3 @@ def descriptive_statistics(items, key):
     return {
         f"{key}_{stat_key}": value.item() for stat_key, value in stats.items()
     }
-
-
-if __name__ == "__main__":
-    # Parse arguments
-    hparams_file, run_opts, overrides = sb.parse_arguments(sys.argv[1:])
-
-    # Reuse the preparation function from the training script
-    from train import dataio_prepare
-
-    # Load hyperparameters file with command-line overrides
-    with open(hparams_file) as fin:
-        hparams = load_hyperpyyaml(fin, overrides, overrides_must_match=False)
-
-    # Load evaluation hyperparameters
-    eval_hparams_file = hparams.get("eval_hparams")
-    if eval_hparams_file is None:
-        # If not defined, look for eval.yaml in the same folder
-        # as the original hyperparameters file
-        eval_hparams_file = Path(hparams_file).parent / "eval.yaml"
-    if eval_hparams_file.exists():
-        logger.info(
-            "Using evaluation hyperparameters from %s", eval_hparams_file
-        )
-        eval_hparams = load_hyperpyyaml(
-            eval_hparams_file, overrides, overrides_must_match=False
-        )
-        hparams.update(eval_hparams)
-    else:
-        logger.info(
-            "%s not found - not using evaluation hyperparameters",
-            eval_hparams_file,
-        )
-
-    from ljspeech_prepare import prepare_ljspeech
-
-    # Data Preparation
-    if not hparams["skip_prep"]:
-        with hparams["freezer"]:
-            run_on_main(
-                prepare_ljspeech,
-                kwargs={
-                    "data_folder": hparams["data_folder"],
-                    "save_folder": hparams["prepare_save_folder"],
-                    "splits": hparams["splits"],
-                    "split_ratio": hparams["split_ratio"],
-                    "seed": hparams["seed"],
-                    "extract_features": ["audio_tokens"],
-                    "extract_features_opts": hparams["extract_features_opts"],
-                    "extract_phonemes": hparams["input"] == "phonemes",
-                    "model_name": "tokotron",
-                    "g2p_src": hparams["g2p_src"],
-                    "skip_ignore_folders": hparams[
-                        "prepare_skip_ignore_folders"
-                    ],
-                    "frozen_split_path": hparams.get("frozen_split_path"),
-                    "device": run_opts.get("device", "cpu"),
-                },
-            )
-
-    # Reading command line arguments
-    datasets, _ = dataio_prepare(hparams)
-
-    # Select the dataset to use in evaluation
-    eval_dataset_key = hparams.get("eval_dataset", "valid")
-
-    eval_dataset = datasets[eval_dataset_key]
-    eval_dataset.add_dynamic_item(label_norm_pipeline)
-    eval_dataset.add_dynamic_item(audio_ref_pipeline)
-    eval_dataset.set_output_keys(["uttid", "label_norm_eval", "tokens", "sig"])
-
-    # Create the evaluator
-    eval = TokotronEvaluator(hparams, device=run_opts["device"])
-
-    # Start evaluation
-    logger.info("Evaluating on %s", eval_dataset_key)
-    eval.evaluate(eval_dataset)

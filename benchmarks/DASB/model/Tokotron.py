@@ -20,7 +20,6 @@ from speechbrain.lobes.models.transformer.Transformer import (
     PositionalEncoding as TransformerPositionalEncoding,
     get_lookahead_mask,
 )
-from speechbrain.dataio.dataio import clean_padding_
 from speechbrain.nnet.attention import RelPosEncXL
 from speechbrain.nnet.embedding import Embedding
 from speechbrain.nnet.linear import Linear
@@ -58,14 +57,7 @@ TokotronDecoderOutput = namedtuple(
 
 TokotronDecoderInfernceOutput = namedtuple(
     "TokotronDecoderInferenceOutput",
-    [
-        "audio",
-        "length",
-        "dec_self_attn",
-        "dec_attn",
-        "alignments",
-        "p_eos",
-    ],
+    ["audio", "length", "dec_self_attn", "dec_attn", "alignments", "p_eos"],
 )
 
 TokotronInfernceOutput = namedtuple(
@@ -80,6 +72,7 @@ TokotronInfernceOutput = namedtuple(
         "p_eos",
     ],
 )
+
 
 class EosMode(Enum):
     GATE = "gate"
@@ -185,10 +178,13 @@ class TokotronTransformerDecoder(nn.Module):
             in_proj_size *= tokens_per_step
         self.tgt_in_proj = Linear(input_size=in_proj_size, n_neurons=d_model,)
         self.representation_mode = RepresentationMode(representation_mode)
-        self.out_dim = num_tokens + audio_token_shift if self.representation_mode == RepresentationMode.DISCRETE else audio_dim
+        self.out_dim = (
+            num_tokens + audio_token_shift
+            if self.representation_mode == RepresentationMode.DISCRETE
+            else audio_dim
+        )
         self.out_proj = Linear(
-            input_size=d_model,
-            n_neurons=self.out_dim * tokens_per_step,
+            input_size=d_model, n_neurons=self.out_dim * tokens_per_step,
         )
         self.gate = Linear(input_size=d_model, n_neurons=1)
         if audio_emb is None:
@@ -202,8 +198,7 @@ class TokotronTransformerDecoder(nn.Module):
                 )
             else:
                 audio_emb = Linear(
-                    input_size=audio_dim,
-                    n_neurons=audio_emb_size,
+                    input_size=audio_dim, n_neurons=audio_emb_size,
                 )
 
         self.positional_encoding = PositionalEncoding(
@@ -581,9 +576,7 @@ class TokotronTransformerAutoregressiveInference(nn.Module):
             # Length = gate activation index + the offset, not exceeding
             length_abs = (seq_gate_idx + gate_offset).clip(max=self.max_steps)
             max_inferred_len = length_abs.max().int()
-            audio_out = (
-                audio_out[:, :max_inferred_len] - self.audio_token_shift
-            )
+            audio_out = audio_out[:, :max_inferred_len] - self.audio_token_shift
             # Compute relative lengths
             length = length_abs.float() / audio_out.size(1)
 
@@ -1423,7 +1416,14 @@ class TokotronTransformerModel(nn.Module):
         self.decoder.init_audio_emb(emb)
 
 
-def get_bos(batch_size, tokens_per_step, bos, audio_dim=None, representation_mode=RepresentationMode.DISCRETE, device="cpu"):
+def get_bos(
+    batch_size,
+    tokens_per_step,
+    bos,
+    audio_dim=None,
+    representation_mode=RepresentationMode.DISCRETE,
+    device="cpu",
+):
     """Constructs a beginning-of-sequence (BOS) sequence for
     autoregressive inference
 
@@ -1440,7 +1440,7 @@ def get_bos(batch_size, tokens_per_step, bos, audio_dim=None, representation_mod
         The dimension of audio representations (used if representation_mode is set to
         CONTINUOUS)
     representation_mode : RepresentationMode | str, optional
-        the type of representations to be used (discrete or continuous)        
+        the type of representations to be used (discrete or continuous)
     device : str|torch.Device
         The device identifier
 
@@ -1451,7 +1451,10 @@ def get_bos(batch_size, tokens_per_step, bos, audio_dim=None, representation_mod
     if representation_mode == RepresentationMode.DISCRETE:
         seq = torch.ones(batch_size, 1, tokens_per_step, device=device) * bos
     else:
-        seq = torch.ones(batch_size, 1, tokens_per_step, audio_dim, device=device) * bos
+        seq = (
+            torch.ones(batch_size, 1, tokens_per_step, audio_dim, device=device)
+            * bos
+        )
     return seq
 
 
@@ -1540,10 +1543,10 @@ class TokotronLoss(nn.Module):
 
     seq_cost : float
         The type of sequence loss to be used
-    
+
     audio_tokens_per_step : int
         The number of audio tokens per step
-    
+
     representation_mode : RepresentationMode
         the type of representations being used (discrete or continuous)
 
@@ -1653,10 +1656,12 @@ class TokotronLoss(nn.Module):
                 batch_size * heads, max_len, audio_dim
             )
             audio_reshaped = bipolar_compression(audio_reshaped)
-            if self.audio_clip_min is not None or self.audio_clip_max is not None:
+            if (
+                self.audio_clip_min is not None
+                or self.audio_clip_max is not None
+            ):
                 audio_reshaped = audio_reshaped.clip(
-                    min=self.audio_clip_min,
-                    max=self.audio_clip_max,
+                    min=self.audio_clip_min, max=self.audio_clip_max,
                 )
 
         audio_reshaped = audio_reshaped[:, :max_len]
@@ -2081,11 +2086,7 @@ def bipolar_compression(x):
 
 def bipolar_compression_inv(x):
     """The inverse of bipolar_compression"""
-    return torch.where(
-        x >= 0,
-        x.exp() - 1.,
-        1. - (-x).exp()
-    )
+    return torch.where(x >= 0, x.exp() - 1.0, 1.0 - (-x).exp())
 
 
 class TargetedNoamScheduler(NoamScheduler):
@@ -2103,11 +2104,14 @@ class TargetedNoamScheduler(NoamScheduler):
         by the scheduler. It is divided by model_size ** (0.5).
         If not specified the maximum learning rate value is instead multiplied by warmup_steps ** (0.5).
     """
-    def __init__(self, lr_initial, n_warmup_steps, model_size=None, param_group=None):
+
+    def __init__(
+        self, lr_initial, n_warmup_steps, model_size=None, param_group=None
+    ):
         super().__init__(
             lr_initial=lr_initial,
             n_warmup_steps=n_warmup_steps,
-            model_size=model_size
+            model_size=model_size,
         )
         self.param_group = param_group
 

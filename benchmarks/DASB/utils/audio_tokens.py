@@ -55,7 +55,9 @@ def get_silence_token(
     silence_emb = None
     if extract_emb:
         if hasattr(model, "embeddings"):
-            silence_emb = model.embeddings(silence_tokens[None, None, :]).squeeze()
+            silence_emb = model.embeddings(
+                silence_tokens[None, None, :]
+            ).squeeze()
         else:
             heads = tokens.shape[-1]
             embs = result[1]
@@ -63,10 +65,9 @@ def get_silence_token(
                 (tokens[0, :, head] == silence_tokens[head]).nonzero()[0].item()
                 for head in range(heads)
             ]
-            silence_emb = torch.stack([
-                embs[0, idx, head]
-                for head, idx in enumerate(mode_idx)
-            ])
+            silence_emb = torch.stack(
+                [embs[0, idx, head] for head, idx in enumerate(mode_idx)]
+            )
     return silence_tokens, silence_emb
 
 

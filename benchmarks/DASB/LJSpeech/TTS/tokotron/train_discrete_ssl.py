@@ -36,7 +36,9 @@ class TokotronDiscreteSSLBrain(TokotronBrain):
             raise ValueError(f"Layers {unavailable_layers} are not supported")
         self.num_units = self.hparams.audio_num_tokens
         _, layers_idx = torch.where(
-            torch.tensor(self.hparams.vocoder_available_layers, device=self.device).unsqueeze(0)
+            torch.tensor(
+                self.hparams.vocoder_available_layers, device=self.device
+            ).unsqueeze(0)
             == torch.tensor(self.hparams.token_model_layers).unsqueeze(1)
         )
         self.layer_offset = (
@@ -62,11 +64,12 @@ class TokotronDiscreteSSLBrain(TokotronBrain):
         """
         units_with_offset = (
             audio + self.layer_offset.to(audio.device) + self.offset
-        )        
+        )
         wav = self.modules.vocoder(units_with_offset)
         wav = wav.squeeze(1)
         clean_padding_(wav, length)
         return wav
+
 
 if __name__ == "__main__":
     run_experiment(TokotronDiscreteSSLBrain)

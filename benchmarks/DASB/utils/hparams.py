@@ -3,11 +3,8 @@
 Authors
  * Artem Ploujnikov 2024
 """
-from numbers import Number
 
 _DTYPE_CONVERT = {"int": int, "float": float}
-
-
 
 
 def repeat_for_layers(layers, value):

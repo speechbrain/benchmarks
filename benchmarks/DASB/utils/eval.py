@@ -13,6 +13,7 @@ from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
 from speechbrain.decoders.seq2seq import S2SWhisperGreedySearch
 from speechbrain.dataio.batch import PaddedBatch
 from speechbrain.utils.metric_stats import ErrorRateStats
+from speechbrain.utils.superpowers import run_shell
 from collections import namedtuple
 from pathlib import Path
 import os
@@ -22,6 +23,7 @@ import re
 import string
 import logging
 import shutil
+import shlex
 import subprocess
 
 logger = logging.getLogger(__name__)
@@ -697,6 +699,9 @@ class BulkSpeechEvaluator:
         raise NotImplementedError()
 
 
+UTMOS_REPO = "https://huggingface.co/spaces/sarulab-speech/UTMOS-demo"
+
+
 class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
     """An evaluation wrapper for UTMOS
 
@@ -728,6 +733,8 @@ class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
         omitted, it will be set to output_folder. This can be useful on
         compute environments that provide fast local storage (e.g. certain
         compute clusters)
+    repo : str
+        The repor
     """
 
     def __init__(
@@ -740,6 +747,7 @@ class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
         use_python=True,
         batch_size=8,
         tmp_folder=None,
+        repo=UTMOS_REPO,
     ):
         self.output_folder = Path(output_folder)
         rand = torch.randint(1, 999999999, (1,)).item()
@@ -755,6 +763,43 @@ class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
         self.batch_size = batch_size
         self.python = python
         self.use_python = use_python
+        self.repo = repo
+        self.install()
+
+    def install(self):
+        if self.model_path.exists():
+            logger.info("UTMOS is already installed in %s", self.model_path)
+            return
+        logger.info(
+            "Attempting to install UTMOS from %s to %s",
+            self.repo,
+            self.model_path,
+        )
+        cmd = shlex.join(
+            [
+                "git",
+                "-C",
+                str(self.model_path.parent),
+                "clone",
+                self.repo,
+                str(self.model_path.name),
+            ]
+        )
+        output, err, return_code = run_shell(cmd)
+        if return_code != 0:
+            raise CommandError(cmd, output, err, return_code)
+        logger.info("Repository clone successful, performing an LFS fetch")
+        cwd = Path.cwd()
+        try:
+            os.chdir(self.model_path)
+            cmd = shlex.join(["git", "lfs", "fetch"])
+            output, err, return_code = run_shell(cmd)
+            if return_code != 0:
+                raise CommandError(cmd, output, err, return_code)
+        finally:
+            os.chdir(cwd)
+        if not self.ckpt_path.exists():
+            raise ValueError("ckpt_path {ckpt_path} does not exist")
 
     def evaluate_files(self, file_names, text, file_names_ref=None):
         """Evaluates multiple files
@@ -840,11 +885,12 @@ def vocoder_to_device(vocoder, device):
 
 class Tracker:
     """A tracker that makes it possible to resume evaluation
-    
+
     Arguments
     ---------
     file_name : str | path-like
         The path to the tracker file"""
+
     def __init__(self, file_name):
         self.file_name = Path(file_name)
 
@@ -877,23 +923,25 @@ class Tracker:
         """
         if self.file_name.exists():
             with open(self.file_name) as tracker_file:
-                processed_ids = set(
-                    line.strip()
-                    for line in tracker_file
-                )
+                processed_ids = set(line.strip() for line in tracker_file)
                 remaining_ids = [
-                    data_id for data_id in dataset.data_ids
+                    data_id
+                    for data_id in dataset.data_ids
                     if data_id not in processed_ids
                 ]
                 logger.info(
                     "Tracker %s already exists, %d items already processed, %d items remaining",
                     self.file_name,
                     len(processed_ids),
-                    len(remaining_ids)
+                    len(remaining_ids),
                 )
-                dataset = FilteredSortedDynamicItemDataset(dataset, remaining_ids)
+                dataset = FilteredSortedDynamicItemDataset(
+                    dataset, remaining_ids
+                )
         else:
-            logger.info("Tracker %s does not exist, evaluating from the beginning")
+            logger.info(
+                "Tracker %s does not exist, evaluating from the beginning"
+            )
         return dataset
 
     def get_processed(self):
@@ -906,10 +954,31 @@ class Tracker:
         """
         if self.file_name.exists():
             with open(self.file_name, "r") as tracker_file:
-                processed_ids = [
-                    line.strip()
-                    for line in tracker_file
-                ]
+                processed_ids = [line.strip() for line in tracker_file]
         else:
             processed_ids = []
         return processed_ids
+
+
+class CommandError(Exception):
+    """Thrown when an external command returns an error
+
+    Arguments
+    ---------
+    cmd : str
+        The command that was run
+    output : str
+        The captured standard output stream
+    err : str
+        The captured standard error stream
+    return_code : int
+        The return code"""
+
+    def __init__(self, cmd, output, err, return_code):
+        super().__init__(
+            f"Command {cmd} returned code {return_code}\n"
+            f"Output: {output}\n"
+            f"Errors: {err}"
+        )
+        self.cmd = cmd
+        self.output = output

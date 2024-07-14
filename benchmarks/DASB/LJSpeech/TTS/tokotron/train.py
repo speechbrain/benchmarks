@@ -18,6 +18,8 @@ import speechbrain as sb
 import math
 import torch
 import sys
+import re
+import string
 from pathlib import Path
 from hyperpyyaml import load_hyperpyyaml
 from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
@@ -29,6 +31,7 @@ from benchmarks.DASB.utils.audio_tokens import (
     feature_pad_to,
 )
 from benchmarks.DASB.model.Tokotron import RepresentationMode
+from evaluate import TokotronEvaluator
 
 
 logger = logging.getLogger(__name__)
@@ -39,6 +42,23 @@ SPECIAL_TOKEN_COUNT = 1
 # Brain class for speech recognition training
 class TokotronBrain(sb.Brain):
     """Class that manages the training loop. See speechbrain.core.Brain."""
+
+    def __init__(
+        self,
+        modules=None,
+        opt_class=None,
+        hparams=None,
+        run_opts=None,
+        checkpointer=None,
+    ):
+        super().__init__(
+            modules, opt_class, hparams, run_opts, checkpointer,
+        )
+        self.evaluator = TokotronEvaluator(
+            hparams=hparams,
+            create_waveform_fn=self.create_waveform,
+            device=self.device,
+        )
 
     def compute_forward(self, batch, stage):
         """Runs all the computation of the Tokotron TTS
@@ -58,8 +78,6 @@ class TokotronBrain(sb.Brain):
         batch = batch.to(self.device)
         tokens, tokens_length = batch.tokens
         audio, audio_length = batch.audio_bos
-        if self.compression:
-            audio = self.compression_model.compress(audio)
         emb = None
         if self.use_spk_emb:
             emb = {"spk": batch.spk_emb.data.squeeze(1)}
@@ -69,10 +87,38 @@ class TokotronBrain(sb.Brain):
             input_length=tokens_length,
             audio=audio,
             audio_length=audio_length,
-            emb=emb
+            emb=emb,
         )
 
         return predictions
+
+    @torch.no_grad()
+    def evaluate_batch(self, batch, stage):
+        """Evaluate one batch, override for different procedure than train.
+
+        The default implementation depends on two methods being defined
+        with a particular behavior:
+
+        * ``compute_forward()``
+        * ``compute_objectives()``
+
+        Arguments
+        ---------
+        batch : list of torch.Tensors
+            Batch of data to use for evaluation. Default implementation assumes
+            this batch has two elements: inputs and targets.
+        stage : Stage
+            The stage of the experiment: Stage.VALID, Stage.TEST
+
+        Returns
+        -------
+        detached loss
+        """
+        out = self.compute_forward(batch, stage=stage)
+        loss = self.compute_objectives(out, batch, stage=stage)
+        if self.is_evaluating:
+            self.evaluator.evaluate_batch(batch)
+        return loss.detach().cpu()
 
     def compute_objectives(self, predictions, batch, stage):
         """Computes the loss given the predicted and targeted outputs. We here
@@ -95,8 +141,6 @@ class TokotronBrain(sb.Brain):
         """
         batch = batch.to(self.device)
         audio, audio_length = batch.audio_pad
-        if self.compression:
-            audio = self.compression_model.compress(audio)
         loss_details = self.hparams.compute_cost(
             predictions=predictions,
             audio=audio,
@@ -126,7 +170,6 @@ class TokotronBrain(sb.Brain):
             The currently-starting epoch. This is passed
             `None` during the test stage.
         """
-        self.create_perfect_samples()
         self.loss_metric = sb.utils.metric_stats.MultiMetricStats(
             metric=self.hparams.compute_cost, batch_eval=True,
         )
@@ -147,17 +190,20 @@ class TokotronBrain(sb.Brain):
                 )
             if vocabulary is not None:
                 self.modules.model.init_audio_emb(vocabulary)
-        # Load the compression model only if compression is enables
-        self.compression = getattr(self.hparams, "compression", False)
-        if self.compression:
-            self.compression_model = self.hparams.compression_model(
-                run_opts={"device": self.device}
-            )
-            self.modules.model.compression_model = self.compression_model
-
         # Speaker embeddings are optional and are used only to pretrain
         # multispeaker models
         self.use_spk_emb = getattr(self.hparams, "use_spk_emb", False)
+
+        self.is_evaluating = False
+        if stage == sb.Stage.VALID:
+            if self.is_eval_epoch(epoch):
+                self.evaluator.on_evaluate_start(stage, epoch)
+                self.is_evaluating = True
+            else:
+                logger.info("No evaluation on epoch %d", epoch)
+        elif stage == sb.Stage.TEST:
+            self.evaluator.on_evaluate_start(stage, epoch)
+            self.is_evaluating = True
 
     def on_stage_end(self, stage, stage_loss, epoch):
         """Gets called at the end of an epoch.
@@ -184,7 +230,9 @@ class TokotronBrain(sb.Brain):
 
             if self.hparams.lr_annealing_mode == "epoch":
                 _, new_lr = self.hparams.lr_annealing(stage_loss)
-                sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr, param_group=0)
+                sb.nnet.schedulers.update_learning_rate(
+                    self.optimizer, new_lr, param_group=0
+                )
 
             lr = self.optimizer.param_groups[0]["lr"]
 
@@ -200,7 +248,8 @@ class TokotronBrain(sb.Brain):
                 meta={"loss": stage_stats["loss"]}, min_keys=["loss"],
             )
 
-            self.create_samples()
+        if stage != sb.Stage.TRAIN and self.is_eval_epoch(epoch):
+            self.evaluator.on_evaluate_end()
 
     def fit_batch(self, batch):
         """Fit one batch, override to do multiple updates.
@@ -229,96 +278,35 @@ class TokotronBrain(sb.Brain):
             self.hparams.lr_annealing(self.optimizer)
         return loss
 
-    def create_samples(self):
-        """Writes audio samples at the end of an epoch"""
-        epoch = self.hparams.epoch_counter.current
-        if epoch % self.hparams.samples_interval != 0:
-            return
-        if self.debug:
-            self.modules.model.decoder.infer_max_decoder_steps = (
-                self.hparams.debug_infer_max_audio_length
-            )
-        sample_loader = sb.dataio.dataloader.make_dataloader(
-            self.sample_data, **self.hparams.sample_dataloader_opts,
-        )
-        with self.hparams.progress_report:
-            for batch in sample_loader:
-                batch = batch.to(self.device)
-                tokens, tokens_length = batch.tokens
-                emb = None
-                if self.use_spk_emb:
-                    emb = {"spk": batch.spk_emb.data.squeeze(1)}
-                with torch.no_grad():
-                    infer_out = self.modules.model.infer(
-                        input_tokens=tokens, input_length=tokens_length,
-                        emb=emb
-                    )
-                    wav = self.create_waveform(
-                        audio=infer_out.audio,
-                        length=infer_out.length
-                    )
-                self.hparams.progress_report.write(
-                    ids=batch.uttid,
-                    audio=wav,
-                    length_pred=infer_out.length,
-                    length=batch.audio_pad.lengths,
-                    tgt_max_length=batch.audio_pad.data.size(1),
-                    alignments=infer_out.alignments,
-                    p_eos=infer_out.p_eos,
-                )
-
-    def create_perfect_samples(self):
-        """Creates the best samples that can be created using
-        the vocoder provided, for comparison purposes"""
-        if not self.hparams.progress_logger["perfect_samples_created"]:
-            sample_loader = sb.dataio.dataloader.make_dataloader(
-                self.sample_data, **self.hparams.sample_dataloader_opts
-            )
-            for batch in sample_loader:
-                batch = batch.to(self.device)
-                sample_audio, length = batch.audio_pad
-                with torch.no_grad():
-                    samples = self.create_waveform(sample_audio, length)
-                if samples.dim() == 3:
-                    samples = samples.squeeze(1)
-                max_len = samples.size(1)
-                samples_length_abs = (length * max_len).int()
-                with self.hparams.progress_logger:
-                    for item_id, item_wav, item_length in zip(
-                        batch.uttid, samples, samples_length_abs
-                    ):
-                        item_cut = item_wav[: item_length.item()]
-                        self.hparams.progress_logger.save(
-                            name=f"{item_id}.wav",
-                            content=item_cut.detach().cpu(),
-                            mode="audio",
-                            folder="_perfect",
-                            samplerate=self.hparams.model_sample_rate,
-                        )
-                    self.hparams.progress_logger[
-                        "perfect_samples_created"
-                    ] = True
-                    self.hparams.progress_logger.clear()
-
     def init_optimizers(self):
         """Custom optimizer initialization
         """
-        representation_mode = getattr(self.hparams, "representation_mode", RepresentationMode.DISCRETE)
+        representation_mode = getattr(
+            self.hparams, "representation_mode", RepresentationMode.DISCRETE
+        )
         representation_mode = RepresentationMode(representation_mode)
         if representation_mode == RepresentationMode.CONTINUOUS:
             audio_emb_params = self.modules.model.decoder.audio_emb.parameters()
             audio_emb_params_set = set(audio_emb_params)
             model_params = [
-                param for param in self.modules.parameters()
+                param
+                for param in self.modules.parameters()
                 if param not in audio_emb_params_set
             ]
-            self.optimizer = self.opt_class([
-                {"params": model_params},
-                {"params": audio_emb_params, "lr": self.hparams.audio_emb_lr,
-                 "weight_decay": self.hparams.audio_emb_weight_decay}]
+            self.optimizer = self.opt_class(
+                [
+                    {"params": model_params},
+                    {
+                        "params": audio_emb_params,
+                        "lr": self.hparams.audio_emb_lr,
+                        "weight_decay": self.hparams.audio_emb_weight_decay,
+                    },
+                ]
             )
         else:
-            self.optimizer = self.opt_class(self.modules.model.parameters(), lr=self.hparams.lr)
+            self.optimizer = self.opt_class(
+                self.modules.model.parameters(), lr=self.hparams.lr
+            )
 
     def create_waveform(self, audio, length):
         """Creates a waveform from a discrete or continuous audio
@@ -336,6 +324,25 @@ class TokotronBrain(sb.Brain):
         wav : torch.Tensor
         """
         raise NotImplementedError()
+
+    def is_eval_epoch(self, epoch):
+        """Determines whether or not evaluation should be performed
+        in the specieied epoch
+
+        Arguments
+        ---------
+        epoch : int
+            The epoch number. If omitted, the epoch number from the
+            epoch counter will be used
+
+        Returns
+        -------
+        eval_epoch : bool
+            True if evaluation should be run in this epoch, false
+            otherwise"""
+        if epoch is None:
+            epoch = self.hparam.epoch_counter.current
+        return epoch % self.hparams.eval_interval == 0
 
 
 INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phonemes"}
@@ -378,16 +385,38 @@ def dataio_prepare(hparams):
     input_feature = INPUT_FEATURE_MAP[hparams["input"]]
 
     @sb.utils.data_pipeline.takes("label")
-    @sb.utils.data_pipeline.provides("label_norm")
+    @sb.utils.data_pipeline.provides("label_norm", "label_norm_eval")
     def text_pipeline(label):
         """Processes the transcriptions to generate proper labels"""
-        return label.upper()
+        label_norm = label.upper()
+        yield label_norm
+
+        label_norm_eval = RE_PUNCTUATION.sub("", label_norm)
+        yield label_norm_eval
 
     @sb.utils.data_pipeline.takes(input_feature)
     @sb.utils.data_pipeline.provides("tokens")
     def tokens_pipeline(label):
         """Processes the transcriptions to generate proper labels"""
         return label_encoder.encode_sequence_torch(label)
+
+    @sb.utils.data_pipeline.takes("wav")
+    @sb.utils.data_pipeline.provides("sig")
+    def audio_ref_pipeline(wav):
+        """The audio loading pipeline for references
+
+        Arguments
+        ---------
+        wav : str
+            The file path
+
+        Returns
+        -------
+        sig : torch.Tensor
+            The waveform
+        """
+        sig = sb.dataio.dataio.read_audio(wav)
+        return sig
 
     use_silence_padding = hparams.get("use_silence_padding", True)
 
@@ -401,7 +430,8 @@ def dataio_prepare(hparams):
         audio_features = "audio_ssl"
 
     audio_tokens_per_step = (
-        len(hparams[layers_key]) if layers_key in hparams
+        len(hparams[layers_key])
+        if layers_key in hparams
         else hparams["audio_tokens_per_step"]
     )
     if use_silence_padding:
@@ -416,15 +446,20 @@ def dataio_prepare(hparams):
             * hparams["eos_index"]
         )
     silence_token = silence_token.cpu()
-    silence_padding = silence_token if representation_mode == RepresentationMode.DISCRETE else silence_emb
+    silence_padding = (
+        silence_token
+        if representation_mode == RepresentationMode.DISCRETE
+        else silence_emb
+    )
     silence_padding_len = int(math.ceil(hparams["silence_padding"]))
     bos_width = hparams.get("bos_width", 1)
     audio_bos_prefix = (
-        torch.ones(bos_width, audio_tokens_per_step)
-        * hparams["bos_index"]
+        torch.ones(bos_width, audio_tokens_per_step) * hparams["bos_index"]
     )
     if representation_mode == RepresentationMode.CONTINUOUS:
-        audio_bos_prefix = audio_bos_prefix.unsqueeze(-1).repeat(1, 1, hparams["audio_dim"])
+        audio_bos_prefix = audio_bos_prefix.unsqueeze(-1).repeat(
+            1, 1, hparams["audio_dim"]
+        )
 
     @sb.utils.data_pipeline.takes(audio_features)
     @sb.utils.data_pipeline.provides("audio_pad", "audio_bos")
@@ -437,7 +472,12 @@ def dataio_prepare(hparams):
         audio_bos = torch.cat([audio_bos_prefix, audio_pad], dim=0)
         yield audio_bos
 
-    dynamic_items = [text_pipeline, tokens_pipeline, audio_pipeline]
+    dynamic_items = [
+        text_pipeline,
+        tokens_pipeline,
+        audio_pipeline,
+        audio_ref_pipeline,
+    ]
 
     init_sequence_encoder(hparams)
     use_spk_emb = hparams.get("use_spk_emb", False)
@@ -447,17 +487,25 @@ def dataio_prepare(hparams):
         "tokens",
         "audio_pad",
         "audio_bos",
+        "label_norm_eval",
     ]
     if use_spk_emb:
         prepared_features.append("spk_emb")
         output_keys.append("spk_emb")
 
+    eval_output_keys = [*output_keys, "sig"]
+
     for dataset in data_info:
+        if dataset == "train":
+            dataset_output_keys = output_keys
+        else:
+            dataset_output_keys = eval_output_keys
+
         dynamic_dataset = sb.dataio.dataset.DynamicItemDataset.from_json(
             json_path=data_info[dataset],
             replacements={"data_root": data_folder},
             dynamic_items=dynamic_items,
-            output_keys=output_keys,
+            output_keys=dataset_output_keys,
         )
 
         add_prepared_features(
@@ -646,6 +694,11 @@ def apply_overfit_test(hparams, dataset):
     return result
 
 
+RE_PUNCTUATION = re.compile(
+    "|".join(re.escape(char) for char in string.punctuation)
+)
+
+
 def run_experiment(brain_cls):
     # Reading command line arguments
     hparams_file, run_opts, overrides = sb.parse_arguments(sys.argv[1:])
@@ -655,7 +708,23 @@ def run_experiment(brain_cls):
 
     # Load hyperparameters file with command-line overrides
     with open(hparams_file) as fin:
-        hparams = load_hyperpyyaml(fin, overrides)
+        yaml = fin.read()
+
+    # Load evaluation hyperparameters
+    eval_hparams_file = Path(hparams_file).parent / "eval.yaml"
+    if eval_hparams_file.exists():
+        logger.info(
+            "Using evaluation hyperparameters from %s", eval_hparams_file
+        )
+        with open(eval_hparams_file) as eval_hparams:
+            hparams_yaml = eval_hparams.read()
+            yaml = "\n".join([yaml, hparams_yaml])
+    else:
+        logger.info(
+            "%s not found - not using evaluation hyperparameters",
+            eval_hparams_file,
+        )
+    hparams = load_hyperpyyaml(yaml, overrides, overrides_must_match=True)
 
     # Create experiment directory
     sb.create_experiment_directory(
@@ -670,7 +739,11 @@ def run_experiment(brain_cls):
     representation_mode = RepresentationMode(
         hparams.get("representation_mode", RepresentationMode.DISCRETE)
     )
-    audio_features = "audio_tokens" if representation_mode == RepresentationMode.DISCRETE else "audio_ssl"
+    audio_features = (
+        "audio_tokens"
+        if representation_mode == RepresentationMode.DISCRETE
+        else "audio_ssl"
+    )
     extract_features = [audio_features]
     if hparams.get("use_spk_emb", False):
         extract_features.append("spk_emb")

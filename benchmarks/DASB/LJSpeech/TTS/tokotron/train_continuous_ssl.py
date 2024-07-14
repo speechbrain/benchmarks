@@ -19,6 +19,7 @@ from speechbrain.dataio.dataio import clean_padding_
 
 class TokotronContinuousSSLBrain(TokotronBrain):
     """Tokotron implementation for Encodec"""
+
     def create_waveform(self, audio, length):
         """Creates a waveform from a discrete or continuous audio
         representation

@@ -404,4 +404,3 @@ class SpeechTokenizerInterface(nn.Module):
         # Decoding from RVQ-i:j tokens from the ith quantizers to the jth quantizers
         # wav = self.model.decode(codes[i: (j + 1)], st=i)
         return wav.squeeze(1)
-

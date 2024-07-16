@@ -39,7 +39,9 @@ class TokotronDiscreteSSLBrain(TokotronBrain):
             torch.tensor(
                 self.hparams.vocoder_available_layers, device=self.device
             ).unsqueeze(0)
-            == torch.tensor(self.hparams.token_model_layers).unsqueeze(1)
+            == torch.tensor(
+                self.hparams.token_model_layers, device=self.device
+            ).unsqueeze(1)
         )
         self.layer_offset = (
             torch.tensor(layers_idx, device=self.device) * self.num_units

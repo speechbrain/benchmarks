@@ -341,7 +341,7 @@ class TokotronBrain(sb.Brain):
             True if evaluation should be run in this epoch, false
             otherwise"""
         if epoch is None:
-            epoch = self.hparam.epoch_counter.current
+            epoch = self.hparams.epoch_counter.current
         return epoch % self.hparams.eval_interval == 0
 
 

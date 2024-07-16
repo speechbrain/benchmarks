@@ -203,13 +203,6 @@ sample_dataloader_opts:
 
 token_model_kwargs:
     SSL_layers: !ref <token_model_layers>
-    deduplicates: !apply:benchmarks.DASB.utils.hparams.repeat_for_layers
-        layers: !ref <token_model_layers>
-        value: False
-    bpe_tokenizers: !apply:benchmarks.DASB.utils.hparams.repeat_for_layers
-        layers: !ref <token_model_layers>
-        value: null
-
 
 extract_features_opts:
     dataloader_opts:

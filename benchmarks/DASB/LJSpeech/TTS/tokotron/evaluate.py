@@ -40,9 +40,6 @@ class TokotronEvaluator:
         modules = self.hparams.modules
         self.modules = ModuleDict(modules).to(self.device)
         self.modules.model.vocoder = None
-        self.vocoder_has_details = hasattr(
-            self.modules.vocoder, "decode_batch_with_details"
-        )
         self.enabled_evaluators = set(self.hparams.evaluations.split(","))
         evaluators = hparams.get("evaluators", {})
         if evaluators:
@@ -108,6 +105,8 @@ class TokotronEvaluator:
         self.sample_text = []
         self.sample_file_names = []
         self.ref_file_names = []
+        if hasattr(self.modules, "vococer"):
+            vocoder_to_device(self.modules.vocoder, self.device)
 
     def get_output_folder(self, stage, epoch):
         """Computes the output folder of evaluation results
@@ -209,7 +208,6 @@ class TokotronEvaluator:
         with torch.no_grad():
             batch = batch.to(self.device)
             tokens, tokens_length = batch.tokens
-            vocoder_to_device(self.modules.vocoder, self.device)
             infer_out = self.modules.model.infer(
                 input_tokens=tokens, input_length=tokens_length
             )

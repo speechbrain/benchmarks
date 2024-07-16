@@ -10,7 +10,7 @@ from speechbrain.inference.interfaces import Pretrained
 from speechbrain.inference.ASR import EncoderDecoderASR
 from speechbrain.lobes.models.huggingface_transformers import Whisper
 from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
-from speechbrain.decoders.seq2seq import S2SWhisperGreedySearch
+from speechbrain.decoders.seq2seq import S2SWhisperGreedySearcher
 from speechbrain.dataio.batch import PaddedBatch
 from speechbrain.utils.metric_stats import ErrorRateStats
 from speechbrain.utils.superpowers import run_shell
@@ -511,12 +511,10 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         The path where Whisper will be saved
     sample_rate: int, optional
         The audio sample rate
-    bos_index : int, optional
-        The index of the BOS token
-    eos_index : int, optional
-        The index of the EOS token
     min_decode_ratio : float, optional
         The minimum decode ratio
+    max_decode_ratio : float, optional
+        The maximum decode ratio
     run_opts : dict, optional
         Run options for the Whisper model
     unbatch : bool, optional
@@ -533,8 +531,6 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         source,
         savedir=None,
         sample_rate=22050,
-        bos_index=50363,
-        eos_index=50257,
         min_decode_ratio=0.0,
         max_decode_ratio=1.0,
         run_opts=None,
@@ -549,21 +545,34 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
             source, savedir, sample_rate, freeze=True, freeze_encoder=True,
         )
         self.model.tokenizer.set_prefix_tokens("english", "transcribe", False)
-        self.searcher = S2SWhisperGreedySearch(
+        self.searcher = S2SWhisperGreedySearcher(
             self.model,
-            bos_index=bos_index,
-            eos_index=eos_index,
             min_decode_ratio=min_decode_ratio,
             max_decode_ratio=max_decode_ratio,
-        )
-        self.searcher.set_decoder_input_tokens(
-            self.model.tokenizer.prefix_tokens
         )
         device = run_opts.get("device", next(self.model.parameters()).device)
         self.unbatch = unbatch
         self.to(device)
 
     def evaluate_samples(self, wavs, length, text, sample_rate):
+        """Evaluates a batch of samples
+
+        Arguments
+        ---------
+        wavs : torch.Tensor
+            A batch of waveforms
+        length : torch.Tensor
+            Relative lengths
+        text : list
+            Text labels corresponding to the waveforms
+        sample_rate : int
+            The sample rate of the waveforms
+
+        Returns
+        -------
+        results : dict
+            The evaluation results
+        """
         if self.unbatch:
             batch_size = len(wavs)
             length_abs = (length * wavs.size(1)).int()
@@ -591,11 +600,33 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
             return self._evaluate_samples(wavs, length, text, sample_rate)
 
     def _evaluate_samples(self, wavs, length, text, sample_rate):
+        """Evaluates a batch of samples. This function is meant
+        to be used internally. evaluate_samples will call
+        it multiple times if unbatch is enabled.
+
+        Arguments
+        ---------
+        wavs : torch.Tensor
+            A batch of waveforms
+        length : torch.Tensor
+            Relative lengths
+        text : list
+            Text labels corresponding to the waveforms
+        sample_rate : int
+            The sample rate of the waveforms
+
+        Returns
+        -------
+        results : dict
+            The evaluation results
+        """
         if text is None:
             raise ValueError("This evaluator requires ground-truth text")
         wavs = self.resample(wavs, sample_rate)
-        enc_out = self.model.forward_encoder(wavs)
-        predicted_words, _, _, _ = self.searcher(enc_out, length)
+        wavs = self.model.pad_or_trim(wavs)
+        mels = self.model.log_mel_spectrogram(wavs)
+        enc_out = self.model.forward_encoder(mels)
+        predicted_words, _, _, _ = self.searcher(enc_out.detach(), length)
         predicted_words = self.model.tokenizer.batch_decode(
             predicted_words, skip_special_tokens=True
         )
@@ -617,7 +648,20 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
             "target": text,
         }
 
-    def normalize(seflf, text):
+    def normalize(self, text):
+        """Performs text normalization (uppercase, remove whitespace,
+        remove punctuation)
+
+        Arguments
+        ---------
+        text : str
+            Unnormalized text
+
+        Returns
+        -------
+        text : str
+            Normalized text
+        """
         text = text.upper()
         text = text.strip()
         text = RE_PUNCTUATION.sub("", text)

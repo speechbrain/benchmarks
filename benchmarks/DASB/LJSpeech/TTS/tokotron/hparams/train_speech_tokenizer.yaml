@@ -98,10 +98,12 @@ gate_offset: !apply:benchmarks.DASB.model.Tokotron.distance_diff_loss_ramp
 silence_padding: !ref <gate_offset>
 
 # Token model (pretrained)
-token_model: !new:benchmarks.DASB.model.custom_model.SpeechTokenizerInterface
+speech_tokenizer: !new:speechbrain.lobes.models.discrete.speechtokenizer_interface.SpeechTokenizer_interface
     source: !ref <token_model_src>
     save_path: !ref <pretrained_model_save_folder>
-    shape: compat
+
+token_model: !new:benchmarks.DASB.model.custom_model.SpeechTokenizerFeatureExtractor
+    speech_tokenizer: !ref <speech_tokenizer>
     codebooks: !ref <audio_tokens_per_step>
 
 # Dataloader options

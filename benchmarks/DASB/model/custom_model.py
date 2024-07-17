@@ -275,7 +275,7 @@ class DACFeatureExtractor(nn.Module):
         return emb.transpose(1, 2)
 
 
-class SpeechTokenizerInterface(nn.Module):
+class SpeechTokenizerFeatureExtractor(nn.Module):
     """This lobe enables the integration of HuggingFace and SpeechBrain
     pretrained SpeechTokenizer.
 
@@ -290,45 +290,16 @@ class SpeechTokenizerInterface(nn.Module):
 
     Arguments
     ---------
-    source : str
-        HuggingFace hub name: e.g "fnlp/SpeechTokenizer"
-    save_path : str
-        Path (dir) of the downloaded model.
-
-    Example
-    -------
-    >>> import torch
-    >>> inputs = torch.rand([10, 600])
-    >>> model_hub = "fnlp/SpeechTokenizer"
-    >>> save_path = "savedir"
-    >>> model =SpeechTokenizer_interface(model_hub, save_path)  # doctest: +SKIP
-    >>> tokens = model(inputs)  # doctest: +SKIP
-    >>> print(tokens.shape)  # doctest: +SKIP
-    torch.Size([8, 10, 2])
-    >>> wav=model.decode(tokens)
-    >>> print(wav.shape)
-    torch.Size([10, 640])
+    speech_tokenizer : speechbrain.lobes.models.discrete.speechtokenizer_interface.SpeechTokenizer_interface
+        The speech tokenizer interface
+    codebooks : int, optional
+        The number of codebooks to use - if omitted,
     """
 
-    def __init__(
-        self, source, save_path, codebooks=None, shape="raw",
-    ):
+    def __init__(self, speech_tokenizer, codebooks=None):
         super().__init__()
-
-        saved_dir = snapshot_download(
-            repo_id=source,
-            allow_patterns=["*config.json", "*SpeechTokenizer.pt"],
-            cache_dir=save_path,
-        )
-
-        config_path = f"{saved_dir}/speechtokenizer_hubert_avg/config.json"
-        ckpt_path = f"{saved_dir}/speechtokenizer_hubert_avg/SpeechTokenizer.pt"
-        self.model = SpeechTokenizer.load_from_checkpoint(
-            config_path, ckpt_path
-        )
-        self.model.eval()
+        self.speech_tokenizer = speech_tokenizer
         self.codebooks = codebooks
-        self.shape = shape
 
     def forward(self, wav, wav_lens=None):
         """Takes an input waveform and return its corresponding wav2vec encoding.
@@ -367,12 +338,12 @@ class SpeechTokenizerInterface(nn.Module):
 
         """
         # Extract discrete codes from SpeechTokenizer
-        with torch.no_grad():
-            codes = self.model.encode(wav.unsqueeze(1))  # codes: (n_q, B, T)
-            if self.codebooks is not None:
-                codes = codes[: self.codebooks]
-            if self.shape == "compat":
-                codes = codes.permute(1, 2, 0)
+        codes = self.speech_tokenizer.encode(
+            wav.unsqueeze(1), wav_lens
+        )  # codes: (n_q, B, T)
+        if self.codebooks is not None:
+            codes = codes[: self.codebooks]
+        codes = codes.permute(1, 2, 0)
         return codes
 
     def decode(self, codes):
@@ -388,19 +359,5 @@ class SpeechTokenizerInterface(nn.Module):
         wav : torch.Tensor (signal)
             A batch of reconstructed audio signals.
         """
-        if self.shape == "compat":
-            codes = codes.permute(2, 0, 1)
-
-        RVQ_1 = codes[
-            :1, :, :
-        ]  # Contain content info, can be considered as semantic tokens
-        RVQ_supplement = codes[
-            1:, :, :
-        ]  # Contain timbre info, complete info lost by the first quantizer
-
-        # Concatenating semantic tokens (RVQ_1) and supplementary timbre tokens and then decoding
-        wav = self.model.decode(torch.cat([RVQ_1, RVQ_supplement], axis=0))
-
-        # Decoding from RVQ-i:j tokens from the ith quantizers to the jth quantizers
-        # wav = self.model.decode(codes[i: (j + 1)], st=i)
-        return wav.squeeze(1)
+        codes = codes.permute(2, 0, 1)
+        return self.speech_tokenizer.decode(codes)

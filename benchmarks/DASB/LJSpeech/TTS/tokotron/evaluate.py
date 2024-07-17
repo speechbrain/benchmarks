@@ -105,7 +105,7 @@ class TokotronEvaluator:
         self.sample_text = []
         self.sample_file_names = []
         self.ref_file_names = []
-        if hasattr(self.modules, "vococer"):
+        if hasattr(self.modules, "vocoder"):
             vocoder_to_device(self.modules.vocoder, self.device)
 
     def get_output_folder(self, stage, epoch):

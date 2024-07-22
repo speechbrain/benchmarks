@@ -23,8 +23,11 @@ vocab_size: 1000
 unk_id: 1
 pad_id: 0
 
+# ssl_model_type: hubert, wavlm, wav2vec2
+# ssl_hub: facebook/hubert-large-ll60k, microsoft/wavlm-large,  facebook/wav2vec2-large
+ssl_model_type: hubert # hubert, wavml or wav2vec2
 ssl_hub: facebook/hubert-large-ll60k
-ssl_folder: !ref <save_folder>/hubert_checkpoint
+ssl_folder: !ref <save_folder>/ssl_checkpoint
 kmeans_repo_id: speechbrain/SSL_Quantization
 kmeans_cache_dir: !ref <save_folder>/kmeans_checkpoint
 kmeans_dataset: LibriSpeech-100-360-500
@@ -38,19 +41,39 @@ bpe_tokenizer_path: [null, null]
 
 
 tokenizer_config:
-   SSL_layers: !ref <ssl_layer_num>
-   deduplicates: !ref <deduplicate>
-   bpe_tokenizers: !ref <bpe_tokenizer_path>
+    SSL_layers: !ref <ssl_layer_num>
+    deduplicates: !ref <deduplicate>
+    bpe_tokenizers: !ref <bpe_tokenizer_path>
 
 
-discrete_ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.discrete_hubert.DiscreteHuBERT
-   source: !ref <ssl_hub>
-   output_norm: False
-   freeze: !ref <freeze_ssl>
-   freeze_feature_extractor: !ref <freeze_feature_extractor>
-   output_all_hiddens: True
-   save_path: !ref <ssl_folder>
-   kmeans_dataset: !ref <kmeans_dataset>
-   kmeans_repo_id: !ref <kmeans_repo_id>
-   num_clusters: !ref <num_clusters>
-   kmeans_cache_dir: !ref <kmeans_cache_dir>
+ssl_model: !apply:speechbrain.utils.hparams.choice
+    value: !ref <ssl_model_type>
+    choices:
+        wavlm: !new:speechbrain.lobes.models.huggingface_transformers.wavlm.WavLM
+            source: !ref <ssl_hub>
+            output_norm: False
+            freeze: !ref <freeze_ssl>
+            freeze_feature_extractor: !ref <freeze_feature_extractor>
+            output_all_hiddens: True
+            save_path: !ref <ssl_folder>
+        hubert: !new:speechbrain.lobes.models.huggingface_transformers.hubert.HuBERT
+            source: !ref <ssl_hub>
+            output_norm: False
+            freeze: !ref <freeze_ssl>
+            freeze_feature_extractor: !ref <freeze_feature_extractor>
+            output_all_hiddens: True
+            save_path: !ref <ssl_folder>
+        wav2vec2: !new:speechbrain.lobes.models.huggingface_transformers.wav2vec2.Wav2Vec2
+            source: !ref <ssl_hub>
+            output_norm: False
+            freeze: !ref <freeze_ssl>
+            freeze_feature_extractor: !ref <freeze_feature_extractor>
+            output_all_hiddens: True
+            save_path: !ref <ssl_folder>
+
+discrete_ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.discrete_ssl.DiscreteSSL
+    save_path: !ref <kmeans_cache_dir>
+    ssl_model: !ref <ssl_model>
+    kmeans_dataset: !ref <kmeans_dataset>
+    kmeans_repo_id: !ref <kmeans_repo_id>
+    num_clusters: !ref <num_clusters>

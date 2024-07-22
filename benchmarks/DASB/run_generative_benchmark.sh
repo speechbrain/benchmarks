@@ -10,5 +10,5 @@ for i in "${!ConsideredTasks[@]}"; do
         task=${ConsideredTasks[i]}
         downstream=${DownStreams[i]}
         dataset_folder=${DatasetsFolders[i]}
-        python $task/$downstream/train_$tokenizer_name.py $task/$downstream/hparams/train_$tokenizer_name.yaml   --output_folder $output_folder/$tokenizer_name/$task/$downstream --data_folder $dataset_folder 
+        python $task/$downstream/train_$tokenizer_name.py $task/$downstream/hparams/train_$tokenizer_name.yaml   --output_folder $output_folder/$tokenizer_name/$task/$downstream --data_folder $dataset_folder
 done

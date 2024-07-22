@@ -65,7 +65,7 @@ vocab_size: !ref <num_clusters>
 SSL_layers: [1, 3, 7, 12, 18, 23]
 num_codebooks: !apply:len [!ref <SSL_layers>]
 ssl_hub: facebook/hubert-large-ll60k
-vocoder_hub: chaanks/hifigan-hubert-l1-3-7-12-18-23-k1000-LibriTTS  # Must be consistent with ssl_hub/SSL_layers/num_clusters
+vocoder_hub: speechbrain/hifigan-hubert-l1-3-7-12-18-23-k1000-LibriTTS  # Must be consistent with ssl_hub/SSL_layers/num_clusters
 kmeans_repo_id: speechbrain/SSL_Quantization
 kmeans_dataset: LibriSpeech-100-360-500
 ssl_model_type: hubert

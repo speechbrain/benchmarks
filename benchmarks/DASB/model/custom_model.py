@@ -68,7 +68,11 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
         self.embedding = torch.nn.Embedding(
             num_codebooks * vocab_size, emb_dim
         ).requires_grad_(not self.freeze)
-        #  TODO: handle padding tokens and initialization with embedding from codec
+        self.init = init
+
+    def init_embedding(self, weights):
+        with torch.no_grad():
+            self.embedding.weight = torch.nn.Parameter(weights)
 
     def forward(self, in_tokens):
         """Computes the embedding for discrete tokens.

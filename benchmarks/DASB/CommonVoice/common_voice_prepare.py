@@ -186,7 +186,7 @@ def process_line(line, data_folder, language, accented_letters):
     duration = info.num_frames / info.sample_rate
 
     # Getting transcript
-    words = line.split("\t")[2]
+    words = line.split("\t")[3]
 
     # Unicode Normalization
     words = unicode_normalisation(words)

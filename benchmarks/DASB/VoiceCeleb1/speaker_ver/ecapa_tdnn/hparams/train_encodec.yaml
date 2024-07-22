@@ -1,0 +1,169 @@
+# ################################
+# Recipe for training then testing speaker embeddings using the VoxCeleb1 Dataset.
+# Embeddings are used using the ECAPA-TDNN network
+#
+# Authors
+# * Pooneh Mousavi 2024
+# ################################
+
+# Basic parameters
+seed: 1986
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+output_folder: !ref results/VoxCeleb1/encodec/<seed>
+save_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/train_log.txt
+# Data files
+data_folder: !PLACEHOLDER  # e.g. /path/to/Voxceleb
+train_annotation: !ref <save_folder>/train.csv
+valid_annotation: !ref <save_folder>/dev.csv
+
+verification_file: https://www.robots.ox.ac.uk/~vgg/data/voxceleb/meta/veri_test2.txt #path/to/veri_test2.txt
+
+train_data: !ref <save_folder>/train.csv
+enrol_data: !ref <save_folder>/enrol.csv
+test_data: !ref <save_folder>/test.csv
+dev_data: !ref  <save_folder>/dev.csv
+
+verif_batch_size: 2
+n_train_snts: 300000 # used for normalization stats
+
+# Dataloader options
+train_dataloader_opts:
+    batch_size: !ref <batch_size>
+
+enrol_dataloader_opts:
+    batch_size: !ref <batch_size>
+
+test_dataloader_opts:
+    batch_size: !ref <batch_size>
+
+skip_prep: False
+ckpt_interval_minutes: 15 # save checkpoint every N min
+pretrain: True
+do_verification: True
+
+# Training parameters
+precision: fp32
+number_of_epochs: 15
+batch_size: 8
+lr: 0.001
+base_lr: 0.00000001
+max_lr: !ref <lr>
+step_size: 65000
+mask_length: 10
+mask_prob: 0.65
+lr_weights: 0.01
+original_sample_rate: 16000
+shuffle: True
+random_chunk: True
+sentence_len: 3
+
+### Config for Tokenizer
+# EnCodec parameters
+# sample_rate: [24000, 24000, 24000, 24000]
+# vocab_size: [1024, 1024, 1024, 1024]
+# bandwidth: [1.5, 3.0, 6.0, 12.0, 24.0]
+# num_codebooks: [2, 4, 8, 16, 32]
+vocab_size: 1024
+bandwidth: 1.5
+num_codebooks: 2
+sample_rate: 24000
+# Feature parameters
+encoder_dim: 1024
+# If set to True, the encoder_dim should be set to the dim of the tokenizer. For encodec it is 128.
+init_embedding: False
+freeze_embedding: False
+
+# Number of speakers
+out_n_neurons: 1211  #1211 for vox1  # 5994 for vox2, 7205 for vox1+vox2
+
+# Modules
+# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
+codec: !new:speechbrain.lobes.models.huggingface_transformers.encodec.Encodec
+    source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
+    save_path: !ref <save_folder>
+    sample_rate: !ref <sample_rate>
+    bandwidth: !ref <bandwidth>
+    flat_embeddings: False
+    freeze: True
+    renorm_embeddings: False
+
+discrete_embedding_layer: !new:custom_model.Discrete_EmbeddingLayer
+    num_codebooks: !ref <num_codebooks>
+    vocab_size: !ref <vocab_size>
+    emb_dim: !ref <encoder_dim>
+    freeze: !ref <freeze_embedding>
+    init: !ref <init_embedding>
+
+attention_mlp: !new:custom_model.AttentionMLP
+    input_dim: !ref <encoder_dim>
+    hidden_dim: !ref <encoder_dim>
+
+embedding_model: !new:speechbrain.lobes.models.ECAPA_TDNN.ECAPA_TDNN
+    input_size: !ref <encoder_dim>
+    channels: [1024, 1024, 1024, 1024, 3072]
+    kernel_sizes: [5, 3, 3, 3, 1]
+    dilations: [1, 2, 3, 4, 1]
+    groups: [1, 1, 1, 1, 1]
+    attention_channels: 128
+    lin_neurons: 192
+
+classifier: !new:speechbrain.lobes.models.ECAPA_TDNN.Classifier
+    input_size: 192
+    out_neurons: !ref <out_n_neurons>
+
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <number_of_epochs>
+
+
+modules:
+    embedding_model: !ref <embedding_model>
+    classifier: !ref <classifier>
+    attention_mlp: !ref <attention_mlp>
+    codec: !ref <codec>
+    discrete_embedding_layer: !ref <discrete_embedding_layer>
+
+model: !new:torch.nn.ModuleList
+    - [!ref <embedding_model>, !ref <classifier>, !ref <discrete_embedding_layer>, !ref <attention_mlp>]
+
+# Cost + optimization
+compute_error: !name:speechbrain.nnet.losses.classification_error
+
+compute_cost: !new:speechbrain.nnet.losses.LogSoftmaxWrapper
+    loss_fn: !new:speechbrain.nnet.losses.AdditiveAngularMargin
+        margin: 0.2
+        scale: 30
+
+
+model_opt_class: !name:torch.optim.Adam
+    lr: !ref <lr>
+    weight_decay: 0.000002
+
+lr_annealing: !new:speechbrain.nnet.schedulers.CyclicLRScheduler
+    base_lr: !ref <base_lr>
+    max_lr: !ref <max_lr>
+    step_size: !ref <step_size>
+
+
+# Logging + checkpoints
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <train_log>
+
+error_stats: !name:speechbrain.utils.metric_stats.MetricStats
+    metric: !name:speechbrain.nnet.losses.classification_error
+        reduction: batch
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        embedding_model: !ref <embedding_model>
+        scheduler_model: !ref <lr_annealing>
+        attention_mlp: !ref <attention_mlp>
+        codec: !ref <codec>
+        discrete_embedding_layer: !ref <discrete_embedding_layer>
+        classifier: !ref <classifier>
+        counter: !ref <epoch_counter>
+
+mean_var_norm_emb: !new:speechbrain.processing.features.InputNormalization
+    norm_type: global
+    std_norm: False

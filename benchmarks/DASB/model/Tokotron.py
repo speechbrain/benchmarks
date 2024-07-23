@@ -24,7 +24,6 @@ from speechbrain.nnet.attention import RelPosEncXL
 from speechbrain.nnet.embedding import Embedding
 from speechbrain.nnet.linear import Linear
 from speechbrain.nnet.losses import kldiv_loss, mse_loss, compute_masked_loss
-from benchmarks.DASB.model.custom_model import MultiEmbedding
 from speechbrain.dataio.dataio import length_to_mask
 from speechbrain.dataio.batch import PaddedBatch
 from speechbrain.decoders.seq2seq import S2STransformerBeamSearcher
@@ -2149,3 +2148,259 @@ class PositionalEncoding(TransformerPositionalEncoding):
 
     def load_state_dict(self, state_dict, strict=True, assign=False):
         pass
+
+
+class MultiEmbedding(nn.Module):
+    """A wrapper module with multiple embedding 'heads' - for
+    cases with multiple tokens per sequence
+
+    Arguments
+    ---------
+    num_embeddings : int
+        Size of the dictionary of embeddings.
+    embedding_dim : int
+        It is the dim of embedding (i.e, the dimensionality of the output).
+    num_heads : int
+        The number of embedding "heads" (i.e. tokens per step)
+    normalized : bool, optional
+        Whether to normalize the embeddings (for transformers)
+    d_model : int, optional
+        The model dimension (igored if not normalized)
+    norm_factor : float, optional
+        The normalization factor (multiplier)
+    """
+
+    def __init__(
+        self,
+        num_embeddings,
+        embedding_dim,
+        num_heads,
+        normalized=False,
+        d_model=512,
+        norm_factor=None,
+    ):
+        super().__init__()
+        self.emb = torch.nn.ModuleList(
+            torch.nn.Embedding(num_embeddings, embedding_dim)
+            for _ in range(num_heads)
+        )
+        self.normalized = normalized
+        if norm_factor is None:
+            norm_factor = math.sqrt(d_model) if normalized else 1.0
+        self.norm_factor = norm_factor
+
+    def forward(self, x):
+        """Computes the forward pass
+
+        Arguments
+        ---------
+        x : torch.Tensor
+            A tensor of indexes
+
+        Returns
+        -------
+        emb : torch.Tensor
+            An embedding tensor"""
+        emb = (
+            torch.cat(
+                [
+                    emb(x[..., idx].int()).unsqueeze(-2)
+                    for idx, emb in enumerate(self.emb)
+                ],
+                dim=-2,
+            )
+            * self.norm_factor
+        )
+        return emb
+
+    def initialize(self, emb):
+        """Initializes the embeddings with the specified embedding tensor
+
+        Arguments
+        ---------
+        emb : torch.Tensor
+            A (Layer x Embeddings x Embedding Dim) tensor"""
+        with torch.no_grad():
+            for head, head_emb in zip(self.emb, emb,):
+                head.weight.copy_(head_emb)
+
+    def all_weights(self):
+        """Returns all embedding weights as a single tensor"""
+        return torch.stack([emb.weight for emb in self.emb])
+
+
+class DACFeatureExtractor(nn.Module):
+    """An adapter for feature extraction
+
+    Arguments
+    ---------
+    dac : DAC
+        a DAC model
+    """
+
+    def __init__(self, dac, n_quantizers):
+        super().__init__()
+        self.dac = dac
+        self.dac.eval()
+        self.n_quantizers = n_quantizers
+
+    def encode(self, inputs, length):
+        """Encodes a raw audio sample using DAC
+
+        Arguments
+        ---------
+        inputs : torch.Tensor
+            A (Batch x Samples) or (Batch x Channel x Samples)
+            tensor of audio
+        length : torch.Tensor
+            A tensor of relative lengths
+
+        Returns
+        -------
+        tokens : torch.Tensor
+            A (Batch x Tokens x Heads) tensor of audio tokens
+        emb : torch.Tensor
+            Raw vector embeddings from the model's
+            quantizers
+
+        """
+        if inputs.dim() < 3:
+            inputs = inputs.unsqueeze(1)
+        emb, codes, _, _, _ = self.dac.encode(
+            inputs, n_quantizers=self.n_quantizers
+        )
+        emb.transpose_(1, 2)
+        codes.transpose_(1, 2)
+        max_len = emb.size(1)
+        mask = length_to_mask(
+            length * max_len, max_len, device=inputs.device
+        ).unsqueeze(-1)
+        return codes * mask, emb * mask
+
+    def forward(self, inputs, length):
+        """Encodes a raw audio sample using DAC
+
+        Arguments
+        ---------
+        inputs : torch.Tensor
+            A (Batch x Samples) or (Batch x Channel x Samples)
+            tensor of audio
+        length : torch.Tensor
+            A tensor of relative lengths
+
+        Returns
+        -------
+        tokens : torch.Tensor
+            A (Batch x Tokens x Heads) tensor of audio tokens
+        emb : torch.Tensor
+            Raw vector embeddings from the model's
+            quantizers
+
+        """
+        return self.encode(inputs, length)
+
+    def embeddings(self, tokens):
+        """Converts token indexes to vector embeddings
+
+        Arguments
+        ---------
+        tokens : torch.Tensor
+            a (Batch x Length x Heads) tensor of token indexes
+
+        Returns
+        -------
+        emb : torch.Tensor
+            a (Batch x Length x Heads x Embedding) tensor
+            of raw vector embeddings from the model's
+            quantizer codebooks
+        """
+        emb, _, _ = self.dac.quantizer.from_codes(tokens.transpose(1, 2).int())
+        return emb.transpose(1, 2)
+
+
+class SpeechTokenizerFeatureExtractor(nn.Module):
+    """This lobe enables the integration of HuggingFace and SpeechBrain
+    pretrained SpeechTokenizer.
+
+    Please, install speechtokenizer:
+    pip install speechtokenizer
+
+    Source paper: https://arxiv.org/abs/2308.16692
+
+
+    The model can be used as a fixed Discrete feature extractor or can be finetuned. It
+    will download automatically the model from HuggingFace or use a local path.
+
+    Arguments
+    ---------
+    speech_tokenizer : speechbrain.lobes.models.discrete.speechtokenizer_interface.SpeechTokenizer_interface
+        The speech tokenizer interface
+    codebooks : int, optional
+        The number of codebooks to use - if omitted,
+    """
+
+    def __init__(self, speech_tokenizer, codebooks=None):
+        super().__init__()
+        self.speech_tokenizer = speech_tokenizer
+        self.codebooks = codebooks
+
+    def forward(self, wav, wav_lens=None):
+        """Takes an input waveform and return its corresponding wav2vec encoding.
+
+        Arguments
+        ---------
+        wav : torch.Tensor (signal)
+            A batch of audio signals to transform to features.
+        wav_lens : torch.Tensor
+            The relative length of the wav given in SpeechBrain format.
+
+        Returns
+        -------
+        tokens : torch.Tensor
+            A tensor of audio tokens
+            Shape: (N_q x Batch x Time) by default
+            (Batch x Time x N_q) if shape == compat
+
+        """
+        return self.encode(wav, wav_lens)
+
+    def encode(self, wav, wav_lens=None):
+        """Takes an input waveform and return its corresponding wav2vec encoding.
+
+        Arguments
+        ---------
+        wav : torch.Tensor (signal)
+            A batch of audio signals to transform to features.
+        wav_lens : torch.Tensor
+            The relative length of the wav given in SpeechBrain format.
+
+        Returns
+        -------
+        tokens : torch.Tensor
+            A (Batch x Seq, N_q) tensor of audio tokens
+
+        """
+        # Extract discrete codes from SpeechTokenizer
+        codes = self.speech_tokenizer.encode(
+            wav.unsqueeze(1), wav_lens
+        )  # codes: (n_q, B, T)
+        if self.codebooks is not None:
+            codes = codes[: self.codebooks]
+        codes = codes.permute(1, 2, 0)
+        return codes
+
+    def decode(self, codes):
+        """Takes an input waveform and return its corresponding wav2vec encoding.
+
+        Arguments
+        ---------
+        tokens : torch.Tensor
+            A (N_q, Batch x Seq) tensor of audio tokens
+
+        Returns
+        -------
+        wav : torch.Tensor (signal)
+            A batch of reconstructed audio signals.
+        """
+        codes = codes.permute(2, 0, 1)
+        return self.speech_tokenizer.decode(codes)

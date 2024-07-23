@@ -102,7 +102,7 @@ speech_tokenizer: !new:speechbrain.lobes.models.discrete.speechtokenizer_interfa
     source: !ref <token_model_src>
     save_path: !ref <pretrained_model_save_folder>
 
-token_model: !new:benchmarks.DASB.model.custom_model.SpeechTokenizerFeatureExtractor
+token_model: !new:benchmarks.DASB.model.Tokotron.SpeechTokenizerFeatureExtractor
     speech_tokenizer: !ref <speech_tokenizer>
     codebooks: !ref <audio_tokens_per_step>
 

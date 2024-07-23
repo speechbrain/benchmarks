@@ -109,7 +109,7 @@ dac: !new:speechbrain.lobes.models.discrete.dac.DAC
     load_pretrained: True
 
 # Token model (pretrained)
-token_model: !new:benchmarks.DASB.model.custom_model.DACFeatureExtractor
+token_model: !new:benchmarks.DASB.model.Tokotron.DACFeatureExtractor
     dac: !ref <dac>
     n_quantizers: !ref <audio_tokens_per_step>
 

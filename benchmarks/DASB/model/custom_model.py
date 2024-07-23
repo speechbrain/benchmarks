@@ -2,14 +2,6 @@ import torch
 from torch import nn
 from speechbrain.dataio.dataio import length_to_mask
 import math
-import logging
-
-from huggingface_hub import snapshot_download
-
-try:
-    from speechtokenizer import SpeechTokenizer
-except ImportError:
-    logging.warning("speechtokenizer is not available")
 
 
 class AttentionMLP(torch.nn.Module):

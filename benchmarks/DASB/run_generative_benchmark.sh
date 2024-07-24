@@ -53,6 +53,7 @@ for i in "${!ConsideredTasks[@]}"; do
         extra_args=${ExtraArgs[i]}
         suffix=${OutputSuffix[i]}
         set -- "$extra_args"
+        echo "${tokenizer_name}/${task}/${downstream}"
         python $task/$downstream/train_$tokenizer_name.py \
                 $task/$downstream/hparams/train_$tokenizer_name.yaml  \
                 --output_folder $output_folder/$tokenizer_name/$task/$downstream$suffix \

@@ -11,6 +11,8 @@ output_folder='path/to/output'
 librimix_path='path/to/Libri2Mix'
 voicebank_path='path/to/VoiceBank'
 ljspeech_path='path/to/ljspeech'
+utmos_path='path/to/utmos'
+tts_args="--utmos_model_path $utmos_path"
 
 declare -a DatasetsFolders=(\
         "$librimix_path" \
@@ -33,8 +35,8 @@ declare -a DownStreams=(\
 declare -a ExtraArgs=(\
         '' \
         '' \
-        '' \
-        '--enc_num_layers 3 --dec_num_layers 6' \
+        "$tts_args" \
+        "$tts_args --enc_num_layers 3 --dec_num_layers 6" \
 )
 
 declare -a OutputSuffix=(\

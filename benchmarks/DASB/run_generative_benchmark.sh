@@ -44,8 +44,6 @@ declare -a OutputSuffix=(\
         '-small'
 )
 
-shift
-
 script_args="$@"
 
 for i in "${!ConsideredTasks[@]}"; do

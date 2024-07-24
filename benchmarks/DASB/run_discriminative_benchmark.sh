@@ -22,12 +22,11 @@ for i in "${!ConsideredTasks[@]}"; do
         dataset_folder=${DatasetsFolders[i]}
         extra_args=${ExtraArgs[i]}
         set -- "$extra_args"
-
         if [[ "$task" == "CommonVoice/ASR" ]]; then
+                echo "${tokenizer_name}/${task}/${downstream}"
                 for j in "${!Locales[@]}"; do
                         locale=${Locales[j]}
                         vocab=${LocalesVobSize[j]}
-                        echo "${tokenizer_name}/${task}/${downstream}/${locale}"
                         python $task/$downstream/train_$tokenizer_name.py $task/$downstream/hparams/train_$tokenizer_name.yaml   --output_folder $output_folder/$tokenizer_name/$task/$downstream/$locale --data_folder $dataset_folder/$locale --language $locale  --output_neurons $vocab $@
                 done
         else

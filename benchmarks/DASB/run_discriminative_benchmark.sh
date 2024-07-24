@@ -8,19 +8,27 @@ declare -a ConsideredTasks=('LibriSpeech/ASR' 'CommonVoice/ASR' 'IEMOCAP/emotion
 declare -a DownStreams=('LSTM' 'LSTM' 'ecapa_tdnn' 'LSTM_linear' 'Xvector','Xvector')
 declare -a Locales=('cy' 'eu')
 declare -a LocalesVobSize=(100 200)
+
+script_dir=$(pwd)
+script_args="$@"
+
 for i in "${!ConsideredTasks[@]}"; do
         task=${ConsideredTasks[i]}
         downstream=${DownStreams[i]}
         dataset_folder=${DatasetsFolders[i]}
+        extra_args=${ExtraArgs[i]}
+        set -- "$script_args $extra_args"
+        cd $task/$downstream
 
         if [[ "$task" == "CommonVoice/ASR" ]]; then
                 for j in "${!Locales[@]}"; do
                         locale=${Locales[j]}
                         vocab=${LocalesVobSize[j]}
                         echo "${tokenizer_name}/${task}/${downstream}/${locale}"
-                        python $task/$downstream/train_$tokenizer_name.py $task/$downstream/hparams/train_$tokenizer_name.yaml   --output_folder $output_folder/$tokenizer_name/$task/$downstream/$locale --data_folder $dataset_folder/$locale --language $locale  --output_neurons $vocab
+                        python train_$tokenizer_name.py hparams/train_$tokenizer_name.yaml   --output_folder $output_folder/$tokenizer_name/$task/$downstream/$locale --data_folder $dataset_folder/$locale --language $locale  --output_neurons $vocab $@
                 done
         else
-                python $task/$downstream/train_$tokenizer_name.py $task/$downstream/hparams/train_$tokenizer_name.yaml   --output_folder $output_folder/$tokenizer_name/$task/$downstream --data_folder $dataset_folder
+                python train_$tokenizer_name.py hparams/train_$tokenizer_name.yaml   --output_folder $output_folder/$tokenizer_name/$task/$downstream --data_folder $dataset_folder $@
         fi
+        cd $script_dir
 done

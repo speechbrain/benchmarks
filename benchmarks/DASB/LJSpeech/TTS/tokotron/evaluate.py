@@ -13,8 +13,8 @@ import re
 from pathlib import Path
 from types import SimpleNamespace
 from torch.nn import ModuleDict
-from benchmarks.DASB.utils.data import undo_batch
-from benchmarks.DASB.utils.eval import vocoder_to_device
+from data import undo_batch
+from eval import vocoder_to_device
 
 logger = logging.getLogger(__name__)
 

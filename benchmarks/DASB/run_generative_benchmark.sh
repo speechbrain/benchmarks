@@ -44,6 +44,8 @@ declare -a OutputSuffix=(\
         '-small'
 )
 
+shift
+
 script_dir=$(pwd)
 script_args="$@"
 

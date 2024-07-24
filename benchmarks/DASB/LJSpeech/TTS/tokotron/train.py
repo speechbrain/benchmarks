@@ -24,13 +24,13 @@ from pathlib import Path
 from hyperpyyaml import load_hyperpyyaml
 from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
 from speechbrain.utils.distributed import run_on_main
-from benchmarks.DASB.utils.preparation import add_prepared_features
-from benchmarks.DASB.utils.audio_tokens import (
+from preparation import add_prepared_features
+from audio_tokens import (
     get_silence_token,
     use_silence_padding,
     feature_pad_to,
 )
-from benchmarks.DASB.model.Tokotron import RepresentationMode
+from Tokotron import RepresentationMode
 from evaluate import TokotronEvaluator
 
 

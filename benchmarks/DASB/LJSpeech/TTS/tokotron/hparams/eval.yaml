@@ -20,12 +20,12 @@ utmos_script: predict.py
 eval_asr: !apply:speechbrain.utils.hparams.choice
   value: !ref <eval_asr_type>
   choices:
-    encoder_decoder: !name:benchmarks.DASB.utils.eval.EncoderDecoderASRSpeechEvaluator
+    encoder_decoder: !name:eval.EncoderDecoderASRSpeechEvaluator
       source: !ref <eval_asr_source>
       sample_rate: !ref <eval_sample_rate>
       overrides:
         lm_weight: 0.0
-    whisper: !name:benchmarks.DASB.utils.eval.WhisperASRSpeechEvaluator
+    whisper: !name:eval.WhisperASRSpeechEvaluator
       source: !ref <eval_asr_source>
       sample_rate: !ref <eval_sample_rate>
       savedir: !ref <pretrained_model_save_folder>
@@ -34,7 +34,7 @@ evaluators:
   asr: !ref <eval_asr>
 
 bulk_evaluators:
-  utmos: !name:benchmarks.DASB.utils.eval.UTMOSSpeechEvaluator
+  utmos: !name:eval.UTMOSSpeechEvaluator
     model_path: !ref <utmos_model_path>
     output_folder: !ref <output_folder>
     ckpt_path: !ref <utmos_ckpt_path>

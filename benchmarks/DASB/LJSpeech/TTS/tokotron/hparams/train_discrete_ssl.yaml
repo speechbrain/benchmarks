@@ -131,7 +131,7 @@ token_list_file: !apply:speechbrain.utils.hparams.choice
         phonemes: !ref <token_list_file_phn>
 
 # Gate offset
-gate_offset: !apply:benchmarks.DASB.model.Tokotron.distance_diff_loss_ramp
+gate_offset: !apply:Tokotron.distance_diff_loss_ramp
     beta: !ref <gate_loss_beta>
     gamma: !ref <gate_loss_gamma>
     max_weight: !ref <gate_loss_max_weight>
@@ -252,7 +252,7 @@ vocoder: !apply:speechbrain.inference.vocoders.UnitHIFIGAN.from_hparams
     savedir: !ref <vocoder_model_path>
 
 
-model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel # yamllint disable-line rule:line-length
+model: !new:Tokotron.TokotronTransformerModel # yamllint disable-line rule:line-length
     input_num_tokens: !ref <input_num_tokens>
     audio_num_tokens: !ref <audio_num_tokens>
     audio_tokens_per_step: !ref <audio_tokens_per_step>
@@ -286,7 +286,7 @@ modules:
 opt_class: !name:torch.optim.Adam
     lr: !ref <lr>
 
-compute_cost: !new:benchmarks.DASB.model.Tokotron.TokotronLoss
+compute_cost: !new:Tokotron.TokotronLoss
     guided_attention_weight: !ref <guided_attention_weight>
     guided_attention_sigma: !ref <guided_attention_sigma>
     gate_weight: !ref <gate_loss_weight>
@@ -302,7 +302,7 @@ compute_cost: !new:benchmarks.DASB.model.Tokotron.TokotronLoss
     representation_mode: discrete
 
 
-lr_annealing: !new:benchmarks.DASB.model.Tokotron.TargetedNoamScheduler
+lr_annealing: !new:Tokotron.TargetedNoamScheduler
     lr_initial: [!ref <lr>, !ref <audio_emb_lr>]
     n_warmup_steps: !ref <lr_warmup_steps>
     param_group: 0
@@ -314,7 +314,7 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
         lr_scheduler: !ref <lr_annealing>
         counter: !ref <epoch_counter>
 
-freezer: !new:benchmarks.DASB.utils.preparation.Freezer
+freezer: !new:preparation.Freezer
     save_path: !ref <prepare_save_folder>
     archive_path: !ref <prepare_archive_path>
 

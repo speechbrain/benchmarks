@@ -29,7 +29,7 @@ from unidecode import unidecode
 from speechbrain.utils.text_to_sequence import _g2p_keep_punctuations
 from speechbrain.dataio.batch import PaddedData
 from speechbrain.dataio.dataset import DynamicItemDataset
-from benchmarks.DASB.utils.preparation import FeatureExtractor
+from preparation import FeatureExtractor
 from torchaudio.functional import resample
 
 

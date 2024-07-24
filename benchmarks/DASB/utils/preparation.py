@@ -19,7 +19,7 @@ from pathlib import Path
 from speechbrain.dataio.dataloader import make_dataloader
 from speechbrain.dataio.dataset import DynamicItemDataset
 from speechbrain.utils.data_pipeline import DataPipeline
-from .data import undo_batch, as_dict
+from data import undo_batch, as_dict
 from tqdm.auto import tqdm
 
 logger = logging.getLogger(__name__)

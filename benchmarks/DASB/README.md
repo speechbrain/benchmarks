@@ -58,18 +58,18 @@ To set up SpeechBrain-DASB, follow these steps:
 
    These commands will install the necessary dependencies for the benchmark, including both the base requirements and the additional requirements.
 
-3. Install the pretrained UTMOS model
+3. Install the pretrained UTMOS model. This step is only required if you want to run TTS experiments.
 
-  Ensure that you have the git-lfs extension installed: https://git-lfs.com. It is needed to automatically
-  download pretrained checkpoint files.
+    Ensure that you have the git-lfs extension installed: https://git-lfs.com. It is needed to automatically
+      download pretrained checkpoint files.
 
-  ```shell
-  cd path/to/utmos
-  git clone https://huggingface.co/spaces/sarulab-speech/UTMOS-demo utmos
-  cd utmos
-  pip install -r requirements.txt
-  git lfs fetch --all
-  ```
+      ```shell
+      cd path/to/utmos
+      git clone https://huggingface.co/spaces/sarulab-speech/UTMOS-demo utmos
+      cd utmos
+      pip install -r requirements.txt
+      git lfs fetch --all
+      ```
 
 # 🎌 Discrete Audio Encoder
 | **Model**                                                                 | **Dataset**                                                                                       | **Repo**                                                         |

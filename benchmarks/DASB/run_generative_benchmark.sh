@@ -46,7 +46,6 @@ declare -a OutputSuffix=(\
 
 shift
 
-script_dir=$(pwd)
 script_args="$@"
 
 for i in "${!ConsideredTasks[@]}"; do
@@ -55,12 +54,10 @@ for i in "${!ConsideredTasks[@]}"; do
         dataset_folder=${DatasetsFolders[i]}
         extra_args=${ExtraArgs[i]}
         suffix=${OutputSuffix[i]}
-        set -- "$script_args $extra_args"
-        cd $task/$downstream
-        python train_$tokenizer_name.py \
-                hparams/train_$tokenizer_name.yaml  \
+        set -- "$extra_args"
+        python $task/$downstream/train_$tokenizer_name.py \
+                $task/$downstream/hparams/train_$tokenizer_name.yaml  \
                 --output_folder $output_folder/$tokenizer_name/$task/$downstream$suffix \
                 --data_folder $dataset_folder \
                 $@
-        cd $script_dir
 done

@@ -21,6 +21,9 @@ The SpeechBrain Benchmarks currently include the following:
 
 - [MOABB](https://github.com/speechbrain/benchmarks/tree/main/benchmarks/MOABB) - A benchmark designed for evaluating neural models in well-known EEG tasks like motor imagery, P300, and SSVEP.
 
+- [DASB](https://github.com/speechbrain/benchmarks/tree/main/benchmarks/DASB) - A benchmark designed for evaluating discrete audio tokens across a wide range of discriminative
+and  generative tasks.
+
 
 Our benchmarks align with speechbrain's commitment to transparent and replicable research by providing standardized tools and resources for studying specific topics.
 

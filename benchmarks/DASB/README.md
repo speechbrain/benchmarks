@@ -122,6 +122,9 @@ To run all tasks, make the following changes:
    bash run_discriminative_benchmark.sh [tokenzier_name]
    bash run_genarative_benchmark.sh [tokenzier_name]
    ```
+   You could also pass extra arguments as far as they are consistent  across all tasks.
+   
+   For generative task, make sure to set the `utmos_path` required for TTS evaluation.
 # 📝 ‍Incorporating Your Audio Tokenizer
 
 Let's now assume you've designed a audio and speech tokenizer in PyTorch and wish to integrate it into our benchmark.

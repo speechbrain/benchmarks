@@ -14,14 +14,15 @@ declare -a DownStreams=('LSTM' 'LSTM' 'ecapa_tdnn' 'LSTM_linear' 'Xvector','Xvec
 declare -a Locales=('cy' 'eu')
 declare -a LocalesVobSize=(100 200)
 
+shift
 script_args="$@"
 
 for i in "${!ConsideredTasks[@]}"; do
         task=${ConsideredTasks[i]}
         downstream=${DownStreams[i]}
         dataset_folder=${DatasetsFolders[i]}
-        extra_args=${ExtraArgs[i]}
-        set -- "$extra_args"
+        recipe_extra_args="$script_args"
+        set -- "$recipe_extra_args"
         if [[ "$task" == "CommonVoice/ASR" ]]; then
                 echo "${tokenizer_name}/${task}/${downstream}"
                 for j in "${!Locales[@]}"; do

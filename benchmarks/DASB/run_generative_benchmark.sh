@@ -15,26 +15,26 @@ utmos_path='path/to/utmos'
 tts_args="--token_list_file_text %recipe_root%/hparams/char_en.txt --utmos_model_path $utmos_path"
 
 declare -a DatasetsFolders=(\
-#        "$librimix_path" \
-#        "$voicebank_path" \
+        "$librimix_path" \
+        "$voicebank_path" \
         "$ljspeech_path" \
         "$ljspeech_path" \
 )
 declare -a ConsideredTasks=(\
-#        'Libri2Mix/separation' \
-#        'VoiceBank/enhancement' \
+        'Libri2Mix/separation' \
+        'VoiceBank/enhancement' \
         'LJSpeech/TTS' \
         'LJSpeech/TTS' \
 )
 declare -a DownStreams=(\
-#        'conformer' \
-#        'conformer' \
+        'conformer' \
+        'conformer' \
         'tokotron' \
         'tokotron' \
 )
 declare -a ExtraArgs=(\
-#        '' \
-#        '' \
+        '' \
+        '' \
         "$tts_args" \
         "$tts_args --enc_num_layers 3 --dec_num_layers 6" \
 )
@@ -46,6 +46,7 @@ declare -a OutputSuffix=(\
         '-small'
 )
 
+shift
 script_args="$@"
 
 for i in "${!ConsideredTasks[@]}"; do
@@ -55,7 +56,7 @@ for i in "${!ConsideredTasks[@]}"; do
         extra_args=${ExtraArgs[i]}
         suffix=${OutputSuffix[i]}
         recipe_root="$task/$downstream"
-        recipe_extra_args="${extra_args//%recipe_root%/$recipe_root}"
+        recipe_extra_args="$script_args ${extra_args//%recipe_root%/$recipe_root}"
         set -- "$recipe_extra_args"
         echo "${tokenizer_name}/${task}/${downstream}"
         python $task/$downstream/train_$tokenizer_name.py \

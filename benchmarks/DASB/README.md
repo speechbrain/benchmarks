@@ -123,7 +123,7 @@ To run all tasks, make the following changes:
    bash run_genarative_benchmark.sh [tokenzier_name]
    ```
    You could also pass extra arguments as far as they are consistent  across all tasks.
-   
+
    For generative task, make sure to set the `utmos_path` required for TTS evaluation.
 # 📝 ‍Incorporating Your Audio Tokenizer
 

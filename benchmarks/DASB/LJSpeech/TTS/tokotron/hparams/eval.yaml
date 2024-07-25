@@ -1,0 +1,50 @@
+eval_sample_rate: 16000
+eval_samples: null
+eval_interval: 1
+eval_asr_type: whisper
+eval_asr_source: !apply:speechbrain.utils.hparams.choice
+  value: !ref <eval_asr_type>
+  choices:
+    encoder_decoder: speechbrain/asr-transformer-transformerlm-librispeech
+    whisper: openai/whisper-small
+evaluations: utmos,asr
+tmp_folder: null
+utmos_batch_size: 8
+utmos_model_path: ./utmos
+utmos_ckpt_name: epoch=3-step=7459.ckpt
+utmos_ckpt_path: !ref <utmos_model_path>/<utmos_ckpt_name>
+utmos_use_python: True
+utmos_script: predict.py
+
+
+eval_asr: !apply:speechbrain.utils.hparams.choice
+  value: !ref <eval_asr_type>
+  choices:
+    encoder_decoder: !name:eval.EncoderDecoderASRSpeechEvaluator
+      source: !ref <eval_asr_source>
+      sample_rate: !ref <eval_sample_rate>
+      overrides:
+        lm_weight: 0.0
+    whisper: !name:eval.WhisperASRSpeechEvaluator
+      source: !ref <eval_asr_source>
+      sample_rate: !ref <eval_sample_rate>
+      savedir: !ref <pretrained_model_save_folder>
+
+evaluators:
+  asr: !ref <eval_asr>
+
+bulk_evaluators:
+  utmos: !name:eval.UTMOSSpeechEvaluator
+    model_path: !ref <utmos_model_path>
+    output_folder: !ref <output_folder>
+    ckpt_path: !ref <utmos_ckpt_path>
+    batch_size: !ref <utmos_batch_size>
+    script: !ref <utmos_script>
+    use_python: !ref <utmos_use_python>
+    tmp_folder: !ref <tmp_folder>
+
+eval_summary:
+  asr:
+    descriptive: ["wer", "cer", "wer_ref", "cer_ref", "dwer", "dcer"]
+  utmos:
+    descriptive: ["utmos"]

@@ -37,7 +37,7 @@ def get_prototype(res_file, eval_metric):
         Metric of interest (e.g, acc or f1).
 
     Returns
-    ---------
+    -------
     prototype: list
         List of the lines of the result file (with <values> as placeholder).
     n_metrics: int
@@ -69,7 +69,7 @@ def get_metrics(res_files, eval_metric):
         Metric of interest (e.g, acc or f1).
 
     Returns
-    ---------
+    -------
     metrics: np.array
         Matrix (n_metrics, n_files) containing the metrics of interest.
     """

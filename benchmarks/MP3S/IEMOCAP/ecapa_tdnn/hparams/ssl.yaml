@@ -21,7 +21,7 @@ train_log: !ref <output_folder>/train_log.txt
 
 # URL for the ssl encoder  model, you can change to benchmark diffrenet models
 # Important: we use ssl encoder base and not the fine-tuned one with ASR task
-# This allow you to have ~4% improvment
+# This allow you to have ~4% improvement
 
 ssl_hub: facebook/wav2vec2-base
 ssl_folder: !ref <output_folder>/ssl_checkpoints

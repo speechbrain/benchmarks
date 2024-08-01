@@ -130,7 +130,7 @@ To run all tasks, make the following changes:
    For generative task, make sure to set the `utmos_path` required for TTS evaluation.
 # 📝 ‍Incorporating Your Audio Tokenizer
 
-Let's now assume you've designed a audio and speech tokenizer in PyTorch and wish to integrate it into our benchmark.
+Let's now assume you've designed an audio and speech tokenizer in PyTorch and wish to integrate it into our benchmark.
 You're in luck because we've made this step as simple as possible for you!
 Here are the steps you should follow:
 

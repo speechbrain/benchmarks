@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="DASB_logo.png" alt="SpeechBrain-DASB logo" width=200/>
+</p>
 
 # DASB - Discrete Audio and Speech Benchmark
 
@@ -144,6 +147,16 @@ Here are the steps you should follow:
 
 # 📈 Results
 We present the performance results for discriminative and generative tasks using two different downstream architectures. Each value in the table reflects the best performance achieved with either architecture. We also categorize the results into three distinct bitrate ranges: low (0-1.5 kbps), medium (2.9-6 kbps), and high (24 kbps).
+## Ranking
+We present the ranking aggregation for the considered tokenizers (medium bitrate) sorted by "Combination" column. Each model is individually ranked for every task, and we compute the average position across all ranks.
+| Model             | Discriminative | Generative | Combination |
+|-------------------|----------------|------------|-------------|
+| Discrete WavLM    | **2.00**       | 2.75       | **1.94**    |
+| Discrete HuBERT   | 2.66           | 3.62       | 3.11        |
+| SpeechTokenizer   | 3.44           | 3.81       | 3.64        |
+| Discrete Wav2Vec2 | 3.33           | **2.68**   | 3.41        |
+| EnCodec           | 4.11           | 3.93       | 4.23        |
+| DAC               | 5.55           | 4.06       | 4.64        |
 
 ## Benchmarking Results for Discriminative Tasks
 

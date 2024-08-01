@@ -1,11 +1,11 @@
 
 # DASB - Discrete Audio and Speech Benchmark
 
-This repository provides recipes for evaluating discrete audio representations using popular audio tokenizers like EnCodec and DAC, integrated with SpeechBrain.
+This repository provides a benchmark for evaluating discrete audio representations using popular audio tokenizers like **EnCodec**, **DAC**, and many more, integrated with SpeechBrain.
 
-The package helps integrate and evaluate new audio tokenizers in speech tasks such as speech recognition, speaker identification, emotion recognition, keyword spotting, intent classification, speech enhancement, separation, and text-to-speech. It offers an interface for easy model integration and testing, and a protocol for comparing different audio tokenizers.
+The package helps integrate and evaluate new audio tokenizers in speech tasks of great interest such as *speech recognition*, *speaker identification*, *emotion recognition*, *keyword spotting*, *intent classification*, *speech enhancement*, *separation*, and *text-to-speech*. It offers an interface for easy model integration and testing and a protocol for comparing different audio tokenizers.
 
-This code benchmarks new audio tokenizers reliably. It includes a benchmark on 9 audio and speech datasets using 6 popular discrete audio encoders: semantic (Discrete HuBERT, Discrete WavLM, Discrete Wav2Vec2), compression (EnCodec, DAC), and hybrid (SpeechTokenizer). We consider different downstream architectures for each task and report the best-performing architecture.
+This repository can be used to benchmark new audio tokenizers reliably. It includes a benchmark on 9 audio and speech datasets using 6 popular discrete audio encoders: **semantic** (*Discrete HuBERT*, *Discrete WavLM*, *Discrete Wav2Vec2*), **compression** (*EnCodec*, *DAC*), and **hybrid** (*SpeechTokenizer*). We consider different downstream architectures for each task and report the best-performing architecture.
 
 For detailed information, refer to [paper](https://arxiv.org/pdf/2406.14294):
 
@@ -216,6 +216,15 @@ If you use SpeechBrain-DASB for your research or business, please cite:
   eprint={2406.14294},
   archivePrefix={arXiv},
   primaryClass={cs.SD}
+}
+```
+
+```bibtex
+@inproceedings{mousavi2024,
+  title={How Should We Extract Discrete Audio Tokens from Self-Supervised Models?},
+  author={Mousavi, Pooneh and Duret, Jarod and Zaiem, Salah and Della Libera, Luca and Ploujnikov, Artem and Subakan, Cem and Ravanelli, Mirco},
+  booktitle={Proceedings of Interspeech},
+  year={2024},
 }
 ```
 

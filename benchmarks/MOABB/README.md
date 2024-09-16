@@ -600,9 +600,21 @@ For any questions or inquiries, feel free to reach Davide Borra, Ph.D., Universi
 <!-- ############################################################################################################### -->
 # 📖 Citing
 
-If you use SpeechBrain-MOABB for your research or business, please cite:
+If you use SpeechBrain-MOABB for your research or business, please cite the [reference paper](https://www.sciencedirect.com/science/article/pii/S001048252401182X):
 
-[The link to the official paper will be available soon]
+```bibtex
+@article{SpeechBrainMOABB,
+title = {SpeechBrain-MOABB: An open-source Python library for benchmarking deep neural networks applied to EEG signals},
+journal = {Computers in Biology and Medicine},
+volume = {182},
+pages = {109097},
+year = {2024},
+issn = {0010-4825},
+doi = {https://doi.org/10.1016/j.compbiomed.2024.109097},
+author = {Davide Borra and Francesco Paissan and Mirco Ravanelli},
+}
+```
+
 
 Please also cite SpeechBrain:
 

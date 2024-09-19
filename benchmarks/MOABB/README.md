@@ -598,6 +598,18 @@ The table presented below illustrates the performance variability (std. dev.) re
 
 For any questions or inquiries, feel free to reach Davide Borra, Ph.D., University of Bologna ([davide.borra2@unibo.it](mailto:davide.borra2@unibo.it)).
 <!-- ############################################################################################################### -->
+
+# 📚  **Related Projects**
+
+| **Project** | 🔗 **Code** | 📄 **Paper** |
+|-------------------------|-------------|--------------|
+| **MOABB**                | [MOABB](https://github.com/NeuroTechX/moabb) | [Paper](https://cnrs.hal.science/hal-04537061/) |
+| **MNE**                  | [MNE](https://mne.tools/stable/index.html) | [Paper](https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2013.00267/full) |
+| **BrainDecode**          | [BrainDecode](https://braindecode.org/stable/index.html) | [Paper](https://cnrs.hal.science/hal-04537061/) |
+
+
+
+
 # 📖 Citing
 
 If you use SpeechBrain-MOABB for your research or business, please cite the [reference paper](https://www.sciencedirect.com/science/article/pii/S001048252401182X):

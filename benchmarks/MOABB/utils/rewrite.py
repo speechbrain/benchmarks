@@ -3,7 +3,7 @@
 Yaml file rewriter to add orion tags to the best hparams file from original yaml file.
 Author
 ------
-Victor Cruz, 20224
+Victor Cruz, 2024
 """
 import argparse
 import yaml

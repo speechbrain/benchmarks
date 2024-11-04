@@ -612,7 +612,12 @@ For any questions or inquiries, feel free to reach Davide Borra, Ph.D., Universi
 
 # 📖 Citing
 
-If you use SpeechBrain-MOABB for your research or business, please cite the [reference paper](https://www.sciencedirect.com/science/article/pii/S001048252401182X):
+If you use SpeechBrain-MOABB for your research or business, please cite the following papers:
+
+- [SpeechBrainMOABB](https://www.sciencedirect.com/science/article/pii/S001048252401182X)
+- [SpeechBrainMOABB Protocol](https://www.sciencedirect.com/science/article/pii/S0893608024007718)
+
+For convenience, the BibTeX entries are provided below:
 
 ```bibtex
 @article{SpeechBrainMOABB,
@@ -627,6 +632,16 @@ author = {Davide Borra and Francesco Paissan and Mirco Ravanelli},
 }
 ```
 
+```bibtex
+@article{SpeechBrainMOABB_protocol,
+title = {A protocol for trustworthy EEG decoding with neural networks},
+journal = {Neural Networks},
+pages = {106847},
+year = {2024},
+issn = {0893-6080},
+author = {Davide Borra and Elisa Magosso and Mirco Ravanelli}
+}
+```
 
 Please also cite SpeechBrain:
 

@@ -450,3 +450,5 @@ scp $best_yaml_file $final_yaml_file
 
 echo "The test performance with best hparams is available at  $output_folder/best"
 
+# add the orion flags to the best_hparams.yaml file
+python utils/rewrite.py $hparams $final_yaml_file

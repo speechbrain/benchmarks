@@ -28,6 +28,12 @@ class ProgressiveWhisperTokenizer(WhisperTokenizer):
 
     See the documentation of `transformers.models.whisper.tokenization_whisper.WhisperTokenizer`.
 
+    Arguments
+    ---------
+    *args : tuple
+    **kwargs : dict
+        Arguments forwarded to ``WhisperTokenizer``
+
     Examples
     --------
     >>> model_hub = "openai/whisper-tiny"
@@ -95,6 +101,13 @@ class ProgressiveWhisper(Whisper):
 
     See the documentation of `speechbrain.lobes.models.huggingface_whisper.HuggingFaceWhisper`.
 
+    Arguments
+    ---------
+    source : str
+    save_path : str
+    **kwargs : dict
+        Arguments forwarded to ``Whisper``
+
     Examples
     --------
     >>> model_hub = "openai/whisper-tiny"
@@ -103,16 +116,11 @@ class ProgressiveWhisper(Whisper):
     >>> inputs = torch.randn([2, 93680])
     >>> tokens = torch.tensor([[1, 1]]) * model.model.config.decoder_start_token_id
     >>> outputs = model(inputs, tokens)
-
     """
 
     # override
-    def __init__(
-        self, source, save_path, **kwargs,
-    ):
-        super().__init__(
-            source, save_path, **kwargs,
-        )
+    def __init__(self, source, save_path, **kwargs):
+        super().__init__(source, save_path, **kwargs)
         if self.tokenizer is not None:
             self.tokenizer = ProgressiveWhisperTokenizer.from_pretrained(
                 source,
@@ -277,7 +285,7 @@ class ProgressiveWhisper(Whisper):
         if forced_decoder_locale is None:
             # Compute most likely language token IDs
             all_lang_tokens = [
-                f"<|{l}|>" for l in self.tokenizer.supported_languages
+                f"<|{lang}|>" for lang in self.tokenizer.supported_languages
             ]
             all_lang_tokens_ids = self.tokenizer.convert_tokens_to_ids(
                 all_lang_tokens
@@ -333,7 +341,7 @@ class ProgressiveWhisper(Whisper):
                 hyps, scores = hyps[:, 0, :], scores[:, 0]
         else:
             hyps, scores = self._greedy_search(
-                audio_features, hyps, suppress_mask, max_gen_tokens,
+                audio_features, hyps, suppress_mask, max_gen_tokens
             )
             if return_all:
                 hyps, scores = hyps[:, None, :], scores[:, None]
@@ -382,9 +390,7 @@ class ProgressiveWhisper(Whisper):
             # B*
             alive_mask_unchanged = gen_token_ids != endoftext_id
             if not alive_mask_unchanged.all():
-                alive_mask[
-                    alive_mask == True
-                ] = alive_mask_unchanged  # noqa: E712
+                alive_mask[alive_mask] = alive_mask_unchanged  # noqa: E712
                 if not alive_mask.any():
                     break
                 # B* x S x F
@@ -566,9 +572,7 @@ class ProgressiveWhisper(Whisper):
                 # B*
                 alive_mask_unchanged = end_idxes < beam_size
                 if not alive_mask_unchanged.all():
-                    alive_mask[
-                        alive_mask == True
-                    ] = alive_mask_unchanged  # noqa: E712
+                    alive_mask[alive_mask] = alive_mask_unchanged  # noqa: E712
                     if not alive_mask.any():
                         break
                     # N x B* x S x F

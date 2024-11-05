@@ -5,6 +5,7 @@ It was proposed for P300, error-related negativity, motor execution, motor image
 Authors
  * Davide Borra, 2021
 """
+
 import torch
 import speechbrain as sb
 
@@ -28,6 +29,8 @@ class EEGNet(torch.nn.Module):
         Pool size and stride after the 2d spatial depthwise convolution.
     cnn_septemporal_depth_multiplier: int
         Depth multiplier of the 2d temporal separable convolution.
+    cnn_septemporal_point_kernels : int
+        Size of point kernels.
     cnn_septemporal_kernelsize: tuple
         Kernel size of the 2d temporal separable convolution.
     cnn_septemporal_pool: tuple
@@ -107,7 +110,7 @@ class EEGNet(torch.nn.Module):
         self.conv_module.add_module(
             "bnorm_0",
             sb.nnet.normalization.BatchNorm2d(
-                input_size=cnn_temporal_kernels, momentum=0.01, affine=True,
+                input_size=cnn_temporal_kernels, momentum=0.01, affine=True
             ),
         )
         # Spatial depthwise convolution
@@ -130,7 +133,7 @@ class EEGNet(torch.nn.Module):
         self.conv_module.add_module(
             "bnorm_1",
             sb.nnet.normalization.BatchNorm2d(
-                input_size=cnn_spatial_kernels, momentum=0.01, affine=True,
+                input_size=cnn_spatial_kernels, momentum=0.01, affine=True
             ),
         )
         self.conv_module.add_module("act_1", activation)
@@ -204,9 +207,7 @@ class EEGNet(torch.nn.Module):
         dense_input_size = self._num_flat_features(out)
         # DENSE MODULE
         self.dense_module = torch.nn.Sequential()
-        self.dense_module.add_module(
-            "flatten", torch.nn.Flatten(),
-        )
+        self.dense_module.add_module("flatten", torch.nn.Flatten())
         self.dense_module.add_module(
             "fc_out",
             sb.nnet.linear.Linear(
@@ -224,6 +225,11 @@ class EEGNet(torch.nn.Module):
         ---------
         x : torch.Tensor
             Input feature map.
+
+        Returns
+        -------
+        num_features : int
+            Count of features in the input.
         """
 
         size = x.size()[1:]  # all dimensions except the batch dimension
@@ -239,6 +245,11 @@ class EEGNet(torch.nn.Module):
         ---------
         x : torch.Tensor (batch, time, EEG channel, channel)
             Input to convolve. 4d tensors are expected.
+
+        Returns
+        -------
+        x : torch.Tensor
+            The convolved outputs.
         """
         x = self.conv_module(x)
         x = self.dense_module(x)

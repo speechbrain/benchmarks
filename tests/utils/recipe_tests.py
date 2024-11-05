@@ -4,6 +4,7 @@ Authors
  * Mirco Ravanelli 2022
  * Andreas Nautsch 2022, 2023
 """
+
 import os
 import re
 import csv
@@ -34,18 +35,18 @@ def check_row_for_test(row, filters_fields, filters, test_field):
         Key of the input dictionary that contains the test flags.
 
     Returns
-    ---------
+    -------
     test: bool
         True if the line must be tested, False otherwise.
     """
     test = True
     for i, field in enumerate(filters_fields):
         field_values = filters[i]
-        if type(field_values) == str:
+        if isinstance(field_values, str):
             # ... AND ... filter
             if not (field_values == row[field]):
                 test = False
-        elif type(field_values) == list:  # type(field) == list
+        elif isinstance(field_values, list):  # type(field) == list
             # ... AND (... OR ...) ... filter; at least one entry of the list matches
             test_flag = False
             for filt in field_values:
@@ -101,7 +102,7 @@ def prepare_test(
         See above.
 
     Returns
-    ---------
+    -------
     test_script: dict
         A Dictionary containing recipe IDs as keys and test_scripts as values.
     test_hparam: dict
@@ -182,7 +183,7 @@ def check_files(
         The pattern used to extract the list of files to check from check_str.
 
     Returns
-    ---------
+    -------
     check: bool
         True if all the files are found, False otherwise.
     """
@@ -225,7 +226,7 @@ def check_performance(
         The pattern used to extract the list of files to check from check_str.
 
     Returns
-    ---------
+    -------
     check: bool
         True if all the files are found, False otherwise.
     """
@@ -255,7 +256,7 @@ def check_performance(
     with open(filename) as file:
         lines = file.readlines()
 
-    # Fitler the lines
+    # Filter the lines
     lines_filt = []
     last_line = ""
     for line in lines:
@@ -316,15 +317,17 @@ def extract_value(string, key):
         The key argument to extract.
 
     Returns
-    ---------
+    -------
     value: float or str
         The value corresponding to the specified key.
     """
     escaped_key = re.escape(key)
 
     # Create the regular expression pattern to match the argument and its corresponding value
-    pattern = r"(?P<key>{})\s*:\s*(?P<value>[-+]?\d*\.\d+([eE][-+]?\d+)?)".format(
-        escaped_key
+    pattern = (
+        r"(?P<key>{})\s*:\s*(?P<value>[-+]?\d*\.\d+([eE][-+]?\d+)?)".format(
+            escaped_key
+        )
     )
 
     # Search for the pattern in the input string
@@ -348,7 +351,7 @@ def check_threshold(threshold, value):
         Float corresponding to the value to test
 
     Returns
-    ---------
+    -------
     bool
         True if the constraint is satisfied, False otherwise.
     """
@@ -391,7 +394,7 @@ def run_test_cmd(cmd, stdout_file, stderr_file):
         File where standard error is stored.
 
     Returns
-    ---------
+    -------
     rc: bool
         The return code obtained after running the command. If 0, the test is
         run without errors. If >0 the execution failed.
@@ -462,7 +465,7 @@ def run_recipe_tests(
     """
     # Create the output folder (where the tests results will be saved)
     os.makedirs(output_folder, exist_ok=True)
-    print("Test ouputs will be put in %s" % (output_folder))
+    print("Test outputs will be put in %s" % (output_folder))
 
     # Read the csv recipe file and detect which tests we have to run
     (
@@ -623,8 +626,6 @@ def download_only_test(
         A dictionary containing recipe IDs as keys and the checks as values.
     run_opts: str
         Running options to append to each test.
-    run_tests_with_checks_only: str
-            Running options to append to each test.
     run_tests_with_checks_only: bool
         If True skips all tests that do not have performance check criteria defined.
     output_folder: path
@@ -709,15 +710,15 @@ def load_yaml_test(
         See above.
     avoid_list: list
         List of hparam file not to check.
-    rir_folder:
+    rir_folder: str
         This overrides the rir_folder; rir_path, and openrir_folder usually specified in the hparam files.
-    data_folder:
+    data_folder: str
         This overrides the data_folder usually specified in the hparam files.
-    output_folder:
+    output_folder: str
         This overrides the output_folder usually specified in the hparam files.
 
     Returns
-    ---------
+    -------
     check: True
         True if all the hparam files are loaded correctly, False otherwise.
     """

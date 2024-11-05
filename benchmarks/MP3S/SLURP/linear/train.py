@@ -19,8 +19,7 @@ from speechbrain.utils.distributed import run_on_main
 
 class IntentIdBrain(sb.Brain):
     def compute_forward(self, batch, stage):
-        """Computation pipeline based on a encoder + scenario classifier.
-        """
+        """Computation pipeline based on a encoder + scenario classifier."""
         batch = batch.to(self.device)
         wavs, lens = batch.sig
         feats = self.modules.weighted_ssl_model(wavs)
@@ -32,8 +31,7 @@ class IntentIdBrain(sb.Brain):
         return outputs
 
     def compute_objectives(self, predictions, batch, stage):
-        """Computes the loss using speaker-id as label.
-        """
+        """Computes the loss using speaker-id as label."""
         scenario_id, _ = batch.scenario_encoded
         # to meet the input form of nll loss
         scenario_id = scenario_id.squeeze(1)
@@ -161,7 +159,8 @@ def dataio_prep(hparams):
     data_folder = hparams["data_folder"]
 
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["csv_train"], replacements={"data_root": data_folder},
+        csv_path=hparams["csv_train"],
+        replacements={"data_root": data_folder},
     )
 
     if hparams["sorting"] == "ascending":
@@ -186,12 +185,14 @@ def dataio_prep(hparams):
         )
 
     valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["csv_valid"], replacements={"data_root": data_folder},
+        csv_path=hparams["csv_valid"],
+        replacements={"data_root": data_folder},
     )
     valid_data = valid_data.filtered_sorted(sort_key="duration")
 
     test_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["csv_test"], replacements={"data_root": data_folder},
+        csv_path=hparams["csv_test"],
+        replacements={"data_root": data_folder},
     )
     test_data = test_data.filtered_sorted(sort_key="duration")
 
@@ -206,7 +207,7 @@ def dataio_prep(hparams):
         sig = sb.dataio.dataio.read_audio(wav)
         return sig
 
-    # Initialization of the label encoder. The label encoder assignes to each
+    # Initialization of the label encoder. The label encoder assigns to each
     # of the observed label a unique index (e.g, 'spk01': 0, 'spk02': 1, ..)
     label_encoder = sb.dataio.encoder.CategoricalEncoder()
 
@@ -225,7 +226,8 @@ def dataio_prep(hparams):
     # Define datasets. We also connect the dataset with the data processing
     # functions defined above.
     sb.dataio.dataset.set_output_keys(
-        datasets, ["id", "sig", "scenario", "scenario_encoded"],
+        datasets,
+        ["id", "sig", "scenario", "scenario_encoded"],
     )
     # Load or compute the label encoder (with multi-GPU DDP support)
     # Please, take a look into the lab_enc_file to see the label to index
@@ -233,7 +235,9 @@ def dataio_prep(hparams):
 
     lab_enc_file = os.path.join(hparams["save_folder"], "label_encoder.txt")
     label_encoder.load_or_create(
-        path=lab_enc_file, from_didatasets=[datasets[0]], output_key="scenario",
+        path=lab_enc_file,
+        from_didatasets=[datasets[0]],
+        output_key="scenario",
     )
     return {"train": datasets[0], "valid": datasets[1], "test": datasets[2]}
 

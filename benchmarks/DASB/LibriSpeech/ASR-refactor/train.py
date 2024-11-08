@@ -18,6 +18,7 @@ from speechbrain.utils.distributed import run_on_main, if_main_process
 from speechbrain.tokenizers.SentencePiece import SentencePiece
 from hyperpyyaml import load_hyperpyyaml
 from pathlib import Path
+
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(base_dir)
 
@@ -32,11 +33,10 @@ class ASR(sb.Brain):
         """Forward computations from the waveform batches to the output probabilities."""
         batch = batch.to(self.device)
         wavs, wav_lens = batch.sig
-       
 
         # Add waveform augmentation if specified.
         if stage == sb.Stage.TRAIN and hasattr(self.hparams, "wav_augment"):
-            wavs, wav_lens = self.hparams.wav_augment(wavs, wav_lens) # [B, T]
+            wavs, wav_lens = self.hparams.wav_augment(wavs, wav_lens)  # [B, T]
 
         current_epoch = self.hparams.epoch_counter.current
 
@@ -49,33 +49,38 @@ class ASR(sb.Brain):
         except KeyError:
             with torch.no_grad():
                 self.hparams.tokenizer.eval().to(self.device)
-                in_toks = self.hparams.tokenizer.sig_to_tokens(wavs, wav_lens,num_codebooks=hparams['num_codebooks']) #[B, T, N-Q]
+                in_toks = self.hparams.tokenizer.sig_to_tokens(
+                    wavs, wav_lens, num_codebooks=hparams["num_codebooks"]
+                )  # [B, T, N-Q]
             if stage != sb.Stage.TRAIN or (
-                stage == sb.Stage.TRAIN and (not hasattr(self.hparams, "wav_augment"))
+                stage == sb.Stage.TRAIN
+                and (not hasattr(self.hparams, "wav_augment"))
             ):
                 if _CACHE["size"] < self.hparams.cache_size:
                     _CACHE[key] = in_toks.cpu()
                     _CACHE["size"] += in_toks.numel()
 
         # Extract embeddings
-        in_embs = self.modules.discrete_embedding_layer(in_toks) #[B, T, N-Q, D]
+        in_embs = self.modules.discrete_embedding_layer(
+            in_toks
+        )  # [B, T, N-Q, D]
 
-        # Attention-Pooling 
-        att_w = self.modules.attention_mlp(in_embs)  #[B, T, N-Q, 1]
-        in_embs = torch.matmul(att_w.transpose(2, -1), in_embs).squeeze(-2)  #[B, T, D]
+        # Attention-Pooling
+        att_w = self.modules.attention_mlp(in_embs)  # [B, T, N-Q, 1]
+        in_embs = torch.matmul(att_w.transpose(2, -1), in_embs).squeeze(
+            -2
+        )  # [B, T, D]
 
         # forward modules
         if type(self.modules.encoder).__name__ == "ContextNet":
             enc_out = self.modules.encoder(in_embs)
 
         elif type(self.modules.encoder).__name__ == "LSTM":
-            enc_out, _ = self.modules.encoder(
-                in_embs
-            ) 
+            enc_out, _ = self.modules.encoder(in_embs)
 
         else:
             raise NotImplementedError
-        
+
         # output layer for ctc log-probabilities
         logits = self.modules.ctc_lin(enc_out)
         p_ctc = self.hparams.log_softmax(logits)
@@ -89,7 +94,6 @@ class ASR(sb.Brain):
             p_tokens = test_searcher(p_ctc, wav_lens)
 
         return p_ctc, wav_lens, p_tokens
-    
 
     def compute_objectives(self, predictions, batch, stage):
         """Computes the loss (CTC+NLL) given predictions and targets."""
@@ -98,14 +102,13 @@ class ASR(sb.Brain):
         ids = batch.id
         tokens, tokens_lens = batch.tokens
 
-
         # Label Augmentation
         if stage == sb.Stage.TRAIN and hasattr(self.hparams, "wav_augment"):
             tokens = self.hparams.wav_augment.replicate_labels(tokens)
             tokens_lens = self.hparams.wav_augment.replicate_labels(tokens_lens)
-        
+
         loss = self.hparams.ctc_cost(p_ctc, tokens, wav_lens, tokens_lens)
-        
+
         if stage == sb.Stage.VALID:
             # Decode token terms to words
             predicted_words = self.tokenizer(
@@ -149,19 +152,15 @@ class ASR(sb.Brain):
         # log stats and save checkpoint at end-of-epoch
         if stage == sb.Stage.VALID:
             if type(self.hparams.scheduler).__name__ == "NewBobScheduler":
-                lr, new_lr = self.hparams.scheduler(
-                    stage_stats["loss"]
-                )
-                sb.nnet.schedulers.update_learning_rate(
-                    self.optimizer, new_lr
-                )
-            elif type(self.hparams.scheduler).__name__  == "LinearNoamScheduler":
+                lr, new_lr = self.hparams.scheduler(stage_stats["loss"])
+                sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr)
+            elif type(self.hparams.scheduler).__name__ == "LinearNoamScheduler":
                 lr = self.hparams.scheduler.current_lr
                 steps = self.optimizer_step
-           
+
             else:
                 raise NotImplementedError
-            
+
             optimizer = self.optimizer.__class__.__name__
             epoch_stats = {
                 "epoch": epoch,
@@ -185,13 +184,17 @@ class ASR(sb.Brain):
                 test_stats=stage_stats,
             )
             if if_main_process():
-                with open(self.hparams.output_wer_folder, "w", encoding="utf-8") as w:
+                with open(
+                    self.hparams.output_wer_folder, "w", encoding="utf-8"
+                ) as w:
                     self.wer_metric.write_stats(w)
 
     def on_fit_batch_end(self, batch, outputs, loss, should_step):
-        if should_step and type(self.hparams.scheduler).__name__  == "LinearNoamScheduler":
+        if (
+            should_step
+            and type(self.hparams.scheduler).__name__ == "LinearNoamScheduler"
+        ):
             self.hparams.scheduler(self.optimizer)
-
 
 
 def dataio_prepare(hparams, tokenizer):
@@ -251,7 +254,7 @@ def dataio_prepare(hparams, tokenizer):
         resampled = torchaudio.transforms.Resample(
             info.sample_rate, hparams["sample_rate"],
         )(sig)
-        #resampled = resampled.unsqueeze(0)
+        # resampled = resampled.unsqueeze(0)
         return resampled
 
     sb.dataio.dataset.add_dynamic_item(datasets, audio_pipeline)
@@ -271,7 +274,6 @@ def dataio_prepare(hparams, tokenizer):
         yield tokens
 
     sb.dataio.dataset.add_dynamic_item(datasets, text_pipeline)
-
 
     # 4. Set output:
     sb.dataio.dataset.set_output_keys(
@@ -319,14 +321,12 @@ if __name__ == "__main__":
     # create ddp_group with the right communication protocol
     sb.utils.distributed.ddp_init_group(run_opts)
 
-
     # Create experiment directory
     sb.create_experiment_directory(
         experiment_directory=hparams["output_folder"],
         hyperparams_to_save=hparams_file,
         overrides=overrides,
     )
-
 
     # Dataset prep (parsing Librispeech)
     from librispeech_prepare import prepare_librispeech  # noqa
@@ -369,12 +369,17 @@ if __name__ == "__main__":
 
     # Use pretrained embeddings
     if hparams["pretrain_embeddings"]:
-        embs= hparams["tokenizer"].get_pretrained_embeddings(device=run_opts["device"],num_codebooks=hparams['num_codebooks'], vocab_size=hparams["vocab_size"])
+        embs = hparams["tokenizer"].get_pretrained_embeddings(
+            device=run_opts["device"],
+            num_codebooks=hparams["num_codebooks"],
+            vocab_size=hparams["vocab_size"],
+        )
         hparams["discrete_embedding_layer"].init_embedding(embs)
 
-
     # Log number of parameters/buffers
-    codec_params = sum([x.numel() for x in hparams["tokenizer"].state_dict().values()])
+    codec_params = sum(
+        [x.numel() for x in hparams["tokenizer"].state_dict().values()]
+    )
     model_params = sum(
         [
             x.numel()
@@ -407,8 +412,7 @@ if __name__ == "__main__":
     from speechbrain.decoders.ctc import CTCBeamSearcher
 
     test_searcher = CTCBeamSearcher(
-        **hparams["test_beam_search"],
-        vocab_list=vocab_list,
+        **hparams["test_beam_search"], vocab_list=vocab_list,
     )
 
     train_dataloader_opts = hparams["train_dataloader_opts"]

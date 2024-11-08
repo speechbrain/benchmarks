@@ -1,4 +1,3 @@
-
 """
 Unified interface for tokenizers, standardizing the output shape of encode and decode functions.
 
@@ -12,9 +11,13 @@ Authors
 import torch
 from abc import ABC, abstractmethod
 from speechbrain.lobes.models.huggingface_transformers.encodec import Encodec
-from speechbrain.lobes.models.huggingface_transformers.discrete_ssl import DiscreteSSL
+from speechbrain.lobes.models.huggingface_transformers.discrete_ssl import (
+    DiscreteSSL,
+)
 from speechbrain.lobes.models.discrete.dac import DAC
-from speechbrain.lobes.models.discrete.speechtokenizer_interface import SpeechTokenizer_interface
+from speechbrain.lobes.models.discrete.speechtokenizer_interface import (
+    SpeechTokenizer_interface,
+)
 
 
 class BaseTokenizer(ABC):
@@ -29,12 +32,13 @@ class BaseTokenizer(ABC):
     def tokens_to_sig(self, tokens, **kwargs):
         """Abstract method to decode tokens into a signal."""
         pass
-    
+
     @abstractmethod
     @torch.no_grad()
     def get_pretrained_embeddings(self, **kwargs):
         """Return pretrained codebook embedding."""
         pass
+
 
 class EncodecTokenizer(Encodec, BaseTokenizer):
     @torch.no_grad()
@@ -50,12 +54,13 @@ class EncodecTokenizer(Encodec, BaseTokenizer):
         self.eval()
         signal = self.decode(tokens)[:, 0]  # [B, T]
         return signal
-    
+
     @torch.no_grad()
     def get_pretrained_embeddings(self, **kwargs):
         """Return pretrained codebook embedding."""
         embeddings = self.vocabulary
         return embeddings.reshape(-1, embeddings.shape[-1])
+
 
 class DACTokenizer(DAC, BaseTokenizer):
     @torch.no_grad()
@@ -63,7 +68,7 @@ class DACTokenizer(DAC, BaseTokenizer):
         # signal: [B, T]
         self.eval()
         tokens, _ = self(
-            signal[:, None], n_quantizers=kwargs['num_codebooks']
+            signal[:, None], n_quantizers=kwargs["num_codebooks"]
         )  # [B, N_Q, T]
         return tokens.movedim(-1, -2)  # [B, T, N_Q]
 
@@ -76,7 +81,7 @@ class DACTokenizer(DAC, BaseTokenizer):
         )
         signal = self.decode(quantized_feats)[:, 0]  # [B, T]
         return signal
-    
+
     @torch.no_grad()
     def get_pretrained_embeddings(self, **kwargs):
         """Return pretrained codebook embedding."""
@@ -88,24 +93,25 @@ class DACTokenizer(DAC, BaseTokenizer):
         self.to(kwargs["device"]).eval()
         with torch.no_grad():
             z_q, z_p, _ = self.quantizer.from_codes(toks)
-        z_ps = z_p.split(z_p.shape[1] // toks.shape[1], dim=1)  # [C, D, 1] * K
+        z_ps = z_p.split(z_p.shape[1] // toks.shape[1], dim=1)
         z_qs = []
         for i, z_p_i in enumerate(z_ps):
             with torch.no_grad():
-                z_q_i = (
-                    self.quantizer.quantizers[i].out_proj(z_p_i)
+                z_q_i = self.quantizer.quantizers[i].out_proj(
+                    z_p_i
                 )  # [C, H, 1]
             z_qs.append(z_q_i)
         assert (z_q == sum(z_qs)).all()
-        embeddings = torch.cat(z_qs)[:, :, 0]  # [CK, H]
+        embeddings = torch.cat(z_qs)[:, :, 0]
         return embeddings
+
 
 class SpeechTokenizer(SpeechTokenizer_interface, BaseTokenizer):
     @torch.no_grad()
     def sig_to_tokens(self, signal, lengths, **kwargs):
         # signal: [B, T]
         self.eval()
-        tokens = self(signal)[: kwargs['num_codebooks']]  # [N_Q, B, T]
+        tokens = self(signal)[: kwargs["num_codebooks"]]  # [N_Q, B, T]
         return tokens.movedim(-3, -1)  # [B, T, N_Q]
 
     @torch.no_grad()
@@ -114,7 +120,7 @@ class SpeechTokenizer(SpeechTokenizer_interface, BaseTokenizer):
         self.eval()
         tokens = tokens.movedim(-1, -3)  # [N_Q, B, T]
         return self.decode(tokens)  # [B, T]
-    
+
     @torch.no_grad()
     def get_pretrained_embeddings(self, **kwargs):
         """Return pretrained codebook embedding."""
@@ -128,54 +134,22 @@ class SpeechTokenizer(SpeechTokenizer_interface, BaseTokenizer):
         for i, indices in enumerate(toks):
             layer = self.model.quantizer.vq.layers[i]
             with torch.no_grad():
-                quantized = layer.decode(indices)  # [C, H, 1]
+                quantized = layer.decode(indices)
             embs.append(quantized)
-        assert (
-            self.model.quantizer.decode(toks) == sum(embs)
-        ).all()
-        embeddings = torch.cat(embs)[:, :, 0]  # [CK, H]
+        assert (self.model.quantizer.decode(toks) == sum(embs)).all()
+        embeddings = torch.cat(embs)[:, :, 0]
         return embeddings
+
 
 class DiscreteSSLTokenizer(DiscreteSSL, BaseTokenizer):
     @torch.no_grad()
     def sig_to_tokens(self, signal, lengths):
-        # signal: [B, T]
-        self.hparams.codec_quantizer.to(self.device).eval()
-        tokens, _, _ = self.hparams.codec_quantizer(
-            signal,
-            lengths,
-            SSL_layers=self.hparams.SSL_layers,
-            deduplicates=[False] * len(self.hparams.SSL_layers),
-            bpe_tokenizers=[None] * len(self.hparams.SSL_layers),
-        )  # [B, T, N_Q]
-        return tokens
+        pass
 
     @torch.no_grad()
     def tokens_to_sig(self, tokens):
-        # tokens: [B, T, N_Q]
-        self.hparams.codec_vocoder.to(self.device).eval()
+        pass
 
-        all_layer_ids = self.hparams.codec_quantizer.ssl_layer_ids
-        offsets = torch.arange(
-            0,
-            len(all_layer_ids) * self.hparams.vocab_size,
-            self.hparams.vocab_size,
-            device=self.device,
-        )
-        offset_idxes = [all_layer_ids.index(x) for x in self.hparams.SSL_layers]
-        offsets = offsets[offset_idxes]
-        tokens += offsets + 1
-
-        if len(self.hparams.SSL_layers) < len(all_layer_ids):
-            full_tokens = torch.zeros(
-                *tokens.shape[:2],
-                len(all_layer_ids),
-                dtype=tokens.dtype,
-                device=self.device,
-            )
-            for i, idx in enumerate(offset_idxes):
-                full_tokens[..., idx] = tokens[..., i]
-            tokens = full_tokens
-
-        self.hparams.codec_vocoder.tokenize = False
-        return self.hparams.codec_vocoder(tokens)[:, 0]  # [B, T]
+    @torch.no_grad()
+    def get_pretrained_embeddings(self, **kwargs):
+        pass

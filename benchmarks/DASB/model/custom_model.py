@@ -59,7 +59,7 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
         emb_dim,
         init=False,
         freeze=False,
-        hidden_dim =None,
+        hidden_dim=None,
     ):
         super(Discrete_EmbeddingLayer, self).__init__()
         self.vocab_size = vocab_size
@@ -76,11 +76,9 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
         else:
             self.proj_layer = None
 
-
     def init_embedding(self, weights):
         self.embedding.weight.data.copy_(weights)
-    
-    
+
     def forward(self, in_tokens):
         """Computes the embedding for discrete tokens.
         a sample.

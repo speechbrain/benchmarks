@@ -163,7 +163,7 @@ test_beam_search:
    beam_size: !ref <beam_size>
    beam_prune_logp: !ref <beam_prune_logp>
    token_prune_min_logp: !ref <token_prune_min_logp>
-   prune_history: !ref <prune_history> 
+   prune_history: !ref <prune_history>
    alpha: 0.8
    beta: 1.2
 
@@ -174,7 +174,7 @@ ctc_cost: !name:speechbrain.nnet.losses.ctc_loss
 log_softmax: !new:speechbrain.nnet.activations.Softmax
    apply_log: True
 
-scheduler:  !new:speechbrain.nnet.schedulers.NewBobScheduler
+scheduler: !new:speechbrain.nnet.schedulers.NewBobScheduler
    initial_value: !ref <lr_model>
    improvement_threshold: 0.0025
    annealing_factor: 0.8

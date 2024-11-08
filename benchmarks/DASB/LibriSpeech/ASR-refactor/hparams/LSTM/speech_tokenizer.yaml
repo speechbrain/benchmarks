@@ -183,7 +183,7 @@ ctc_cost: !name:speechbrain.nnet.losses.ctc_loss
 log_softmax: !new:speechbrain.nnet.activations.Softmax
    apply_log: True
 
-scheduler:  !new:speechbrain.nnet.schedulers.NewBobScheduler
+scheduler: !new:speechbrain.nnet.schedulers.NewBobScheduler
    initial_value: !ref <lr_model>
    improvement_threshold: 0.0025
    annealing_factor: 0.8

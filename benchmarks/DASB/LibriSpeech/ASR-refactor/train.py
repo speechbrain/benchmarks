@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 _CACHE = {"size": 0}
 
+
 # Define training procedure
 class ASR(sb.Brain):
     def compute_forward(self, batch, stage):
@@ -37,8 +38,6 @@ class ASR(sb.Brain):
         # Add waveform augmentation if specified.
         if stage == sb.Stage.TRAIN and hasattr(self.hparams, "wav_augment"):
             wavs, wav_lens = self.hparams.wav_augment(wavs, wav_lens)  # [B, T]
-
-        current_epoch = self.hparams.epoch_counter.current
 
         # compute features
         # Extract tokens (cache them at first epoch if augmentation is disabled)
@@ -156,8 +155,6 @@ class ASR(sb.Brain):
                 sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr)
             elif type(self.hparams.scheduler).__name__ == "LinearNoamScheduler":
                 lr = self.hparams.scheduler.current_lr
-                steps = self.optimizer_step
-
             else:
                 raise NotImplementedError
 

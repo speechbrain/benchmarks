@@ -83,6 +83,7 @@ To set up SpeechBrain-DASB, follow these steps:
 | [EnCodec](https://arxiv.org/abs/2210.13438)                              | DNS, CommonVoice, AudioSet, FSD50K, and Jamendo                                                    | [github.com/facebookresearch/encodec](https://github.com/facebookresearch/encodec)                    |
 | [DAC](https://arxiv.org/abs/2306.06546)                                  | DAPS, DNS, CommonVoice, VCTK, MUSDB, and Jamendo                                                   | [github.com/descriptinc/descript-audio-codec](https://github.com/descriptinc/descript-audio-codec)     |
 | [SpeechTokenizer](https://arxiv.org/abs/2308.16692)                      | LibriSpeech960                                                                                     | [github.com/ZhangXInFD/SpeechTokenizer](https://github.com/ZhangXInFD/SpeechTokenizer)                 |
+| [SNAC]([https://arxiv.org/abs/2308.16692](https://github.com/hubertsiuzdak/snac))                     | ?                       |  [https://github.com/hubertsiuzdak/snac](https://github.com/hubertsiuzdak/snac)
 
 # ⚡ Datasets and Recipes
 

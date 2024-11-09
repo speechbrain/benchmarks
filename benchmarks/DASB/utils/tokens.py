@@ -3,14 +3,17 @@ import logging
 import pathlib as pl
 import kaldiio
 import torch
+import torchaudio
 import numpy as np
 from tqdm.auto import tqdm
 import speechbrain as sb
 from speechbrain.dataio.dataloader import make_dataloader
 from speechbrain.dataio.dataset import DynamicItemDataset
+from speechbrain.dataio.dataio import load_pkl, save_pkl
 
 
 logger = logging.getLogger(__name__)
+OPT_FILE = "opt_extract.pkl"
 
 
 def get_device(use_cuda):
@@ -30,8 +33,8 @@ class TokensExtractor:
     ---------
     tokenizer : torch.nn.Module
         The tokenizer model to use for token extraction.
-    save_path : str
-        The directory where the tokens will be saved.
+    sample_rate : int
+        The sample rate of the audio data.
     src_key : str, optional
         The key in the dataset that contains the audio data (default: "wav").
     id_key : str, optional
@@ -42,62 +45,36 @@ class TokensExtractor:
         Whether to use CUDA for computation (default: True).
     dataloader_opts : dict, optional
         Options for the data loader (default: None).
-    pipelines : list, optional
-        List of data processing pipelines to apply (default: None).
-    save_name : str, optional
-        Base name for the saved token files (default: "tokens").
+
+    Raises
+    ------
+    ValueError
+        If an unsupported save_format is provided.
+    ValueError
+        If the tokenizer's sample rate does not match the provided sample_rate.
     """
 
     def __init__(
         self,
         tokenizer,
-        save_path,
+        sample_rate,
         src_key="wav",
         id_key="id",
         save_format="numpy",
         use_cuda=True,
         dataloader_opts=None,
-        pipelines=None,
-        save_name="tokens",
     ):
-        """
-        Initializes the TokensExtractor.
-
-        Arguments
-        ---------
-        tokenizer : torch.nn.Module
-            The tokenizer model to use for token extraction.
-        save_path : str
-            The directory where the tokens will be saved.
-        src_key : str, optional
-            The key in the dataset that contains the audio data (default: "wav").
-        id_key : str, optional
-            The key in the dataset that contains unique identifiers (default: "id").
-        save_format : str, optional
-            The format to save the tokens ('numpy', 'pickle', 'soundfile_flac') (default: "numpy").
-        use_cuda : bool, optional
-            Whether to use CUDA for computation (default: True).
-        dataloader_opts : dict, optional
-            Options for the data loader (default: None).
-        pipelines : list, optional
-            List of data processing pipelines to apply (default: None).
-        save_name : str, optional
-            Base name for the saved token files (default: "tokens").
-
-        Raises
-        ------
-        ValueError
-            If an unsupported save_format is provided.
-        """
-        self.save_path = pl.Path(save_path).absolute()
-        self.save_path.mkdir(parents=True, exist_ok=True)
-        self.save_name = save_name
-
         self.id_key = id_key
         self.src_key = src_key
 
         self.device = get_device(use_cuda)
         self.tokenizer = tokenizer.to(self.device)
+        self.sample_rate = sample_rate
+
+        if tokenizer.sample_rate != self.sample_rate:
+            raise ValueError(
+                f"Sample rate mismatch: {self.sample_rate} != {tokenizer.sample_rate}"
+            )
 
         if save_format not in ["numpy", "pickle", "soundfile_flac"]:
             raise ValueError(f"Unsupported save_format: {save_format}")
@@ -106,14 +83,9 @@ class TokensExtractor:
         if not dataloader_opts:
             dataloader_opts = {}
         self.dataloader_opts = dataloader_opts
-        self.pipelines = pipelines if pipelines is not None else []
+        self.pipelines = self._make_pipelines()
 
-        self.wspecifier = f"ark,scp,t:{self.save_path}/{self.save_name}.ark,{self.save_path}/{self.save_name}.scp"
-        self.writer = kaldiio.WriteHelper(
-            self.wspecifier, write_function="numpy"
-        )
-
-    def extract(self, dataset):
+    def extract_tokens(self, dataset, save_path, save_name="tokens"):
         """
         Extracts tokens from the dataset and saves them to the specified format.
 
@@ -122,9 +94,30 @@ class TokensExtractor:
         dataset : speechbrain.dataio.dataset.DynamicItemDataset or dict
             The dataset from which to extract tokens. Can be a DynamicItemDataset or a dictionary.
         """
+        conf = {
+            "sample_rate": self.sample_rate,
+            "save_folder": save_path,
+            "dataset_length": len(dataset),
+        }
+
+        save_path = pl.Path(save_path).absolute()
+        save_path.mkdir(parents=True, exist_ok=True)
+
+        # Check if the extraction is already done (if so, skip it)
+        if _skip(save_path, save_name, conf):
+            logger.info("Skipping preparation, completed in previous run.")
+            return
+
+        self.wspecifier = (
+            f"ark,scp,t:{save_path}/{save_name}.ark,{save_path}/{save_name}.scp"
+        )
+        self.writer = kaldiio.WriteHelper(
+            self.wspecifier, write_function="numpy"
+        )
+
         if isinstance(dataset, dict):
             dataset = DynamicItemDataset(dataset)
-        dataset.set_output_keys([self.src_key, self.id_key])
+        dataset.set_output_keys([self.src_key, self.id_key, "sig"])
         for pipeline in self.pipelines:
             dataset.add_dynamic_item(pipeline)
 
@@ -133,13 +126,18 @@ class TokensExtractor:
         batch_count = int(math.ceil(len(dataset) / batch_size))
         for batch in tqdm(dataloader, total=batch_count):
             batch = batch.to(self.device)
-            x, x_lengths = batch[self.src_key]
+            x, x_lengths = batch["sig"]
             ids = batch[self.id_key]
             batch_tokens = self.tokenizer.sig_to_tokens(x, x_lengths)
             batch_tokens = sb.utils.data_utils.undo_padding(
                 batch_tokens, x_lengths
             )
             self.process_batch(batch_tokens, ids)
+
+        logger.info("Extraction completed.")
+
+        save_opt = save_path / OPT_FILE
+        save_pkl(conf, save_opt.as_posix())
 
     def process_batch(self, batch, ids):
         """
@@ -156,11 +154,77 @@ class TokensExtractor:
             tokens = np.array(tokens)
             self.writer(utt_id, tokens)
 
+    def _make_pipelines(self):
+        """
+        Creates the data processing pipeline for audio data.
+
+        The pipeline reads audio files, resamples them to the desired sample rate, and provides
+        the processed signal under the key "sig".
+
+        Returns
+        -------
+        pipeline : list
+            A list containing the audio processing pipeline function.
+        """
+
+        @sb.utils.data_pipeline.takes(self.src_key)
+        @sb.utils.data_pipeline.provides("sig")
+        def audio_pipeline(wav):
+            info = torchaudio.info(wav)
+            sig = sb.dataio.dataio.read_audio(wav)
+            sig = torchaudio.transforms.Resample(
+                info.sample_rate,
+                self.sample_rate,
+            )(sig)
+            return sig
+
+        return [audio_pipeline]
+
     def __del__(self):
         """
         Close the writer.
         """
         self.writer.close()
+
+
+def _skip(save_path, save_name, conf):
+    """
+    Detects if the dataset extraction has been already done.
+    If the extraction has been done, we can skip it.
+
+    Arguments
+    ---------
+    save_path : str
+        The path to the directory containing extracted tokens.
+    conf : dict
+        Configuration to match against saved config.
+
+    Returns
+    -------
+    bool
+        if True, the preparation phase can be skipped.
+        if False, it must be done.
+    """
+    skip = True
+
+    # Checking ark,scp files
+    for ext in [".ark", ".scp"]:
+        save_file = save_path / f"{save_name}{ext}"
+        if not save_file.exists:
+            skip = False
+
+    # Checking saved options
+    save_opt = save_path / OPT_FILE
+    if skip is True:
+        if save_opt.exists():
+            opts_old = load_pkl(save_opt.as_posix())
+            if opts_old == conf:
+                skip = True
+            else:
+                skip = False
+        else:
+            skip = False
+    return skip
 
 
 class TokensLoader:
@@ -197,30 +261,48 @@ class TokensLoader:
             )
         self.tokens = self._load(data_path, save_name)
 
-    def tokens_by_uttid(self, utt_id):
+    def tokens_by_uttid(self, utt_id, num_codebooks=None):
         """
         Retrieves the tokens corresponding to a given utterance ID.
 
         Arguments
         ---------
-        utt_id: str
+        utt_id : str
             The utterance ID to retrieve tokens for.
+        num_codebooks : int, optional
+            The number of codebooks to retrieve from the tokens. If specified, the tokens will be truncated
+            to include only the first `num_codebooks` codebooks. If not specified, all codebooks are returned.
 
         Returns
         -------
-        result: torch.LongTensor [T, N_Q]
-            The tokens associated with the utterance ID.
+        result : torch.LongTensor [T, N_Q]
+            The tokens associated with the utterance ID, possibly truncated to `num_codebooks` codebooks.
 
         Raises
         ------
         KeyError
             If the utterance ID is not found in the tokens.
+        ValueError
+            If `num_codebooks` is invalid or exceeds the number of available codebooks.
         """
         if utt_id not in self.tokens:
             raise KeyError(f"Utterance ID '{utt_id}' not found in tokens.")
         tokens_path = self.tokens[utt_id]
         tokens = kaldiio.load_mat(tokens_path)
         tokens = torch.from_numpy(tokens).long()
+
+        if num_codebooks is not None:
+            if not isinstance(num_codebooks, int) or num_codebooks <= 0:
+                raise ValueError(
+                    f"Invalid num_codebooks value: {num_codebooks}. It must be a positive integer."
+                )
+            if num_codebooks > tokens.size(-1):
+                raise ValueError(
+                    f"Invalid number of codebooks: {num_codebooks}. "
+                    f"Available codebooks: {tokens.size(-1)}."
+                )
+            tokens = tokens[:, :num_codebooks]
+
         return tokens
 
     def _load(self, data_path, save_name):

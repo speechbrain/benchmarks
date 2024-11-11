@@ -1,3 +1,11 @@
+"""
+Unified interface for token extraction and pretrained embeddings handling for speech tokenizers.
+
+Authors
+---------
+* Jarod Duret, 2024
+"""
+
 import math
 import logging
 import pathlib as pl
@@ -105,7 +113,7 @@ class TokensExtractor:
 
         # Check if the extraction is already done (if so, skip it)
         if _skip(save_path, save_name, conf):
-            logger.info("Skipping preparation, completed in previous run.")
+            logger.info("Skipping extraction, completed in previous run.")
             return
 
         self.wspecifier = (
@@ -180,6 +188,29 @@ class TokensExtractor:
 
         return [audio_pipeline]
 
+    def save_pretrained_embeddings(self, save_path, save_name="embeddings"):
+        """
+        Saves the pretrained embeddings of the tokenizer to a specified directory.
+
+        This method retrieves the pretrained embeddings from the tokenizer,
+        converts them to a NumPy array, and saves them as a `.npy` file.
+
+        Parameters
+        ----------
+        save_path : str or pathlib.Path
+            The directory where the pretrained embeddings will be saved.
+            If the directory does not exist, it will be created.
+        save_name : str, optional
+            The base name of the saved embeddings file (default is "embeddings").
+            The embeddings will be saved as `<save_name>.npy` in the specified directory.
+        """
+        save_path = pl.Path(save_path).absolute()
+        save_path.mkdir(parents=True, exist_ok=True)
+
+        embeddings = self.tokenizer.get_pretrained_embeddings()
+        embeddings = embeddings.cpu().numpy()
+        np.save(save_path / save_name, embeddings)
+
     def __del__(self):
         """
         Close the writer.
@@ -196,6 +227,8 @@ def _skip(save_path, save_name, conf):
     ---------
     save_path : str
         The path to the directory containing extracted tokens.
+    save_name : str
+        The base name of the saved tokens file.
     conf : dict
         Configuration to match against saved config.
 
@@ -244,16 +277,6 @@ class TokensLoader:
         data_path,
         save_name="tokens",
     ):
-        """
-        Initializes the TokensLoader.
-
-        Arguments
-        ---------
-        data_path: str
-            The path to the data directory containing the token files.
-        save_name: str, optional
-            The base name of the tokens files (default: "tokens").
-        """
         self.data_path = pl.Path(data_path)
         if not self.data_path.exists():
             raise ValueError(
@@ -329,3 +352,31 @@ class TokensLoader:
                 if line.strip()
             }
         return utt2toks
+
+    def load_pretrained_embeddings(self, data_path, save_name="embeddings"):
+        """
+        Loads pretrained embeddings from a specified path.
+
+        Arguments
+        ---------
+        data_path : str
+            The directory where the embeddings are saved.
+        save_name : str, optional
+            The name of the embeddings file (default: "embeddings").
+
+        Returns
+        -------
+        embeddings : torch.Tensor
+            The loaded embeddings as a PyTorch tensor.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the embeddings file does not exist at the specified path.
+        """
+        data_path = pl.Path(data_path).absolute()
+        if not self.data_path.exists():
+            raise ValueError(f"Data folder not found: {data_path.as_posix()}")
+        embeddings = np.load(data_path / save_name)
+        embeddings = torch.from_numpy(embeddings)
+        return embeddings

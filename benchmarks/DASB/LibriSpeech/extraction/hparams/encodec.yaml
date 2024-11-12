@@ -23,7 +23,7 @@ test_csv:
   - !ref <output_folder>/test-clean.csv
   - !ref <output_folder>/test-other.csv
 
-batch_size: 32
+batch_size: 8
 num_workers: 8
 src_key: wav
 id_key: id

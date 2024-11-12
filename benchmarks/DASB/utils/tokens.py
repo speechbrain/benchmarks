@@ -377,6 +377,6 @@ class TokensLoader:
         data_path = pl.Path(data_path).absolute()
         if not self.data_path.exists():
             raise ValueError(f"Data folder not found: {data_path.as_posix()}")
-        embeddings = np.load(data_path / save_name)
+        embeddings = np.load(data_path / f"{save_name}.npy")
         embeddings = torch.from_numpy(embeddings)
         return embeddings

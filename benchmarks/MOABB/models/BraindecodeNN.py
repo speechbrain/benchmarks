@@ -1,4 +1,5 @@
 import torch
+from einops.layers.torch import Rearrange
 
 
 class BraindecodeNN(torch.nn.Module):
@@ -19,6 +20,8 @@ class BraindecodeNN(torch.nn.Module):
     def __init__(self, model):
         super().__init__()
         self.model = model
+        self.input_layer =  Rearrange("batch time chan 1 -> batch chan time")
+        self.softmax = torch.nn.LogSoftmax(dim=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Returns the output of the model.
@@ -29,6 +32,7 @@ class BraindecodeNN(torch.nn.Module):
             Input to convolve. 4d tensors are expected.
         """
         # (batch, time_, EEG channel, channel) ->  # (batch, EEG channel, time_, channel)
-        x = torch.transpose(x, 1, 2)
+        x = self.input_layer(x)
         x = self.model(x)
+        x = self.softmax(x)
         return x

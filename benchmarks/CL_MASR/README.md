@@ -66,7 +66,7 @@ Navigate to `<path-to-repository>/benchmarks/CL_MASR/<model>`, open a terminal a
 python train_<cl-method>.py hparams/train_<cl-method>.yaml --data_folder <path-to-data-folder>
 ```
 
-**NOTE**: in order to reproduce the experiments with WavLM large, you need to download checkpoint pretrained 
+**NOTE**: in order to reproduce the experiments with WavLM large, you need to download checkpoint pretrained
           on the base languages from [here](https://www.dropbox.com/sh/tbjuwi9yo1fv2ez/AABILEMY9yAhHMwhTlvyw69Pa?dl=0).
 
 **NOTE**: to profile the model (optional), install `ptflops` and `torchinfo` as additional dependencies.
@@ -138,8 +138,8 @@ If you use the CL-MASR benchmark, please cite:
 ```bibtex
 @article{dellalibera2024clmasr,
   author  = {{Della Libera}, Luca and Mousavi, Pooneh and Zaiem, Salah and Subakan, Cem and Ravanelli, Mirco},
-  journal = {IEEE/ACM Transactions on Audio, Speech, and Language Processing}, 
-  title   = {{CL-MASR}: A Continual Learning Benchmark for Multilingual {ASR}}, 
+  journal = {IEEE/ACM Transactions on Audio, Speech, and Language Processing},
+  title   = {{CL-MASR}: A Continual Learning Benchmark for Multilingual {ASR}},
   year    = {2024},
   pages   = {1--14},
   doi     = {10.1109/TASLP.2024.3487410}

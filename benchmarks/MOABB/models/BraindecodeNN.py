@@ -20,7 +20,7 @@ class BraindecodeNN(torch.nn.Module):
     def __init__(self, model):
         super().__init__()
         self.model = model
-        self.input_layer =  Rearrange("batch time chan 1 -> batch chan time")
+        self.input_layer = Rearrange("batch time chan 1 -> batch chan time")
         self.softmax = torch.nn.LogSoftmax(dim=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

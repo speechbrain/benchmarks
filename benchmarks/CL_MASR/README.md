@@ -141,7 +141,9 @@ If you use the CL-MASR benchmark, please cite:
   journal = {IEEE/ACM Transactions on Audio, Speech, and Language Processing},
   title   = {{CL-MASR}: A Continual Learning Benchmark for Multilingual {ASR}},
   year    = {2024},
-  pages   = {1--14},
+  volume  = {32},
+  number  = {},
+  pages   = {4931--4944},
   doi     = {10.1109/TASLP.2024.3487410}
 }
 ```

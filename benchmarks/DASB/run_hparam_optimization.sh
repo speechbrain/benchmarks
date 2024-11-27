@@ -49,12 +49,14 @@ exp_name="hopt"
 output_folder=""
 data_folder=""
 cached_data_folder=""
+task=""
+dataset=""
 hparams=""
 nruns=""
 nruns_eval=10
 eval_metric="acc"
 seed=1986
-config_file="hparams/orion/hparams_tpe.yaml"
+config_file="orion/hparams_bohb.yaml"
 mne_dir=""
 orion_db_address=""
 orion_db_type="PickledDB"
@@ -70,6 +72,8 @@ print_argument_descriptions() {
     echo "  --output_folder output_path           Output folder were the results will be stored"
     echo "  --data_folder data_path               Folder were the data are stored. If not available, they will be downloaded there."
     echo "  --cached_data_folder path [Optional]  Folder were the data in pkl format will be cached."
+    echo "  --task task                       downstream task"
+    echo "  --dataset dataset                 dataset"
     echo "  --hparms hparam_file                  YAML file containing the hparam to optimize. The hyperparameters decorated with @orion_step1 or @orion_step1 in the YAML file will be used"
     echo "  --nruns num_runs                      Number of runs for each hparam selection."
     echo "  --nruns_eval num_runs                 Number of runs for the final evaluation  (with best hparams) on the test set"
@@ -116,6 +120,18 @@ while [[ $# -gt 0 ]]; do
 
     --cached_data_folder)
       cached_data_folder="$2"
+      shift
+      shift
+      ;;
+
+    --task)
+      task="$2"
+      shift
+      shift
+      ;;
+     
+    --dataset)
+      dataset="$2"
       shift
       shift
       ;;
@@ -220,7 +236,7 @@ fi
 
 # Assign default value to cached_data_folder
 if [ -z "$cached_data_folder" ]; then
-    cached_data_folder="$data_folder/pkl"
+    cached_data_folder="$data_folder/cache"
 fi
 
 
@@ -233,9 +249,12 @@ export ORION_DB_TYPE=$orion_db_type
 
 echo "-------------------------------------"
 echo "Experiment Name: $exp_name"
+echo "hparams: $hparams"
 echo "Output Folder: $output_folder"
 echo "Data Folder: $data_folder"
 echo "Cached Data Folder: $cached_data_folder"
+echo "task: $task"
+echo "dataset: $dataset"
 echo "Hparam File: $hparams"
 echo "Number of Runs: $nruns"
 echo "Number of Eval Runs: $nruns_eval"
@@ -335,8 +354,8 @@ while [ -n "$opt_flags" ]; do
     echo
     # Setting up orion command
     orion_hunt_command="orion hunt -n $exp_name_step -c $config_file --exp-max-trials $exp_max_trials \
-    	./run_experiments.sh --hparams $hparams_step --data_folder $data_folder --seed $seed \
-    	--output_folder $output_folder_step/exp   --nruns $nruns \
+    	./run_experiments.sh --hparams $hparams_step --data_folder $data_folder --cached_data_folder=$cached_data_folder --seed $seed \
+    	--output_folder $output_folder_step/exp   --task=$task   --dataset=$dataset --nruns $nruns \
     	--eval_metric $eval_metric --eval_set dev  --rnd_dir $store_all $additional_flags"
 
 
@@ -396,10 +415,10 @@ final_yaml_file="$output_folder/best_hparams.yaml"
 scp $best_yaml_file $final_yaml_file
 
 # Running evaluation on the test set for the best models
- ./run_experiments.sh --hparams $final_yaml_file --data_folder $data_folder \
-  --seed $seed --output_folder $output_folder/best --nsbj $nsbj --nsess $nsess \
+ ./run_experiments.sh --hparams $final_yaml_file --data_folder $data_folder  --cached_data_folder=$cached_data_folder \
+  --seed $seed --output_folder $output_folder/best --task=$task   --dataset=$dataset \
   --nruns $nruns_eval --eval_metric $eval_metric --eval_set test \
-  --train_mode $train_mode --rnd_dir $store_all $additional_flags
+  --rnd_dir $store_all $additional_flags
 
 
 echo "The test performance with best hparams is available at  $output_folder/best"

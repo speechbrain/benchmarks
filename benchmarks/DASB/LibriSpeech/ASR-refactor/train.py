@@ -336,7 +336,7 @@ if __name__ == "__main__":
             "tr_splits": hparams["train_splits"],
             "dev_splits": hparams["dev_splits"],
             "te_splits": hparams["test_splits"],
-            "save_folder": hparams["output_folder"],
+            "save_folder": hparams["cached_data_folder"],
             "merge_lst": hparams["train_splits"],
             "merge_name": "train.csv",
             "skip_prep": hparams["skip_prep"],
@@ -345,7 +345,7 @@ if __name__ == "__main__":
 
     # Defining tokenizer and loading it
     tokenizer = SentencePiece(
-        model_dir=hparams["save_folder"],
+        model_dir=hparams["cached_data_folder"],
         vocab_size=hparams["output_neurons"],
         annotation_train=hparams["train_csv"],
         annotation_read="wrd",

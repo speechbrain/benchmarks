@@ -15,7 +15,7 @@ output_folder: !ref results/dac/LSTM/<seed>
 output_wer_folder: !ref <output_folder>/wer.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
-
+cached_data_folder: !PLACEHOLDER #'path/to/cache'
 
 # Data files
 data_folder: !PLACEHOLDER  # e.g., /path/to/LibriSpeech
@@ -27,16 +27,21 @@ train_splits: ["train-clean-100"]
 dev_splits: ["dev-clean"]
 test_splits: ["dev-clean", "test-clean"]
 skip_prep: False
-train_csv: !ref <output_folder>/train.csv
-valid_csv: !ref <output_folder>/dev-clean.csv
+train_csv: !ref <cached_data_folder>/train.csv
+valid_csv: !ref <cached_data_folder>/dev-clean.csv
 test_csv:
-   - !ref <output_folder>/dev-clean.csv
-   - !ref <output_folder>/test-clean.csv
+   - !ref <cached_data_folder>/dev-clean.csv
+   - !ref <cached_data_folder>/test-clean.csv
 
 
 ####################### Training Parameters ####################################
-number_of_epochs: 20
-batch_size: 4 # This works for 2x GPUs with 32GB
+# number_of_epochs: 20
+number_of_epochs_: 200 # @orion_step1: --number_of_epochs~"fidelity(15, 1000, base=4)"
+number_of_epochs: !apply:int
+    - !apply:math.floor
+        - !ref <number_of_epochs_>
+batch_size_exponent: 6 # @orion_step1: --batch_size_exponent~"uniform(4, 6,discrete=True)"
+batch_size: !ref 2 ** <batch_size_exponent>
 test_batch_size: 1
 grad_accumulation_factor: 2
 max_grad_norm: 5.0
@@ -48,7 +53,7 @@ valid_search_interval: 1
 avg_checkpoints: 10 # Number of checkpoints to average for evaluation
 cache_size: 1.e+10
 
-lr_model: 0.001
+lr_model: 0.0001 # @orion_step1: --lr_model~"loguniform(0.00001,0.5)"
 weight_decay: 0.0005
 
 

@@ -14,12 +14,11 @@
 ###########################################################
 
 # Initialize variables
+hparams=""
 data_folder=""
 cached_data_folder=""
 output_folder=""
 task=""
-downstream=""
-tokenizer_name=""
 dataset=""
 seed=""
 nruns=""
@@ -33,12 +32,12 @@ additional_flags=""
 print_argument_descriptions() {
     echo "Usage: $0 [options]"
     echo "Options:"
+    echo "  --hparams hparams_path            Hparam YAML file"
     echo "  --data_folder data_folder_path    Data folder path"
+    echo "  --cached_data_folder cache_path   Cached data folder path"
     echo "  --output_folder output_path       Output folder path"
     echo "  --task task                       downstream task"
-    echo "  --downstream downstream           probing head"
-    echo "  --tokenizer_name tokenizer_name   tokenizer choice"
-    echo "  --dataset dataset               dataset"
+    echo "  --dataset dataset                 dataset"
     echo "  --seed random_seed                Seed (random if not specified)"
     echo "  --nruns num_runs                  Number of runs"
     echo "  --eval_metric metric              Evaluation metric (e.g., acc or f1)"
@@ -53,8 +52,20 @@ POSITIONAL_ARGS=()
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --hparams)
+      hparams="$2"
+      shift
+      shift
+      ;;
+
     --data_folder)
       data_folder="$2"
+      shift
+      shift
+      ;;
+
+    --cached_data_folder)
+      cached_data_folder="$2"
       shift
       shift
       ;;
@@ -70,20 +81,7 @@ while [[ $# -gt 0 ]]; do
       shift
       shift
       ;;
-    
-    
-    --downstream)
-      downstream="$2"
-      shift
-      shift
-      ;;   
-
-      --tokenizer_name)
-      tokenizer_name="$2"
-      shift
-      shift
-      ;;
-      
+     
       --dataset)
       dataset="$2"
       shift
@@ -140,7 +138,7 @@ done
 
 
 # Check for required arguments
-if  [ -z "$data_folder" ] || [ -z "$output_folder" ]  || [ -z "$nruns" ]; then
+if  [ -z "$hparams" ] ||[ -z "$data_folder" ] || [ -z "$output_folder" ]  || [ -z "$nruns" ]; then
     echo "ERROR: Missing required arguments! Please provide all required options."
     print_argument_descriptions
 fi
@@ -172,10 +170,9 @@ mkdir -p $output_folder
 {
     echo "hparams: $hparams"
     echo "data_folder: $data_folder"
+    echo "cached_data_folder: $cached_data_folder"
     echo "output_folder: $output_folder"
     echo "task: $task"
-    echo "downstream: $downstream"
-    echo "tokenizer_name: $tokenizer_name"
     echo "dataset: $dataset"
     echo "seed: $seed"
     echo "nruns: $nruns"
@@ -194,8 +191,8 @@ mkdir -p $cached_data_folder
 # Function to run the training experiment
 run_experiment() {
 
-python $dataset/$task/train.py $dataset/$task/hparams/$downstream/$tokenizer_name.yaml  --seed=$seed --data_folder=$data_folder --output_folder=$output_folder_exp\
-$additional_flags --debug
+python $dataset/$task/train.py $hparams  --cached_data_folder=$cached_data_folder --seed=$seed --data_folder=$data_folder --output_folder=$output_folder_exp \
+$additional_flags 
 
 }
 
@@ -208,7 +205,7 @@ for i in $(seq 0 1 $(( nruns - 1 ))); do
   run_experiment  $output_folder_exp
 
 
-  # Store the results
+  # # Store the results
   # python utils/parse_results.py $output_folder_exp $metric_file $eval_metric | tee -a  $output_folder/$run_name\_results.txt
 
   # Changing Random seed
@@ -217,4 +214,4 @@ done
 
 
 echo 'Final Results (Performance Aggregation)'
-python utils/aggregate_results.py $output_folder $eval_metric | tee -a  $output_folder/aggregated_performance.txt
+python utils/aggregate_results.py $output_folder "$eval_metric" | tee -a  $output_folder/aggregated_performance.txt

@@ -20,6 +20,7 @@ Mirco Ravanelli, 2022
 """
 
 import sys
+import re
 import numpy as np
 from orion.client import report_objective
 from speechbrain.utils.data_utils import get_all_files
@@ -84,11 +85,13 @@ def get_metrics(res_files, eval_metric):
         with open(res_files[i]) as file_in:
             for line in file_in:
                 if eval_metric in line:
-                    value = line.split(eval_metric + " ")[1]
-                    value = value.split(" ")[0]
-                    value = float(value)
-                    metrics[cnt, i] = value
-                    cnt = cnt + 1
+                    # Use regex to find the test WER value
+                    match = re.search(rf'{eval_metric}: (\d+\.\d+e[+-]\d+)', line)
+                    if match:
+                        value = match.group(1)
+                        value = float(value)
+                        metrics[cnt, i] = value
+                        cnt = cnt + 1
     return metrics
 
 
@@ -120,12 +123,11 @@ def aggregate_metrics(prototype, metrics):
 
 
 if __name__ == "__main__":
-    # output_folder = sys.argv[1]
-    # eval_metric = sys.argv[2]
-    output_folder = "benchmarks/DASB/result"
-    eval_metric = "wer"
+    output_folder = sys.argv[1]
+    eval_metric = sys.argv[2]
+
     # Getting the list of the result files in the output folder
-    res_files = get_all_files(output_folder, match_and=["_results.txt"])
+    res_files = get_all_files(output_folder, match_and=["train_log.txt"])
 
     # Gettin a prototype file
     prototype, n_metrics = get_prototype(res_files[0], eval_metric)

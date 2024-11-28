@@ -1,0 +1,6 @@
+experiment:
+    algorithms:
+        bohb:
+            seed: 1986
+            min_points_in_model: 20
+            num_samples: 24

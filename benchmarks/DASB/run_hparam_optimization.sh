@@ -354,8 +354,8 @@ while [ -n "$opt_flags" ]; do
     echo
     # Setting up orion command
     orion_hunt_command="orion hunt -n $exp_name_step -c $config_file --exp-max-trials $exp_max_trials \
-    	./run_experiments.sh --hparams $hparams_step --data_folder $data_folder --cached_data_folder=$cached_data_folder --seed $seed \
-    	--output_folder $output_folder_step/exp   --task=$task   --dataset=$dataset --nruns $nruns \
+    	./run_experiments.sh --hparams $hparams_step --data_folder $data_folder --cached_data_folder $cached_data_folder \
+    	--output_folder $output_folder_step/exp   --task $task   --dataset $dataset  --seed $seed --nruns $nruns \
     	--eval_metric $eval_metric --eval_set dev  --rnd_dir $store_all $additional_flags"
 
 
@@ -415,10 +415,9 @@ final_yaml_file="$output_folder/best_hparams.yaml"
 scp $best_yaml_file $final_yaml_file
 
 # Running evaluation on the test set for the best models
- ./run_experiments.sh --hparams $final_yaml_file --data_folder $data_folder  --cached_data_folder=$cached_data_folder \
-  --seed $seed --output_folder $output_folder/best --task=$task   --dataset=$dataset \
+./run_experiments.sh --hparams $final_yaml_file --data_folder $data_folder  --cached_data_folder $cached_data_folder \
+  --output_folder $output_folder/best --task $task   --dataset $dataset  --seed $seed\
   --nruns $nruns_eval --eval_metric $eval_metric --eval_set test \
   --rnd_dir $store_all $additional_flags
-
 
 echo "The test performance with best hparams is available at  $output_folder/best"

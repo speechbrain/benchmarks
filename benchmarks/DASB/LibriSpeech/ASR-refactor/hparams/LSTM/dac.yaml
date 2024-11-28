@@ -40,7 +40,7 @@ number_of_epochs_: 200 # @orion_step1: --number_of_epochs~"fidelity(15, 1000, ba
 number_of_epochs: !apply:int
     - !apply:math.floor
         - !ref <number_of_epochs_>
-batch_size_exponent: 6 # @orion_step1: --batch_size_exponent~"uniform(4, 6,discrete=True)"
+batch_size_exponent: 6 # @orion_step1: --batch_size_exponent~"uniform(1, 2,discrete=True)"
 batch_size: !ref 2 ** <batch_size_exponent>
 test_batch_size: 1
 grad_accumulation_factor: 2
@@ -119,7 +119,7 @@ freeze_embedding: False
 
 # LSTM
 activation: !name:torch.nn.Sigmoid
-dnn_layers: 2
+dnn_layers: 2 #  @orion_step1: --dnn_layers~"uniform(2, 4,discrete=True)"
 dnn_neurons: 1024
 dropout: 0.2
 output_neurons: 31

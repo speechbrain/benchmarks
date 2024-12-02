@@ -1,14 +1,17 @@
 """Braindecode from https://braindecode.org/stable/index.html.
-Braindecode is an open-source Python toolbox for decoding raw electrophysiological brain data with 
-deep learning models. It includes dataset fetchers, data preprocessing and visualization tools, as 
-well as implementations of several deep learning architectures and data augmentations for analysis 
+Braindecode is an open-source Python toolbox for decoding raw electrophysiological brain data with
+deep learning models. It includes dataset fetchers, data preprocessing and visualization tools, as
+well as implementations of several deep learning architectures and data augmentations for analysis
 of EEG, ECoG and MEG.
 
-This code is a Speechbrain interface for the Braindecode models. This wrapper allows the usage of 
-Braindecode models with the benchmarks pipeline for experiment reproducibility. 
+This code is a Speechbrain interface for the Braindecode models. This wrapper allows the usage of
+Braindecode models with the benchmarks pipeline for experiment reproducibility.
 
-Note 1: The library "einops" is included when braindecode is installed and is not in the package 
-requirements of benchmarks or speechbrain. 
+Note 1: We recommend using the braindecode from the source code to avoid compatibility issues.
+
+```bash
+pip install git+https://github.com/braindecode/braindecode.git#egg=braindecode
+```
 
 Note 2: Softmax is added to the model layer stack since NLL is used.
 

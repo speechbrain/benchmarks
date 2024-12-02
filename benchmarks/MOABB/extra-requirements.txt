@@ -1,7 +1,7 @@
+-e git+https://github.com/braindecode/braindecode.git#egg=braindecode
 mne
 moabb
 orion
 orion[profet]
 scikit-learn
 torchinfo
--e git+https://github.com/braindecode/braindecode.git#egg=braindecode

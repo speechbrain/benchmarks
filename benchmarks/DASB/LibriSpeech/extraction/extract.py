@@ -85,7 +85,9 @@ if __name__ == "__main__":
     save_folder = pl.Path(hparams["save_folder"])
     logger.info("Extracting dataset tokens ...")
     tokens_extractor.extract_tokens(
-        merged_dataset, (save_folder / "librispeech").as_posix()
+        merged_dataset,
+        hparams["num_codebooks"],
+        (save_folder / "librispeech").as_posix(),
     )
 
     if hparams["save_embedding"]:

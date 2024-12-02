@@ -11,7 +11,8 @@
 
 seed: 1986
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref results/enocdec/LSTM/<seed>
+run_name: !PLACEHOLDER
+output_folder: !ref results/LSTM/<run_name>/<seed>
 output_wer_folder: !ref <output_folder>/wer.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
@@ -39,7 +40,7 @@ pretain_embeddings_folder: !PLACEHOLDER # Optional
 
 ####################### Training Parameters ####################################
 number_of_epochs: 20
-batch_size: 4 # This works for 2x GPUs with 32GB
+batch_size: 4
 test_batch_size: 1
 grad_accumulation_factor: 2
 max_grad_norm: 5.0
@@ -56,10 +57,6 @@ weight_decay: 0.0005
 
 
 # Training parameters
-# To make Transformers converge, the global bath size should be large enough.
-# The global batch size is max_batch_len * n_gpus * gradient_accumulation.
-# Empirically, we used 850 * 8 A40 45G GPUs * 2 or 1700 * 4 A100 80G * 2.
-# Please, set your parameters accordingly.
 dynamic_batching: True
 max_batch_length_train: 850
 max_batch_len_val: 100
@@ -134,19 +131,8 @@ token_prune_min_logp: -1.2
 prune_history: False
 
 ############################## models ################################
-# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
-# tokenizer: !new:model.tokenizer_interface.EncodecTokenizer
-#    source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
-#    save_path: !ref <save_folder>
-#    sample_rate: !ref <sample_rate>
-#    bandwidth: !ref <bandwidth>
-#    flat_embeddings: False
-#    freeze: True
-#    renorm_embeddings: False
-
 tokens_loader: !new:utils.tokens.TokensLoader
   data_path: !ref <tokens_folder>
-
 
 discrete_embedding_layer: !new:model.custom_model.Discrete_EmbeddingLayer
    num_codebooks: !ref <num_codebooks>

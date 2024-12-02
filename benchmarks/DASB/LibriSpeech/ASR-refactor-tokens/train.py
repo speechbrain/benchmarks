@@ -25,8 +25,6 @@ sys.path.append(base_dir)
 
 logger = logging.getLogger(__name__)
 
-_CACHE = {"size": 0}
-
 
 # Define training procedure
 class ASR(sb.Brain):
@@ -36,7 +34,6 @@ class ASR(sb.Brain):
         wavs, wav_lens = batch.sig
         in_toks, _ = batch.speech_tokens
 
-        # Extract embeddings
         in_embs = self.modules.discrete_embedding_layer(
             in_toks
         )  # [B, T, N-Q, D]

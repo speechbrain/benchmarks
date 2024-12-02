@@ -1,5 +1,5 @@
 # ############################################################################
-# Auido Tokenizer: Encodec
+# Auido Tokenizer: Speech Tokenizer
 # Extraction: Librispeech 960h
 # Authors: Jarod Duret 2024
 # ############################################################################
@@ -7,7 +7,7 @@
 
 seed: 1986
 __set_seed: !apply:torch.manual_seed [!ref <seed>]
-output_folder: !ref results/encodec
+output_folder: !ref results/speech_tokenizer
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/extraction_log.txt
 
@@ -34,20 +34,17 @@ dataloader_opts:
    shuffle: True
    num_workers: !ref <num_workers>
 
-bandwidth: 1.5
+vocab_size: 1024
 num_codebooks: 2
-sample_rate: 24000
+sample_rate: 16000
+encoder_dim: 1024
+freeze_embedding: False
 save_embedding: False
 
 # EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
-tokenizer: !new:model.tokenizer_interface.EncodecTokenizer
-   source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
+tokenizer: !new:model.tokenizer_interface.SpeechTokenizer
+   source: fnlp/SpeechTokenizer  # Only the 24kHz version supports mono audio
    save_path: !ref <save_folder>
-   sample_rate: !ref <sample_rate>
-   bandwidth: !ref <bandwidth>
-   flat_embeddings: False
-   freeze: True
-   renorm_embeddings: False
 
 tokens_extractor: !new:utils.tokens.TokensExtractor
   tokenizer: !ref <tokenizer>

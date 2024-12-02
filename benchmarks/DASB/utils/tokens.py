@@ -93,7 +93,9 @@ class TokensExtractor:
         self.dataloader_opts = dataloader_opts
         self.pipelines = self._make_pipelines()
 
-    def extract_tokens(self, dataset, save_path, save_name="tokens"):
+    def extract_tokens(
+        self, dataset, num_codebooks, save_path, save_name="tokens"
+    ):
         """
         Extracts tokens from the dataset and saves them to the specified format.
 
@@ -101,6 +103,12 @@ class TokensExtractor:
         ---------
         dataset : speechbrain.dataio.dataset.DynamicItemDataset or dict
             The dataset from which to extract tokens. Can be a DynamicItemDataset or a dictionary.
+        num_codebooks: int
+            The number of codebooks to retrieve from the tokens.
+        save_path: str
+            The path where tokens will be saved.
+        save_name: str
+            The name of the .scp and .ark files.
         """
         conf = {
             "sample_rate": self.sample_rate,
@@ -136,7 +144,9 @@ class TokensExtractor:
             batch = batch.to(self.device)
             x, x_lengths = batch["sig"]
             ids = batch[self.id_key]
-            batch_tokens = self.tokenizer.sig_to_tokens(x, x_lengths)
+            batch_tokens = self.tokenizer.sig_to_tokens(
+                x, x_lengths, num_codebooks=num_codebooks
+            )
             batch_tokens = sb.utils.data_utils.undo_padding(
                 batch_tokens, x_lengths
             )

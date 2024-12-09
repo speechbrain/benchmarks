@@ -148,7 +148,7 @@ If you use the CL-MASR benchmark, please cite:
 }
 ```
 
-If you use SpeechBrain, please cite:
+If you use SpeechBrain, please cite the [reference paper](https://arxiv.org/abs/2310.16931):
 
 ```bibtex
 @article{ravanelli2024open,

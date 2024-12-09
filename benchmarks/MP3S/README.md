@@ -1,14 +1,30 @@
 # Multi-probe Speech Self Supervision Benchmark (MP3S)
 This repository provides scripts for benchmarking self-supervised representations on various downstream tasks, including ASR, speaker verification, emotion recognition, and intent classification.
 
-The key feature of this benchmark is that it allows users to choose their desired probing head for downstream training. This is why we called it the *Multi-probe Speech Self Supervision Benchmark (MP3S)*. It has been demonstrated that the performance of the model is greatly influenced by this selection. For more information about the motivation, tasks, and results, please refer to the following [paper](https://arxiv.org/abs/2306.00452):
+The key feature of this benchmark is that it allows users to choose their desired probing head for downstream training. This is why we called it the *Multi-probe Speech Self Supervision Benchmark (MP3S)*. It has been demonstrated that the performance of the model is greatly influenced by this selection. For more information about the motivation, tasks, and results, please refer to the following papers:
+
+[Paper1](https://arxiv.org/abs/2306.00452)
 
 ```bibtex
-@article{zaiem2023speech,
+@inproceedings{zaiem2023speech,
   title={Speech Self-Supervised Representation Benchmarking: Are We Doing it Right?},
   author={Zaiem, Salah and Kemiche, Youcef and Parcollet, Titouan and Essid, Slim and Ravanelli, Mirco},
-  journal={In Proc. of Interspeech},
-  year={2023}
+  booktitle={Proceedings of Interspeech 2023},
+  year={2023},
+  pages={1234--1238},
+  address={Dublin, Ireland},
+  publisher={ISCA}
+}
+```
+[Paper2](https://www.sciencedirect.com/science/article/pii/S0885230824000780)
+
+```bibtex
+@article{ZAIEM2025101695,
+title = {Speech self-supervised representations benchmarking: A case for larger probing heads},
+journal = {Computer Speech & Language},
+volume = {89},
+pages = {101695},
+year = {2025},
 }
 ```
 
@@ -117,16 +133,30 @@ The next table provides estimates of training time for every couple (task, probi
 [zaiemsalah@gmail.com](mailto:zaiemsalah@gmail.com)
 
 # **Citing**
-If you use this MP3S benchmark, please cite :
+If you use this MP3S benchmark, please cite the following papers:
 
 ```bibtex
-@article{zaiem2023speech,
+@inproceedings{zaiem2023speech,
   title={Speech Self-Supervised Representation Benchmarking: Are We Doing it Right?},
   author={Zaiem, Salah and Kemiche, Youcef and Parcollet, Titouan and Essid, Slim and Ravanelli, Mirco},
-  journal={arXiv preprint arXiv:2306.00452},
-  year={2023}
+  booktitle={Proceedings of Interspeech 2023},
+  year={2023},
+  pages={1234--1238},
+  address={Dublin, Ireland},
+  publisher={ISCA}
 }
 ```
+
+```bibtex
+@article{ZAIEM2025101695,
+title = {Speech self-supervised representations benchmarking: A case for larger probing heads},
+journal = {Computer Speech & Language},
+volume = {89},
+pages = {101695},
+year = {2025},
+}
+```
+
 Please, cite SpeechBrain if you use it for your research or business.
 
 ```bibtex

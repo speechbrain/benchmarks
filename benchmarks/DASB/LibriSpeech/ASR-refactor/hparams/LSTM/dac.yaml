@@ -16,7 +16,7 @@ output_wer_folder: !ref <output_folder>/wer.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
 cached_data_folder: !PLACEHOLDER #'path/to/cache'
-
+testing: True
 # Data files
 data_folder: !PLACEHOLDER  # e.g., /path/to/LibriSpeech
 # If RIRS_NOISES dir exists in /localscratch/xxx_corpus/RIRS_NOISES
@@ -25,7 +25,7 @@ data_folder: !PLACEHOLDER  # e.g., /path/to/LibriSpeech
 # data_folder_rirs: !ref <data_folder>
 train_splits: ["train-clean-100"]
 dev_splits: ["dev-clean"]
-test_splits: ["dev-clean", "test-clean"]
+test_splits: ["test-clean"]
 skip_prep: False
 train_csv: !ref <cached_data_folder>/train.csv
 valid_csv: !ref <cached_data_folder>/dev-clean.csv
@@ -33,13 +33,9 @@ test_csv:
    - !ref <cached_data_folder>/dev-clean.csv
    - !ref <cached_data_folder>/test-clean.csv
 
-
 ####################### Training Parameters ####################################
 # number_of_epochs: 20
-number_of_epochs_: 200 # @orion_step1: --number_of_epochs~"fidelity(15, 1000, base=4)"
-number_of_epochs: !apply:int
-    - !apply:math.floor
-        - !ref <number_of_epochs_>
+number_of_epochs: 200 # @orion_step1: --number_of_epochs~"fidelity(1, 2, base=4)"
 batch_size_exponent: 6 # @orion_step1: --batch_size_exponent~"uniform(1, 2,discrete=True)"
 batch_size: !ref 2 ** <batch_size_exponent>
 test_batch_size: 1
@@ -119,7 +115,7 @@ freeze_embedding: False
 
 # LSTM
 activation: !name:torch.nn.Sigmoid
-dnn_layers: 2 #  @orion_step1: --dnn_layers~"uniform(2, 4,discrete=True)"
+dnn_layers: 2 #  @orion_step1: --dnn_layers~"uniform(1, 2,discrete=True)"
 dnn_neurons: 1024
 dropout: 0.2
 output_neurons: 31
@@ -224,8 +220,9 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
 
 
 # Functions and classes
-epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
-   limit: !ref <number_of_epochs>
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter  # epoch counter
+    limit: !new:int
+        - !ref <number_of_epochs>
 
 train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
    save_file: !ref <train_log>

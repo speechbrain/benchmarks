@@ -86,7 +86,7 @@ def get_metrics(res_files, eval_metric):
             for line in file_in:
                 if eval_metric in line:
                     # Use regex to find the test WER value
-                    match = re.search(rf'{eval_metric}: (\d+\.\d+e[+-]\d+)', line)
+                    match = re.search(rf'{eval_metric}: (\d+\.\d+(?:e[+-]?\d+)?)', line)
                     if match:
                         value = match.group(1)
                         value = float(value)
@@ -125,7 +125,7 @@ def aggregate_metrics(prototype, metrics):
 if __name__ == "__main__":
     output_folder = sys.argv[1]
     eval_metric = sys.argv[2]
-
+    
     # Getting the list of the result files in the output folder
     res_files = get_all_files(output_folder, match_and=["train_log.txt"])
 

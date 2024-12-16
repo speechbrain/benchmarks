@@ -15,28 +15,29 @@ output_folder: !ref results/enocdec/LSTM/<seed>
 output_wer_folder: !ref <output_folder>/wer.txt
 save_folder: !ref <output_folder>/save
 train_log: !ref <output_folder>/train_log.txt
-
+cached_data_folder: !PLACEHOLDER #'path/to/cache'
+testing: True
 
 # Data files
 data_folder: !PLACEHOLDER  # e.g., /path/to/LibriSpeech
 # If RIRS_NOISES dir exists in /localscratch/xxx_corpus/RIRS_NOISES
 # then data_folder_rirs should be /localscratch/xxx_corpus
 # otherwise the dataset will automatically be downloaded
-# data_folder_rirs: !ref <data_folder>
-train_splits: ["train-clean-100", "train-clean-360", "train-other-500"]
+data_folder_rirs: !ref <data_folder>
+train_splits: ["train-clean-100"]
 dev_splits: ["dev-clean"]
-test_splits: ["dev-clean", "test-clean", "test-other"]
+test_splits: ["test-clean", "test-other"]
 skip_prep: False
-train_csv: !ref <output_folder>/train.csv
-valid_csv: !ref <output_folder>/dev-clean.csv
+train_csv: !ref <cached_data_folder>/train.csv
+valid_csv: !ref <cached_data_folder>/dev-clean.csv
 test_csv:
-   - !ref <output_folder>/dev-clean.csv
-   - !ref <output_folder>/test-clean.csv
-
+   - !ref <cached_data_folder>/test-clean.csv
+   - !ref <cached_data_folder>/test-other.csv
 
 ####################### Training Parameters ####################################
-number_of_epochs: 20
-batch_size: 4 # This works for 2x GPUs with 32GB
+number_of_epochs: 20 # @orion_step1: --number_of_epochs~"fidelity(5, 20, base=4)"
+batch_size_exponent: 4 # @orion_step1: --batch_size_exponent~"uniform(2, 4,discrete=True)"
+batch_size: !ref 2 ** <batch_size_exponent>
 test_batch_size: 1
 grad_accumulation_factor: 2
 max_grad_norm: 5.0
@@ -48,7 +49,7 @@ valid_search_interval: 1
 avg_checkpoints: 10 # Number of checkpoints to average for evaluation
 cache_size: 1.e+10
 
-lr_model: 0.001
+lr_model: 0.0001 # @orion_step1: --lr_model~"loguniform(0.00001,0.5)"
 weight_decay: 0.0005
 
 
@@ -99,8 +100,8 @@ test_dataloader_opts:
 # bandwidth: [1.5, 3.0, 6.0, 12.0, 24.0]
 # num_codebooks: [2, 4, 8, 16, 32]
 vocab_size: 1024
-bandwidth: 1.5
-num_codebooks: 2
+bandwidth: 6.0
+num_codebooks: 8
 sample_rate: 24000
 # Feature parameters
 encoder_dim: 1024
@@ -109,9 +110,10 @@ pretrain_embeddings: False
 freeze_embedding: False
 
 
+
 # LSTM
 activation: !name:torch.nn.Sigmoid
-dnn_layers: 2
+dnn_layers: 2 #  @orion_step1: --dnn_layers~"uniform(1, 4,discrete=True)"
 dnn_neurons: 1024
 dropout: 0.2
 output_neurons: 31
@@ -134,7 +136,7 @@ prune_history: False
 # EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
 tokenizer: !new:model.tokenizer_interface.EncodecTokenizer
    source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
-   save_path: !ref <save_folder>
+   save_path: !ref <cached_data_folder>
    sample_rate: !ref <sample_rate>
    bandwidth: !ref <bandwidth>
    flat_embeddings: False
@@ -219,8 +221,9 @@ checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
 
 
 # Functions and classes
-epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
-   limit: !ref <number_of_epochs>
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter  # epoch counter
+    limit: !new:int
+        - !ref <number_of_epochs>
 
 train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
    save_file: !ref <train_log>

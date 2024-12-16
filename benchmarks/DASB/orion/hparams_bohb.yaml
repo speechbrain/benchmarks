@@ -2,5 +2,5 @@ experiment:
     algorithms:
         bohb:
             seed: 1986
-            min_points_in_model: 20
-            num_samples: 24
+            min_points_in_model: 5
+            num_samples: 5

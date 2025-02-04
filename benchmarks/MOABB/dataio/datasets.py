@@ -20,6 +20,8 @@ from moabb.datasets.bids_interface import camel_to_kebab_case
 from speechbrain.dataio.dataset import DynamicItemDataset
 from speechbrain.utils.data_pipeline import provides, takes
 
+from torch.utils.data import Dataset
+
 
 class RawEEGSample(TypedDict, total=False):
     """Default dictionary keys provided by `~RawEEGDataset`.
@@ -195,6 +197,7 @@ class RawEEGDataset(DynamicItemDataset):
         )
         dataset.download(subject_list)
 
+        # Convert from MOABB format to BIDS
         for sub in subject_list:
             dataset.get_data(
                 subjects=[sub],
@@ -352,9 +355,8 @@ class EpochedEEGDataset(RawEEGDataset):
         output_keys=(),
         **kwargs,
     ):
-        dynamic_items = (
-            [self._make_load_epoch_dynamic_item(tmin, tmax)]
-            + list(dynamic_items)
+        dynamic_items = [self._make_load_epoch_dynamic_item(tmin, tmax)] + list(
+            dynamic_items
         )
         super().__init__(
             data, dynamic_items=dynamic_items, output_keys=output_keys, **kwargs
@@ -414,9 +416,7 @@ class EpochedEEGDataset(RawEEGDataset):
     def __getitem__(self, index) -> EpochedEEGSample:
         return super().__getitem__(index)  # type: ignore
 
-    def _make_load_epoch_dynamic_item(
-        self, tmin: float, tmax: Optional[float]
-    ):
+    def _make_load_epoch_dynamic_item(self, tmin: float, tmax: Optional[float]):
 
         @takes("raw", "onset")
         @provides("epoch")
@@ -436,3 +436,26 @@ class EpochedEEGDataset(RawEEGDataset):
             )
 
         return _load_epoch
+
+
+class InMemoryDataset(Dataset):
+    """Intended to wrap a DynamicItemDataset in order to cache
+    the computed items in memory.
+
+    Arguments
+    ---------
+    dataset : Dataset
+        The (dynamic) dataset to delegate to when an item is not available in cache.
+    """
+
+    def __init__(self, dataset: Dataset):
+        self.dataset = dataset
+        self.cache = {}
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, index) -> Any:
+        if index not in self.cache:
+            self.cache[index] = self.dataset[index]
+        return self.cache[index]

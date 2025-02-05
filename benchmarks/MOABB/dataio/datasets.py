@@ -8,6 +8,7 @@ Drew Wagner, 2025
 import json
 from functools import cache
 from pathlib import Path
+from types import MethodType
 from typing import Any, Hashable, Iterable, Optional, Self, TypedDict
 
 import mne
@@ -438,24 +439,31 @@ class EpochedEEGDataset(RawEEGDataset):
         return _load_epoch
 
 
-class InMemoryDataset(Dataset):
-    """Intended to wrap a DynamicItemDataset in order to cache
-    the computed items in memory.
+class InMemoryDataset:
+    """Wraps a dataset to cache computed items in memory.
 
     Arguments
     ---------
     dataset : Dataset
-        The (dynamic) dataset to delegate to when an item is not available in cache.
+        The dataset to delegate to when an item is not available in cache.
     """
 
-    def __init__(self, dataset: Dataset):
-        self.dataset = dataset
-        self.cache = {}
+    def __new__(cls, dataset: Dataset):
+        class Wrapper(dataset.__class__):
+            def __init__(self):
+                self.__wrapped_dataset = dataset
+                self.__cache = {}
 
-    def __len__(self):
-        return len(self.dataset)
+            def __getitem__(self, index) -> Any:
+                if index not in self.__cache:
+                    self.__cache[index] = self.__wrapped_dataset[index]
+                return self.__cache[index]
 
-    def __getitem__(self, index) -> Any:
-        if index not in self.cache:
-            self.cache[index] = self.dataset[index]
-        return self.cache[index]
+            def __dir__(self) -> list[str]:
+                """Ensure tab-completion works properly."""
+                return dir(self.__wrapped_dataset)
+
+            def __getattr__(self, item):
+                return getattr(self.__wrapped_dataset, item)
+
+        return Wrapper()

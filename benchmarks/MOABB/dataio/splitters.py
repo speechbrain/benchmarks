@@ -10,7 +10,6 @@ from speechbrain.dataio.dataset import (
     FilteredSortedDynamicItemDataset,
 )
 
-
 TargetT = TypeVar("TargetT", bound=Hashable)
 DatasetT = TypeVar("DatasetT")
 

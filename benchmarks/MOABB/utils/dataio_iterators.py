@@ -49,7 +49,7 @@ def get_dataloader(batch_size, xy_train, xy_valid, xy_test):
 
     inps = torch.Tensor(
         x_train.reshape(
-            (x_train.shape[0], x_train.shape[1], x_train.shape[2], 1,)
+            (x_train.shape[0], x_train.shape[1], x_train.shape[2], 1)
         )
     )
     tgts = torch.tensor(y_train, dtype=torch.long)
@@ -60,7 +60,7 @@ def get_dataloader(batch_size, xy_train, xy_valid, xy_test):
 
     inps = torch.Tensor(
         x_valid.reshape(
-            (x_valid.shape[0], x_valid.shape[1], x_valid.shape[2], 1,)
+            (x_valid.shape[0], x_valid.shape[1], x_valid.shape[2], 1)
         )
     )
     tgts = torch.tensor(y_valid, dtype=torch.long)
@@ -68,7 +68,14 @@ def get_dataloader(batch_size, xy_train, xy_valid, xy_test):
     valid_loader = DataLoader(ds, batch_size=batch_size, pin_memory=True)
 
     inps = torch.Tensor(
-        x_test.reshape((x_test.shape[0], x_test.shape[1], x_test.shape[2], 1,))
+        x_test.reshape(
+            (
+                x_test.shape[0],
+                x_test.shape[1],
+                x_test.shape[2],
+                1,
+            )
+        )
     )
     tgts = torch.tensor(y_test, dtype=torch.long)
     ds = TensorDataset(inps, tgts)
@@ -207,15 +214,13 @@ class LeaveOneSessionOut(object):
             Flag to save the prepared dataset into a pkl file.
         n_steps_channel_selection: int
             Number of steps to perform when sampling a subset of channels from a seed channel, based on the adjacency matrix.
-        ...
 
         Returns
-        ---------
+        -------
         tail_path: str
             String containing the relative path where results will be stored for the specified iterator, subject and session.
         datasets: dict
             Dictionary containing all sets (keys: 'train', 'test', 'valid').
-         ---------
         """
         interval = [tmin, tmax]
 
@@ -260,7 +265,7 @@ class LeaveOneSessionOut(object):
             # obtaining indices for the current session
             idx = np.where(metadata.session == s)[0]
             # validation set definition (equal proportion btw classes)
-            (tmp_idx_train, tmp_idx_valid,) = get_idx_train_valid_classbalanced(
+            (tmp_idx_train, tmp_idx_valid) = get_idx_train_valid_classbalanced(
                 idx, valid_ratio, y
             )
             idx_train.extend(tmp_idx_train)
@@ -432,15 +437,13 @@ class LeaveOneSubjectOut(object):
             Flag to save the prepared dataset into a pkl file.
         n_steps_channel_selection: int
             Number of steps to perform when sampling a subset of channels from a seed channel, based on the adjacency matrix.
-        ...
 
         Returns
-        ---------
+        -------
         tail_path: str
             String containing the relative path where results will be stored for the specified iterator, subject and session.
         datasets: dict
             Dictionary containing all sets (keys: 'train', 'test', 'valid').
-         ---------
         """
         interval = [tmin, tmax]
         if len(dataset.subject_list) < 2:

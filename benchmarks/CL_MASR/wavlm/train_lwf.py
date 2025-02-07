@@ -39,7 +39,7 @@ class ASR(sb.Brain):
         if self.hparams.gradient_checkpointing:
             wavs.requires_grad_()
             logits = torch.utils.checkpoint.checkpoint(
-                self.modules.wavlm, wavs, wav_lens,
+                self.modules.wavlm, wavs, wav_lens
             )
         else:
             logits = self.modules.wavlm(wavs, wav_lens)
@@ -72,7 +72,8 @@ class ASR(sb.Brain):
         if stage == sb.Stage.TRAIN:
             # Probabilities modified by distillation temperature
             modified_probs = F.softmax(
-                logits.flatten(end_dim=-2) / self.hparams.lwf_T, dim=1,
+                logits.flatten(end_dim=-2) / self.hparams.lwf_T,
+                dim=1,
             )
 
             # Target probabilities modified by distillation temperature
@@ -135,7 +136,8 @@ class ASR(sb.Brain):
                 valid_stats=stage_stats,
             )
             self.checkpointer.save_and_keep_only(
-                meta={"WER": stage_stats["WER"]}, min_keys=["WER"],
+                meta={"WER": stage_stats["WER"]},
+                min_keys=["WER"],
             )
         elif stage == sb.Stage.TEST:
             self.hparams.train_logger.log_stats(
@@ -148,7 +150,8 @@ class ASR(sb.Brain):
 
 def dataio_prepare(hparams, tokenizer):
     """This function prepares the datasets to be used in the brain class.
-    It also defines the data processing pipeline through user-defined functions."""
+    It also defines the data processing pipeline through user-defined functions.
+    """
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
         csv_path=os.path.join(hparams["data_folder"], "train.csv"),
         replacements={"data_root": hparams["data_folder"]},
@@ -197,7 +200,8 @@ def dataio_prepare(hparams, tokenizer):
         info = torchaudio.info(mp3)
         sig = sb.dataio.dataio.read_audio(mp3)
         resampled = torchaudio.transforms.Resample(
-            info.sample_rate, hparams["sample_rate"],
+            info.sample_rate,
+            hparams["sample_rate"],
         )(sig)
         return resampled
 
@@ -223,7 +227,8 @@ def dataio_prepare(hparams, tokenizer):
 
     # 4. Set output:
     sb.dataio.dataset.set_output_keys(
-        datasets, ["id", "sig", "tokens", "target_wrd"],
+        datasets,
+        ["id", "sig", "tokens", "target_wrd"],
     )
 
     return train_data, valid_data, test_data
@@ -258,10 +263,10 @@ def test(hparams, run_opts, locales, wer_file="wer_test.txt"):
 
         if locale in ["zh-CN", "ja"]:
             # Use CER instead of WER (spaces are not used)
-            hparams[
-                "wer_computer"
-            ] = lambda *args, **kwargs: sb.utils.metric_stats.ErrorRateStats(
-                split_tokens=True
+            hparams["wer_computer"] = (
+                lambda *args, **kwargs: sb.utils.metric_stats.ErrorRateStats(
+                    split_tokens=True
+                )
             )
         else:
             hparams["wer_computer"] = sb.utils.metric_stats.ErrorRateStats
@@ -274,7 +279,7 @@ def test(hparams, run_opts, locales, wer_file="wer_test.txt"):
 
         # Trainer initialization
         asr_brain = ASR(
-            modules=hparams["modules"], hparams=hparams, run_opts=run_opts,
+            modules=hparams["modules"], hparams=hparams, run_opts=run_opts
         )
 
         # We dynamically add the tokenizer to our brain class
@@ -334,9 +339,7 @@ def train(hparams, run_opts):
         )
 
     # Testing
-    test(
-        hparams, run_opts, hparams["base_locales"], f"wer_test_before.txt",
-    )
+    test(hparams, run_opts, hparams["base_locales"], "wer_test_before.txt")
 
     # Train on new locales
     for i, locale in enumerate(hparams["new_locales"]):
@@ -427,7 +430,7 @@ def profile(hparams, run_opts):
             super().__init__()
             self.wavlm = hparams["wavlm"]
             self.wavs = torch.randn(
-                1, hparams["sample_rate"], device=run_opts["device"],
+                1, hparams["sample_rate"], device=run_opts["device"]
             )
 
         @torch.no_grad()
@@ -437,13 +440,13 @@ def profile(hparams, run_opts):
 
     model = Model().eval().to(run_opts["device"])
     macs, params = ptflops.get_model_complexity_info(
-        model, (1,), as_strings=True, print_per_layer_stat=False,
+        model, (1,), as_strings=True, print_per_layer_stat=False
     )
     time_start = time.time()
     model()
     torch.cuda.synchronize()
     time_stop = time.time() - time_start
-    max_mem = torch.cuda.max_memory_allocated("cuda") / 10 ** 9
+    max_mem = torch.cuda.max_memory_allocated("cuda") / 10**9
     result = {
         "MACs": macs,
         "memory": max_mem,

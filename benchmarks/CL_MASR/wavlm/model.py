@@ -86,7 +86,7 @@ class ProgressiveWavLM(nn.Module):
             dest_unpack=_TOKENIZER_PATH,
         )
         self.tokenizer = SentencePiece(
-            model_dir=_TOKENIZER_PATH, vocab_size=4887, model_type="char",
+            model_dir=_TOKENIZER_PATH, vocab_size=4887, model_type="char"
         ).sp
         vocab_size = self.tokenizer.vocab_size()
         encoder_kwargs = {
@@ -103,7 +103,7 @@ class ProgressiveWavLM(nn.Module):
             "bidirectional": bidirectional,
         }
         self.model = Model(
-            source, save_path, vocab_size, encoder_kwargs, decoder_kwargs,
+            source, save_path, vocab_size, encoder_kwargs, decoder_kwargs
         )
         if freeze:
             self.model.requires_grad_(False)
@@ -243,7 +243,7 @@ class Decoder(nn.Module):
             ]
         )
         self.out_proj = nn.Linear(
-            (2 if bidirectional else 1) * hidden_size, output_size,
+            (2 if bidirectional else 1) * hidden_size, output_size
         )
 
     def forward(self, input, lengths=None):

@@ -31,7 +31,7 @@ n_steps_channel_selection: 3 # @orion_step1: --n_steps_channel_selection~"unifor
 T: !apply:math.ceil
     - !ref <sample_rate> * (<tmax> - <tmin>)
 C: 13
-# We here specify how to perfom test:
+# We here specify how to perform test:
 # - If test_with: 'last' we perform test with the latest model.
 # - if test_with: 'best, we perform test with the best model (according to the metric specified in test_key)
 # The variable avg_models can be used to average the parameters of the last (or best) N saved models before testing.
@@ -130,7 +130,7 @@ cnn_temporal_kernels: 26 # @orion_step1: --cnn_temporal_kernels~"uniform(4, 64,d
 cnn_temporal_kernelsize: 54 # @orion_step1: --cnn_temporal_kernelsize~"uniform(24, 62,discrete=True)"
 # depth multiplier for the spatial depthwise conv. layer
 cnn_spatial_depth_multiplier: 3 # @orion_step1: --cnn_spatial_depth_multiplier~"uniform(1, 4,discrete=True)"
-cnn_spatial_max_norm: 1.  # kernel max-norm constaint of the spatial depthwise conv. layer
+cnn_spatial_max_norm: 1.  # kernel max-norm constraint of the spatial depthwise conv. layer
 cnn_spatial_pool: 4
 cnn_septemporal_depth_multiplier: 1  # depth multiplier for the separable temporal conv. layer
 cnn_septemporal_point_kernels_ratio_: 5 # @orion_step1: --cnn_septemporal_point_kernels_ratio_~"uniform(0, 8, discrete=True)"
@@ -145,7 +145,7 @@ cnn_septemporal_kernelsize: !apply:round
     - !ref <cnn_septemporal_kernelsize_> * <max_cnn_spatial_pool> / <cnn_spatial_pool>
 cnn_septemporal_pool: 7 # @orion_step1: --cnn_septemporal_pool~"uniform(1, 8,discrete=True)"
 cnn_pool_type: 'avg'
-dense_max_norm: 0.25  # kernel max-norm constaint of the dense layer
+dense_max_norm: 0.25  # kernel max-norm constraint of the dense layer
 dropout: 0.2184 # @orion_step1: --dropout~"uniform(0.0, 0.5)"
 activation_type: 'elu'
 

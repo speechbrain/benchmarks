@@ -81,7 +81,7 @@ class MOABBBrain(sb.Brain):
                 self.hparams.lr_annealing.on_batch_end(self.optimizer)
         return loss
 
-    def on_fit_start(self,):
+    def on_fit_start(self):
         """Gets called at the beginning of ``fit()``"""
         self.init_model(self.hparams.model)
         self.init_optimizers()
@@ -185,12 +185,16 @@ class MOABBBrain(sb.Brain):
                     stats_meta={
                         "epoch loaded": self.hparams.epoch_counter.current
                     },
-                    test_stats=self.last_eval_stats
-                    if not getattr(self, "log_test_as_valid", False)
-                    else None,
-                    valid_stats=self.last_eval_stats
-                    if getattr(self, "log_test_as_valid", False)
-                    else None,
+                    test_stats=(
+                        self.last_eval_stats
+                        if not getattr(self, "log_test_as_valid", False)
+                        else None
+                    ),
+                    valid_stats=(
+                        self.last_eval_stats
+                        if getattr(self, "log_test_as_valid", False)
+                        else None
+                    ),
                 )
                 # save the averaged checkpoint at the end of the evaluation stage
                 # delete the rest of the intermediate checkpoints
@@ -218,17 +222,15 @@ class MOABBBrain(sb.Brain):
             max_key=max_key, min_key=min_key
         )
         ckpt = sb.utils.checkpoints.average_checkpoints(
-            ckpts, recoverable_name="model",
+            ckpts, recoverable_name="model"
         )
 
         self.hparams.model.load_state_dict(ckpt, strict=True)
         self.hparams.model.eval()
 
-    def check_if_best(
-        self, last_eval_stats, best_eval_stats, keys,
-    ):
+    def check_if_best(self, last_eval_stats, best_eval_stats, keys):
         """Checks if the current model is the best according at least to
-        one of the monitored metrics. """
+        one of the monitored metrics."""
         is_best = False
         for key in keys:
             if key == "loss":

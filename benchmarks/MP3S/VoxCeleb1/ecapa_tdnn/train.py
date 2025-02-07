@@ -27,12 +27,16 @@ def compute_embedding(wavs, wav_lens):
 
     Arguments
     ---------
-    wavs : Torch.Tensor
+    wavs : torch.Tensor
         Tensor containing the speech waveform (batch, time).
         Make sure the sample rate is fs=16000 Hz.
-    wav_lens: Torch.Tensor
+    wav_lens: torch.Tensor
         Tensor containing the relative length for each sentence
         in the length (e.g., [0.8 0.6 1.0])
+
+    Returns
+    -------
+    embeddings : torch.Tensor
     """
     with torch.no_grad():
         wavs, wav_lens = (
@@ -70,8 +74,7 @@ def compute_embedding_loop(data_loader):
 
 
 def get_verification_scores(veri_test):
-    """ Computes positive and negative scores given the verification split.
-    """
+    """Computes positive and negative scores given the verification split."""
     scores = []
     positive_scores = []
     negative_scores = []
@@ -156,7 +159,8 @@ def dataio_prep_verif(params):
 
     # Train data (used for normalization)
     train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=params["train_data"], replacements={"data_root": data_folder},
+        csv_path=params["train_data"],
+        replacements={"data_root": data_folder},
     )
     train_data = train_data.filtered_sorted(
         sort_key="duration", select_n=params["n_train_snts"]
@@ -164,13 +168,15 @@ def dataio_prep_verif(params):
 
     # Enrol data
     enrol_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=params["enrol_data"], replacements={"data_root": data_folder},
+        csv_path=params["enrol_data"],
+        replacements={"data_root": data_folder},
     )
     enrol_data = enrol_data.filtered_sorted(sort_key="duration")
 
     # Test data
     test_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=params["test_data"], replacements={"data_root": data_folder},
+        csv_path=params["test_data"],
+        replacements={"data_root": data_folder},
     )
     test_data = test_data.filtered_sorted(sort_key="duration")
 
@@ -209,12 +215,10 @@ def dataio_prep_verif(params):
 
 
 class SpeakerBrain(sb.core.Brain):
-    """Class for speaker embedding training"
-    """
+    """Class for speaker embedding training" """
 
     def compute_forward(self, batch, stage):
-        """Computation pipeline based on a encoder + speaker classifier.
-        """
+        """Computation pipeline based on a encoder + speaker classifier."""
         batch = batch.to(self.device)
         wavs, lens = batch.sig
         feats = self.modules.weighted_ssl_model(wavs)
@@ -224,8 +228,7 @@ class SpeakerBrain(sb.core.Brain):
         return outputs, lens
 
     def compute_objectives(self, predictions, batch, stage):
-        """Computes the loss using speaker-id as label.
-        """
+        """Computes the loss using speaker-id as label."""
         predictions, lens = predictions
         uttid = batch.id
         spkid, _ = batch.spk_id_encoded
@@ -348,7 +351,9 @@ def dataio_prep(hparams):
     # Load or compute the label encoder (with multi-GPU DDP support)
     lab_enc_file = os.path.join(hparams["save_folder"], "label_encoder.txt")
     label_encoder.load_or_create(
-        path=lab_enc_file, from_didatasets=[train_data], output_key="spk_id",
+        path=lab_enc_file,
+        from_didatasets=[train_data],
+        output_key="spk_id",
     )
 
     # 4. Set output:
@@ -373,7 +378,7 @@ if __name__ == "__main__":
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
 
-    # Download verification list (to exlude verification sentences from train)
+    # Download verification list (to exclude verification sentences from train)
     veri_file_path = os.path.join(
         hparams["save_folder"], os.path.basename(hparams["verification_file"])
     )
@@ -390,9 +395,9 @@ if __name__ == "__main__":
         split_ratio=[90, 10],
         seg_dur=hparams["sentence_len"],
         skip_prep=hparams["skip_prep"],
-        source=hparams["voxceleb_source"]
-        if "voxceleb_source" in hparams
-        else None,
+        source=(
+            hparams["voxceleb_source"] if "voxceleb_source" in hparams else None
+        ),
     )
 
     # Loading wav2vec2.0

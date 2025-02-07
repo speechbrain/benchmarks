@@ -83,11 +83,11 @@ def get_output_dict(
     )
 
     if verbose == 1:
-        for l in np.unique(labels):
+        for label in np.unique(labels):
             print(
                 print(
                     "Number of label {0} examples: {1}".format(
-                        l, np.where(labels == l)[0].shape[0]
+                        label, np.where(labels == label)[0].shape[0]
                     )
                 )
             )
@@ -119,7 +119,8 @@ def get_output_dict(
 
 def load_data(paradigm, dataset, idx):
     """This function returns EEG signals and the corresponding labels using MOABB methods
-    In addition metadata, channel names and the sampling rate are provided too."""
+    In addition metadata, channel names and the sampling rate are provided too.
+    """
     x, labels, metadata = paradigm.get_data(dataset, idx, True)
     ch_names = x.info.ch_names
     adjacency, _ = find_ch_adjacency(x.info, ch_type="eeg")

@@ -31,7 +31,7 @@ n_steps_channel_selection: 2 # @orion_step1: --n_steps_channel_selection~"unifor
 T: !apply:math.ceil
     - !ref <sample_rate> * (<tmax> - <tmin>)
 C: 13
-# We here specify how to perfom test:
+# We here specify how to perform test:
 # - If test_with: 'last' we perform test with the latest model.
 # - if test_with: 'best, we perform test with the best model (according to the metric specified in test_key)
 # The variable avg_models can be used to average the parameters of the last (or best) N saved models before testing.

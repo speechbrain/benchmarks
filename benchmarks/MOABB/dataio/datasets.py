@@ -8,7 +8,6 @@ Drew Wagner, 2025
 import json
 from functools import cache
 from pathlib import Path
-from types import MethodType
 from typing import Any, Hashable, Iterable, Optional, Self, TypedDict
 
 import mne

@@ -13,7 +13,7 @@ from speechbrain.utils.data_utils import get_all_files, get_list_from_csv
 __skip_list = ["README.md", "setup"]
 
 
-@pytest.skip("This test is not broken.")
+@pytest.mark.skip("This test is broken.")
 def test_recipe_list(
     search_folder="recipes",
     hparam_ext=[".yaml"],

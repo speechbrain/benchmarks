@@ -1,3 +1,9 @@
+"""EEG preprocessing functions.
+
+Authors
+ * Drew 2025
+ * Bruno 2025
+"""
 import logging
 from functools import cache
 
@@ -5,12 +11,11 @@ import mne
 import torch
 from speechbrain.utils.data_pipeline import provides, takes
 
-HPARAMS = dict(target_sampling_frequency=125, fmin=None, fmax=22)
-
 
 @takes("epoch")
 @provides("epoch")
 def to_tensor(epoch):
+    """Convert a numpy array to a PyTorch tensor."""
     return torch.from_numpy(epoch).float()
 
 
@@ -22,6 +27,8 @@ cached_create_filter = cache(mne.filter.create_filter)
 @takes("epoch", "info", "target_sfreq", "fmin", "fmax")
 @provides("epoch", "sfreq", "target_sfreq", "fmin", "fmax")
 def bandpass_resample(epoch, info, target_sfreq, fmin, fmax):
+    """Bandpass filter and resample an epoch."""
+
     bandpass = cached_create_filter(
         None,
         info["sfreq"],

@@ -1,3 +1,9 @@
+"""EEG splitter functions
+
+Authors
+ * Drew 2025
+ * Bruno 2025
+"""
 from abc import ABC, abstractmethod
 from itertools import chain, combinations, groupby
 from operator import itemgetter
@@ -132,7 +138,7 @@ class MetadataSplitter(DatasetSplitter[TargetT, DatasetT]):
             )
 
         super().__init__(dataset.filtered_sorted(sort_key=key))
-        self.unique_ids = set(self.dataset.data_ids)
+        self.unique_ids = list(set(self.dataset.data_ids))
         self._split_folds(key)
 
     def _split_folds(self, key):
@@ -176,7 +182,7 @@ class MetadataSplitter(DatasetSplitter[TargetT, DatasetT]):
             A dictionary with 'train' and 'test' keys containing the respective dataset splits.
         """
         test_data_ids = self._get_test_data_ids(target)
-        train_data_ids = self.unique_ids - set(test_data_ids)
+        train_data_ids = list(set(self.unique_ids) - set(test_data_ids))
 
         return DatasetSplit(
             train=FilteredSortedDynamicItemDataset(

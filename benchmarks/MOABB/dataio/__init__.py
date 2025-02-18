@@ -1,3 +1,5 @@
+"""Utils functions to run the benchmark study on EEG Decoding."""
+
 from .datasets import InMemoryDataset, EpochedEEGDataset, RawEEGDataset
 from .splitters import (
     CrossSessionSplitter,

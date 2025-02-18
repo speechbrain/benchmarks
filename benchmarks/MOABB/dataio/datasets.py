@@ -3,6 +3,7 @@
 Author
 ------
 Drew Wagner, 2025
+Bruno Aristimunha, 2025
 """
 
 import json
@@ -17,10 +18,11 @@ from moabb.datasets import download as dl
 from moabb.datasets.base import BaseDataset as BaseMOABBDataset
 from moabb.datasets.bids_interface import camel_to_kebab_case
 
+from torch.utils.data import Dataset
+
 from speechbrain.dataio.dataset import DynamicItemDataset
 from speechbrain.utils.data_pipeline import provides, takes
 
-from torch.utils.data import Dataset
 
 
 class RawEEGSample(TypedDict, total=False):
@@ -61,7 +63,7 @@ class EpochedEEGSample(RawEEGSample):
 class RawEEGDataset(DynamicItemDataset):
     """Dataset which loads raw data from a BIDS directory.
 
-    By default data is loaded lazily from disk, but can optionally be preloaded to memory.
+    By default, data is loaded lazily from disk, but can optionally be preloaded to memory.
 
     Supports additional dynamic transformations. See Speechbrain's `~DynamicItemDataset` for
     more details.
@@ -180,6 +182,7 @@ class RawEEGDataset(DynamicItemDataset):
         RawEEGDataset
             DynamicItemDataset initialized to read the MOABB dataset.
         """
+        # Reading the mne-python.json
         json_path = Path(json_path)
         if json_path.exists():
             with json_path.open() as fp:
@@ -195,7 +198,7 @@ class RawEEGDataset(DynamicItemDataset):
         subject_list = (
             subjects if subjects is not None else dataset.subject_list
         )
-        dataset.download(subject_list)
+        dataset.download(subject_list) # ??
 
         # Convert from MOABB format to BIDS
         for sub in subject_list:

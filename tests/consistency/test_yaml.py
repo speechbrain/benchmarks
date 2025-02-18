@@ -5,8 +5,10 @@ Authors
 """
 import os
 import csv
-from tests.consistency.test_recipe import __skip_list
+
 from tests.utils.check_yaml import check_yaml_vs_script
+
+from test_recipe import __skip_list
 
 
 def test_yaml_script_consistency(recipe_folder="tests/recipes"):

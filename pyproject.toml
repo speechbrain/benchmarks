@@ -13,3 +13,11 @@ exclude = '''
   )/
 )
 '''
+
+[tool.pytest.ini_options]
+pythonpath = [".", "benchmarks/MOABB", "tests"]
+minversion = "7.0"
+addopts = "--maxfail=3 --disable-warnings"
+testpaths = [
+    "tests",
+]

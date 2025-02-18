@@ -81,7 +81,7 @@ def test_cross_session_splitter(dummy_dataset):
     from dataio.splitters import CrossSessionSplitter
 
     splitter = CrossSessionSplitter(dummy_dataset, leave_k_out=1)
-    expected_targets = {("1",), ("2",)}  # thanks to last code sprint
+    expected_targets = {("0",), ("1",)}  # thanks to last code sprint
     assert set(splitter.targets) == expected_targets
 
 

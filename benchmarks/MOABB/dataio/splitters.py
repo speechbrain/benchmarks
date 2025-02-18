@@ -70,7 +70,7 @@ class MetadataSplitter(DatasetSplitter[TargetT, DatasetT]):
 
     def __getitem__(self, target: TargetT) -> DatasetSplit[DatasetT]:
         test_data_ids = self._get_test_data_ids(target)
-        train_data_ids = set(self.unique_ids) - set(test_data_ids)
+        train_data_ids = list(set(self.unique_ids) - set(test_data_ids))
 
         return DatasetSplit(
             train=FilteredSortedDynamicItemDataset(

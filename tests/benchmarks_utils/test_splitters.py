@@ -53,10 +53,10 @@ def test_metadata_splitter(dummy_dataset):
 
 
 def test_leave_k_out_splitter(dummy_dataset):
-    from dataio.splitters import LeaveKOutSplitter
+    from dataio.splitters import CrossSubjectSplitter
 
     # Using leave_k_out=1, so targets become tuples of one element.
-    splitter = LeaveKOutSplitter(dummy_dataset, key="subject", leave_k_out=1)
+    splitter = CrossSubjectSplitter(dummy_dataset, leave_k_out=1)
     expected_targets = {("1",), ("2",), ("3",)}
     assert set(splitter.targets) == expected_targets
     for target in splitter.targets:

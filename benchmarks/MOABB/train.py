@@ -35,6 +35,7 @@ class MOABBBrain(sb.Brain):
     testing, and checkpointing.
 
     """
+
     def init_model(self, model):
         """Function to initialize neural network modules"""
         for mod in model.modules():

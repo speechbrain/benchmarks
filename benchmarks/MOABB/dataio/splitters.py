@@ -28,13 +28,15 @@ class DatasetSplitter(Generic[TargetT, DatasetT], ABC):
 
     @property
     @abstractmethod
-    def targets(self) -> Sequence[TargetT]: ...
+    def targets(self) -> Sequence[TargetT]:
+        ...
 
     def __len__(self) -> int:
         return len(self.targets)
 
     @abstractmethod
-    def __getitem__(self, target: TargetT) -> DatasetSplit[DatasetT]: ...
+    def __getitem__(self, target: TargetT) -> DatasetSplit[DatasetT]:
+        ...
 
     def __iter__(self):
         for target in self.targets:
@@ -84,7 +86,6 @@ class MetadataSplitter(DatasetSplitter[TargetT, DatasetT]):
 
 
 class LeaveKOutSplitter(MetadataSplitter[TargetT, DatasetT]):
-
     def __init__(self, dataset: DynamicItemDataset, key: str, leave_k_out=1):
         super().__init__(dataset, key)
         self.leave_k_out = leave_k_out
@@ -102,18 +103,15 @@ class LeaveKOutSplitter(MetadataSplitter[TargetT, DatasetT]):
 
 
 class CrossSubjectSplitter(LeaveKOutSplitter[str, DatasetT]):
-
     def __init__(self, dataset: DynamicItemDataset, leave_k_out=1):
         super().__init__(dataset, "subject", leave_k_out)
 
 
 class CrossSessionSplitter(LeaveKOutSplitter[str, DatasetT]):
-
     def __init__(self, dataset: DynamicItemDataset, leave_k_out=1):
         super().__init__(dataset, "session", leave_k_out)
 
 
 class CrossDatasetSplitter(LeaveKOutSplitter[str, DatasetT]):
-
     def __init__(self, dataset: DynamicItemDataset, leave_k_out=1):
         super().__init__(dataset, "dataset", leave_k_out)

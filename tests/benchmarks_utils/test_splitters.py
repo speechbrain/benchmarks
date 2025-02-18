@@ -10,9 +10,11 @@ import mne
 from dataio.datasets import EpochedEEGDataset
 
 from moabb.datasets import FakeDataset
+
 hparams = dict(target_sampling_frequency=125, fmin=None, fmax=22)
 
 cached_create_filter = cache(mne.filter.create_filter)
+
 
 @pytest.fixture
 def dummy_dataset():
@@ -29,18 +31,14 @@ def dummy_dataset():
         save_path=path / "MNE-BIDS-Fake-Epoched",
         tmin=0,
         tmax=4.0,
-        output_keys=[
-            "label",
-            "subject",
-            "session",
-            "epoch",
-        ],
+        output_keys=["label", "subject", "session", "epoch"],
     )
     return dataset
 
 
 def test_metadata_splitter(dummy_dataset):
     from dataio.splitters import MetadataSplitter
+
     splitter = MetadataSplitter(dummy_dataset, key="subject")
     # The targets should be the unique subjects
     assert set(splitter.targets) == {"1", "2", "3"}
@@ -53,8 +51,10 @@ def test_metadata_splitter(dummy_dataset):
         for item in split["train"]:
             assert item["subject"] != target
 
+
 def test_leave_k_out_splitter(dummy_dataset):
     from dataio.splitters import LeaveKOutSplitter
+
     # Using leave_k_out=1, so targets become tuples of one element.
     splitter = LeaveKOutSplitter(dummy_dataset, key="subject", leave_k_out=1)
     expected_targets = {("1",), ("2",), ("3",)}
@@ -71,6 +71,7 @@ def test_leave_k_out_splitter(dummy_dataset):
 
 def test_cross_subject_splitter(dummy_dataset):
     from dataio.splitters import CrossSubjectSplitter
+
     splitter = CrossSubjectSplitter(dummy_dataset, leave_k_out=1)
     expected_targets = {("1",), ("2",), ("3",)}
     assert set(splitter.targets) == expected_targets
@@ -78,9 +79,11 @@ def test_cross_subject_splitter(dummy_dataset):
 
 def test_cross_session_splitter(dummy_dataset):
     from dataio.splitters import CrossSessionSplitter
+
     splitter = CrossSessionSplitter(dummy_dataset, leave_k_out=1)
-    expected_targets = {("1",), ("2",)} #thanks to last code sprint
+    expected_targets = {("1",), ("2",)}  # thanks to last code sprint
     assert set(splitter.targets) == expected_targets
+
 
 # def test_cross_dataset_splitter(dummy_dataset):
 #     from dataio.splitters import CrossDatasetSplitter
@@ -91,6 +94,7 @@ def test_cross_session_splitter(dummy_dataset):
 
 def test_metadata_splitter_invalid_dataset():
     from dataio.splitters import MetadataSplitter
+
     # Create an object that is not an instance of DynamicItemDataset.
     class NotADynamicItemDataset:
         pass
@@ -99,7 +103,6 @@ def test_metadata_splitter_invalid_dataset():
         not_dataset = NotADynamicItemDataset()
 
         MetadataSplitter(not_dataset, key="subject")
-
 
 
 def bandpass_resample(epoch, info):
@@ -134,8 +137,10 @@ def bandpass_resample(epoch, info):
 def test_bandpass_resample(monkeypatch):
     # Define dummy versions of mne.filter.create_filter and mne.filter.resample.
     dummy_filter = [0] * 10  # Dummy filter of length 10.
+
     def dummy_create_filter(*args, **kwargs):
         return dummy_filter
+
     def dummy_resample(epoch, up, down, method, window):
         # Simulate resampling: multiply the epoch by up/down.
         return epoch * (up / down)

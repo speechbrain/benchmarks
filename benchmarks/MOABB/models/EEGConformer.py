@@ -331,6 +331,7 @@ class ResidualAdd(torch.nn.Module):
     """
     Class that defines a residual connection followed by a layer normalization.
     """
+
     def __init__(self, fn):
         super().__init__()
         self.fn = fn
@@ -362,6 +363,7 @@ class FeedForwardBlock(torch.nn.Sequential):
     Class that defines a feed-forward block for EEGConformer.
     Compose by two layers and a GELU activation function.
     """
+
     def __init__(self, emb_size, expansion, dropout):
         """
         Constructor for the FeedForwardBlock class.

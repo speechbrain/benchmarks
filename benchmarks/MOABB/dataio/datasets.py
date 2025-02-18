@@ -5,6 +5,7 @@ Author
 Drew Wagner, 2025
 Bruno Aristimunha, 2025
 """
+from __future__ import annotations
 
 import json
 from functools import cache
@@ -387,7 +388,6 @@ class EpochedEEGDataset(RawEEGDataset):
                     raw, verbose=False
                 )
 
-            # TODO: How to handle the case where multiple values map to the same key?
             event_id = {v: k for k, v in event_id.items()}
 
             for onset, _, event in events:
@@ -451,7 +451,9 @@ class InMemoryDataset:
     """
 
     def __new__(cls, dataset: Dataset):
+        """Create a new instance of the wrapped dataset."""
         class Wrapper(dataset.__class__):
+            """hacking way to perform the cache."""
             def __init__(self):
                 self.__wrapped_dataset = dataset
                 self.__cache = {}

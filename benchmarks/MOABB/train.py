@@ -27,6 +27,14 @@ import yaml
 
 
 class MOABBBrain(sb.Brain):
+    """
+    This class implements a brain for the MOABB benchmark.
+
+    This class inherits from the Brain class in SpeechBrain.
+    The Brain class is the main class that handles training, validation,
+    testing, and checkpointing.
+
+    """
     def init_model(self, model):
         """Function to initialize neural network modules"""
         for mod in model.modules():

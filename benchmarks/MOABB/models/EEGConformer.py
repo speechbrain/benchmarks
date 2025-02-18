@@ -8,6 +8,7 @@ https://github.com/eeyhsong/EEG-Conformer.git.
 
 Authors
  * Davide Borra, 2023
+ * Bruno Aristimunha, 2025
 """
 import torch
 import speechbrain as sb
@@ -327,11 +328,29 @@ class MultiHeadAttention(torch.nn.Module):
 
 
 class ResidualAdd(torch.nn.Module):
+    """
+    Class that defines a residual connection followed by a layer normalization.
+    """
     def __init__(self, fn):
         super().__init__()
         self.fn = fn
 
     def forward(self, x, **kwargs):
+        """
+        Residual connection followed by a layer normalization.
+
+        Parameters
+        ----------
+        x: torch.Tensor
+            Input tensor
+        kwargs: dict
+            Additional arguments to pass to the function
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor
+        """
         res = x
         x = self.fn(x, **kwargs)
         x += res
@@ -339,7 +358,22 @@ class ResidualAdd(torch.nn.Module):
 
 
 class FeedForwardBlock(torch.nn.Sequential):
+    """
+    Class that defines a feed-forward block for EEGConformer.
+    Compose by two layers and a GELU activation function.
+    """
     def __init__(self, emb_size, expansion, dropout):
+        """
+        Constructor for the FeedForwardBlock class.
+        Parameters
+        ----------
+        emb_size: int
+            Number of features from the embedding module.
+        expansion: int
+            Expansion factor for the feed-forward block.
+        dropout: float
+            Dropout probability for the feed-forward block.
+        """
         super().__init__(
             sb.nnet.linear.Linear(
                 input_size=emb_size, n_neurons=expansion * emb_size, bias=True
@@ -367,6 +401,20 @@ class TransformerEncoderBlock(torch.nn.Sequential):
     """
 
     def __init__(self, emb_size, attn_heads, dropout, forward_expansion=4):
+        """
+        Constructor for the TransformerEncoderBlock class.
+
+        Parameters
+        ----------
+        emb_size: int
+            Number of features from the embedding module.
+        attn_heads: int
+            Number of heads in the transformer module.
+        dropout: float
+            Dropout probability for the transformer module.
+        forward_expansion: int
+        """
+
         super().__init__(
             ResidualAdd(
                 torch.nn.Sequential(
@@ -403,6 +451,16 @@ class TransformerEncoder(torch.nn.Sequential):
     """
 
     def __init__(self, attn_depth, emb_size, attn_heads, dropout):
+        """
+        Constructor for the TransformerEncoder class.
+
+        Parameters
+        ----------
+        attn_depth
+        emb_size
+        attn_heads
+        dropout
+        """
         super().__init__(
             *[
                 TransformerEncoderBlock(emb_size, attn_heads, dropout)

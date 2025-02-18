@@ -54,7 +54,7 @@ class MetadataSplitter(DatasetSplitter[TargetT, DatasetT]):
             )
 
         super().__init__(dataset.filtered_sorted(sort_key=key))
-        self.unique_ids = set(self.dataset.data_ids)
+        self.unique_ids = list(self.dataset.data_ids)
 
         self._split_folds(key)
 
@@ -70,7 +70,7 @@ class MetadataSplitter(DatasetSplitter[TargetT, DatasetT]):
 
     def __getitem__(self, target: TargetT) -> DatasetSplit[DatasetT]:
         test_data_ids = self._get_test_data_ids(target)
-        train_data_ids = self.unique_ids - set(test_data_ids)
+        train_data_ids = set(self.unique_ids) - set(test_data_ids)
 
         return DatasetSplit(
             train=FilteredSortedDynamicItemDataset(
@@ -85,6 +85,9 @@ class MetadataSplitter(DatasetSplitter[TargetT, DatasetT]):
 
 
 class LeaveKOutSplitter(MetadataSplitter[TargetT, DatasetT]):
+    """Creates test targets from all combinations of `leave_k_out` targets.
+    """
+
     def __init__(self, dataset: DynamicItemDataset, key: str, leave_k_out=1):
         super().__init__(dataset, key)
         self.leave_k_out = leave_k_out

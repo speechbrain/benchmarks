@@ -365,7 +365,7 @@ while [ -n "$opt_flags" ]; do
     eval $orion_hunt_command
 
     # Compress the exp folder (if required)
-    if [ "$compress_exp" = True ]; then
+    if [ "$compress_exp" = True ] && [ ! -e "$output_folder_step/exp.tar.gz" ]; then
         tar -czf "$output_folder_step/exp.tar.gz" "$output_folder_step/exp"
         if [ -d "$output_folder_step/exp" ]; then
             rm -rf "$output_folder_step/exp"

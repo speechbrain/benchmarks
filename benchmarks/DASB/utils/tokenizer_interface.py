@@ -10,7 +10,9 @@ Authors
 import sys
 import os
 import torch
+import re
 from abc import ABC, abstractmethod
+from pathlib import Path
 from speechbrain.lobes.models.huggingface_transformers.encodec import Encodec
 from speechbrain.lobes.models.huggingface_transformers.discrete_ssl import (
     DiscreteSSL,
@@ -19,6 +21,14 @@ from speechbrain.lobes.models.discrete.dac import DAC
 from speechbrain.lobes.models.discrete.speechtokenizer import SpeechTokenizer
 from speechbrain.lobes.models.discrete.wavtokenizer import WavTokenizer
 from speechbrain.lobes.models.huggingface_transformers.mimi import Mimi
+from speechbrain.utils.superpowers import run_shell
+from speechbrain.utils.fetching import fetch
+from torch import nn
+import logging
+import shlex
+import yaml
+
+logger = logging.getLogger(__name__)
 
 base_dir = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
@@ -499,7 +509,7 @@ class SQCodecTokenizer(SQCodec, BaseTokenizer):
     @torch.no_grad()
     def tokens_to_sig(self, tokens, **kwargs):
         self.eval()
-        signal = self.decode(tokens.view(tokens.shape[0], -1), **kwargs)
+        signal = self.decode(tokens.reshape(tokens.shape[0], -1), **kwargs)
         return signal.squeeze(1)
 
     @torch.no_grad()
@@ -512,4 +522,110 @@ class SQCodecTokenizer(SQCodec, BaseTokenizer):
         """
         raise ValueError(
             "SQCodec does not have any trainable quantizer or embedding since it uses scalar quantization."
+        )
+
+
+DEFAULT_ESPNET_REPO = "https://github.com/espnet/espnet"
+
+
+class ESPNetEncodecInterface(BaseTokenizer, nn.Module):
+    """An interface for pretrained ESPNet Encodec implementations"""
+
+    def __init__(
+        self,
+        source,
+        model_ckpt,
+        model_config,
+        save_path,
+        sample_rate=24000,
+        n_codebook=32,
+        espnet_repo=DEFAULT_ESPNET_REPO,
+        espnet_commit=None,
+    ):
+        super().__init__()
+        self.source = source
+        self.model_ckpt = model_ckpt
+        self.model_config = model_config
+        self.save_path = Path(save_path)
+        self.sample_rate = sample_rate
+        self.n_codebook = n_codebook
+        self.espnet_repo = espnet_repo
+        self.espnet_commit = espnet_commit
+        self._load()
+
+    def _load(self):
+        self._load_espnet()
+        ckpt_file_name = fetch(
+            filename=self.model_ckpt,
+            source=self.source,
+            savedir=str(self.save_path),
+            save_filename=str(Path(self.model_ckpt).name)
+        )
+        config_file_name = fetch(
+            filename=self.model_config,
+            source=self.source,
+            savedir=str(self.save_path),
+            save_filename="config.yaml"
+        )
+        with open(config_file_name) as config_file:
+            config = yaml.safe_load(config_file)
+        from espnet2.gan_codec.encodec.encodec import Encodec as ESPNetEncodec
+        self.encodec = ESPNetEncodec(**config["codec_conf"])
+        device = next(iter(self.encodec.parameters())).device
+        state_dict = torch.load(ckpt_file_name, map_location=device)
+        state_dict = {
+            re.sub("^codec.", "", key): value
+            for key, value in state_dict.items()
+        }
+        self.encodec.load_state_dict(state_dict)
+
+    def _load_espnet(self):
+        try:
+            import espnet2
+        except ModuleNotFoundError:
+            self._download_espnet()
+
+    def _download_espnet(self):
+        logger.info("espnet is not installed, installing")
+        espnet_path = self.save_path / "espnet"
+        if not espnet_path.exists():
+            logger.info("Cloining %s into %s", self.espnet_repo, espnet_path)
+            cmd = shlex.join(["git", "clone", self.espnet_repo, str(espnet_path)])
+            run_shell(cmd)
+        else:
+            logger.info("%s already exists", espnet_path)
+        if self.espnet_commit:
+            logger.info("Checking out %s", self.espnet_commit)
+            cmd = shlex.join(["git", "-C", str(espnet_path), "checkout", self.espnet_commit])
+            run_shell(cmd)
+        logger.info("Installing")
+        cmd = shlex.join(["pip", "install", "-e", str(espnet_path)])
+        run_shell(cmd)
+        logger.info("Installation completed")
+
+    @torch.no_grad()
+    def sig_to_tokens(self, signal, lengths=None, num_codebooks=None, **kwargs):
+        self.encodec.eval()
+        if signal.dim() < 3:
+            signal = signal.unsqueeze(1)
+        tokens = self.encodec.encode(signal)
+        return tokens.permute(1, 2, 0)[:, :, :self.n_codebook]
+
+    @torch.no_grad()
+    def tokens_to_sig(self, tokens, **kwargs):
+        self.encodec.eval()
+        tokens = tokens.permute(2, 0, 1)
+        signal = self.encodec.decode(tokens, **kwargs)
+        return signal.squeeze(1)
+
+    @torch.no_grad()
+    def get_pretrained_embeddings(
+        self, vocab_size=None, num_codebooks=None, **kwargs
+    ):
+        """
+        This method is not implemented for ESPNet Encodec, as it uses scalar quantization
+        and does not have any trainable quantizer or embedding.
+        """
+        raise ValueError(
+            "ESPNet Encodec does not have any trainable quantizer or embedding since it uses scalar quantization."
         )

@@ -47,7 +47,7 @@ vocab_size: 4096
 # wavtokenizer model
 tokenizer: !new:utils.tokenizer_interface.WavTokenizerWrapper
   source: !ref <model_hub>
-  save_path: !ref <save_folder>
+  save_path: !ref <pretrained_model_save_folder>
   checkpoint: !ref <checkpoint>
   config: !ref <config>
   sample_rate: !ref <sample_rate>

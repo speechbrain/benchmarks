@@ -1,0 +1,56 @@
+# ############################################################################
+# Auido Tokenizer: SQCodec
+# Extraction: Librispeech 960h
+# Authors: Jarod Duret 2024
+# ############################################################################
+# Seed needs to be set at top of yaml, before objects with parameters are made
+
+seed: 1986
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+output_folder: !ref results/sqcodec
+save_folder: !ref <output_folder>/save
+pretrained_model_save_folder: !ref <save_folder>
+train_log: !ref <output_folder>/extraction_log.txt
+
+# Data files
+data_folder: !PLACEHOLDER  # e.g., /path/to/LJSpeech
+splits: ["train", "valid", "test"]
+split_ratio: [90, 5, 5]
+frozen_split_path: null
+skip_prep: False
+train_json: !ref <output_folder>/train.json
+valid_json: !ref <output_folder>/valid.json
+test_json: !ref <output_folder>/test.json
+
+batch_size: 8
+num_workers: 8
+src_key: wav
+id_key: id
+
+# Dataloader options
+dataloader_opts:
+  batch_size: !ref <batch_size>
+  shuffle: True
+  num_workers: !ref <num_workers>
+
+# SQCodec parameters
+config: config.yaml
+checkpoint: ckpt_00190000.pth
+sample_rate: 16000
+save_embedding: False
+num_codebooks: 4
+save_path: /home/ubuntu/sq-codec/SQ-Codec
+
+# SQCodec model
+tokenizer: !new:utils.tokenizer_interface.SQCodecTokenizer
+  save_path: !ref <pretrained_model_save_folder>
+  checkpoint: !ref <checkpoint>
+  config: !ref <config>
+
+
+tokens_extractor: !new:utils.tokens.TokensExtractor
+  tokenizer: !ref <tokenizer>
+  sample_rate: !ref <sample_rate>
+  src_key: !ref <src_key>
+  id_key: !ref <id_key>
+  dataloader_opts: !ref <dataloader_opts>

@@ -13,13 +13,11 @@ import csv
 import json
 import random
 import logging
-from types import SimpleNamespace
 import torch
 import torchaudio
 import numpy as np
 import tgt
 import re
-import speechbrain as sb
 from tqdm import tqdm
 from pathlib import Path
 from speechbrain.utils.data_utils import download_file
@@ -27,10 +25,6 @@ from speechbrain.dataio.dataio import load_pkl, save_pkl
 from speechbrain.inference.text import GraphemeToPhoneme
 from unidecode import unidecode
 from speechbrain.utils.text_to_sequence import _g2p_keep_punctuations
-from speechbrain.dataio.batch import PaddedData
-from speechbrain.dataio.dataset import DynamicItemDataset
-from preparation import FeatureExtractor
-from torchaudio.functional import resample
 
 
 logger = logging.getLogger(__name__)
@@ -59,8 +53,6 @@ def prepare_ljspeech(
     pitch_max_f0=400,
     skip_prep=False,
     use_custom_cleaner=False,
-    extract_features=None,
-    extract_features_opts=None,
     extract_phonemes=False,
     g2p_src="speechbrain/soundchoice-g2p",
     skip_ignore_folders=False,
@@ -179,7 +171,7 @@ def prepare_ljspeech(
             os.makedirs(duration_folder)
 
     # extract pitch for both Fastspeech2 and FastSpeech2WithAligner models
-    if "FastSpeech2" in model_name:
+    if model_name is not None and "FastSpeech2" in model_name:
         pitch_folder = os.path.join(data_folder, "pitch")
         if not os.path.exists(pitch_folder):
             os.makedirs(pitch_folder)
@@ -200,16 +192,6 @@ def prepare_ljspeech(
         data_folder, splits, split_ratio, frozen_split_path
     )
 
-    extract_features_context = None
-    extract_features_folder = None
-    if extract_features:
-        extract_features_context = get_context(
-            extract_features=extract_features,
-            extract_features_opts=extract_features_opts or {},
-            device=device,
-        )
-        extract_features_folder = Path(save_folder) / "features"
-
     if "train" in splits:
         prepare_json(
             model_name,
@@ -226,10 +208,6 @@ def prepare_ljspeech(
             pitch_min_f0,
             pitch_max_f0,
             use_custom_cleaner,
-            extract_features,
-            extract_features_context,
-            extract_features_folder,
-            extract_features_opts,
             extract_phonemes,
             g2p_src,
             device,
@@ -250,10 +228,6 @@ def prepare_ljspeech(
             pitch_min_f0,
             pitch_max_f0,
             use_custom_cleaner,
-            extract_features,
-            extract_features_context,
-            extract_features_folder,
-            extract_features_opts,
             extract_phonemes,
             g2p_src,
             device,
@@ -274,10 +248,6 @@ def prepare_ljspeech(
             pitch_min_f0,
             pitch_max_f0,
             use_custom_cleaner,
-            extract_features,
-            extract_features_context,
-            extract_features_folder,
-            extract_features_opts,
             extract_phonemes,
             g2p_src,
             device,
@@ -432,10 +402,6 @@ def prepare_json(
     pitch_min_f0,
     pitch_max_f0,
     use_custom_cleaner=False,
-    extract_features=None,
-    extract_features_context=None,
-    extract_features_folder=None,
-    extract_features_opts=None,
     extract_phonemes=False,
     g2p_src="speechbrain/soundchoice-g2p",
     device="cpu",
@@ -495,12 +461,12 @@ def prepare_json(
         extract_phonemes = True
     if extract_phonemes:
         logger.info(
-            "Computing phonemes for LJSpeech labels using SpeechBrain G2P. This may take a while."
+            "Computing phonemes for LJSpeech labels using SpeechBrain f This may take a while."
         )
         g2p = GraphemeToPhoneme.from_hparams(
             g2p_src, run_opts={"device": device}
         )
-    if "FastSpeech2" in model_name:
+    if model_name is not None and "FastSpeech2" in model_name:
         logger.info(
             "Computing pitch as required for FastSpeech2. This may take a while."
         )
@@ -648,19 +614,6 @@ def prepare_json(
             phonemes = _g2p_keep_punctuations(g2p, label)
             # Updates data for the utterance
             json_dict[id].update({"phonemes": phonemes})
-
-    # Feature Extraction
-    if extract_features:
-        extract_features_folder.mkdir(exist_ok=True)
-        prepare_features(
-            data=json_dict,
-            data_folder=data_folder,
-            save_path=extract_features_folder,
-            features=extract_features,
-            context=extract_features_context,
-            options=extract_features_opts,
-            device=device,
-        )
 
     # Writing the dictionary to the json file
     with open(json_file, mode="w") as json_f:
@@ -838,146 +791,3 @@ def custom_clean(text, model_name):
     for regex, replacement in _abbreviations:
         text = re.sub(regex, replacement, text)
     return text
-
-
-INLINE_FEATURES = ["audio_ssl_len"]
-
-
-def prepare_features(
-    data, data_folder, save_path, features, context, options=None, device="cpu"
-):
-    """Performs feature extraction
-
-    Arguments
-    ---------
-    data: dict
-        a preprocessed dataset
-    data_folder : str
-        the data folder
-    save_folder : str
-        the folder where features will be saved
-    context : dict
-        context data
-    features: list
-        the list of feature extractions to be performed
-    """
-    dataset = DynamicItemDataset(data)
-    feature_extractor = FeatureExtractor(
-        save_path=save_path,
-        src_keys=["sig"],
-        id_key="uttid",
-        dataloader_opts=options.get("dataloader_opts", {}),
-        device=device,
-    )
-    token_model_kwargs = options.get("token_model_kwargs", {})
-    ssl_layers = options.get("ssl_model_layers") or options.get(
-        "token_model_layers"
-    )
-
-    @sb.utils.data_pipeline.takes("wav")
-    @sb.utils.data_pipeline.provides("sig")
-    def audio_pipeline(wav):
-        """Load the audio signal. """
-        wav = wav.replace("{data_root}", data_folder)
-        sig = sb.dataio.dataio.read_audio(wav)
-
-        yield sig
-
-    dataset.add_dynamic_item(audio_pipeline)
-
-    @sb.utils.data_pipeline.takes("sig")
-    @sb.utils.data_pipeline.provides("sig_resampled")
-    def resample_pipeline(sig):
-        sig_data = resample(
-            waveform=sig.data,
-            orig_freq=options["sample_rate"],
-            new_freq=options["model_sample_rate"],
-        )
-        return PaddedData(sig_data, sig.lengths)
-
-    @sb.utils.data_pipeline.takes("sig_resampled")
-    @sb.utils.data_pipeline.provides("audio_tokens", "audio_emb")
-    def token_pipeline(sig):
-        with torch.no_grad():
-            result = context.token_model(
-                sig.data, sig.lengths, **token_model_kwargs
-            )
-            # TODO: Clean this up
-            if torch.is_tensor(result):
-                tokens = result
-                # Note: Dummy embedding - meaning embeddings are not available
-                emb = torch.zeros((len(sig.data), 1, 1), device=sig.data.device)
-            else:
-                tokens, emb = result[:2]
-                tokens = tokens.int()
-            if tokens.dim() < 3:
-                tokens = tokens.unsqueeze(-1)
-            yield PaddedData(tokens, sig.lengths)
-            yield PaddedData(emb, sig.lengths)
-
-    @sb.utils.data_pipeline.takes("sig_resampled")
-    @sb.utils.data_pipeline.provides("spk_emb")
-    def spk_emb_pipeline(sig):
-        mel_spec = context.spk_emb_model.mel_spectogram(audio=sig.data)
-        return context.spk_emb_model.encode_mel_spectrogram_batch(
-            mel_spec, sig.lengths
-        )
-
-    @sb.utils.data_pipeline.takes("sig_resampled")
-    @sb.utils.data_pipeline.provides("audio_ssl", "audio_ssl_len")
-    def ssl_pipeline(sig):
-        ssl_raw = context.ssl_model(sig.data, sig.lengths)
-        ssl = ssl_raw[ssl_layers].permute(1, 2, 0, 3)
-        yield PaddedData(ssl, sig.lengths)
-        yield (sig.lengths * ssl.size(1)).tolist()
-
-    dynamic_items = [
-        resample_pipeline,
-        token_pipeline,
-        ssl_pipeline,
-        spk_emb_pipeline,
-    ]
-    for dynamic_item in dynamic_items:
-        feature_extractor.add_dynamic_item(dynamic_item)
-
-    feature_keys = [key for key in features if key not in INLINE_FEATURES]
-    inline_keys = [key for key in features if key in INLINE_FEATURES]
-    feature_extractor.set_output_features(feature_keys, inline_keys=inline_keys)
-    feature_extractor.extract(dataset, data)
-
-
-def get_context(extract_features, extract_features_opts, device):
-    """
-    Gets the context (pretrained models, etc) for feature extraction
-
-    Arguments
-    ---------
-    extract_features : list
-        A list of features to extract
-        Available features:
-        audio_tokens - raw tokens
-        audio_emb - embeddings from the model
-    extract_features_opts : dict
-        Options for feature extraction
-    device : str|torch.Device
-        The device on which extraction will be run
-
-    Returns
-    --------
-    context: SimpleNamespace
-        The context object
-    """
-    context = {}
-    if (
-        any(key in extract_features for key in ["audio_tokens", "audio_emb"])
-        and "token_model" in extract_features_opts
-    ):
-        context["token_model"] = extract_features_opts["token_model"].to(device)
-    if "audio_ssl" in extract_features:
-        context["ssl_model"] = extract_features_opts["ssl_model"].to(device)
-    if "spk_emb" in extract_features:
-        context["spk_emb_model"] = extract_features_opts["spk_emb_model"](
-            run_opts={"device": device}
-        )
-
-    return SimpleNamespace(**context)

@@ -144,6 +144,8 @@ if __name__ == "__main__":
 
     # Report final metric to Orion
     # Remember: orion expects metrics to be minimized!
-    if eval_metric == "acc" or eval_metric == "f1":
+    if eval_metric in ["acc", "f1"]:
         final_metric = 1 - final_metric
+    elif eval_metric == "utmos":
+        final_metric = -final_metric
     report_objective(final_metric)

@@ -1300,7 +1300,7 @@ def decimal_to_ternary_matrix(decimals, D):
         corresponds to a batch, and each column is represented as a ternary number.
     """
     B, T = decimals.shape
-    ternary_matrix = torch.zeros((B, D, T), dtype=torch.long)
+    ternary_matrix = torch.zeros((B, D, T), dtype=torch.long, device=decimals.device)
     for pos in range(D):
         ternary_matrix[:, pos, :] = decimals % 3  # Modulo operation
         decimals //= 3  # Floor division for next ternary digit

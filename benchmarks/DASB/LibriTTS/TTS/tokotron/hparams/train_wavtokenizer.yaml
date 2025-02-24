@@ -1,0 +1,281 @@
+# ############################################################################
+# Model: Tokenized TTS (WhisperSpeech-inspired)
+# Authors:  Artem Ploujnikov
+# ############################################################################
+# Seed needs to be set at top of yaml, before objects with parameters are made
+
+seed: 74443
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+run_name: !PLACEHOLDER
+output_folder: !ref results/transformer/<seed>
+save_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/train_log.txt
+testing: True # If set to True, the test evlaution is done, otherwise skipped.
+
+# Data files
+cached_data_folder: !PLACEHOLDER
+data_folder: !PLACEHOLDER # e.g., /path/to/LibriSpeech
+prepare_save_folder: !ref <cached_data_folder>
+pretrained_model_save_folder: !ref <prepare_save_folder>
+representation_mode: discrete
+vocoder_model_name: vocos
+vocoder_model_path: !ref <pretrained_model_save_folder>/<vocoder_model_name>
+prepare_archive_path: null
+prepare_skip_ignore_folders: False
+data_mode: lite
+train_json: !ref <prepare_save_folder>/train.json
+valid_json: !ref <prepare_save_folder>/valid.json
+test_json: !ref <prepare_save_folder>/test.json
+train_split: !apply:speechbrain.utils.hparams.choice
+    value: !ref <data_mode>
+    choices:
+        lite: ["train-clean-100"]
+        clean: ["train-clean-100", "train-clean-360"]
+        full: ["train-clean-100", "train-clean-360", "train-other-500"]
+valid_split: ["dev-clean"]
+test_split: ["test-clean"]
+frozen_split_path: null
+sample_path: null
+progress_folder: !ref <output_folder>/progress
+progress_current: !ref <progress_folder>/current
+progress_meta: !ref <progress_folder>/meta.yaml
+init_from: null
+num_audio_samples: 32
+samples_interval: 5
+
+tokens_folder: !PLACEHOLDER # Path to the folder where extracted tokens are saved.
+
+tokens_loader: !new:utils.tokens.TokensLoader
+    data_path: !ref <tokens_folder>
+
+
+freeze_token_model: True
+model_hub: kyutai/mimi
+g2p_src: flexthink/soundchoice-g2p
+token_offset: 1
+vocoder_takes_spk_emb: False
+spk_emb_src: speechbrain/spkrec-ecapa-voxceleb-mel-spec
+spk_emb_shuffle: True
+
+splits: ["train", "valid", "test"]
+split_ratio: [90, 5, 5]
+
+
+ckpt_interval_minutes: 30 # save checkpoint every N min
+
+# Training parameters
+input: text
+number_of_epochs: 1000
+reset_annealing_epoch: null
+batch_size: 16
+valid_batch_size: !ref <batch_size>
+extract_features_batch_size: 32
+grad_accumulation_factor: 1
+max_grad_norm: 0.01
+sorting: random
+num_workers: 4
+skip_prep: False
+overfit_test: False
+overfit_test_sample_count: !ref <batch_size>
+overfit_test_epoch_data_count: 1000
+
+
+# index
+pad_index: 0
+bos_index: 0
+bos_width: 1
+eos_index: 0
+eos_width: 1
+audio_token_shift: 0
+
+# stages related parameters
+lr: 0.0005 # @orion_step1: --lr~"loguniform(0.00001,0.005)"
+lr_warmup_steps: 10000
+lr_annealing_mode: step
+guided_attention_weight: 50.0
+guided_attention_sigma: 0.5
+gate_loss_weight: 1.0
+gate_threshold: 0.5
+gate_loss_beta: 0.2
+gate_loss_gamma: 0.01
+gate_loss_max_weight: 1.
+
+# Inference parameters
+inference_mode: autoregressive
+eos_mode: gate
+scale_factor: 4
+
+# Beam Search-specific parameters
+min_decode_ratio: 1.0
+max_decode_ratio: 10.0
+beam_size: 5
+
+
+# Feature parameters
+sample_rate: 22050
+model_sample_rate: 16000
+max_audio_length: 5000
+infer_max_audio_length: 1000
+debug_infer_max_audio_length: 10
+
+# Label encoder
+label_encoder: !new:speechbrain.dataio.encoder.TextEncoder
+token_list_file_text: char_en.txt
+token_list_file_phn: arpabet.txt
+token_list_file: !apply:speechbrain.utils.hparams.choice
+    value: !ref <input>
+    choices:
+        text: !ref <token_list_file_text>
+        phonemes: !ref <token_list_file_phn>
+
+# Gate offset
+gate_offset: !apply:model.Tokotron.distance_diff_loss_ramp
+    beta: !ref <gate_loss_beta>
+    gamma: !ref <gate_loss_gamma>
+    max_weight: !ref <gate_loss_max_weight>
+
+silence_padding: !ref <gate_offset>
+use_silence_padding: True
+
+
+# Token model (pretrained)
+spk_emb_model: !name:speechbrain.inference.encoders.MelSpectrogramEncoder.from_hparams
+    source: !ref <spk_emb_src>
+    savedir: !ref <pretrained_model_save_folder>/ecapa
+
+
+# Dataloader options
+train_dataloader_opts:
+    batch_size: !ref <batch_size>
+    shuffle: True
+    num_workers: !ref <num_workers>
+    collate_fn: !name:speechbrain.dataio.batch.PaddedBatch
+        padding_kwargs:
+            value: !ref <pad_index>
+
+valid_dataloader_opts:
+    batch_size: !ref <valid_batch_size>
+    num_workers: !ref <num_workers>
+    collate_fn: !name:speechbrain.dataio.batch.PaddedBatch
+        padding_kwargs:
+            value: !ref <pad_index>
+
+test_dataloader_opts:
+    batch_size: 1
+    num_workers: !ref <num_workers>
+    collate_fn: !name:speechbrain.dataio.batch.PaddedBatch
+        padding_kwargs:
+            value: !ref <pad_index>
+
+sample_dataloader_opts:
+    batch_size: !ref <batch_size>
+    num_workers: !ref <num_workers>
+    collate_fn: !name:speechbrain.dataio.batch.PaddedBatch
+        padding_kwargs:
+            value: !ref <pad_index>
+
+####################### Model parameters ###########################
+# Transformer
+d_model: 512
+nhead: 4
+enc_num_layers: 6 # @orion_step1: --enc_num_layers~"choices([3, 6, 12])"
+dec_num_layers: 12 # @orion_step1: --dec_num_layers~"choices([3, 6, 12])"
+d_ffn: 2048
+decoder_chunk_size: -1
+transformer_dropout: 0.2
+target_dropout: 0.2
+activation: !name:torch.nn.GELU
+vocab_size: 2048
+audio_emb_size: 1024
+audio_emb_freeze: True
+audio_emb_pretrained: False
+text_num_tokens: 39
+phn_num_tokens: 52
+input_num_tokens: !apply:speechbrain.utils.hparams.choice
+    value: !ref <input>
+    choices:
+        text: !ref <text_num_tokens>
+        phonemes: !ref <phn_num_tokens>
+audio_tokens_per_step: 8
+attention_type: regularMHA
+
+############################## models ################################
+emb:
+    spk:
+        kind: "pretrained"
+        dim: 192
+        vocoder: !ref <vocoder_takes_spk_emb>
+
+model: !new:Tokotron.TokotronTransformerModel
+    input_num_tokens: !ref <input_num_tokens> # yamllint disable-line rule:line-length
+    audio_num_tokens: !ref <vocab_size>
+    audio_tokens_per_step: !ref <audio_tokens_per_step>
+    d_model: !ref <d_model>
+    d_ffn: !ref <d_ffn>
+    nhead: !ref <nhead>
+    enc_num_layers: !ref <enc_num_layers>
+    dec_num_layers: !ref <dec_num_layers>
+    dropout: !ref <transformer_dropout>
+    target_dropout: !ref <target_dropout>
+    activation: !ref <activation>
+    attention_type: !ref <attention_type>
+    gate_threshold: !ref <gate_threshold>
+    gate_offset: !ref <gate_offset>
+    audio_emb_size: !ref <audio_emb_size>
+    audio_emb_freeze: !ref <audio_emb_freeze>
+    max_audio_length: !ref <max_audio_length>
+    eos_mode: !ref <eos_mode>
+    infer_max_audio_length: !ref <infer_max_audio_length>
+    audio_token_shift: !ref <audio_token_shift>
+    scale_factor: !ref <scale_factor>
+    representation_mode: !ref <representation_mode>
+    emb: !ref <emb>
+
+tokenizer: !new:utils.tokenizer_interface.MimiTokenizer
+    source: !ref <model_hub>
+    save_path: !ref <pretrained_model_save_folder>
+    num_codebooks: !ref <audio_tokens_per_step>
+
+modules:
+    model: !ref <model>
+    tokenizer: !ref <tokenizer>
+    compute_cost: !ref <compute_cost>
+
+# define two optimizers here for two-stage training
+opt_class: !name:torch.optim.Adam
+    lr: !ref <lr>
+
+compute_cost: !new:model.Tokotron.TokotronLoss
+    guided_attention_weight: !ref <guided_attention_weight>
+    guided_attention_sigma: !ref <guided_attention_sigma>
+    gate_weight: !ref <gate_loss_weight>
+    gate_beta: !ref <gate_loss_beta>
+    gate_gamma: !ref <gate_loss_gamma>
+    gate_max_weight: !ref <gate_loss_max_weight>
+    silence_padding: !ref <silence_padding>
+    eos_mode: !ref <eos_mode>
+    eos_index: !ref <eos_index>
+    eos_width: !ref <eos_width>
+    audio_tokens_per_step: !ref <audio_tokens_per_step>
+    audio_token_shift: !ref <audio_token_shift>
+
+
+lr_annealing: !new:speechbrain.nnet.schedulers.NoamScheduler
+    lr_initial: !ref <lr>
+    n_warmup_steps: !ref <lr_warmup_steps>
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        model: !ref <model>
+        lr_scheduler: !ref <lr_annealing>
+        counter: !ref <epoch_counter>
+
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <number_of_epochs>
+
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <train_log>
+
+spk_sampler: !name:speechbrain.dataio.sampler.ReproducibleRandomSampler
+    seed: !ref <seed>

@@ -186,7 +186,7 @@ mkdir -p $cached_data_folder
 # Function to run the training experiment
 run_experiment() {
 
-python $dataset/$task/train.py $hparams  --cached_data_folder=$cached_data_folder --seed=$seed --data_folder=$data_folder --output_folder=$output_folder_exp \
+eval python $dataset/$task/train.py $hparams  --cached_data_folder=$cached_data_folder --seed=$seed --data_folder=$data_folder --output_folder=$output_folder_exp \
 $additional_flags
 
 }

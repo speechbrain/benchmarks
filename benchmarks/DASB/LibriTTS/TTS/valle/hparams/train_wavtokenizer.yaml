@@ -1,0 +1,254 @@
+# ############################################################################
+# Model: Tokenized TTS (WhisperSpeech-inspired)
+# Authors:  Artem Ploujnikov
+# ############################################################################
+
+experiment_name: tokotron/wavtokenizer
+
+# Seed needs to be set at top of yaml, before objects with parameters are made
+seed: 74443
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+run_name: !PLACEHOLDER
+output_folder: !ref results/<experiment_name>/<seed>
+save_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/train_log.txt
+testing: True # If set to True, the test evlaution is done, otherwise skipped.
+
+
+# Data files
+data_folder: !PLACEHOLDER
+cached_data_folder: !PLACEHOLDER
+alignments_folder: null
+prepare_save_folder: !ref <cached_data_folder>
+data_folder_alignments: null # e.g., /path/to/LibriSpeech
+pretrained_model_save_folder: !ref <prepare_save_folder>
+representation_mode: discrete
+prepare_archive_path: null
+prepare_skip_ignore_folders: False
+data_mode: lite
+train_json: !ref <prepare_save_folder>/train.json
+valid_json: !ref <prepare_save_folder>/valid.json
+test_json: !ref <prepare_save_folder>/test.json
+train_split: !apply:speechbrain.utils.hparams.choice
+    value: !ref <data_mode>
+    choices:
+        lite: ["train-clean-100"]
+        clean: ["train-clean-100", "train-clean-360"]
+        full: ["train-clean-100", "train-clean-360", "train-other-500"]
+valid_split: ["dev-clean"]
+test_split: ["test-clean"]
+frozen_split_path: null
+sample_path: null
+progress_folder: !ref <output_folder>/progress
+progress_current: !ref <progress_folder>/current
+progress_meta: !ref <progress_folder>/meta.yaml
+num_audio_samples: 32
+samples_interval: 5
+
+g2p_src: flexthink/soundchoice-g2p
+tokens_folder: !PLACEHOLDER  # Path to the folder where extracted tokens are saved.
+tokens_loader: !new:utils.tokens.TokensLoader
+    data_path: !ref <tokens_folder>
+flip_layers: False
+splits: ["train", "valid", "test"]
+
+ckpt_key: dwer
+ckpt_key_kind: min
+ckpt_keep: 2
+test_key: dwer
+test_key_kind: min
+ckpt_interval_minutes: 30 # save checkpoint every N min
+
+# Training parameters
+input: text
+number_of_epochs: 100
+number_of_epochs_ar: null
+number_of_epochs_nar: null
+epoch_size: 50000
+epoch_fixed: False
+batch_size: 16
+valid_inter_data_count: 50
+valid_batch_size: !ref <batch_size>
+grad_accumulation_factor: 1
+max_grad_norm: 1.0
+sorting: random
+num_workers: 4
+skip_prep: False
+overfit_test: False
+overfit_test_sample_count: !ref <batch_size>
+overfit_test_epoch_data_count: 1000
+
+# index
+pad_index: 0
+bos_index: 1
+eos_index: 2
+eot_index: 3
+eop_index: 4
+special_tokens: ["<bos>", "<eos>", "<eot>", "<eop>"]
+special_num_tokens: 5
+
+# stages related parameters
+lr: 0.001 # @orion_step1: --lr~"loguniform(0.00001,0.1)"
+lr_warmup_steps: 70000
+lr_annealing_mode: step
+betas: [0.9, 0.95]
+
+# Feature parameters
+sample_rate: 24000
+model_sample_rate: 24000
+max_audio_length: 2300
+text_max_length: 500
+spk_prompt_length: 150
+n_ctx: !ref <max_audio_length> + <text_max_length> + <spk_prompt_length>
+infer_max_audio_length: !ref <max_audio_length>
+max_length_ratio: 10.0
+debug_infer_max_audio_length: 10
+
+# Label encoder
+label_encoder: !new:speechbrain.dataio.encoder.TextEncoder
+token_list_file_text: char_en.txt
+token_list_file_phn: arpabet.txt
+token_list_file: !apply:speechbrain.utils.hparams.choice
+    value: !ref <input>
+    choices:
+        text: !ref <token_list_file_text>
+        phonemes: !ref <token_list_file_phn>
+
+# Dataloader options
+train_dataloader_opts:
+    batch_size: !ref <batch_size>
+    shuffle: True
+    num_workers: !ref <num_workers>
+    looped_nominal_epoch: !apply:speechbrain.utils.hparams.choice
+        value: !ref <epoch_fixed>
+        choices:
+            True: !ref <epoch_size> // <batch_size>
+            False: null
+    collate_fn: !name:speechbrain.dataio.batch.PaddedBatch
+        padding_kwargs:
+            value: !ref <pad_index>
+
+valid_dataloader_opts:
+    batch_size: !ref <valid_batch_size>
+    num_workers: !ref <num_workers>
+    collate_fn: !name:speechbrain.dataio.batch.PaddedBatch
+        padding_kwargs:
+            value: !ref <pad_index>
+
+test_dataloader_opts:
+    batch_size: 1
+    num_workers: !ref <num_workers>
+    collate_fn: !name:speechbrain.dataio.batch.PaddedBatch
+        padding_kwargs:
+            value: !ref <pad_index>
+
+sample_dataloader_opts:
+    batch_size: !ref <batch_size>
+    num_workers: !ref <num_workers>
+    collate_fn: !name:speechbrain.dataio.batch.PaddedBatch
+        padding_kwargs:
+            value: !ref <pad_index>
+
+
+####################### Model parameters ###########################
+# Transformer
+d_model: 1024 # @orion_step1: --d_model~"choices([512, 768, 1024])"
+share_emb: False
+qk_norm: True
+nhead: 16
+num_layers_ar: 12 # @orion_step1: --num_layers_ar~"choices([6, 9, 12])"
+num_layers_nar: 12 # @orion_step1: --num_layers_nar~"choices([6, 9, 12])"
+dropout: 0.2
+vocab_size: 4096
+audio_emb_freeze: False
+audio_emb_pretrained: False
+text_num_tokens: 39
+phn_num_tokens: 52
+input_num_tokens: !apply:speechbrain.utils.hparams.choice
+    value: !ref <input>
+    choices:
+        text: !ref <text_num_tokens>
+        phonemes: !ref <phn_num_tokens>
+
+model_vocab_size: !apply:speechbrain.utils.hparams.choice
+    value: !ref <input>
+    choices:
+        text: !ref <text_num_tokens> + (<vocab_size> * <audio_tokens_per_step>) + <special_num_tokens>
+        phonemes: !ref <phn_num_tokens> + (<vocab_size> * <audio_tokens_per_step>) + <special_num_tokens>
+
+audio_token_shift: !apply:speechbrain.utils.hparams.choice
+    value: !ref <input>
+    choices:
+        text: !ref <text_num_tokens> +  <special_num_tokens>
+        phonemes: !ref <phn_num_tokens> + <special_num_tokens>
+
+audio_tokens_per_step: 1
+
+# Model Settings
+model_hub: novateur/WavTokenizer-medium-music-audio-75token
+config: wavtokenizer_mediumdata_music_audio_frame75_3s_nq1_code4096_dim512_kmeans200_attn.yaml
+checkpoint: wavtokenizer_medium_music_audio_320_24k_v2.ckpt
+
+freeze_lm_head: False
+
+############################## models ################################
+
+model: !new:model.valle.ValleLM # yamllint disable-line rule:line-length
+    vocab_size: !ref <model_vocab_size>
+    nq: !ref <audio_tokens_per_step>
+    att_unit: !ref <d_model>
+    head: !ref <nhead>
+    ar_layer: !ref <num_layers_ar>
+    nar_layer: !ref <num_layers_nar>
+    n_ctx: !ref <n_ctx>
+    dropout: !ref <dropout>
+    share_emb: !ref <share_emb>
+    qk_norm: !ref <qk_norm>
+
+inference_opts: !name:model.valle.SpeechLMInferenceOptions
+    start: !ref <bos_index>
+    eos: !ref <eos_index>
+    minlenratio: 1.0
+    maxlenratio: !ref <max_length_ratio>
+    nq: !ref <audio_tokens_per_step>
+
+tokenizer: !new:utils.tokenizer_interface.WavTokenizerWrapper
+    source: !ref <model_hub>
+    save_path: !ref <pretrained_model_save_folder>
+    checkpoint: !ref <checkpoint>
+    config: !ref <config>
+    freeze: True
+
+modules:
+    model: !ref <model>
+    tokenizer: !ref <tokenizer>
+
+# define two optimizers here for two-stage training
+opt_class: !name:torch.optim.AdamW
+    lr: !ref <lr>
+    betas: !ref <betas>
+
+compute_cost: !name:model.valle.masked_nll_loss
+
+log_softmax: !new:speechbrain.nnet.activations.Softmax
+    apply_log: True
+
+lr_annealing: !new:speechbrain.nnet.schedulers.NoamScheduler
+    lr_initial: !ref <lr>
+    n_warmup_steps: !ref <lr_warmup_steps>
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        model: !ref <model>
+        lr_scheduler: !ref <lr_annealing>
+        counter: !ref <epoch_counter>
+
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <number_of_epochs>
+
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <train_log>
+
+spk_sampler: !name:speechbrain.dataio.sampler.ReproducibleRandomSampler
+    seed: !ref <seed>

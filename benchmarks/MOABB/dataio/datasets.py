@@ -23,6 +23,8 @@ from speechbrain.utils.data_pipeline import provides, takes
 
 from torch.utils.data import Dataset
 
+from .ica import ICAProcessor
+
 
 class RawEEGSample(TypedDict, total=False):
     """Default dictionary keys provided by `~RawEEGDataset`.
@@ -94,10 +96,12 @@ class RawEEGDataset(DynamicItemDataset):
         data,
         preload=False,
         verbose=None,
+        ica_processor: Optional[ICAProcessor] = None,
         dynamic_items=(),
         output_keys=(),
     ):
         self.verbose = verbose
+        self.ica_processor = ica_processor
         dynamic_items = [self._make_load_raw_dynamic_item(preload)] + list(
             dynamic_items
         )
@@ -297,6 +301,9 @@ class RawEEGDataset(DynamicItemDataset):
         @provides("info", "raw")
         def _load_raw(fpath: str):
             raw = self._read_raw_bids_cached(fpath, preload)
+            
+            if self.ica_processor is not None:
+                raw = self.ica_processor.process(raw, fpath)
 
             yield raw.info
             yield raw

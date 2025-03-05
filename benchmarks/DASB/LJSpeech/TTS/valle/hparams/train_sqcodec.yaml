@@ -175,6 +175,8 @@ audio_token_shift: !apply:speechbrain.utils.hparams.choice
         phonemes: !ref <phn_num_tokens> + <special_num_tokens>
 
 audio_tokens_per_step: 4
+ternary_num_digits: 9
+pred_mode: ternary
 freeze_lm_head: False
 
 
@@ -191,6 +193,8 @@ model: !new:model.valle.ValleLM # yamllint disable-line rule:line-length
     dropout: !ref <dropout>
     share_emb: !ref <share_emb>
     qk_norm: !ref <qk_norm>
+    emb: !ref <emb>
+    lm_head: !ref <lm_head>
 
 inference_opts: !name:model.valle.SpeechLMInferenceOptions
     start: !ref <bos_index>
@@ -198,6 +202,20 @@ inference_opts: !name:model.valle.SpeechLMInferenceOptions
     minlenratio: 1.0
     maxlenratio: !ref <max_length_ratio>
     nq: !ref <audio_tokens_per_step>
+
+lm_head: !apply:speechbrain.utils.hparams.choice
+    value: !ref <pred_mode>
+    choices:
+        ternary: !new:model.custom_model.TernaryPredictionHead
+            d_model: !ref <d_model>
+            num_positions: !ref <ternary_num_digits>
+        tokens: null
+
+emb: !new:speechbrain.nnet.containers.Sequential
+    ternary: !new:model.sq_codec.TernaryEmbedding
+    linear: !new:speechbrain.nnet.linear.Linear
+        input_size: !ref <ternary_num_digits>
+        n_neurons: !ref <d_model>
 
 tokenizer: !new:utils.tokenizer_interface.SQCodecTokenizer
     save_path: !ref <sq_codec_save_path>
@@ -211,7 +229,12 @@ modules:
 opt_class: !name:torch.optim.Adam
     lr: !ref <lr>
 
-compute_cost: !name:model.valle.masked_nll_loss
+compute_cost: !apply:speechbrain.utils.hparams.choice
+    value: !ref <pred_mode>
+    choices:
+        ternary: !name:model.sq_codec.ternary_loss
+            targets_type: tokens
+        tokens: !name:model.valle.masked_nll_loss
 
 log_softmax: !new:speechbrain.nnet.activations.Softmax
     apply_log: True

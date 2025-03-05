@@ -78,8 +78,6 @@ class ICAProcessor:
 
     def process(self, raw: mne.io.RawArray, raw_path: Union[str, Path]) -> mne.io.RawArray:
         """Process raw data with ICA, computing or loading from cache."""
-        if not raw.preload:
-            raw.load_data()
         
         ica_path = self.get_ica_path(raw_path)
         

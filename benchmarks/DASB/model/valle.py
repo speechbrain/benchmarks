@@ -71,6 +71,10 @@ class ValleLM(nn.Module):
         Number of layers in NAR Transformer.
     n_ctx : int
         maximum context length of AR & NAR Transformer.
+    lm_head : torch.nn.Module, optional
+        an alternative LM head implementation head, an alternative
+        to the default Linear, useful for non-trivial codecs,
+        such as SQ-Codec
     """
 
     def __init__(
@@ -86,11 +90,16 @@ class ValleLM(nn.Module):
         ar_layer=4,
         nar_layer=4,
         n_ctx=3000,
+        emb=None,
+        lm_head=None,
     ):
         super().__init__()
-
-        self.emb = torch.nn.Embedding(vocab_size, att_unit)
-        self.lm_head = torch.nn.Linear(att_unit, vocab_size, bias=False)
+        if emb is None:
+            emb = torch.nn.Embedding(vocab_size, att_unit)
+        self.emb = emb
+        if lm_head is None:
+            lm_head = torch.nn.Linear(att_unit, vocab_size, bias=False)
+        self.lm_head = lm_head
         if share_emb:
             self.lm_head.weight = self.emb.weight
 

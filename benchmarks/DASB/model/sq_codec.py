@@ -1283,6 +1283,23 @@ class ConvTranspose1d(nn.ConvTranspose1d):
         return x
 
 
+class TernaryEmbedding(nn.Module):
+    """A module wrapper for tokens-to-ternary conversion
+
+    Arguments
+    ---------
+    tokens : torch.Tensor
+        the tokens"""
+    def forward(self, tokens):
+        if tokens.dim() < 3:
+            tokens = tokens.unsqueeze(-1)
+        batch_size, max_len, tracks = tokens.shape
+        emb = tokens_to_ternary(tokens).float()
+        positions = emb.size(-1)
+        emb = emb.reshape(batch_size, max_len, tracks, positions // tracks)
+        return emb
+
+
 def decimal_to_ternary_matrix(decimals, D):
     """
     Convert a tensor of decimal numbers to a D*T ternary matrix for each batch.
@@ -1378,7 +1395,6 @@ def ternary_matrix_to_decimal_torch(matrix):
     return decimals
 
 
-
 def get_padding(kernel_size, dilation=1):
     """
     Computes the padding size for a given kernel size and dilation.
@@ -1444,12 +1460,12 @@ def ternary_logits_to_tokens(logits):
 
 def tokens_to_ternary(tokens):
     """Converts a sequence of tokens to a ternary matrix
-    
+
     Arguments
     ---------
     tokens : torch.Tensor
         A (Batch x Length x Codebooks) tensor of tokens
-    
+
     Returns
     -------
     result : torch.Tensor
@@ -1487,7 +1503,12 @@ def logits_to_ternary(logits):
     ternary = logits.argmax(-1) - 1
     return ternary
 
-def ternary_loss(predictions, targets, length=None, reduction="mean"):
+
+def ternary_loss(predictions, targets, length=None, mask=None, targets_type="ternary", reduction="mean"):
+    if targets.dim() < 3:
+        targets = targets.unsqueeze(-1)
+    if targets_type == "tokens":
+        targets = tokens_to_ternary(targets.unsqueeze(-1))
     batch_size, max_len, positions = targets.shape
     targets_cat = targets + 1
     predictions_loss = predictions.permute(0, 3, 1, 2).contiguous()
@@ -1496,11 +1517,14 @@ def ternary_loss(predictions, targets, length=None, reduction="mean"):
         targets_cat,
         reduction="none"
     )
-    mask = length_to_mask(
-        length * max_len,
-        max_len
-    ).unsqueeze(-1)
-    loss = loss * mask
+    mask = None
+    if length is not None:
+        mask = length_to_mask(
+            length * max_len,
+            max_len
+        ).unsqueeze(-1)
+    if mask is not None:
+        loss = loss * mask
     if reduction == "mean":
         loss = loss.sum(2).mean(1).mean(0) / 3.0
     elif reduction == "batch":

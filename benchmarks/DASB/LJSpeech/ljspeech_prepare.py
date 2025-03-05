@@ -197,7 +197,6 @@ def prepare_ljspeech(
             model_name,
             data_split["train"],
             save_json_train,
-            data_folder,
             wavs_folder,
             meta_csv,
             phoneme_alignments_folder,
@@ -217,7 +216,6 @@ def prepare_ljspeech(
             model_name,
             data_split["valid"],
             save_json_valid,
-            data_folder,
             wavs_folder,
             meta_csv,
             phoneme_alignments_folder,
@@ -237,7 +235,6 @@ def prepare_ljspeech(
             model_name,
             data_split["test"],
             save_json_test,
-            data_folder,
             wavs_folder,
             meta_csv,
             phoneme_alignments_folder,
@@ -391,7 +388,6 @@ def prepare_json(
     model_name,
     seg_lst,
     json_file,
-    data_folder,
     wavs_folder,
     csv_reader,
     phoneme_alignments_folder,
@@ -437,14 +433,8 @@ def prepare_json(
         Max f0 for pitch computation
     use_custom_cleaner : bool
         If True, uses custom cleaner defined for this recipe
-    extract_features : list, optional
-        If specified, feature extraction will be performed
-    extract_features_context : types.SimpleNamespace, optional
-        Context for feature extraction (pretrained models, etc)
-    extract_features_folder : path-like, optional
-        The folder where extracted features will be saved
-    extract_features_opts : dict, optional
-        Options for feature extraction
+    extract_phonemes : bool
+        Whether to extract phonemes
     g2p_src : str
         The name of the HuggingFace Hub to use for the Grapheme-to-Phoneme
         model or the path to it

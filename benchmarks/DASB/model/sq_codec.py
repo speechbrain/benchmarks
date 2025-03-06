@@ -1284,19 +1284,25 @@ class ConvTranspose1d(nn.ConvTranspose1d):
 
 
 class TernaryEmbedding(nn.Module):
-    """A module wrapper for tokens-to-ternary conversion
-
-    Arguments
-    ---------
-    tokens : torch.Tensor
-        the tokens"""
+    """A module wrapper for tokens-to-ternary conversion"""
     def forward(self, tokens):
+        """Computes the forward pass
+
+        Arguments
+        ---------
+        tokens : torch.Tensor
+            the tokens
+        """
+        squeeze = False
         if tokens.dim() < 3:
+            squeeze = True
             tokens = tokens.unsqueeze(-1)
         batch_size, max_len, tracks = tokens.shape
         emb = tokens_to_ternary(tokens).float()
         positions = emb.size(-1)
         emb = emb.reshape(batch_size, max_len, tracks, positions // tracks)
+        if squeeze:
+            emb = emb.squeeze(-2)
         return emb
 
 

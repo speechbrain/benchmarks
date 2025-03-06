@@ -1284,7 +1284,16 @@ class ConvTranspose1d(nn.ConvTranspose1d):
 
 
 class TernaryEmbedding(nn.Module):
-    """A module wrapper for tokens-to-ternary conversion"""
+    """A module wrapper for tokens-to-ternary conversion
+
+    Arguments
+    ---------
+    num_digits : int
+        The number of ternary digits"""
+    def __init__(self, num_digits):
+        super().__init__()
+        self.num_digits = num_digits
+
     def forward(self, tokens):
         """Computes the forward pass
 
@@ -1298,7 +1307,7 @@ class TernaryEmbedding(nn.Module):
             squeeze = True
             tokens = tokens.unsqueeze(-1)
         batch_size, max_len, tracks = tokens.shape
-        emb = tokens_to_ternary(tokens).float()
+        emb = tokens_to_ternary(tokens, D=self.num_digits).float()
         positions = emb.size(-1)
         emb = emb.reshape(batch_size, max_len, tracks, positions // tracks)
         if squeeze:
@@ -1464,13 +1473,15 @@ def ternary_logits_to_tokens(logits):
     return tokens
 
 
-def tokens_to_ternary(tokens):
+def tokens_to_ternary(tokens, D=9):
     """Converts a sequence of tokens to a ternary matrix
 
     Arguments
     ---------
     tokens : torch.Tensor
         A (Batch x Length x Codebooks) tensor of tokens
+    D : int
+        The number of ternary digits
 
     Returns
     -------
@@ -1484,7 +1495,7 @@ def tokens_to_ternary(tokens):
     n_codebook = tokens.size(2)
     tokens = tokens.view(batch_size, -1, n_codebook).permute(2, 0, 1).clone()
     ternary_matrix = torch.cat([
-        decimal_to_ternary_matrix(item, D=9) - 1
+        decimal_to_ternary_matrix(item, D=D) - 1
         for item in tokens
     ], dim=1)
     ternary_matrix = ternary_matrix.transpose(1, 2)

@@ -811,7 +811,7 @@ def init_sequence_encoder(hparams):
 
 
 def get_selected_layer_indexes(hparams):
-    """Finds the layers of selected layers
+    """Finds the indexes of selected layers
 
     Arguments
     ---------

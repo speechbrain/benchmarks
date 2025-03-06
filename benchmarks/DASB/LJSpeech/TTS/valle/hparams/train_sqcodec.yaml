@@ -175,7 +175,7 @@ audio_token_shift: !apply:speechbrain.utils.hparams.choice
         phonemes: !ref <phn_num_tokens> + <special_num_tokens>
 
 audio_tokens_per_step: 4
-ternary_num_digits: 10
+ternary_num_digits: 11
 pred_mode: ternary
 freeze_lm_head: False
 
@@ -195,6 +195,7 @@ model: !new:model.valle.ValleLM # yamllint disable-line rule:line-length
     qk_norm: !ref <qk_norm>
     emb: !ref <emb>
     lm_head: !ref <lm_head>
+    logits_to_probs: !ref <logits_to_probs>
 
 inference_opts: !name:model.valle.SpeechLMInferenceOptions
     start: !ref <bos_index>
@@ -210,6 +211,15 @@ lm_head: !apply:speechbrain.utils.hparams.choice
             d_model: !ref <d_model>
             num_positions: !ref <ternary_num_digits>
         tokens: null
+
+logits_to_probs: !apply:speechbrain.utils.hparams.choice
+    value: !ref <pred_mode>
+    choices:
+        ternary: !new:model.custom_model.TernaryLogitTokenizer
+            num_tokens: !ref <model_vocab_size>
+            num_positions: !ref <ternary_num_digits>
+        tokens: !new:torch.nn.Identity
+
 
 emb: !new:speechbrain.nnet.containers.Sequential
     ternary: !new:model.sq_codec.TernaryEmbedding
@@ -235,6 +245,7 @@ compute_cost: !apply:speechbrain.utils.hparams.choice
     choices:
         ternary: !name:model.sq_codec.ternary_loss
             targets_type: tokens
+            num_positions: !ref <ternary_num_digits>
         tokens: !name:model.valle.masked_nll_loss
 
 log_softmax: !new:speechbrain.nnet.activations.Softmax

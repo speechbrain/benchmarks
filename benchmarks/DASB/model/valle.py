@@ -22,8 +22,7 @@ from torch import nn
 from torch.nn import functional as F
 from dataclasses import dataclass
 
-from speechbrain.nnet.losses import reduce_loss
-from speechbrain.nnet.losses import truncate
+from speechbrain.nnet.losses import reduce_loss, truncate
 
 
 @dataclass
@@ -75,6 +74,9 @@ class ValleLM(nn.Module):
         an alternative LM head implementation head, an alternative
         to the default Linear, useful for non-trivial codecs,
         such as SQ-Codec
+    logits_to_probs : callable, optional
+        A module or a function that converts logits to token probabilities to
+        support top-K sampling
     """
 
     def __init__(
@@ -92,6 +94,7 @@ class ValleLM(nn.Module):
         n_ctx=3000,
         emb=None,
         lm_head=None,
+        logits_to_probs=None,
     ):
         super().__init__()
         if emb is None:
@@ -100,6 +103,9 @@ class ValleLM(nn.Module):
         if lm_head is None:
             lm_head = torch.nn.Linear(att_unit, vocab_size, bias=False)
         self.lm_head = lm_head
+        if logits_to_probs is None:
+            logits_to_probs = nn.Identity()
+        self.logits_to_probs = logits_to_probs
         if share_emb:
             self.lm_head.weight = self.emb.weight
 
@@ -302,7 +308,7 @@ class ValleLM(nn.Module):
             #  (3.2) AR loop
             prev_emb = self.emb(prev_tok)  # [B, 1, D]
             h_ar = self.ar_decoder(prev_emb, kv_cache=cache)
-            logits = self.lm_head(h_ar)  # [B, 1, V]
+            logits = self.logits_to_probs(self.lm_head(h_ar))  # [B, 1, V]
             gen_tok, gen_score = logits_to_tokens(
                 logits.unsqueeze(2),
                 opts,
@@ -415,7 +421,7 @@ class ValleLM(nn.Module):
                 h_nar = self.nar_decoder(
                     prev_emb, ones * step - 1, mask=mask
                 )  # [B, T, D]
-                logits = self.lm_head(h_nar)
+                logits = self.logits_to_probs(self.lm_head(h_nar))
                 gen_tok, gen_score = logits_to_tokens(
                     logits.unsqueeze(2),
                     opts,

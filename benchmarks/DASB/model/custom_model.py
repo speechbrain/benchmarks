@@ -1,5 +1,6 @@
 import torch
 from speechbrain.nnet.linear import Linear
+from model.sq_codec import tokens_to_ternary
 
 
 class AttentionMLP(torch.nn.Module):
@@ -163,4 +164,34 @@ class TernaryPredictionHead(torch.nn.Module):
         x = self.lin_p(x)
         p = x.reshape(batch_size, max_len, self.num_positions, 3)
         return p
+    
 
+class TernaryLogitTokenizer(torch.nn.Module):
+    """Converts ternary logits to probabilities
+
+    Arguments
+    ---------
+    num_positions : int
+        The number of ternary digits/positions
+    num_tokens : int
+        The number of tokens
+    """
+    def __init__(self, num_positions, num_tokens=None):
+        super().__init__()
+        self.num_positions = num_positions
+        if num_tokens is None:
+            num_tokens = 3 ** num_positions
+        self.num_tokens = num_tokens
+        self.register_buffer("vocab", torch.arange(num_tokens))
+        self.register_buffer("vocab_ternary", tokens_to_ternary(self.vocab[None, None, None, :], D=num_positions) + 1)
+        self.register_buffer("idx", torch.arange(3)[None, None, None, None, :])
+
+    def forward(self, logits):
+        logits_unsq = logits.softmax(-1).unsqueeze(-3).unsqueeze(-3)
+        token_logits_raw = torch.where(
+            self.vocab_ternary[:, None, None, :, :, None] == self.idx,
+            logits_unsq,
+            1 - logits_unsq
+        ).prod(-1).prod(-1)
+        token_logits_raw_sum = token_logits_raw.sum(-1, keepdim=True)
+        return (token_logits_raw / token_logits_raw_sum).squeeze(2)

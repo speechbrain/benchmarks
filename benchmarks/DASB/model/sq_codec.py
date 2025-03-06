@@ -1521,11 +1521,11 @@ def logits_to_ternary(logits):
     return ternary
 
 
-def ternary_loss(predictions, targets, length=None, mask=None, targets_type="ternary", reduction="mean"):
+def ternary_loss(predictions, targets, length=None, mask=None, targets_type="ternary", num_positions=9, reduction="mean"):
     if targets.dim() < 3:
         targets = targets.unsqueeze(-1)
     if targets_type == "tokens":
-        targets = tokens_to_ternary(targets.unsqueeze(-1))
+        targets = tokens_to_ternary(targets.unsqueeze(-1), D=num_positions)
     batch_size, max_len, positions = targets.shape
     targets_cat = targets + 1
     predictions_loss = predictions.permute(0, 3, 1, 2).contiguous()

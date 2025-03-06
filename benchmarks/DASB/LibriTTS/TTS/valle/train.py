@@ -162,7 +162,7 @@ class VALLEBrain(sb.Brain):
             logits_ar_sm = self.hparams.log_softmax(logits_ar)
             targets_ar = prompt[:, 1:, 0]
             loss_ar = self.hparams.compute_cost(
-                log_probabilities=logits_ar_sm, targets=targets_ar, mask=mask
+                logits_ar_sm, targets=targets_ar, mask=mask
             )
             loss_components.append(loss_ar)
         else:
@@ -171,7 +171,7 @@ class VALLEBrain(sb.Brain):
             logits_nar_sm = self.hparams.log_softmax(logits_nar)
             targets_nar = prompt[batch_idx, 1:, nar_track]
             loss_nar = self.hparams.compute_cost(
-                log_probabilities=logits_nar_sm, targets=targets_nar, mask=mask,
+                logits_nar_sm, targets=targets_nar, mask=mask,
             )
             loss_components.append(loss_nar)
         else:
@@ -221,12 +221,12 @@ class VALLEBrain(sb.Brain):
         stats = {}
         if self.train_ar:
             stats["loss_ar"] = self.hparams.compute_cost(
-                log_probabilities=logits_ar, targets=targets_ar, mask=mask,
+                logits_ar, targets=targets_ar, mask=mask,
                 reduction=reduction,
             )
         if self.train_nar:
             stats["loss_nar"] = self.hparams.compute_cost(
-                log_probabilities=logits_nar, targets=targets_nar, mask=mask,
+                logits_nar, targets=targets_nar, mask=mask,
                 reduction=reduction,
             )
         return stats

@@ -152,7 +152,7 @@ nhead: 16
 num_layers_ar: 12 # @orion_step1: --num_layers_ar~"choices([6, 9, 12])"
 num_layers_nar: 12 # @orion_step1: --num_layers_nar~"choices([6, 9, 12])"
 dropout: 0.2
-vocab_size: 2048
+vocab_size: 19683
 text_num_tokens: 39
 phn_num_tokens: 52
 

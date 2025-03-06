@@ -391,7 +391,10 @@ class ValleLM(nn.Module):
             prev_tok = suffix[:, :, 0]
         else:
             prev_tok = gen_tokens_ar[:, :, 0]
-        start_emb = self.emb.weight[opts.start].tile(
+        start_token = torch.tensor(
+            [opts.start], device=prefix.device
+        )[None, None, :]
+        start_emb = self.emb(start_token).squeeze().tile(
             len(valid_idx), 1, 1
         )  # [B, 1, D]
         prev_emb = torch.cat(

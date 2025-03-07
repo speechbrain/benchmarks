@@ -242,6 +242,8 @@ class VALLEBrain(sb.Brain):
         self.offsets = get_offsets(
             self.hparams.vocab_size, self.hparams.audio_tokens_per_step,
         )[None, None, :].to(self.device)
+        if not self.hparams.use_token_offsets:
+            self.offsets = torch.zeros_like(self.offsets)
 
         self.loss_metric = sb.utils.metric_stats.MultiMetricStats(
             metric=self.compute_loss_stats, batch_eval=True,
@@ -489,9 +491,10 @@ class VALLEBrain(sb.Brain):
         tracks = torch.arange(
             self.hparams.audio_tokens_per_step, device=self.device
         )[:, None]
+        if not self.hparams.use_token_offsets:
+            tracks = torch.zeros_like(tracks)
         track_start = (
-            self.hparams.text_num_tokens
-            + self.hparams.special_num_tokens
+            self.hparams.audio_token_shift
             + tracks * self.hparams.vocab_size
         )
         if self.hparams.flip_layers:
@@ -501,6 +504,12 @@ class VALLEBrain(sb.Brain):
             ((idx >= track_start) & (idx < track_end))
             | (idx == self.hparams.bos_index)
         ).logical_not()
+        mask[
+            (
+                (idx >= self.hparams.special_num_tokens)
+                & (idx <= self.hparams.audio_token_shift)
+            ).expand_as(mask)
+        ] = True
         return self.hparams.inference_opts(
             masks={self.hparams.bos_index: mask}, device=self.device,
         )
@@ -579,6 +588,8 @@ def dataio_prepare(hparams):
     offsets = get_offsets(
         hparams["vocab_size"], hparams["audio_tokens_per_step"]
     ).unsqueeze(0)
+    if not hparams["use_token_offsets"]:
+        offsets = torch.zeros_like(offsets)
     if hparams["flip_layers"]:
         offsets = offsets.flip(-1)
 

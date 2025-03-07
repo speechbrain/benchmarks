@@ -48,6 +48,7 @@ kmeans_dataset: LibriSpeech
 available_speech_model_layers: [1, 3, 7, 12, 18, 23]
 speech_model_layers: !ref <available_speech_model_layers>
 flip_layers: False
+use_token_offsets: False
 token_offset: 1
 spk_emb_src: speechbrain/spkrec-ecapa-voxceleb-mel-spec
 use_spk_emb: False
@@ -165,17 +166,13 @@ input_num_tokens: !apply:speechbrain.utils.hparams.choice
 model_vocab_size: !apply:speechbrain.utils.hparams.choice
     value: !ref <input>
     choices:
-        text: !ref <text_num_tokens> + (<vocab_size> * <audio_tokens_per_step>) + <special_num_tokens>
-        phonemes: !ref <phn_num_tokens> + (<vocab_size> * <audio_tokens_per_step>) + <special_num_tokens>
+        text: !ref <vocab_size> * 2
+        phonemes: !ref <vocab_size> * 2
 
-audio_token_shift: !apply:speechbrain.utils.hparams.choice
-    value: !ref <input>
-    choices:
-        text: !ref <text_num_tokens> +  <special_num_tokens>
-        phonemes: !ref <phn_num_tokens> + <special_num_tokens>
-
+audio_token_shift: !ref 3**(<ternary_num_digits> - 1)
+ 
 audio_tokens_per_step: 4
-ternary_num_digits: 11
+ternary_num_digits: 10
 pred_mode: ternary
 freeze_lm_head: False
 

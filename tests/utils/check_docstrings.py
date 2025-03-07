@@ -34,7 +34,7 @@ def extractName(s, search_class=False):
 
 
 def check_docstrings(
-    base_folder=".", check_folders=["speechbrain", "tools", "templates"]
+    base_folder=".", check_folders=["speechbrain", "tools", "benchmarks/MOABB"]
 ):
     """Checks if all the functions or classes have a docstring.
 
@@ -55,7 +55,7 @@ def check_docstrings(
         base_folder,
         match_and=[".py"],
         match_or=check_folders,
-        exclude_or=[".pyc"],
+        exclude_or=[".pyc", ".ipynb_checkpoints"],
     )
     check = True
     # Loop over the detected libraries

@@ -3,12 +3,13 @@
 Author
 ------
 Drew Wagner, 2025
+Bruno Aristimunha, 2025
 """
+from __future__ import annotations
 
 import json
 from functools import cache
 from pathlib import Path
-from types import MethodType
 from typing import Any, Hashable, Iterable, Optional, Self, TypedDict
 
 import mne
@@ -18,10 +19,10 @@ from moabb.datasets import download as dl
 from moabb.datasets.base import BaseDataset as BaseMOABBDataset
 from moabb.datasets.bids_interface import camel_to_kebab_case
 
+from torch.utils.data import Dataset
+
 from speechbrain.dataio.dataset import DynamicItemDataset
 from speechbrain.utils.data_pipeline import provides, takes
-
-from torch.utils.data import Dataset
 
 from .ica import ICAProcessor
 
@@ -64,7 +65,7 @@ class EpochedEEGSample(RawEEGSample):
 class RawEEGDataset(DynamicItemDataset):
     """Dataset which loads raw data from a BIDS directory.
 
-    By default data is loaded lazily from disk, but can optionally be preloaded to memory.
+    By default, data is loaded lazily from disk, but can optionally be preloaded to memory.
 
     Supports additional dynamic transformations. See Speechbrain's `~DynamicItemDataset` for
     more details.
@@ -185,6 +186,7 @@ class RawEEGDataset(DynamicItemDataset):
         RawEEGDataset
             DynamicItemDataset initialized to read the MOABB dataset.
         """
+        # Reading the mne-python.json
         json_path = Path(json_path)
         if json_path.exists():
             with json_path.open() as fp:
@@ -200,7 +202,7 @@ class RawEEGDataset(DynamicItemDataset):
         subject_list = (
             subjects if subjects is not None else dataset.subject_list
         )
-        dataset.download(subject_list)
+        dataset.download(subject_list)  # ??
 
         # Convert from MOABB format to BIDS
         for sub in subject_list:
@@ -230,10 +232,7 @@ class RawEEGDataset(DynamicItemDataset):
 
     @classmethod
     def load_or_create_json_data_from_bids(
-        cls,
-        bids_path: BIDSPath,
-        json_path: Path | str,
-        subjects=None,
+        cls, bids_path: BIDSPath, json_path: Path | str, subjects=None,
     ) -> dict[str, dict]:
         """Indexes the BIDS directory and saves the result to a JSON file, or loads
         the index from JSON if it already exists.
@@ -392,7 +391,6 @@ class EpochedEEGDataset(RawEEGDataset):
                     raw, verbose=False
                 )
 
-            # TODO: How to handle the case where multiple values map to the same key?
             event_id = {v: k for k, v in event_id.items()}
 
             for onset, _, event in events:
@@ -425,7 +423,6 @@ class EpochedEEGDataset(RawEEGDataset):
         return super().__getitem__(index)  # type: ignore
 
     def _make_load_epoch_dynamic_item(self, tmin: float, tmax: Optional[float]):
-
         @takes("raw", "onset")
         @provides("epoch")
         def _load_epoch(raw: mne.io.RawArray, onset: int):
@@ -456,7 +453,11 @@ class InMemoryDataset:
     """
 
     def __new__(cls, dataset: Dataset):
+        """Create a new instance of the wrapped dataset."""
+
         class Wrapper(dataset.__class__):
+            """hacking way to perform the cache."""
+
             def __init__(self):
                 self.__wrapped_dataset = dataset
                 self.__cache = {}

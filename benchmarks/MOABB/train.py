@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 This script implements raining neural networks to decode single EEG trials using various paradigms on MOABB datasets.
 For a list of supported datasets and paradigms, please refer to the official documentation at http://moabb.neurotechx.com/docs/api.html.
@@ -27,6 +26,15 @@ import yaml
 
 
 class MOABBBrain(sb.Brain):
+    """
+    This class implements a brain for the MOABB benchmark.
+
+    This class inherits from the Brain class in SpeechBrain.
+    The Brain class is the main class that handles training, validation,
+    testing, and checkpointing.
+
+    """
+
     def init_model(self, model):
         """Function to initialize neural network modules"""
         for mod in model.modules():

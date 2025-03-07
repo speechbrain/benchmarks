@@ -1,3 +1,8 @@
+"""Module for handling ICA computation and application for EEG data.
+Author
+------
+Victor Cruz, 2025
+"""
 from pathlib import Path
 from typing import Union, Optional, Dict, Any
 
@@ -27,9 +32,9 @@ class ICAProcessor:
     """
 
     def __init__(
-        self, 
-        n_components=None, 
-        method='fastica',
+        self,
+        n_components=None,
+        method="fastica",
         random_state=42,
         fit_params: Optional[Dict[str, Any]] = None,
         filter_params: Optional[Dict[str, Any]] = None,
@@ -38,22 +43,24 @@ class ICAProcessor:
         self.method = method
         self.random_state = random_state
         self.fit_params = fit_params or {}
-        self.filter_params = filter_params or {'l_freq': 1.0, 'h_freq': None}
+        self.filter_params = filter_params or {"l_freq": 1.0, "h_freq": None}
 
     def get_ica_path(self, raw_path: Union[str, Path]) -> Path:
         """Generate path where ICA solution should be stored.
-        
+
         Creates a derivatives folder to store ICA solutions, following BIDS conventions.
         """
         bids_path = get_bids_path_from_fname(raw_path)
         # For derivatives, you can put them in a derivatives folder:
-        bids_path.root = (bids_path.root / ".." / "derivatives" / f"ica-{self.method}")
+        bids_path.root = (
+            bids_path.root / ".." / "derivatives" / f"ica-{self.method}"
+        )
         # Keep the same base entities:
         bids_path.update(
-            suffix='eeg',    # override or confirm suffix
-            extension='.fif',
-            description='ica',      # <-- This sets a desc=ica entity
-            check=True,     # If you do not want BIDSPath to fail on derivative checks
+            suffix="eeg",  # override or confirm suffix
+            extension=".fif",
+            description="ica",  # <-- This sets a desc=ica entity
+            check=True,  # If you do not want BIDSPath to fail on derivative checks
         )
         # Make sure the folder is created
         bids_path.fpath.parent.mkdir(parents=True, exist_ok=True)
@@ -70,24 +77,26 @@ class ICAProcessor:
             n_components=self.n_components,
             method=self.method,
             random_state=self.random_state,
-            **self.fit_params
+            **self.fit_params,
         )
         ica.fit(raw_filtered)
         ica.save(ica_path)
         return ica
 
-    def process(self, raw: mne.io.RawArray, raw_path: Union[str, Path]) -> mne.io.RawArray:
+    def process(
+        self, raw: mne.io.RawArray, raw_path: Union[str, Path]
+    ) -> mne.io.RawArray:
         """Process raw data with ICA, computing or loading from cache."""
-        
+
         ica_path = self.get_ica_path(raw_path)
-        
+
         if not ica_path.exists():
             ica = self.compute_ica(raw, ica_path)
         else:
-            ica = mne.preprocessing.read_ica(ica_path, verbose='ERROR')
-        
+            ica = mne.preprocessing.read_ica(ica_path, verbose="ERROR")
+
         # Create a copy of the raw data before applying ICA
         raw_ica = raw.copy()
         ica.apply(raw_ica)
-        
+
         return raw_ica

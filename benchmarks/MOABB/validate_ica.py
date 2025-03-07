@@ -121,7 +121,7 @@ def profile_memory_usage():
         ica_processor = ICAProcessor(
             n_components=15,
             method=method,
-            fit_params={'max_iter': 500} if method == 'picard' else {'iteration': 1000}
+            fit_params={'max_iter': 500} if method == 'picard' else {'max_iter': 1000}
         )
         dataset = EpochedEEGDataset.from_moabb(
             BNCI2014_001(),

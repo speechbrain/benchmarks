@@ -3,7 +3,7 @@ from typing import Union, Optional, Dict, Any
 
 import mne
 from mne.preprocessing import ICA
-from mne_bids import get_bids_path_from_fname, BIDSPath
+from mne_bids import get_bids_path_from_fname
 
 
 class ICAProcessor:

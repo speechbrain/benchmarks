@@ -1,8 +1,8 @@
-'''File for testing ICA computation and application for EEG data.
+"""File for testing ICA computation and application for EEG data.
 Authors
 -------
 Victor Cruz, 2025
-'''
+"""
 import time
 import mne
 import moabb

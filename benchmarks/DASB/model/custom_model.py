@@ -141,13 +141,16 @@ class TernaryPredictionHead(torch.nn.Module):
             bias=False
         )
 
-    def forward(self, x):
+    def forward(self, x, track=None):
         """Computes the forward pass
 
         Arguments
         ---------
         x : torch.Tensor
             The decoder output (Batch x Length x d_model)
+
+        track : int
+            The track index (if applicable)
 
         Returns
         -------
@@ -165,7 +168,70 @@ class TernaryPredictionHead(torch.nn.Module):
         x = self.lin_p(x)
         p = x.reshape(batch_size, max_len, self.num_positions, 3)
         return p
-    
+
+
+class MultitrackTernaryPredictionHead(torch.nn.Module):
+    """An alternative prediction head that predicts a fixed number of ternary digits
+    for each position (as used in SQ-Codec)
+
+    Arguments
+    ---------
+    d_model : int
+        The model dimension
+    num_positions : int
+        the number of positions
+    """
+    def __init__(self, d_model, num_positions, d_hidden=512, num_tracks=1):
+        super().__init__()
+        self.num_positions = num_positions
+        self.d_model = d_model
+        self.num_positions = num_positions
+        self.lin_hidden = torch.nn.ModuleList(
+            [
+                Linear(
+                    input_size=d_model,
+                    n_neurons=d_hidden,                    
+                )
+            ] * num_tracks
+        )
+        self.act = torch.nn.LeakyReLU()
+        self.lin_p = torch.nn.ModuleList(
+            [
+                Linear(
+                    input_size=d_hidden,
+                    n_neurons=num_positions * 3,
+                )
+            ] * num_tracks
+        )
+
+    def forward(self, x, track=0):
+        """Computes the forward pass
+
+        Arguments
+        ---------
+        x : torch.Tensor
+            The decoder output (Batch x Length x d_model)
+
+        track : int
+            The track index (if applicable)
+
+        Returns
+        -------
+        p : torch.Tensor
+            A tensor of shape (Batch x Length x num_positions x ternary digit)
+            The values are logits (unnormalized probabilities)
+
+            p[:, :, :, 0] corresponds to -1
+            p[:, :, :, 1] corresponds to 0
+            p[:, :, :, 2] corresponds to 1
+        """
+        batch_size, max_len, _ = x.shape
+        x = self.lin_hidden[track](x)
+        x = self.act(x)
+        x = self.lin_p[track](x)
+        p = x.reshape(batch_size, max_len, self.num_positions, 3)
+        return p
+
 
 class TernaryLogitTokenizer(torch.nn.Module):
     """Converts ternary logits to probabilities

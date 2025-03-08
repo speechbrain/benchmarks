@@ -98,6 +98,7 @@ text_max_length: 500
 n_ctx: !ref <max_audio_length> + <text_max_length>
 infer_max_audio_length: !ref <max_audio_length>
 max_length_ratio: 10.0
+top_k: 1
 debug_infer_max_audio_length: 10
 
 # Label encoder
@@ -196,11 +197,12 @@ inference_opts: !name:model.valle.SpeechLMInferenceOptions
     minlenratio: 1.0
     maxlenratio: !ref <max_length_ratio>
     nq: !ref <audio_tokens_per_step>
+    top_k: !ref <top_k>
 
 lm_head: !apply:speechbrain.utils.hparams.choice
     value: !ref <pred_mode>
     choices:
-        ternary: !new:model.custom_model.TernaryPredictionHead
+        ternary: !new:model.custom_model.MultitrackTernaryPredictionHead
             d_model: !ref <d_model>
             num_positions: !ref <ternary_num_digits>
         tokens: null

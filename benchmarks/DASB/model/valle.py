@@ -94,6 +94,7 @@ class ValleLM(nn.Module):
         n_ctx=3000,
         emb=None,
         lm_head=None,
+        lm_head_multitrack=False,
         logits_to_probs=None,
     ):
         super().__init__()
@@ -103,6 +104,7 @@ class ValleLM(nn.Module):
         if lm_head is None:
             lm_head = torch.nn.Linear(att_unit, vocab_size, bias=False)
         self.lm_head = lm_head
+        self.lm_head_multitrack = lm_head_multitrack
         if logits_to_probs is None:
             logits_to_probs = nn.Identity()
         self.logits_to_probs = logits_to_probs
@@ -204,9 +206,9 @@ class ValleLM(nn.Module):
         # Logits
         logits_ar, logits_nar = None, None
         if predict_ar:
-            logits_ar = self.lm_head(h_ar)
+            logits_ar = self.apply_lm_head(h_ar, 0)
         if predict_nar:
-            logits_nar = self.lm_head(h_nar)
+            logits_nar = self.apply_lm_head(h_nar, nar_level_idx + 1)
 
         return logits_ar, logits_nar
 
@@ -308,7 +310,7 @@ class ValleLM(nn.Module):
             #  (3.2) AR loop
             prev_emb = self.emb(prev_tok)  # [B, 1, D]
             h_ar = self.ar_decoder(prev_emb, kv_cache=cache)
-            logits = self.logits_to_probs(self.lm_head(h_ar))  # [B, 1, V]
+            logits = self.logits_to_probs(self.apply_lm_head(h_ar, 0))  # [B, 1, V]
             gen_tok, gen_score = logits_to_tokens(
                 logits.unsqueeze(2),
                 opts,
@@ -421,7 +423,9 @@ class ValleLM(nn.Module):
                 h_nar = self.nar_decoder(
                     prev_emb, ones * step - 1, mask=mask
                 )  # [B, T, D]
-                logits = self.logits_to_probs(self.lm_head(h_nar))
+                
+                logits = self.apply_lm_head(h_nar, step)
+                logits = self.logits_to_probs(logits)
                 gen_tok, gen_score = logits_to_tokens(
                     logits.unsqueeze(2),
                     opts,
@@ -463,6 +467,19 @@ class ValleLM(nn.Module):
             gen_scores_list.append(gen_scores[b][: finish_idx[b]])
 
         return gen_tokens_list, gen_scores_list
+    
+    def apply_lm_head(self, x, track):
+        """Applies the language model head
+        
+        Arguments
+        ---------
+        """
+
+        if self.lm_head_multitrack:
+            result = self.lm_head(x, track)
+        else:
+            result = self.lm_head(x)
+        return result
 
     def _initialize(self):
         for m in self.modules():

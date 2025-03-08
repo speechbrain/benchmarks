@@ -205,6 +205,7 @@ lm_head: !apply:speechbrain.utils.hparams.choice
         ternary: !new:model.custom_model.MultitrackTernaryPredictionHead
             d_model: !ref <d_model>
             num_positions: !ref <ternary_num_digits>
+            num_tracks: !ref <audio_tokens_per_step>
         tokens: null
 
 logits_to_probs: !apply:speechbrain.utils.hparams.choice

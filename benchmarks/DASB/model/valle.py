@@ -14,6 +14,7 @@ Authors
 
 import logging
 import torch
+import inspect
 from typing import Tuple, Optional
 from speechbrain.dataio.dataio import length_to_mask
 
@@ -94,7 +95,6 @@ class ValleLM(nn.Module):
         n_ctx=3000,
         emb=None,
         lm_head=None,
-        lm_head_multitrack=False,
         logits_to_probs=None,
     ):
         super().__init__()
@@ -104,7 +104,8 @@ class ValleLM(nn.Module):
         if lm_head is None:
             lm_head = torch.nn.Linear(att_unit, vocab_size, bias=False)
         self.lm_head = lm_head
-        self.lm_head_multitrack = lm_head_multitrack
+        spec = inspect.getfullargspec(lm_head.forward)
+        self.lm_head_multitrack = "track" in spec.args
         if logits_to_probs is None:
             logits_to_probs = nn.Identity()
         self.logits_to_probs = logits_to_probs

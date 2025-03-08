@@ -163,13 +163,9 @@ input_num_tokens: !apply:speechbrain.utils.hparams.choice
         text: !ref <text_num_tokens>
         phonemes: !ref <phn_num_tokens>
 
-model_vocab_size: !apply:speechbrain.utils.hparams.choice
-    value: !ref <input>
-    choices:
-        text: !ref <vocab_size> * 2
-        phonemes: !ref <vocab_size> * 2
+model_vocab_size: !ref <vocab_size> * 2
 
-audio_token_shift: !ref 3**(<ternary_num_digits> - 1)
+audio_token_shift: 19683
  
 audio_tokens_per_step: 4
 ternary_num_digits: 10

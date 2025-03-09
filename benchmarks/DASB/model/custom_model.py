@@ -226,6 +226,8 @@ class MultitrackTernaryPredictionHead(torch.nn.Module):
             p[:, :, :, 2] corresponds to 1
         """
         batch_size, max_len, _ = x.shape
+        if torch.is_tensor(track):
+            track = track.int().item()
         x = self.lin_hidden[track](x)
         x = self.act(x)
         x = self.lin_p[track](x)

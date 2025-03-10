@@ -63,6 +63,7 @@ orion_db_type="PickledDB"
 exp_max_trials=50
 store_all=True
 compress_exp=True
+hparam_filter=""
 
 # Function to print argument descriptions and exit
 print_argument_descriptions() {
@@ -202,6 +203,12 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
 
+    --hparam_filter)
+      hparam_filter="$2"
+      shift
+      shift
+      ;;
+
     --help)
       print_argument_descriptions
       ;;
@@ -281,6 +288,11 @@ echo "-------------------------------------"
 get_flag() {
     local file_path="$1"
     local pattern="$2"
+    local filter="$3"
+
+    if [[ -z "$filter" ]]; then
+      filter=".*"
+    fi
 
     # Check if the file exists
     if [ ! -f "$file_path" ]; then
@@ -289,7 +301,7 @@ get_flag() {
     fi
 
     # Use grep to find all lines containing the pattern and then extract the flags using sed
-    grep -o "$pattern.*" "$file_path" | sed "s/$pattern//" | tr -d '\n'
+    grep -o "$pattern.*" "$file_path" | sed "s/$pattern//" | grep $filter | tr -d '\n'
 }
 
 
@@ -333,7 +345,9 @@ function extract_best_params() {
 step_id=1
 hparams_step=$hparams
 pattern="@orion_step1:"
-opt_flags=$(get_flag "$hparams_step" "$pattern")
+opt_flags=$(get_flag "$hparams_step" "$pattern" "$hparam_filter")
+echo ">>> OPT FLAGS: $opt_flags"
+exit
 
 # Check if the string is empty and exit with an error if it is
 if [ -z "$opt_flags" ]; then
@@ -409,7 +423,7 @@ while [ -n "$opt_flags" ]; do
     pattern="@orion_step$step_id:"
 
     # update optimization flags pattern
-    opt_flags=$(get_flag "$hparams_step" "$pattern")
+    opt_flags=$(get_flag "$hparams_step" "$pattern" "$hparam_filter")
 done
 
 echo

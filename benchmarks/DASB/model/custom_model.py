@@ -168,3 +168,45 @@ class TernaryPredictionHead(torch.nn.Module):
         x = self.lin_p(x)
         p = x.reshape(batch_size, max_len, self.num_positions, 3)
         return p
+
+
+class TernaryLogitTokenizer(torch.nn.Module):
+    """Converts ternary logits to probabilities
+
+    Arguments
+    ---------
+    num_positions : int
+        The number of ternary digits/positions
+    num_tokens : int
+        The number of tokens
+    chunk_size : int
+        The size of the chunk (to prevent OOM)
+    """
+    def __init__(self, num_positions, num_tokens=None, chunk_size=10):
+        super().__init__()
+        self.num_positions = num_positions
+        if num_tokens is None:
+            num_tokens = 3 ** num_positions
+        self.num_tokens = num_tokens
+        self.chunk_size = chunk_size
+        self.register_buffer("vocab", torch.arange(num_tokens))
+        self.register_buffer("vocab_ternary", tokens_to_ternary(self.vocab[None, None, None, :], D=num_positions) + 1)
+        self.register_buffer("idx", torch.arange(3)[None, None, None, None, :])
+
+    def forward(self, logits):
+        logits_unsq = logits.softmax(-1).unsqueeze(-3).unsqueeze(-3)
+        chunks = logits_unsq.chunk(dim=1, chunks=math.ceil(logits_unsq.size(1) / self.chunk_size))
+        token_logits_chunks = []
+        for chunk in chunks:
+            token_logits_raw = torch.where(
+                self.vocab_ternary[:, None, None, :, :, None] == self.idx,
+                chunk,
+                1 - chunk
+            ).prod(-1).prod(-1)
+            token_logits_raw_sum = token_logits_raw.sum(-1, keepdim=True)
+            token_logits_chunks.append((token_logits_raw / token_logits_raw_sum).squeeze(2))
+        token_logits = torch.cat(
+            token_logits_chunks,
+            dim=1
+        )
+        return token_logits

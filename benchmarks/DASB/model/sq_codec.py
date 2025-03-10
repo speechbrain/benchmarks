@@ -1534,12 +1534,12 @@ def ternary_loss(predictions, targets, length=None, mask=None, targets_type="ter
         targets_cat,
         reduction="none"
     )
-    mask = None
     if length is not None:
         mask = length_to_mask(
             length * max_len,
             max_len
-        ).unsqueeze(-1)
+        )
+    mask = mask.unsqueeze(-1)
     if mask is not None:
         loss = loss * mask
     if reduction == "mean":

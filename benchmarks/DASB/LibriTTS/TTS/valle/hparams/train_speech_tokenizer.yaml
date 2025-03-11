@@ -50,6 +50,7 @@ tokens_folder: !PLACEHOLDER  # Path to the folder where extracted tokens are sav
 tokens_loader: !new:utils.tokens.TokensLoader
     data_path: !ref <tokens_folder>
 flip_layers: False
+use_token_offsets: True
 splits: ["train", "valid", "test"]
 
 ckpt_key: dwer

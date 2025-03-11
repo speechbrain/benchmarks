@@ -50,6 +50,7 @@ tokens_folder: !PLACEHOLDER  # Path to the folder where extracted tokens are sav
 tokens_loader: !new:utils.tokens.TokensLoader
     data_path: !ref <tokens_folder>
 flip_layers: False
+use_token_offsets: False
 splits: ["train", "valid", "test"]
 
 ckpt_key: dwer
@@ -176,6 +177,7 @@ model_vocab_size: !ref <vocab_size> * 2
 audio_token_shift: 19683
 audio_tokens_per_step: 4
 ternary_num_digits: 10
+ternary_emb_hidden_size: 512
 pred_mode: ternary
 
 # Model Settings
@@ -229,8 +231,12 @@ logits_to_probs: !apply:speechbrain.utils.hparams.choice
 emb: !new:speechbrain.nnet.containers.Sequential
     ternary: !new:model.sq_codec.TernaryEmbedding
         num_digits: !ref <ternary_num_digits>    
-    linear: !new:speechbrain.nnet.linear.Linear
+    hidden: !new:speechbrain.nnet.linear.Linear
         input_size: !ref <ternary_num_digits>
+        n_neurons: !ref <ternary_emb_hidden_size>
+    act: !new:torch.nn.LeakyReLU
+    linear: !new:speechbrain.nnet.linear.Linear
+        input_size: !ref <ternary_emb_hidden_size>
         n_neurons: !ref <d_model>
 
 tokenizer: !new:utils.tokenizer_interface.SQCodecTokenizer

@@ -48,6 +48,7 @@ kmeans_dataset: LibriSpeech
 available_speech_model_layers: [1, 3, 7, 12, 18, 23]
 speech_model_layers: !ref <available_speech_model_layers>
 flip_layers: False
+use_token_offsets: True
 token_offset: 1
 spk_emb_src: speechbrain/spkrec-ecapa-voxceleb-mel-spec
 use_spk_emb: False

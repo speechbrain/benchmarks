@@ -61,6 +61,9 @@ class ValleLM(nn.Module):
         If true, apply LayerNorm to q and k in atention.
     dropout : float
         dropout rate for attention layers.
+    target_dropout : float
+        a separate dropout applied to targets only (may be
+        useful to mitigate autorgressive prediction instability)
     att_unit: int
         Dimention of Transformer attention.
     head : int
@@ -88,6 +91,7 @@ class ValleLM(nn.Module):
         share_emb=True,
         qk_norm=False,
         dropout=0.0,
+        target_dropout=0.0,
         att_unit=256,
         head=2,
         ar_layer=4,
@@ -119,6 +123,7 @@ class ValleLM(nn.Module):
             n_layer=ar_layer,
             qk_norm=qk_norm,
             dropout=dropout,
+            target_dropout=target_dropout
         )
         if nq > 1:
             # NOTE: An NAR encoder is not needed if there is only one track
@@ -575,6 +580,30 @@ class ResidualAttentionBlock(nn.Module):
 
 
 class TransformerDecoder(nn.Module):
+    """A custom transformer decoder implementation for VALL-E
+
+    Arguments
+    ---------
+    n_ctx : int
+        The context length
+    n_state : int
+        The number of states
+    n_head : int
+        The number of heads
+    n_layer : int
+        The number of layers
+    causal : bool
+        Whether to operate in causal mode (i.e. avoid attending
+        to future steps)
+    qk_norm : bool
+        Whether to normalize queries and keys
+    dropout : float
+        The dropout probability
+    target_dropout : float
+        The target dropout probability
+    layer_class : type
+        The layer type to be used
+    """    
     def __init__(
         self,
         n_ctx,
@@ -584,30 +613,10 @@ class TransformerDecoder(nn.Module):
         causal=True,
         qk_norm=False,
         dropout=0.0,
+        target_dropout=0.0,
         layer_class=ResidualAttentionBlock,
     ):
-        """A custom transformer decoder implementation for VALL-E
 
-        Arguments
-        ---------
-        n_ctx : int
-            The context length
-        n_state : int
-            The number of states
-        n_head : int
-            The number of heads
-        n_layer : int
-            The number of layers
-        causal : bool
-            Whether to operate in causal mode (i.e. avoid attending
-            to future steps)
-        qk_norm : bool
-            Whether to normalize queries and keys
-        dropout : float
-            The dropout probability
-        layer_class : type
-            The layer type to be used
-        """
         super().__init__()
 
         self.pos_emb = nn.Embedding(n_ctx, n_state)
@@ -626,6 +635,7 @@ class TransformerDecoder(nn.Module):
             ]
         )
         self.ln = LayerNorm(n_state)
+        self.target_dropout = nn.Dropout(target_dropout)
 
         self.causal = causal
         self.kv_cache = None
@@ -654,9 +664,11 @@ class TransformerDecoder(nn.Module):
 
         offset = next(iter(kv_cache.values())).shape[1] if kv_cache else 0
         x = x + self.pos_emb.weight[offset : offset + x.shape[1]].unsqueeze(0)
+        tgt = self.target_dropout(x)
 
         for block in self.blocks:
-            x = block(x, mask=mask, kv_cache=kv_cache)
+            x = block(x, tgt, mask=mask, kv_cache=kv_cache)
+            tgt = x
 
         x = self.ln(x)
         return x

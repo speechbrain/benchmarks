@@ -154,6 +154,7 @@ nhead: 16
 num_layers_ar: 12 # @orion_step1: --num_layers_ar~"choices([6, 9, 12])"
 num_layers_nar: 12 # @orion_step1: --num_layers_nar~"choices([6, 9, 12])"
 dropout: 0.2
+target_dropout: 0.5
 vocab_size: 19683
 text_num_tokens: 39
 phn_num_tokens: 52
@@ -185,6 +186,7 @@ model: !new:model.valle.ValleLM # yamllint disable-line rule:line-length
     nar_layer: !ref <num_layers_nar>
     n_ctx: !ref <n_ctx>
     dropout: !ref <dropout>
+    target_dropout: !ref <target_dropout>
     share_emb: !ref <share_emb>
     qk_norm: !ref <qk_norm>
     emb: !ref <emb>

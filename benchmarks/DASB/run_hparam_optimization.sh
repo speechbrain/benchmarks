@@ -346,8 +346,6 @@ step_id=1
 hparams_step=$hparams
 pattern="@orion_step1:"
 opt_flags=$(get_flag "$hparams_step" "$pattern" "$hparam_filter")
-echo ">>> OPT FLAGS: $opt_flags"
-exit
 
 # Check if the string is empty and exit with an error if it is
 if [ -z "$opt_flags" ]; then

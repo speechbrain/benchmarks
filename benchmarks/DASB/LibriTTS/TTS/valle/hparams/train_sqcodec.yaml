@@ -179,6 +179,7 @@ model_vocab_size: !ref <vocab_size> * 2
 audio_token_shift: 19683
 audio_tokens_per_step: 4
 ternary_num_digits: 10
+ternary_tokenizer_mode: argmax
 pred_mode: ternary
 
 # Model Settings
@@ -230,6 +231,7 @@ logits_to_probs: !apply:speechbrain.utils.hparams.choice
         ternary: !new:model.custom_model.TernaryLogitTokenizer
             num_tokens: !ref <model_vocab_size>
             num_positions: !ref <ternary_num_digits>
+            mode: !ref <ternary_tokenizer_mode>
         tokens: !new:torch.nn.Identity
 
 emb: !new:speechbrain.nnet.containers.Sequential

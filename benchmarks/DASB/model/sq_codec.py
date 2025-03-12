@@ -126,7 +126,7 @@ class SQCodec(nn.Module):
         exp_model_config = OmegaConf.load(config)
         scalar_codec = ScalarModel(**exp_model_config.generator.config)
         device = next(iter(scalar_codec.parameters())).device
-        parameter_dict = torch.load(self.ckpt_path, map_location=device)
+        parameter_dict = torch.load(self.ckpt_path, map_location=device, weights_only=False)
         scalar_codec.load_state_dict(parameter_dict["codec_model"])
         return scalar_codec
 
@@ -1543,7 +1543,7 @@ def ternary_loss(predictions, targets, length=None, mask=None, targets_type="ter
     if mask is not None:
         loss = loss * mask
     if reduction == "mean":
-        loss = loss.sum(2).mean(1).mean(0) / 3.0
+        loss = loss.sum(2).sum(1).sum(0) / mask.sum()
     elif reduction == "batch":
-        loss = loss.sum(2).mean(1) / 3.0
+        loss = loss.sum(2).sum(1) / mask.sum(-1).sum(-1)
     return loss

@@ -1455,7 +1455,7 @@ def ternary_to_decimal(ternary, n_codebook=4):
     return codec_ls.permute(1, 2, 0)
 
 
-def ternary_logits_to_tokens(logits):
+def ternary_logits_to_tokens(logits, n_codebook=4):
     """Converts ternary logits to tokens (as used for SQ-Codec)
 
     Arguments
@@ -1469,7 +1469,7 @@ def ternary_logits_to_tokens(logits):
         Token IDs
     """
     ternary_matrix = logits_to_ternary(logits)
-    tokens = ternary_to_decimal(ternary_matrix.transpose(-1, -2))
+    tokens = ternary_to_decimal(ternary_matrix.transpose(-1, -2), n_codebook=n_codebook)
     return tokens
 
 

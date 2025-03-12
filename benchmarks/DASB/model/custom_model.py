@@ -1,7 +1,7 @@
 import math
 import torch
 from speechbrain.nnet.linear import Linear
-from model.sq_codec import tokens_to_ternary
+from model.sq_codec import tokens_to_ternary, ternary_logits_to_tokens
 
 
 class AttentionMLP(torch.nn.Module):
@@ -183,19 +183,27 @@ class TernaryLogitTokenizer(torch.nn.Module):
         The number of tokens
     chunk_size : int
         The size of the chunk (to prevent OOM)
+    mode : str
+        "probability" : treats the outputs as a probability distribution
+        "argmax" : "hard" mode, only the top probability is used. Cannot be used with
+        top_k sampling with k > 1
+        
     """
-    def __init__(self, num_positions, num_tokens=None, chunk_size=10):
+    def __init__(self, num_positions, num_tokens=None, chunk_size=10, mode="probability"):
         super().__init__()
         self.num_positions = num_positions
         if num_tokens is None:
             num_tokens = 3 ** num_positions
         self.num_tokens = num_tokens
         self.chunk_size = chunk_size
+        self.mode = mode
         self.register_buffer("vocab", torch.arange(num_tokens))
         self.register_buffer("vocab_ternary", tokens_to_ternary(self.vocab[None, None, None, :], D=num_positions) + 1)
         self.register_buffer("idx", torch.arange(3)[None, None, None, None, :])
 
     def forward(self, logits):
+        if self.mode == "argmax":
+            return self._probs_argmax(logits)
         logits_unsq = logits.softmax(-1).unsqueeze(-3).unsqueeze(-3)
         chunks = logits_unsq.chunk(dim=1, chunks=math.ceil(logits_unsq.size(1) / self.chunk_size))
         token_logits_chunks = []
@@ -212,3 +220,8 @@ class TernaryLogitTokenizer(torch.nn.Module):
             dim=1
         )
         return token_logits
+
+    def _probs_argmax(self, logits):
+        logit_tokens = ternary_logits_to_tokens(logits, n_codebook=1)
+        probs = (logit_tokens == self.vocab[None, None, :]).float()
+        return probs

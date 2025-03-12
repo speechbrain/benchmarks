@@ -125,11 +125,12 @@ class TernaryPredictionHead(torch.nn.Module):
     num_positions : int
         the number of positions
     """
-    def __init__(self, d_model, num_positions, d_hidden=512):
+    def __init__(self, d_model, num_positions, d_hidden=512, norm=False):
         super().__init__()
         self.num_positions = num_positions
         self.d_model = d_model
         self.num_positions = num_positions
+        self.norm = torch.nn.LayerNorm(d_model) if norm else torch.nn.Identity()
         self.lin_hidden = Linear(
             input_size=d_model,
             n_neurons=d_hidden,
@@ -163,6 +164,7 @@ class TernaryPredictionHead(torch.nn.Module):
             p[:, :, :, 2] corresponds to 1
         """
         batch_size, max_len, _ = x.shape
+        x = self.norm(x)
         x = self.lin_hidden(x)
         x = self.act(x)
         x = self.lin_p(x)

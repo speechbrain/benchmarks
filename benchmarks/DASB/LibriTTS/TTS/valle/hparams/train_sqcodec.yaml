@@ -71,7 +71,7 @@ batch_size: 16
 valid_inter_data_count: 50
 valid_batch_size: !ref <batch_size>
 grad_accumulation_factor: 1
-max_grad_norm: 1.0
+max_grad_norm: 0.01
 sorting: random
 num_workers: 4
 skip_prep: False
@@ -155,12 +155,14 @@ sample_dataloader_opts:
 ####################### Model parameters ###########################
 # Transformer
 d_model: 1024 # @orion_step1: --d_model~"choices([512, 768, 1024])"
+ternary_d_hidden: 128
 share_emb: False
 qk_norm: True
 nhead: 16
 num_layers_ar: 12 # @orion_step1: --num_layers_ar~"choices([6, 9, 12])"
 num_layers_nar: 12 # @orion_step1: --num_layers_nar~"choices([6, 9, 12])"
 dropout: 0.2
+target_dropout: 0.2
 vocab_size: 19683
 audio_emb_freeze: False
 audio_emb_pretrained: False
@@ -177,7 +179,6 @@ model_vocab_size: !ref <vocab_size> * 2
 audio_token_shift: 19683
 audio_tokens_per_step: 4
 ternary_num_digits: 10
-ternary_emb_hidden_size: 512
 pred_mode: ternary
 
 # Model Settings
@@ -198,6 +199,7 @@ model: !new:model.valle.ValleLM # yamllint disable-line rule:line-length
     nar_layer: !ref <num_layers_nar>
     n_ctx: !ref <n_ctx>
     dropout: !ref <dropout>
+    target_dropout: !ref <target_dropout>
     share_emb: !ref <share_emb>
     qk_norm: !ref <qk_norm>
     lm_head: !ref <lm_head>
@@ -217,7 +219,9 @@ lm_head: !apply:speechbrain.utils.hparams.choice
     choices:
         ternary: !new:model.custom_model.TernaryPredictionHead
             d_model: !ref <d_model>
+            d_hidden: !ref <ternary_d_hidden>
             num_positions: !ref <ternary_num_digits>
+            norm: False
         tokens: null
 
 logits_to_probs: !apply:speechbrain.utils.hparams.choice
@@ -231,12 +235,8 @@ logits_to_probs: !apply:speechbrain.utils.hparams.choice
 emb: !new:speechbrain.nnet.containers.Sequential
     ternary: !new:model.sq_codec.TernaryEmbedding
         num_digits: !ref <ternary_num_digits>    
-    hidden: !new:speechbrain.nnet.linear.Linear
-        input_size: !ref <ternary_num_digits>
-        n_neurons: !ref <ternary_emb_hidden_size>
-    act: !new:torch.nn.LeakyReLU
     linear: !new:speechbrain.nnet.linear.Linear
-        input_size: !ref <ternary_emb_hidden_size>
+        input_size: !ref <ternary_num_digits>
         n_neurons: !ref <d_model>
 
 tokenizer: !new:utils.tokenizer_interface.SQCodecTokenizer

@@ -164,12 +164,6 @@ class TernaryPredictionHead(torch.nn.Module):
         """
         batch_size, max_len, _ = x.shape
         x = self.norm(x)
-        if self.use_emb:
-            positions = torch.arange(
-                self.num_positions,
-                device=x.device
-            )[None, None, :]
-            x = x[:, :, None, :] + self.emb(positions)
         x = self.lin_hidden(x)
         x = self.act(x)
         p = self.lin_p(x)

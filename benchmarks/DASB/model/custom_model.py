@@ -125,11 +125,10 @@ class TernaryPredictionHead(torch.nn.Module):
     num_positions : int
         the number of positions
     """
-    def __init__(self, d_model, num_positions, d_hidden=512, norm=False):
+    def __init__(self, d_model, num_positions, d_hidden=512, norm=True):
         super().__init__()
         self.num_positions = num_positions
         self.d_model = d_model
-        self.num_positions = num_positions
         self.norm = torch.nn.LayerNorm(d_model) if norm else torch.nn.Identity()
         self.lin_hidden = Linear(
             input_size=d_model,
@@ -165,10 +164,16 @@ class TernaryPredictionHead(torch.nn.Module):
         """
         batch_size, max_len, _ = x.shape
         x = self.norm(x)
+        if self.use_emb:
+            positions = torch.arange(
+                self.num_positions,
+                device=x.device
+            )[None, None, :]
+            x = x[:, :, None, :] + self.emb(positions)
         x = self.lin_hidden(x)
         x = self.act(x)
-        x = self.lin_p(x)
-        p = x.reshape(batch_size, max_len, self.num_positions, 3)
+        p = self.lin_p(x)
+        p = p.reshape(batch_size, max_len, self.num_positions, 3)
         return p
 
 
@@ -211,8 +216,8 @@ class TernaryLogitTokenizer(torch.nn.Module):
             token_logits_raw = torch.where(
                 self.vocab_ternary[:, None, None, :, :, None] == self.idx,
                 chunk,
-                1 - chunk
-            ).prod(-1).prod(-1)
+                1.
+            ).prod(-1).log().sum(-1).exp()
             token_logits_raw_sum = token_logits_raw.sum(-1, keepdim=True)
             token_logits_chunks.append((token_logits_raw / token_logits_raw_sum).squeeze(2))
         token_logits = torch.cat(

@@ -1290,9 +1290,10 @@ class TernaryEmbedding(nn.Module):
     ---------
     num_digits : int
         The number of ternary digits"""
-    def __init__(self, num_digits):
+    def __init__(self, num_digits, emb_size=512, flat=False):
         super().__init__()
         self.num_digits = num_digits
+        self.flat = flat
 
     def forward(self, tokens):
         """Computes the forward pass
@@ -1309,7 +1310,10 @@ class TernaryEmbedding(nn.Module):
         batch_size, max_len, tracks = tokens.shape
         emb = tokens_to_ternary(tokens, D=self.num_digits).float()
         positions = emb.size(-1)
-        emb = emb.reshape(batch_size, max_len, tracks, positions // tracks)
+        if self.flat:
+            emb = emb.unsqueeze(-2)
+        else:
+            emb = emb.reshape(batch_size, max_len, tracks, positions // tracks)
         if squeeze:
             emb = emb.squeeze(-2)
         return emb

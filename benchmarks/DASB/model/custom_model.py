@@ -188,29 +188,32 @@ class TernaryLogitTokenizer(torch.nn.Module):
         top_k sampling with k > 1
         
     """
-    def __init__(self, num_positions, num_tokens=None, chunk_size=10, mode="probability"):
+    def __init__(self, num_positions, num_tokens=None, num_tracks=4, chunk_size=10):
         super().__init__()
         self.num_positions = num_positions
         if num_tokens is None:
             num_tokens = 3 ** num_positions
         self.num_tokens = num_tokens
+        self.num_tracks = num_tracks
         self.chunk_size = chunk_size
-        self.mode = mode
         self.register_buffer("vocab", torch.arange(num_tokens))
         self.register_buffer("vocab_ternary", tokens_to_ternary(self.vocab[None, None, None, :], D=num_positions) + 1)
         self.register_buffer("idx", torch.arange(3)[None, None, None, None, :])
 
     def forward(self, logits):
-        if self.mode == "argmax":
-            return self._probs_argmax(logits)
-        logits_unsq = logits.softmax(-1).unsqueeze(-3).unsqueeze(-3)
-        chunks = logits_unsq.chunk(dim=1, chunks=math.ceil(logits_unsq.size(1) / self.chunk_size))
+        batch_size, max_len, num_positions, _ = logits.shape
+        logits = logits.softmax(-1)
+        logits = logits.reshape(batch_size, max_len, self.num_tracks, 1, num_positions // self.num_tracks, 3)
+        chunks = logits.chunk(
+            dim=1,
+            chunks=math.ceil(logits.size(1) / self.chunk_size)
+        )
         token_logits_chunks = []
         for chunk in chunks:
             token_logits_raw = torch.where(
                 self.vocab_ternary[:, None, None, :, :, None] == self.idx,
                 chunk,
-                1.
+                torch.ones_like(chunk)
             ).prod(-1).log().sum(-1).exp()
             token_logits_raw_sum = token_logits_raw.sum(-1, keepdim=True)
             token_logits_chunks.append((token_logits_raw / token_logits_raw_sum).squeeze(2))
@@ -219,8 +222,3 @@ class TernaryLogitTokenizer(torch.nn.Module):
             dim=1
         )
         return token_logits
-
-    def _probs_argmax(self, logits):
-        logit_tokens = ternary_logits_to_tokens(logits, n_codebook=1)
-        probs = (logit_tokens == self.vocab[None, None, :]).float()
-        return probs

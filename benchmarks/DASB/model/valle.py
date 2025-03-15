@@ -307,6 +307,9 @@ class ValleLM(nn.Module):
         )
         modality_index = prev_tok.flatten()
         mask = modality_index_to_mask(modality_index, opts)
+        tracks = prefix.size(-1)
+        if opts.nq == 1 and tracks > 1:
+            prev_tok = prev_tok.unsqueeze(-1).expand(1, 1, tracks)
         mask_cache = []
         modality_tokens = torch.tensor(
             list(opts.masks.keys()), device=prefix.device
@@ -314,11 +317,13 @@ class ValleLM(nn.Module):
 
         for step in range(maxlen):
             #  (3.2) AR loop
-            prev_emb = self.emb(prev_tok)  # [B, 1, D]
+            prev_emb = self.emb(prev_tok).squeeze(2)  # [B, 1, D]
             h_ar = self.ar_decoder(prev_emb, kv_cache=cache)
             logits = self.logits_to_probs(self.apply_lm_head(h_ar, 0))  # [B, 1, V]
+            if logits.dim() < 4:
+                logits = logits.unsqueeze(-2)
             gen_tok, gen_score = logits_to_tokens(
-                logits.unsqueeze(2),
+                logits,
                 opts,
                 mask,
                 allow_eos=step >= minlen,
@@ -408,23 +413,24 @@ class ValleLM(nn.Module):
         start_token = torch.tensor(
             [opts.start], device=prefix.device
         )[None, None, :]
-        start_emb = self.emb(start_token).squeeze().tile(
-            len(valid_idx), 1, 1
-        )  # [B, 1, D]
-        prev_emb = torch.cat(
-            [prefix_emb[:, 1:], start_emb, self.emb(prev_tok)], dim=1
-        )  # [B, T, D]
-
-        ones = torch.ones_like(valid_idx)
-        mask = length_to_mask(prefix.size(1) + finish_idx + 1).bool()
-        mask = mask.unsqueeze(1).unsqueeze(1)
-        generated = {"token": [], "score": []}
-
-        mask_cache = [mask_cache[0]] * prefix.size(1) + mask_cache
-        vocab_mask = torch.cat(mask_cache, dim=1)
 
         # (4.2) NAR loop
         if self.nq > 1:
+            start_emb = self.emb(start_token).squeeze().tile(
+                len(valid_idx), 1, 1
+            )  # [B, 1, D]
+            prev_emb = torch.cat(
+                [prefix_emb[:, 1:], start_emb, self.emb(prev_tok)], dim=1
+            )  # [B, T, D]
+
+            ones = torch.ones_like(valid_idx)
+            mask = length_to_mask(prefix.size(1) + finish_idx + 1).bool()
+            mask = mask.unsqueeze(1).unsqueeze(1)
+            generated = {"token": [], "score": []}
+
+            mask_cache = [mask_cache[0]] * prefix.size(1) + mask_cache
+            vocab_mask = torch.cat(mask_cache, dim=1)
+
             for step in range(1, opts.nq):
                 h_nar = self.nar_decoder(
                     prev_emb, ones * step - 1, mask=mask
@@ -469,8 +475,11 @@ class ValleLM(nn.Module):
 
         gen_tokens_list, gen_scores_list = [], []
         for b in range(len(valid_idx)):
-            gen_tokens_list.append(gen_tokens[b][: finish_idx[b]])
-            gen_scores_list.append(gen_scores[b][: finish_idx[b]])
+            item_finish_idx = finish_idx[b]
+            if len(item_finish_idx) > 1:
+                item_finish_idx = item_finish_idx[0]
+            gen_tokens_list.append(gen_tokens[b][:item_finish_idx])
+            gen_scores_list.append(gen_scores[b][:item_finish_idx])
 
         return gen_tokens_list, gen_scores_list
     

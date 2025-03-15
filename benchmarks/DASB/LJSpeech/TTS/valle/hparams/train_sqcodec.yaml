@@ -98,7 +98,7 @@ text_max_length: 500
 n_ctx: !ref <max_audio_length> + <text_max_length>
 infer_max_audio_length: !ref <max_audio_length>
 max_length_ratio: 10.0
-top_k: 1
+top_k: 20
 debug_infer_max_audio_length: 10
 
 # Label encoder
@@ -170,8 +170,8 @@ model_vocab_size: !ref <vocab_size> * 2
 audio_token_shift: 19683
  
 audio_tokens_per_step: 4
+flatten: true
 ternary_num_digits: 10
-ternary_tokenizer_mode: argmax
 pred_mode: ternary
 freeze_lm_head: False
 
@@ -180,7 +180,7 @@ freeze_lm_head: False
 
 model: !new:model.valle.ValleLM # yamllint disable-line rule:line-length
     vocab_size: !ref <model_vocab_size>
-    nq: !ref <audio_tokens_per_step>
+    nq: 1
     att_unit: !ref <d_model>
     head: !ref <nhead>
     ar_layer: !ref <num_layers_ar>
@@ -199,7 +199,7 @@ inference_opts: !name:model.valle.SpeechLMInferenceOptions
     eos: !ref <eos_index>
     minlenratio: 1.0
     maxlenratio: !ref <max_length_ratio>
-    nq: !ref <audio_tokens_per_step>
+    nq: 1
     top_k: !ref <top_k>
 
 lm_head: !apply:speechbrain.utils.hparams.choice
@@ -207,7 +207,7 @@ lm_head: !apply:speechbrain.utils.hparams.choice
     choices:
         ternary: !new:model.custom_model.TernaryPredictionHead
             d_model: !ref <d_model>
-            num_positions: !ref <ternary_num_digits>
+            num_positions: !ref <ternary_num_digits> * <audio_tokens_per_step>
         tokens: null
 
 logits_to_probs: !apply:speechbrain.utils.hparams.choice
@@ -216,15 +216,15 @@ logits_to_probs: !apply:speechbrain.utils.hparams.choice
         ternary: !new:model.custom_model.TernaryLogitTokenizer
             num_tokens: !ref <model_vocab_size>
             num_positions: !ref <ternary_num_digits>
-            mode: !ref <ternary_tokenizer_mode>
         tokens: !new:torch.nn.Identity
 
 
 emb: !new:speechbrain.nnet.containers.Sequential
     ternary: !new:model.sq_codec.TernaryEmbedding
         num_digits: !ref <ternary_num_digits>
+        flat: True
     linear: !new:speechbrain.nnet.linear.Linear
-        input_size: !ref <ternary_num_digits>
+        input_size: !ref <ternary_num_digits> * <audio_tokens_per_step>
         n_neurons: !ref <d_model>
 
 tokenizer: !new:utils.tokenizer_interface.SQCodecTokenizer

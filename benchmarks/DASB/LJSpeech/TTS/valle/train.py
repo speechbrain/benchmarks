@@ -157,7 +157,10 @@ class VALLEBrain(sb.Brain):
 
         if self.train_ar:
             logits_ar_sm = self.hparams.log_softmax(logits_ar)
-            targets_ar = prompt[:, 1:, 0]
+            if self.hparams.flatten:
+                targets_ar = prompt[:, 1:]
+            else:
+                targets_ar = prompt[:, 1:, 0]
             loss_ar = self.hparams.compute_cost(
                 logits_ar_sm, targets=targets_ar, mask=mask
             )

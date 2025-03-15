@@ -276,7 +276,7 @@ class VALLEBrain(sb.Brain):
             else self.modules.model.lm_head
         )
         lm_head.requires_grad_(True)
-        if self.hparams.audio_tokens_per_step == 1:
+        if self.hparams.audio_tokens_per_step == 1 or self.hparams.flatten:
             # NOTE: If there is only one track it's autoregressive
             self.train_nar = False
         elif self.hparams.number_of_epochs_ar is not None and epoch <= self.hparams.number_of_epochs_ar:

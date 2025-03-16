@@ -350,7 +350,11 @@ class ValleLM(nn.Module):
             if torch.any(modality_change_mask):
                 modality_index = torch.where(
                     modality_change_mask, prev_tok[:, 0], modality_index,
-                )
+                ).flatten().squeeze()
+                if modality_index.dim() == 0:
+                    modality_index = modality_index.unsqueeze(0)
+                if modality_index.size(0) > 1:
+                    modality_index = modality_index[0:1]
                 mask = modality_index_to_mask(modality_index, opts)
                 logging.warning(
                     f"Step {step}: change modality index {modality_index}"

@@ -186,6 +186,7 @@ audio_token_shift: !apply:speechbrain.utils.hparams.choice
         phonemes: !ref <phn_num_tokens> + <special_num_tokens>
 
 audio_tokens_per_step: 2
+flatten: false
 
 # Model Settings
 model_type: 24khz

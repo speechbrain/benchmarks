@@ -160,7 +160,10 @@ class VALLEBrain(sb.Brain):
 
         if self.train_ar:
             logits_ar_sm = self.hparams.log_softmax(logits_ar)
-            targets_ar = prompt[:, 1:, 0]
+            if self.hparams.flatten:
+                targets_ar = prompt[:, 1:]
+            else:
+                targets_ar = prompt[:, 1:, 0]
             loss_ar = self.hparams.compute_cost(
                 logits_ar_sm, targets=targets_ar, mask=mask
             )
@@ -288,11 +291,11 @@ class VALLEBrain(sb.Brain):
             else self.modules.model.lm_head
         )
         lm_head.requires_grad_(True)
-        if self.hparams.audio_tokens_per_step == 1:
+        if self.hparams.audio_tokens_per_step == 1 or self.hparams.flatten:
             # NOTE: If there is only one track it's autoregressive
             self.train_nar = False
         elif self.hparams.number_of_epochs_ar is not None and epoch <= self.hparams.number_of_epochs_ar:
-            self.train_nar = False                
+            self.train_nar = False
         elif (
             self.hparams.number_of_epochs_nar is not None
             and epoch <= (self.hparams.number_of_epochs_ar + self.hparams.number_of_epochs_nar)

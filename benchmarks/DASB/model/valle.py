@@ -308,7 +308,8 @@ class ValleLM(nn.Module):
         modality_index = prev_tok.flatten()
         mask = modality_index_to_mask(modality_index, opts)
         tracks = prefix.size(-1)
-        if opts.nq == 1 and tracks > 1:
+        is_flattened = opts.nq == 1 and tracks > 1
+        if is_flattened:
             prev_tok = prev_tok.unsqueeze(-1).expand(1, 1, tracks)
         mask_cache = []
         modality_tokens = torch.tensor(
@@ -342,7 +343,10 @@ class ValleLM(nn.Module):
 
             # (3.3) detect modality swtich
             mask_cache.append(mask.clone())
-            modality_change_mask = torch.isin(prev_tok[:, 0], modality_tokens)
+            mod_tok = prev_tok[:, 0]
+            if is_flattened:
+                mod_tok = mod_tok[:, 0]
+            modality_change_mask = torch.isin(mod_tok, modality_tokens)
             # Note: The ESPNET VALL-E had
             # modality_change_mask = torch.logical_and(
             #    prev_tok[:, 0] >= 32, prev_tok[:, 0] < 64,
@@ -484,7 +488,9 @@ class ValleLM(nn.Module):
                 item_finish_idx = item_finish_idx[0]
             gen_tokens_list.append(gen_tokens[b][:item_finish_idx])
             gen_scores_list.append(gen_scores[b][:item_finish_idx])
-
+        if is_flattened:
+            gen_tokens_list = [item.squeeze(-2) for item in gen_tokens_list]
+            gen_scores_list = [item.squeeze(-2) for item in gen_scores_list]
         return gen_tokens_list, gen_scores_list
     
     def apply_lm_head(self, x, track):

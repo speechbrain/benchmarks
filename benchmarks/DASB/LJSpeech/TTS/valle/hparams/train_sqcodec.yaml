@@ -148,6 +148,7 @@ token_model_kwargs:
 ####################### Model parameters ###########################
 # Transformer
 d_model: 1024 # @orion_step1: --d_model~"choices([512, 768, 1024])"
+ternary_d_hidden: 512
 share_emb: False
 qk_norm: True
 nhead: 16
@@ -207,6 +208,7 @@ lm_head: !apply:speechbrain.utils.hparams.choice
     choices:
         ternary: !new:model.custom_model.TernaryPredictionHead
             d_model: !ref <d_model>
+            d_hidden: !ref <ternary_d_hidden>
             num_positions: !ref <ternary_num_digits> * <audio_tokens_per_step>
         tokens: null
 

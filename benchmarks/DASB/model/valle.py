@@ -310,7 +310,7 @@ class ValleLM(nn.Module):
         tracks = prefix.size(-1)
         is_flattened = opts.nq == 1 and tracks > 1
         if is_flattened:
-            prev_tok = prev_tok.unsqueeze(-1).expand(1, 1, tracks)
+            prev_tok = prev_tok.expand(1, tracks)
         mask_cache = []
         modality_tokens = torch.tensor(
             list(opts.masks.keys()), device=prefix.device
@@ -318,6 +318,8 @@ class ValleLM(nn.Module):
 
         for step in range(maxlen):
             #  (3.2) AR loop
+            if is_flattened:
+                prev_tok = prev_tok.unsqueeze(1)
             prev_emb = self.emb(prev_tok).squeeze(2)  # [B, 1, D]
             h_ar = self.ar_decoder(prev_emb, kv_cache=cache)
             logits = self.logits_to_probs(self.apply_lm_head(h_ar, 0))  # [B, 1, V]
@@ -331,7 +333,7 @@ class ValleLM(nn.Module):
                 nq_level=0,
             )
             # [B, 1, 1] -> [B, 1]
-            gen_tok, gen_score = gen_tok.squeeze(2), gen_score.squeeze(2)
+            gen_tok, gen_score = gen_tok.squeeze(1), gen_score.squeeze(1)
 
             generated["token"].append(gen_tok)
             generated["score"].append(gen_score)
@@ -343,10 +345,7 @@ class ValleLM(nn.Module):
 
             # (3.3) detect modality swtich
             mask_cache.append(mask.clone())
-            mod_tok = prev_tok[:, 0]
-            if is_flattened:
-                mod_tok = mod_tok[:, 0]
-            modality_change_mask = torch.isin(mod_tok, modality_tokens)
+            modality_change_mask = torch.isin(prev_tok[:, 0], modality_tokens)
             # Note: The ESPNET VALL-E had
             # modality_change_mask = torch.logical_and(
             #    prev_tok[:, 0] >= 32, prev_tok[:, 0] < 64,
@@ -484,13 +483,8 @@ class ValleLM(nn.Module):
         gen_tokens_list, gen_scores_list = [], []
         for b in range(len(valid_idx)):
             item_finish_idx = finish_idx[b]
-            if len(item_finish_idx) > 1:
-                item_finish_idx = item_finish_idx[0]
             gen_tokens_list.append(gen_tokens[b][:item_finish_idx])
             gen_scores_list.append(gen_scores[b][:item_finish_idx])
-        if is_flattened:
-            gen_tokens_list = [item.squeeze(-2) for item in gen_tokens_list]
-            gen_scores_list = [item.squeeze(-2) for item in gen_scores_list]
         return gen_tokens_list, gen_scores_list
     
     def apply_lm_head(self, x, track):

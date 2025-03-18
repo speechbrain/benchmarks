@@ -23,11 +23,13 @@ from speechbrain.dataio.dataio import (
     length_to_mask,
     write_audio,
 )
+from speechbrain.dataio.dataloader import LoopedLoader
 from speechbrain.utils.data_utils import pad_right_to
 from speechbrain.utils.distributed import run_on_main
 from speechbrain.utils.data_utils import batch_pad_right
 from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
 from functools import partial
+from torch.utils.data import DataLoader
 import re
 import string
 
@@ -648,11 +650,14 @@ class VALLEBrain(sb.Brain):
                 "Test only mode, skipping training and validation stages."
             )
             return
-
+        if not (
+            isinstance(train_set, DataLoader)
+            or isinstance(train_set, LoopedLoader)
+        ):        
+            train_set = self.make_dataloader(
+                train_set, stage=sb.Stage.TRAIN, **train_loader_kwargs
+            )
         self.on_fit_start()
-        train_set = self.make_dataloader(
-            train_set, stage=sb.Stage.TRAIN, **train_loader_kwargs
-        )
         epoch = self.hparams.epoch_counter.current
         if epoch < self.hparams.number_of_epochs:
             valid_set = sample_dataset(
@@ -892,7 +897,6 @@ def dataio_prepare(hparams):
         raise NotImplementedError(
             "sorting must be random, ascending or descending"
         )
-
     return datasets, resample_fn
 
 

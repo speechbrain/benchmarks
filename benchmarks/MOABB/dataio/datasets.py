@@ -301,9 +301,6 @@ class RawEEGDataset(DynamicItemDataset):
         def _load_raw(fpath: str):
             raw = self._read_raw_bids_cached(fpath, preload)
 
-            if self.ica_processor is not None:
-                raw = self.ica_processor.process(raw, fpath)
-
             yield raw.info
             yield raw
 

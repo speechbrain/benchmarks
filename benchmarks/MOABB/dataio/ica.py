@@ -83,20 +83,26 @@ class ICAProcessor:
         ica.save(ica_path)
         return ica
 
-    def process(
-        self, raw: mne.io.RawArray, raw_path: Union[str, Path]
-    ) -> mne.io.RawArray:
-        """Process raw data with ICA, computing or loading from cache."""
+    @property
+    def dynamic_item(self):
+        @takes("raw", "fpath")
+        @provides("raw", "ica_path")
+        def process(
+            raw: mne.io.RawArray, fpath: Union[str, Path]
+        ):
+            """Process raw data with ICA, computing or loading from cache."""
 
-        ica_path = self.get_ica_path(raw_path)
+            ica_path = self.get_ica_path(fpath)
 
-        if not ica_path.exists():
-            ica = self.compute_ica(raw, ica_path)
-        else:
-            ica = mne.preprocessing.read_ica(ica_path, verbose="ERROR")
+            if not ica_path.exists():
+                ica = self.compute_ica(raw, ica_path)
+            else:
+                ica = mne.preprocessing.read_ica(ica_path, verbose="ERROR")
 
-        # Create a copy of the raw data before applying ICA
-        raw_ica = raw.copy()
-        ica.apply(raw_ica)
+            # Create a copy of the raw data before applying ICA
+            raw_ica = raw.copy()
+            ica.apply(raw_ica)
 
-        return raw_ica
+            yield raw_ica
+            yield ica_path
+        return process

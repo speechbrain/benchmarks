@@ -174,7 +174,11 @@ input_num_tokens: !apply:speechbrain.utils.hparams.choice
         text: !ref <text_num_tokens>
         phonemes: !ref <phn_num_tokens>
 
-model_vocab_size:  !ref <text_num_tokens> + <vocab_size> + <special_num_tokens>
+model_vocab_size: !apply:speechbrain.utils.hparams.choice
+    value: !ref <input>
+    choices:
+        text: !ref <text_num_tokens> + <vocab_size> + <special_num_tokens>
+        phonemes: !ref <phn_num_tokens> + <vocab_size> + <special_num_tokens>
 audio_token_shift: !apply:speechbrain.utils.hparams.choice
     value: !ref <input>
     choices:

@@ -1339,7 +1339,12 @@ class TernaryEmbedding(nn.Module):
             tokens = tokens.unsqueeze(-1)
         batch_size, max_len, tracks = tokens.shape
         tokens = self._shift(tokens)
-        emb = tokens_to_ternary(tokens, D=self.num_digits).float()
+        if self.hybrid:
+            # Note: Yes, text tokens will be "floored" but 
+            emb_tokens = (tokens - self.hybrid_cutoff).clip(0)
+        else:
+            emb_tokens = tokens
+        emb = tokens_to_ternary(emb_tokens, D=self.num_digits).float()
         if self.hybrid:
             emb = self._hybrid_emb(emb, tokens)
         positions = emb.size(-1)

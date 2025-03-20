@@ -230,16 +230,24 @@ lm_head: !new:model.custom_model.MultitrackPredictionHead
 
 logits_to_probs: !new:torch.nn.Identity
 
-ternary_emb_shift:  4
+ternary_emb_shift: 4
+ternary_emb_hybrid: false
 
 emb: !new:speechbrain.nnet.containers.Sequential
     ternary: !new:model.sq_codec.TernaryEmbedding
         num_digits: !ref <ternary_num_digits>
         shift: !ref <ternary_emb_shift>
         shift_cutoff: !ref <audio_token_shift>
+        hybrid: !ref <ternary_emb_hybrid>
+        hybrid_cutoff: !ref <audio_token_shift>
+        hybrid_size: !ref <ternary_num_digits> * <audio_tokens_per_step>
         flat: True
     linear: !new:speechbrain.nnet.linear.Linear
-        input_size: !ref <ternary_num_digits> * <audio_tokens_per_step>
+        input_size: !apply:speechbrain.utils.hparams.choice
+            value: !ref <ternary_emb_hybrid>
+            choices:
+                true: !ref <ternary_num_digits> * <audio_tokens_per_step> * 2
+                false: !ref <ternary_num_digits> * <audio_tokens_per_step>
         n_neurons: !ref <d_model>
 
 tokenizer: !new:utils.tokenizer_interface.SQCodecTokenizer

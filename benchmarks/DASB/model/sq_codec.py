@@ -1294,18 +1294,36 @@ class TernaryEmbedding(nn.Module):
         The number of digits to "shift" embeddings by.
         This is needed when text and special tokens are concatenated
     shift_cutoff : int
-
+        The shifted tokens
     flat : bool
         Where to enable "flat" embeddings (e.g. multiple codebooks "flattened")
     """
-    def __init__(self, num_digits, shift=None, shift_cutoff=None, flat=False):
+    def __init__(
+            self,
+            num_digits,
+            shift=None,
+            shift_cutoff=None,
+            hybrid=False,
+            hybrid_cutoff=None,
+            hybrid_size=None,
+            flat=False):
         super().__init__()
         self.num_digits = num_digits
+        if hybrid:
+            shift = None
         self.shift = shift
         if shift_cutoff is None and shift:
             shift_cutoff = 3**shift
         self.shift_cutoff = shift_cutoff
+        if hybrid and not flat:
+            raise ValueError(
+                "Hybrid embeddings are currently supported"
+                "only for flattened mode")
         self.flat = flat
+        self.hybrid = hybrid
+        self.hybrid_cutoff = hybrid_cutoff
+        if hybrid:
+            self.emb = torch.nn.Embedding(hybrid_cutoff + 1, hybrid_size)
 
     def forward(self, tokens):
         """Computes the forward pass
@@ -1322,6 +1340,8 @@ class TernaryEmbedding(nn.Module):
         batch_size, max_len, tracks = tokens.shape
         tokens = self._shift(tokens)
         emb = tokens_to_ternary(tokens, D=self.num_digits).float()
+        if self.hybrid:
+            emb = self._hybrid_emb(emb, tokens)
         positions = emb.size(-1)
         if self.flat:
             emb = emb.unsqueeze(-2)
@@ -1330,6 +1350,22 @@ class TernaryEmbedding(nn.Module):
         if squeeze:
             emb = emb.squeeze(-2)
         return emb
+
+    def _hybrid_emb(self, emb, tokens):
+        batch_size, max_len, tracks = tokens.shape
+        hybrid_emb = torch.cat(
+            [
+                self.emb(tokens[:, :, 0].clip(max=self.hybrid_cutoff)),
+                torch.where(
+                    (tokens[:, :, 0] < self.hybrid_cutoff).unsqueeze(-1),
+                    torch.ones(batch_size, max_len, emb.size(-1)) * -1,
+                    emb
+                )
+            ],
+            dim=-1
+
+        )
+        return hybrid_emb
 
     def _shift(self, tokens):
         if not self.shift:

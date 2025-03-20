@@ -1363,7 +1363,7 @@ class TernaryEmbedding(nn.Module):
                 self.emb(tokens[:, :, 0].clip(max=self.hybrid_cutoff)),
                 torch.where(
                     (tokens[:, :, 0] < self.hybrid_cutoff).unsqueeze(-1),
-                    torch.ones(batch_size, max_len, emb.size(-1)) * -1,
+                    torch.ones(batch_size, max_len, emb.size(-1), device=tokens.device) * -1,
                     emb
                 )
             ],

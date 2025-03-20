@@ -166,6 +166,7 @@ class VALLEBrain(sb.Brain):
                 targets_ar = prompt[:, 1:]
             else:
                 targets_ar = prompt[:, 1:, 0]
+
             loss_ar = self.hparams.compute_cost(
                 logits_ar_sm, targets=targets_ar, mask=mask
             )

@@ -1289,10 +1289,22 @@ class TernaryEmbedding(nn.Module):
     Arguments
     ---------
     num_digits : int
-        The number of ternary digits"""
-    def __init__(self, num_digits, emb_size=512, flat=False):
+        The number of ternary digits
+    shift : int
+        The number of digits to "shift" embeddings by.
+        This is needed when text and special tokens are concatenated
+    shift_cutoff : int
+
+    flat : bool
+        Where to enable "flat" embeddings (e.g. multiple codebooks "flattened")
+    """
+    def __init__(self, num_digits, shift=None, shift_cutoff=None, flat=False):
         super().__init__()
         self.num_digits = num_digits
+        self.shift = shift
+        if shift_cutoff is None and shift:
+            shift_cutoff = 3**shift
+        self.shift_cutoff = shift_cutoff
         self.flat = flat
 
     def forward(self, tokens):
@@ -1308,6 +1320,7 @@ class TernaryEmbedding(nn.Module):
             squeeze = True
             tokens = tokens.unsqueeze(-1)
         batch_size, max_len, tracks = tokens.shape
+        tokens = self._shift(tokens)
         emb = tokens_to_ternary(tokens, D=self.num_digits).float()
         positions = emb.size(-1)
         if self.flat:
@@ -1317,6 +1330,18 @@ class TernaryEmbedding(nn.Module):
         if squeeze:
             emb = emb.squeeze(-2)
         return emb
+
+    def _shift(self, tokens):
+        if not self.shift:
+            return tokens
+        shift_multiplier = 3**self.shift
+        shift_offset = shift_multiplier - 1
+        tokens_shift = torch.where(
+            tokens < self.shift_cutoff,
+            tokens,
+            (tokens - self.shift_cutoff) * shift_multiplier + shift_offset
+        )
+        return tokens_shift
 
 
 def decimal_to_ternary_matrix(decimals, D):

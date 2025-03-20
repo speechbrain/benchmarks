@@ -174,16 +174,21 @@ input_num_tokens: !apply:speechbrain.utils.hparams.choice
         text: !ref <text_num_tokens>
         phonemes: !ref <phn_num_tokens>
 
-model_vocab_size:  !ref <text_num_tokens> + <vocab_size> + <special_num_tokens>
-audio_token_shift: !apply:speechbrain.utils.hparams.choice
-    value: !ref <input>
+model_vocab_size: !apply:speechbrain.utils.hparams.choice
+    value: <pred_mode>
     choices:
-        text: !ref <text_num_tokens> + <special_num_tokens>
-        phonemes: !ref <phn_num_tokens> + <special_num_tokens>
+        ternary: !ref <vocab_size> * 2
+        tokens: !ref <text_num_tokens> + <vocab_size> + <special_num_tokens>
+
+audio_token_shift: !apply:speechbrain.utils.hparams.choice
+    value: <pred_mode>
+    choices:
+        ternary: 19683
+        tokens: !ref <input_num_tokens> + <special_num_tokens>
 
 audio_tokens_per_step: 4
 flatten: true
-ternary_num_digits: 14
+ternary_num_digits: 10
 pred_mode: ternary
 
 # Model Settings
@@ -219,20 +224,18 @@ inference_opts: !name:model.valle.SpeechLMInferenceOptions
     nq: 1
     top_k: !ref <top_k>
 
-lm_head: !new:model.custom_model.MultitrackPredictionHead
+lm_head: !new:model.custom_model.TernaryPredictionHead
     d_model: !ref <d_model>
-    num_tracks: !ref <audio_tokens_per_step>
-    vocab_size: !ref <model_vocab_size>
+    d_hidden: !ref <ternary_d_hidden>
+    num_positions: !ref <ternary_num_digits> * <audio_tokens_per_step>
 
-logits_to_probs: !new:torch.nn.Identity
-
-ternary_emb_shift:  4
+logits_to_probs: !new:model.custom_model.TernaryLogitTokenizer
+    num_tokens: !ref <model_vocab_size>
+    num_positions: !ref <ternary_num_digits>
 
 emb: !new:speechbrain.nnet.containers.Sequential
     ternary: !new:model.sq_codec.TernaryEmbedding
         num_digits: !ref <ternary_num_digits>
-        shift: !ref <ternary_emb_shift>
-        shift_cutoff: !ref <audio_token_shift>
         flat: True
     linear: !new:speechbrain.nnet.linear.Linear
         input_size: !ref <ternary_num_digits> * <audio_tokens_per_step>
@@ -243,6 +246,7 @@ tokenizer: !new:utils.tokenizer_interface.SQCodecTokenizer
     checkpoint: !ref <checkpoint>
     config: !ref <config>
 
+
 modules:
     model: !ref <model>
     tokenizer: !ref <tokenizer>
@@ -252,7 +256,9 @@ opt_class: !name:torch.optim.AdamW
     lr: !ref <lr>
     betas: !ref <betas>
 
-compute_cost: !name:model.valle.masked_nll_loss
+compute_cost: !name:model.sq_codec.ternary_loss
+    targets_type: tokens
+    num_positions: !ref <ternary_num_digits>
 
 log_softmax: !new:speechbrain.nnet.activations.Softmax
     apply_log: True

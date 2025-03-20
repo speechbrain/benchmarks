@@ -1221,10 +1221,14 @@ def masked_nll_loss(
     log_probabilities, targets = truncate(
         log_probabilities, targets, allowed_len_diff
     )
-    log_probabilities = log_probabilities.transpose(1, -1)
+    dims = [0, log_probabilities.dim() - 1] + list(range(1, log_probabilities.dim() - 1))
+    log_probabilities = log_probabilities.permute(dims).contiguous()
     loss = torch.nn.functional.nll_loss(
         input=log_probabilities, target=targets.long(), reduction="none"
     )
+    while mask.dim() < loss.dim():
+        mask = mask.unsqueeze(-1)
+    mask = mask.expand_as(loss)
     loss *= mask
     loss = reduce_loss(loss, mask, reduction, 0.0, log_probabilities, targets)
-    return loss
+    return loss.contiguous()

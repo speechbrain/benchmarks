@@ -171,6 +171,47 @@ class TernaryPredictionHead(torch.nn.Module):
         return p
 
 
+class MultitrackPredictionHead(torch.nn.Module):
+    """An alternative prediction head that predicts multiple
+    tracks of tokens simultaneously
+    
+    Arguments
+    ---------
+    d_model : int
+        The model dimension
+    num_tracks: int
+        The number of tracks
+    vocab_size : int
+        The vocabulary size
+    """
+    def __init__(self, d_model, num_tracks, vocab_size):
+        super().__init__()
+        self.num_tracks = num_tracks
+        self.vocab_size = vocab_size
+        self.lin = Linear(
+            input_size=d_model,
+            n_neurons=num_tracks * vocab_size
+        )
+
+    def forward(self, x):
+        """Computes the forward pass
+        
+        Arguments
+        ---------
+        x : torch.Tensor
+            the input
+        Returns
+        -------
+        result : torch.Tensor
+            a result of shape (Batch x Length x Tracks x Tokens)
+        """
+        batch_size, max_len, _ = x.shape
+        x = self.lin(x)
+        x = x.reshape(batch_size, max_len, self.num_tracks, self.vocab_size)
+        return x
+
+
+
 class TernaryLogitTokenizer(torch.nn.Module):
     """Converts ternary logits to probabilities
 

@@ -1,0 +1,64 @@
+# ############################################################################
+# Auido Tokenizer: FairSEQ HuBERT
+# Extraction: Librispeech 960h
+# Authors: Jarod Duret 2024
+# ############################################################################
+# Seed needs to be set at top of yaml, before objects with parameters are made
+
+seed: 1986
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+output_folder: !ref results/fairseq-hubert
+save_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/extraction_log.txt
+
+# Data files
+data_folder: !PLACEHOLDER  # e.g., /path/to/LibriSpeech
+train_splits: ["train-clean-100"] #, "train-clean-360", "train-other-500"
+dev_splits: ["dev-clean"]
+test_splits: ["test-clean", "test-other"]
+skip_prep: False
+train_json: !ref <output_folder>/train.json
+valid_json: !ref <output_folder>/dev-clean.json
+test_json: !ref <output_folder>/test.json
+
+
+batch_size: 8
+num_workers: 8
+src_key: wav
+id_key: id
+
+# Dataloader options
+dataloader_opts:
+  batch_size: !ref <batch_size>
+  shuffle: True
+  num_workers: !ref <num_workers>
+
+model_path: !PLACEHOLDER
+feature_extractor_path: !ref <model_path>/mhubert_base_25hz_cp_mls_cv_sp_fisher.pt
+kmeans_path: !ref <model_path>/mhubert_base_25hz_cp_mls_cv_sp_fisher_L11_km500.bin
+vocab_size: 500
+save_embedding: False
+skip_resample: False
+
+
+### Config for Tokenizer
+# Layer number should be among the supported layers for discrete SSL models(kmenas  model should be available for that layer)
+layer: 11
+num_codebooks: 1
+deduplicate: [False, False, False, False, False, False]
+bpe_tokenizer_path: [null, null, null, null, null, null]
+sample_rate: 16000
+encoder_dim: 1024
+
+tokenizer: !new:utils.tokenizer_interface.FairseqHuBERTTokenizer
+  feat_extractor_path: !ref <feature_extractor_path>
+  km_path: !ref <kmeans_path>
+  layer: !ref <layer>
+  vocoder: null
+
+tokens_extractor: !new:utils.tokens.TokensExtractor
+  tokenizer: !ref <tokenizer>
+  sample_rate: !ref <sample_rate>
+  src_key: !ref <src_key>
+  id_key: !ref <id_key>
+  dataloader_opts: !ref <dataloader_opts>

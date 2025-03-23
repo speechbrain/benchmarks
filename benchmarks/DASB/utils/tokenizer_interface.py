@@ -23,12 +23,15 @@ from speechbrain.lobes.models.discrete.wavtokenizer import WavTokenizer
 from speechbrain.lobes.models.huggingface_transformers.mimi import Mimi
 from speechbrain.utils.superpowers import run_shell
 from speechbrain.utils.fetching import fetch
+from model.fairseq_hubert import FairseqHuBERT
 from torch import nn
 import logging
 import shlex
 import yaml
 
 logger = logging.getLogger(__name__)
+
+    
 
 base_dir = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
@@ -629,3 +632,26 @@ class ESPNetEncodecInterface(BaseTokenizer, nn.Module):
         raise ValueError(
             "ESPNet Encodec does not have any trainable quantizer or embedding since it uses scalar quantization."
         )
+
+
+class FairseqHuBERTTokenizer(FairseqHuBERT, BaseTokenizer):
+    def __init__(self, *args, **kwargs):
+        FairseqHuBERT.__init__(self, *args, **kwargs)
+        BaseTokenizer.__init__(self)
+
+    @torch.no_grad()
+    def sig_to_tokens(self, signal, lengths, num_codebooks=None, **kwargs):
+        self.eval()
+        tokens = self.encode(signal)
+        return tokens.unsqueeze(0).permute(0, 2, 1)
+
+    @torch.no_grad()
+    def tokens_to_sig(self, tokens, **kwargs):
+        return self.decode(tokens.permute(0, 2, 1)).unsqueeze(0)
+
+    @torch.no_grad()
+    def get_pretrained_embeddings(
+        self, vocab_size=None, num_codebooks=None, **kwargs
+    ):
+        raise NotImplementedError("Fairseq HuBERT does not support embeddings")
+

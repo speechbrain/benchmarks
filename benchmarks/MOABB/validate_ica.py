@@ -32,7 +32,8 @@ def test_ica_method(method: str, n_components: int = 15, **kwargs):
         tmax=4.0,
         preload=True,
         output_keys=["label", "subject", "session", "epoch"],
-        ica_processor=ica_processor,
+        #ica_processor=ica_processor,
+        dynamic_items=[ica_processor.dynamic_item]
     )
 
     # First run - ICA computation
@@ -136,7 +137,8 @@ def profile_memory_usage():
             tmax=4.0,
             preload=True,
             output_keys=["label", "subject", "session", "epoch"],
-            ica_processor=ica_processor,
+            #ica_processor=ica_processor,
+            dynamic_items=[ica_processor.dynamic_item]
         )
 
         for _ in dataset:

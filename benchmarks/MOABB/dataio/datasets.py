@@ -97,12 +97,12 @@ class RawEEGDataset(DynamicItemDataset):
         data,
         preload=False,
         verbose=None,
-        ica_processor: Optional[ICAProcessor] = None,
+        #ica_processor: Optional[ICAProcessor] = None,
         dynamic_items=(),
         output_keys=(),
     ):
         self.verbose = verbose
-        self.ica_processor = ica_processor
+        #self.ica_processor = ica_processor
         dynamic_items = [self._make_load_raw_dynamic_item(preload)] + list(
             dynamic_items
         )

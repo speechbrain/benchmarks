@@ -10,6 +10,7 @@ import mne
 from mne.preprocessing import ICA
 from mne_bids import get_bids_path_from_fname
 
+from speechbrain.utils.data_pipeline import provides, takes
 
 class ICAProcessor:
     """Handles ICA computation and application for EEG data.

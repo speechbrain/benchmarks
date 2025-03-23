@@ -91,8 +91,10 @@ class ICAProcessor:
         if self.use_hash:
             param_hash = self._get_params_hash()
             folder_name = f"ica-{self.method}-{param_hash}"
+            desc = f"ica{param_hash}"
         else:
             folder_name = f"ica{self.method}"
+            desc = f"ica"
 
         # For derivatives, you can put them in a derivatives folder:
         bids_path.root = bids_path.root / ".." / "derivatives" / folder_name
@@ -100,7 +102,7 @@ class ICAProcessor:
         bids_path.update(
             suffix="eeg",  # override or confirm suffix
             extension=".fif",
-            description="ica",  # <-- This sets a desc=ica entity
+            description=desc,  # <-- This sets a desc=ica entity
             check=True,  # If you do not want BIDSPath to fail on derivative checks
         )
         # Make sure the folder is created

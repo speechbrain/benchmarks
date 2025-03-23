@@ -90,10 +90,8 @@ class ICAProcessor:
         if self.use_hash:
             param_hash = self._get_params_hash()
             folder_name = f"ica-{self.method}-{param_hash}"
-            # desc = f"ica{self.method}"
         else:
             folder_name = f"ica{self.method}"
-            # desc = f"ica-{self.method}"
 
         # For derivatives, you can put them in a derivatives folder:
         bids_path.root = bids_path.root / ".." / "derivatives" / folder_name

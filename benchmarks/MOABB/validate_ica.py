@@ -19,50 +19,48 @@ from dataio.ica import ICAProcessor
 mne.set_log_level(verbose=False)
 moabb.set_log_level(level="ERROR")
 
+
 # Configure logging
 def setup_logging():
     """Set up logging to both file and console."""
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
     log_file = log_dir / f"ica_benchmark_{timestamp}.log"
-    
+
     # Configure logging format
-    formatter = logging.Formatter('%(asctime)s - %(message)s')
-    
+    formatter = logging.Formatter("%(asctime)s - %(message)s")
+
     # File handler
     file_handler = logging.FileHandler(log_file)
     file_handler.setFormatter(formatter)
-    
+
     # Console handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
-    
+
     # Set up logger
-    logger = logging.getLogger('ICA_benchmark')
+    logger = logging.getLogger("ICA_benchmark")
     logger.setLevel(logging.INFO)
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-    
+
     return logger
+
 
 logger = setup_logging()
 
+
 def test_ica_method(
-    method: str, 
-    n_components: int = 15, 
-    use_hash: bool = True,
-    **kwargs
+    method: str, n_components: int = 15, use_hash: bool = True, **kwargs
 ):
     """Test a specific ICA method and return timing results."""
     logger.info(f"\nTesting ICA method: {method} (use_hash={use_hash})")
-    
+
     start = time.time()
     ica_processor = ICAProcessor(
-        n_components=n_components,
-        method=method,
-        use_hash=use_hash,
-        **kwargs
+        n_components=n_components, method=method, use_hash=use_hash, **kwargs
     )
     time_init = time.time() - start
     logger.info(f"Time to create processor: {time_init:.4f}s")
@@ -76,7 +74,7 @@ def test_ica_method(
         tmax=4.0,
         preload=True,
         output_keys=["label", "subject", "session", "epoch"],
-        dynamic_items=[ica_processor.dynamic_item]
+        dynamic_items=[ica_processor.dynamic_item],
     )
     time_create = time.time() - start
     logger.info(f"Time to create dataset: {time_create:.2f}s")
@@ -170,12 +168,16 @@ def compare_ica_methods():
     logger.info(f"Baseline (no ICA): {baseline_time:.2f}s")
     logger.info("-" * 70)
     for result in results:
-        logger.info(f"Method: {result['method']} (use_hash={result['use_hash']})")
+        logger.info(
+            f"Method: {result['method']} (use_hash={result['use_hash']})"
+        )
         logger.info(f"  Initialization time: {result['init_time']:.4f}s")
         logger.info(f"  Dataset creation time: {result['create_time']:.2f}s")
         logger.info(f"  Computation time: {result['computation_time']:.2f}s")
         logger.info(f"  Cached access time: {result['cached_time']:.2f}s")
-        logger.info(f"  In-memory cached time: {result['memory_cached_time']:.2f}s")
+        logger.info(
+            f"  In-memory cached time: {result['memory_cached_time']:.2f}s"
+        )
         logger.info("-" * 70)
 
 
@@ -200,7 +202,7 @@ def profile_memory_usage():
                 tmax=4.0,
                 preload=True,
                 output_keys=["label", "subject", "session", "epoch"],
-                dynamic_items=[ica_processor.dynamic_item]
+                dynamic_items=[ica_processor.dynamic_item],
             )
 
             for _ in dataset:

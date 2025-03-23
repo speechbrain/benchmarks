@@ -32,6 +32,7 @@ class ICAProcessor:
         See mne.preprocessing.ICA for details.
     filter_params : dict | None
         Parameters for the high-pass filter applied before ICA.
+        Set to None to skip filtering if data is already filtered.
         Defaults to {'l_freq': 1.0, 'h_freq': None}
     """
 
@@ -131,10 +132,19 @@ class ICAProcessor:
         return saved_metadata == current_metadata
 
     def compute_ica(self, raw: mne.io.RawArray, ica_path: Path) -> ICA:
-        """Compute ICA solution and save to disk."""
-        # High-pass filter for ICA
-        raw_filtered = raw.copy()
-        raw_filtered.filter(**self.filter_params)
+        """Compute ICA solution and save to disk.
+
+        If filter_params is provided, applies a high-pass filter before ICA computation.
+        This step can be skipped if the data is already filtered by setting
+        filter_params to None during ICAProcessor initialization.
+        """
+        if self.filter_params is not None:
+            # Apply high-pass filter only if filter parameters are provided
+            raw_filtered = raw.copy()
+            raw_filtered.filter(**self.filter_params)
+        else:
+            # Use raw data directly if no filtering is needed
+            raw_filtered = raw
 
         ica = ICA(
             n_components=self.n_components,

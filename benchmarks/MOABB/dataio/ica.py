@@ -14,6 +14,7 @@ from mne_bids import get_bids_path_from_fname
 
 from speechbrain.utils.data_pipeline import provides, takes
 
+
 class ICAProcessor:
     """Handles ICA computation and application for EEG data.
 
@@ -55,13 +56,15 @@ class ICAProcessor:
         # Select critical parameters that affect the ICA computation
         # not accessible from ICA object for standarization
         critical_params = {
-            'n_components': self.n_components,
-            'method': self.method,
-            'filter_params': self.filter_params
+            "n_components": self.n_components,
+            "method": self.method,
+            "filter_params": self.filter_params,
         }
         # Create a deterministic string representation and hash it
         param_str = json.dumps(critical_params, sort_keys=True)
-        return hashlib.md5(param_str.encode()).hexdigest()[:8]  # First 8 chars are enough
+        return hashlib.md5(param_str.encode()).hexdigest()[
+            :8
+        ]  # First 8 chars are enough
 
     def get_ica_metadata(self) -> Dict:
         """ Generate metadata dictionary for the ICA parameters. """
@@ -70,7 +73,7 @@ class ICAProcessor:
             "method": self.method,
             "random_state": self.random_state,
             "filter_params": self.filter_params,
-            "fit_params": self.fit_params
+            "fit_params": self.fit_params,
         }
 
     def get_ica_path(self, raw_path: Union[str, Path]) -> tuple[Path, Path]:
@@ -87,15 +90,13 @@ class ICAProcessor:
         if self.use_hash:
             param_hash = self._get_params_hash()
             folder_name = f"ica-{self.method}-{param_hash}"
-            desc = f"ica{self.method}"
+            # desc = f"ica{self.method}"
         else:
             folder_name = f"ica{self.method}"
-            desc = f"ica-{self.method}"
+            # desc = f"ica-{self.method}"
 
         # For derivatives, you can put them in a derivatives folder:
-        bids_path.root = (
-            bids_path.root / ".." / "derivatives" / folder_name
-        )
+        bids_path.root = bids_path.root / ".." / "derivatives" / folder_name
         # Keep the same base entities:
         bids_path.update(
             suffix="eeg",  # override or confirm suffix
@@ -107,7 +108,7 @@ class ICAProcessor:
         bids_path.fpath.parent.mkdir(parents=True, exist_ok=True)
 
         ica_path = bids_path.fpath
-        metadata_path = ica_path.with_suffix('.json')
+        metadata_path = ica_path.with_suffix(".json")
 
         return ica_path, metadata_path
 
@@ -115,19 +116,19 @@ class ICAProcessor:
         """Save ICA solution and metadata to disk."""
         # Save ICA solution
         ica.save(ica_path, overwrite=True)
-        
+
         # Save metadata
-        with metadata_path.open('w') as f:
+        with metadata_path.open("w") as f:
             json.dump(self.get_ica_metadata(), f)
 
     def check_ica_metadata(self, metadata_path: Path) -> bool:
         """Check if existing ICA metadata matches current parameters."""
         if not metadata_path.exists():
             return False
-            
+
         with metadata_path.open() as f:
             saved_metadata = json.load(f)
-        
+
         current_metadata = self.get_ica_metadata()
         return saved_metadata == current_metadata
 
@@ -151,14 +152,12 @@ class ICAProcessor:
     def dynamic_item(self):
         @takes("raw", "fpath")
         @provides("raw", "ica_path")
-        def process(
-            raw: mne.io.RawArray, fpath: Union[str, Path]
-        ):
+        def process(raw: mne.io.RawArray, fpath: Union[str, Path]):
             """Process raw data with ICA, computing or loading from cache."""
 
             ica_path, metadata_path = self.get_ica_path(fpath)
 
-            if ica_path.exists() and self.check_ica_metadata(metadata_path): 
+            if ica_path.exists() and self.check_ica_metadata(metadata_path):
                 ica = mne.preprocessing.read_ica(ica_path, verbose="ERROR")
             else:
                 ica = self.compute_ica(raw, ica_path)
@@ -170,4 +169,5 @@ class ICAProcessor:
 
             yield raw_ica
             yield ica_path
+
         return process

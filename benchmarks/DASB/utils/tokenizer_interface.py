@@ -643,15 +643,15 @@ class FairseqHuBERTTokenizer(FairseqHuBERT, BaseTokenizer):
     def sig_to_tokens(self, signal, lengths, num_codebooks=None, **kwargs):
         self.eval()
         tokens = self.encode(signal)
-        return tokens.unsqueeze(0).permute(0, 2, 1)
+        tokens = tokens.unsqueeze(-1)
+        return tokens
 
     @torch.no_grad()
     def tokens_to_sig(self, tokens, **kwargs):
-        return self.decode(tokens.permute(0, 2, 1)).unsqueeze(0)
+        return self.decode(tokens.permute(0, 2, 1))
 
     @torch.no_grad()
     def get_pretrained_embeddings(
         self, vocab_size=None, num_codebooks=None, **kwargs
     ):
         raise NotImplementedError("Fairseq HuBERT does not support embeddings")
-

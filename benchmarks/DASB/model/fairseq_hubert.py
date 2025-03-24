@@ -1,6 +1,8 @@
 import joblib
 import torch
 import torch.nn.functional as F
+from speechbrain.utils.data_utils import batch_pad_right
+
 
 
 MIN_WAV_LEN = 720
@@ -43,7 +45,6 @@ class FairseqHuBERT(torch.nn.Module):
     def encode(self, x, wav_lens=None):
         if self.task.cfg.normalize:
             x = F.layer_norm(x, x.shape)
-        x = x.view(1, -1)
 
         feat = []
         for start in range(0, x.size(1), self.max_chunk):
@@ -59,13 +60,21 @@ class FairseqHuBERT(torch.nn.Module):
             feat.append(feat_chunk)
         feat = torch.cat(feat, 1).squeeze(0)
         dist = (
-            feat.pow(2).sum(1, keepdim=True)
+            feat.pow(2).sum(-1, keepdim=True)
             - 2 * torch.matmul(feat, self.C)
             + self.Cnorm
         )
-        return dist.argmin(dim=1).unsqueeze(0)
+        tokens = dist.argmin(dim=-1)
+        if tokens.dim() < 2:
+            tokens = tokens.unsqueeze(0)
+        return tokens
 
     def decode(self, tokens):
         if self.vocoder is None:
             raise ValueError("Vocoder is not set")
-        return self.vocoder(tokens, dur_prediction=True)
+        sig_items = [
+            self.vocoder(item, dur_prediction=True)
+            for item in tokens
+        ]
+        sig, _ = batch_pad_right(sig_items)
+        return sig

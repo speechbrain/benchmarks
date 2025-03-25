@@ -1324,6 +1324,7 @@ class TernaryEmbedding(nn.Module):
         self.hybrid_cutoff = hybrid_cutoff
         if hybrid:
             self.emb = torch.nn.Embedding(hybrid_cutoff + 1, hybrid_size)
+            torch.nn.init.uniform_(self.emb.weight, a=-1., b=1.)
 
     def forward(self, tokens):
         """Computes the forward pass

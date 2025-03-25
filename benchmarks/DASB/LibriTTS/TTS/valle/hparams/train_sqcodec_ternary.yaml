@@ -174,17 +174,13 @@ input_num_tokens: !apply:speechbrain.utils.hparams.choice
         text: !ref <text_num_tokens>
         phonemes: !ref <phn_num_tokens>
 
-model_vocab_size: !apply:speechbrain.utils.hparams.choice
-    value: <pred_mode>
-    choices:
-        ternary: !ref <vocab_size> * 2
-        tokens: !ref <text_num_tokens> + <vocab_size> + <special_num_tokens>
+model_vocab_size: !ref <text_num_tokens> + <vocab_size> + <special_num_tokens>
 
 audio_token_shift: !apply:speechbrain.utils.hparams.choice
-    value: <pred_mode>
+    value: !ref <input>
     choices:
-        ternary: 19683
-        tokens: !ref <input_num_tokens> + <special_num_tokens>
+        text: !ref <text_num_tokens> + <special_num_tokens>
+        phonemes: !ref <phn_num_tokens> + <special_num_tokens>
 
 audio_tokens_per_step: 4
 flatten: true
@@ -233,12 +229,24 @@ logits_to_probs: !new:model.custom_model.TernaryLogitTokenizer
     num_tokens: !ref <model_vocab_size>
     num_positions: !ref <ternary_num_digits>
 
+ternary_emb_shift: 4
+ternary_emb_hybrid: false
+
 emb: !new:speechbrain.nnet.containers.Sequential
     ternary: !new:model.sq_codec.TernaryEmbedding
         num_digits: !ref <ternary_num_digits>
+        shift: !ref <ternary_emb_shift>
+        shift_cutoff: !ref <audio_token_shift>
+        hybrid: !ref <ternary_emb_hybrid>
+        hybrid_cutoff: !ref <audio_token_shift>
+        hybrid_size: !ref <ternary_num_digits> * <audio_tokens_per_step>
         flat: True
     linear: !new:speechbrain.nnet.linear.Linear
-        input_size: !ref <ternary_num_digits> * <audio_tokens_per_step>
+        input_size: !apply:speechbrain.utils.hparams.choice
+            value: !ref <ternary_emb_hybrid>
+            choices:
+                true: !ref <ternary_num_digits> * <audio_tokens_per_step> * 2
+                false: !ref <ternary_num_digits> * <audio_tokens_per_step>
         n_neurons: !ref <d_model>
 
 tokenizer: !new:utils.tokenizer_interface.SQCodecTokenizer

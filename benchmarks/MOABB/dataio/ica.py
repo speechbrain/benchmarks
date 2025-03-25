@@ -56,7 +56,7 @@ class ICAProcessor:
         """Generate a short hash of the ICA parameters."""
         # Select critical parameters that affect the ICA computation
         # not accessible from ICA object for standarization
-        critical_params = {
+        base_params = {
             "n_components": self.n_components,
             "method": self.method,
             "filter_params": self.filter_params,

@@ -62,7 +62,7 @@ class ICAProcessor:
             "filter_params": self.filter_params,
         }
         # Create a deterministic string representation and hash it
-        param_str = json.dumps(critical_params, sort_keys=True)
+        param_str = json.dumps(base_params, sort_keys=True)
         return hashlib.md5(param_str.encode()).hexdigest()[
             :8
         ]  # First 8 chars are enough

@@ -22,7 +22,16 @@ moabb.set_log_level(level="ERROR")
 
 # Configure logging
 def setup_logging():
-    """Set up logging to both file and console."""
+    """Set up logging to both file and console.
+
+    The logs are written to a file in the 'logs' directory, with a timestamp
+    in the filename. The logs are also printed to the console.
+
+    Returns
+    -------
+    logging.Logger
+        The configured logger instance.
+    """
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_dir = Path("logs")
@@ -55,7 +64,28 @@ logger = setup_logging()
 def test_ica_method(
     method: str, n_components: int = 15, use_hash: bool = True, **kwargs
 ):
-    """Test a specific ICA method and return timing results."""
+    """Test a specific ICA method and return timing results.
+
+    This function creates an ICAProcessor, runs the EpochedEEGDataset with the
+    processor, and measures the time taken for various steps, including initial
+    ICA computation, caching, and in-memory caching.
+
+    Arguments
+    ---------
+    method : str
+        The ICA method to test, either 'picard' or 'infomax'.
+    n_components : int, optional
+        The number of ICA components to use, by default 15.
+    use_hash : bool, optional
+        Whether to use parameter hashing for caching, by default True.
+    **kwargs
+        Additional parameters to pass to the ICAProcessor constructor.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the timing results for the tested ICA method.
+    """
     logger.info(f"\nTesting ICA method: {method} (use_hash={use_hash})")
 
     start = time.time()
@@ -118,6 +148,12 @@ def test_ica_method(
 
 
 def compare_ica_methods():
+    """Compare the performance of different ICA methods.
+
+    This function tests the Picard and Infomax ICA methods, both with and without
+    parameter hashing for caching. It also tests the baseline performance without
+    any ICA processing. The results are logged to the console and the log file.
+    """
     # Test without ICA first as baseline
     logger.info("\nTesting without ICA (baseline):")
     dataset_no_ica = EpochedEEGDataset.from_moabb(
@@ -183,6 +219,11 @@ def compare_ica_methods():
 
 @profile
 def profile_memory_usage():
+    """Profile the memory usage of ICA processing.
+
+    This function runs the ICA processing for both Picard and Infomax methods,
+    with and without parameter hashing, and profiles the memory usage.
+    """
     # Profile memory usage for both methods with and without hash
     for method in ["picard", "infomax"]:
         for use_hash in [True, False]:
@@ -210,6 +251,10 @@ def profile_memory_usage():
 
 
 if __name__ == "__main__":
+    """Entry point for the ICA benchmark script.
+
+    Runs the ICA method comparison and the memory usage profiling.
+    """
     logger.info("Running ICA method comparison...")
     compare_ica_methods()
 

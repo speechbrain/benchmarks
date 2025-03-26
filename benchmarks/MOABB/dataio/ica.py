@@ -34,7 +34,7 @@ class ICAProcessor:
         Parameters for the high-pass filter applied before ICA.
         Set to None to skip filtering if data is already filtered.
         Defaults to {'l_freq': 1.0, 'h_freq': None}
-    
+
     Example
     -------
     >>> raw = mne.io.RawArray(data, info)  # Create some MNE raw data
@@ -158,7 +158,7 @@ class ICAProcessor:
 
     def save_ica(self, ica: ICA, ica_path: Path, metadata_path: Path):
         """Save ICA solution and metadata to disk.
-        
+
         Arguments
         ---------
         ica : mne.preprocessing.ICA
@@ -181,7 +181,7 @@ class ICAProcessor:
 
     def check_ica_metadata(self, metadata_path: Path) -> bool:
         """Check if existing ICA metadata matches current parameters.
-        
+
          Arguments
         ---------
         metadata_path : Path
@@ -259,6 +259,7 @@ class ICAProcessor:
                 - raw (mne.io.RawArray): The ICA-processed EEG data
                 - ica_path (Path): Path to the saved ICA solution
         """
+
         @takes("raw", "fpath")
         @provides("raw", "ica_path")
         def process(raw: mne.io.RawArray, fpath: Union[str, Path]):

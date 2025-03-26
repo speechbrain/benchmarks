@@ -34,6 +34,17 @@ class ICAProcessor:
         Parameters for the high-pass filter applied before ICA.
         Set to None to skip filtering if data is already filtered.
         Defaults to {'l_freq': 1.0, 'h_freq': None}
+    
+    Example
+    -------
+    >>> raw = mne.io.RawArray(data, info)  # Create some MNE raw data
+    >>> ica_processor = ICAProcessor(
+    ...     n_components=15,
+    ...     method="picard",
+    ...     fit_params={"max_iter": 500}
+    ... )
+    >>> # Use in a SpeechBrain pipeline
+    >>> pipeline.add_dynamic_item(ica_processor.dynamic_item)
     """
 
     def __init__(
@@ -53,7 +64,18 @@ class ICAProcessor:
         self.use_hash = use_hash
 
     def _get_params_hash(self) -> str:
-        """Generate a short hash of the ICA parameters."""
+        """Generate a short hash of the ICA parameters.
+
+        Arguments
+        ---------
+        None
+            Uses instance attributes n_components, method, and filter_params.
+
+        Returns
+        -------
+        str
+            8-character hexadecimal hash of the parameters.
+        """
         # Select critical parameters that affect the ICA computation
         # not accessible from ICA object for standarization
         base_params = {
@@ -68,7 +90,23 @@ class ICAProcessor:
         ]  # First 8 chars are enough
 
     def get_ica_metadata(self) -> Dict:
-        """ Generate metadata dictionary for the ICA parameters. """
+        """Generate metadata dictionary for the ICA parameters.
+
+        Arguments
+        ---------
+        None
+            Uses instance attributes.
+
+        Returns
+        -------
+        dict
+            Dictionary containing all ICA parameters:
+            - n_components
+            - method
+            - random_state
+            - filter_params
+            - fit_params
+        """
         return {
             "n_components": self.n_components,
             "method": self.method,
@@ -80,11 +118,16 @@ class ICAProcessor:
     def get_ica_path(self, raw_path: Union[str, Path]) -> tuple[Path, Path]:
         """Generate path where ICA solution should be stored.
 
-        Creates a derivatives folder to store ICA solutions, following BIDS conventions.
+        Arguments
+        ---------
+        raw_path : str | Path
+            Path to the raw data file.
+
         Returns
         -------
         tuple[Path, Path]
-            Returns (ica_path, metadata_path)
+            - Path to ICA solution file
+            - Path to metadata JSON file
         """
         bids_path = get_bids_path_from_fname(raw_path)
 
@@ -114,7 +157,21 @@ class ICAProcessor:
         return ica_path, metadata_path
 
     def save_ica(self, ica: ICA, ica_path: Path, metadata_path: Path):
-        """Save ICA solution and metadata to disk."""
+        """Save ICA solution and metadata to disk.
+        
+        Arguments
+        ---------
+        ica : mne.preprocessing.ICA
+            The ICA solution to save.
+        ica_path : Path
+            Path where to save the ICA solution.
+        metadata_path : Path
+            Path where to save the metadata JSON.
+
+        Returns
+        -------
+        None
+    """
         # Save ICA solution
         ica.save(ica_path, overwrite=True)
 
@@ -123,7 +180,19 @@ class ICAProcessor:
             json.dump(self.get_ica_metadata(), f)
 
     def check_ica_metadata(self, metadata_path: Path) -> bool:
-        """Check if existing ICA metadata matches current parameters."""
+        """Check if existing ICA metadata matches current parameters.
+        
+         Arguments
+        ---------
+        metadata_path : Path
+            Path to the metadata JSON file to check.
+
+        Returns
+        -------
+        bool
+            True if metadata exists and matches current parameters,
+            False otherwise.
+        """
         if not metadata_path.exists():
             return False
 
@@ -139,6 +208,18 @@ class ICAProcessor:
         If filter_params is provided, applies a high-pass filter before ICA computation.
         This step can be skipped if the data is already filtered by setting
         filter_params to None during ICAProcessor initialization.
+
+        Arguments
+        ---------
+        raw : mne.io.RawArray
+            The raw EEG data to process.
+        ica_path : Path
+            Path where to save the computed ICA solution.
+
+        Returns
+        -------
+        mne.preprocessing.ICA
+            The computed ICA solution.
         """
         if self.filter_params is not None:
             # Apply high-pass filter only if filter parameters are provided
@@ -162,49 +243,26 @@ class ICAProcessor:
     def dynamic_item(self):
         """Creates a dynamic pipeline item for ICA processing.
 
-        This property creates a function that can be used as a dynamic item in a
-        SpeechBrain pipeline. The function handles:
-        1. Loading or computing ICA solutions
-        2. Applying ICA to the raw data
-        3. Caching results to disk
-
-        The pipeline item:
-            Takes:
-                - raw (mne.io.RawArray): The raw EEG data
-                - fpath (Union[str, Path]): Path to the raw data file
-
-            Provides:
-                - raw (mne.io.RawArray): The ICA-processed EEG data
-                - ica_path (Path): Path to the saved ICA solution
+        Arguments
+        ---------
+        None
+            Uses instance methods and attributes.
 
         Returns
         -------
         callable
-            A function that can be used as a dynamic item in a SpeechBrain pipeline.
+            A function that:
+            Takes:
+                - raw (mne.io.RawArray): The raw EEG data
+                - fpath (Union[str, Path]): Path to the raw data file
+            Provides:
+                - raw (mne.io.RawArray): The ICA-processed EEG data
+                - ica_path (Path): Path to the saved ICA solution
         """
-
         @takes("raw", "fpath")
         @provides("raw", "ica_path")
         def process(raw: mne.io.RawArray, fpath: Union[str, Path]):
-            """Process raw data with ICA, computing or loading from cache.
-
-            Checks for existing ICA solution in cache. If found and valid, loads and
-            applies it. Otherwise, computes new ICA solution, saves it, and applies it.
-
-            Arguments
-            ---------
-            raw : mne.io.RawArray
-                The raw EEG data to process
-            fpath : Union[str, Path]
-                Path to the raw data file, used to generate cache paths
-
-            Yields
-            ------
-            mne.io.RawArray
-                The ICA-processed EEG data
-            Path
-                Path to the saved ICA solution
-            """
+            """Process raw data with ICA, computing or loading from cache."""
 
             ica_path, metadata_path = self.get_ica_path(fpath)
 

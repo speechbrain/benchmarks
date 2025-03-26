@@ -161,33 +161,34 @@ class ICAProcessor:
     @property
     def dynamic_item(self):
         """Creates a dynamic pipeline item for ICA processing.
-    
-        This property creates a function that can be used as a dynamic item in a 
+
+        This property creates a function that can be used as a dynamic item in a
         SpeechBrain pipeline. The function handles:
         1. Loading or computing ICA solutions
         2. Applying ICA to the raw data
         3. Caching results to disk
-        
+
         The pipeline item:
             Takes:
                 - raw (mne.io.RawArray): The raw EEG data
                 - fpath (Union[str, Path]): Path to the raw data file
-                
+
             Provides:
                 - raw (mne.io.RawArray): The ICA-processed EEG data
                 - ica_path (Path): Path to the saved ICA solution
-        
+
         Returns
         -------
         callable
             A function that can be used as a dynamic item in a SpeechBrain pipeline.
         """
+
         @takes("raw", "fpath")
         @provides("raw", "ica_path")
         def process(raw: mne.io.RawArray, fpath: Union[str, Path]):
             """Process raw data with ICA, computing or loading from cache.
 
-                Checks for existing ICA solution in cache. If found and valid, loads and 
+            Checks for existing ICA solution in cache. If found and valid, loads and
             applies it. Otherwise, computes new ICA solution, saves it, and applies it.
 
             Arguments

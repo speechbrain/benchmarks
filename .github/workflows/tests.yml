@@ -32,6 +32,8 @@ jobs:
                   pip install uv
                   uv pip install --system -r requirements.txt
                   cd benchmarks/MOABB && uv pip install --system -r extra-requirements.txt
+            - name: Upgrade pytest to a version compatible with Python 3.11
+              run: pip install --upgrade pytest
             - name: Display Python version
               run: python -c "import sys; print(sys.version)"
             - name: Consistency tests with pytest

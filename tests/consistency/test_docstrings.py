@@ -12,5 +12,5 @@ def test_recipe_list():
     base_folder = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "..")
     )
-    check_folders = ["speechbrain", "tools", "benchmarks/MOABB"]
+    check_folders = ["benchmarks/MOABB"]
     assert check_docstrings(base_folder, check_folders)

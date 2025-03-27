@@ -30,8 +30,13 @@ jobs:
             - name: Full dependencies
               run: |
                   pip install uv
+                  git submodule update --init --recursive
+                  cd speechbrain
                   uv pip install --system -r requirements.txt
-                  cd benchmarks/MOABB && uv pip install --system -r extra-requirements.txt
+                  uv pip install --system -e .
+                  cd ../benchmarks/MOABB
+                  uv pip install --system -r ../../requirements.txt
+                  uv pip install --system -r extra-requirements.txt
             - name: Display Python version
               run: python -c "import sys; print(sys.version)"
             - name: Consistency tests with pytest

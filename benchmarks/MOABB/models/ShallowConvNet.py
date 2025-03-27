@@ -13,6 +13,7 @@ class Square(torch.nn.Module):
     """Layer for squaring activations."""
 
     def forward(self, x):
+        """Apply the square."""
         return torch.square(x)
 
 
@@ -20,11 +21,14 @@ class Log(torch.nn.Module):
     """Layer to compute log of activations."""
 
     def forward(self, x):
+        """Apply the log with epsilon clipping."""
         return torch.log(torch.clamp(x, min=1e-6))
 
 
 class ShallowConvNet(torch.nn.Module):
     """ShallowConvNet.
+
+    Fill here
 
     Arguments
     ---------

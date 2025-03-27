@@ -1,0 +1,44 @@
+# SpeechBrain Benchmark tests to ease continuous integration
+name: SpeechBrain Benchmark test
+
+# Runs on pushes to master and all pull requests
+on:    # yamllint disable-line rule:truthy
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches:
+            - '*' # all branches, including forks
+
+jobs:
+    tests:
+        name: Tests
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                python-version: [3.11] # python 3.12 is not working for some strange reason
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/cache@v4
+              id: cache-uv
+              with:
+                  path: ~/.cache/uv
+                  key: ${{ runner.os }}-python-${{ matrix.python-version }}-uv
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v5
+              with:
+                  python-version: ${{ matrix.python-version }}
+            - name: Full dependencies
+              run: |
+                  pip install uv
+                  git submodule update --init --recursive
+                  cd speechbrain
+                  uv pip install --system -r requirements.txt
+                  uv pip install --system -e .
+                  cd ../benchmarks/MOABB
+                  uv pip install --system -r ../../requirements.txt
+                  uv pip install --system -r extra-requirements.txt
+            - name: Display Python version
+              run: python -c "import sys; print(sys.version)"
+            - name: Consistency tests with pytest
+              run: |
+                  pytest tests

@@ -1251,6 +1251,8 @@ if __name__ == "__main__":
 
     # Load evaluation hyperparameters
     eval_hparams_file = Path(hparams_file).parent / "eval.yaml"
+    if not eval_hparams_file.exists():
+        eval_hparams_file = Path(__file__).parent / "hparams" / "eval.yaml"
     if eval_hparams_file.exists():
         logger.info(
             "Using evaluation hyperparameters from %s", eval_hparams_file

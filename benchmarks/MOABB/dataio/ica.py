@@ -60,7 +60,7 @@ class ICAProcessor:
         self.n_components = n_components
         self.method = method
         self.random_state = random_state
-        self.fit_params = fit_params or {}
+        self._fit_params = fit_params or {}
         self.filter_params = filter_params or {"l_freq": 1.0, "h_freq": None}
         self.use_hash = use_hash
 
@@ -296,7 +296,7 @@ class ICAProcessor:
             n_components=self.n_components,
             method=self.method,
             random_state=self.random_state,
-            **self.fit_params,
+            **self._fit_params,
         )
         ica.fit(raw_filtered)
         ica.save(ica_path)

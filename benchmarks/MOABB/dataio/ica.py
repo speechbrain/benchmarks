@@ -55,17 +55,61 @@ class ICAProcessor:
         random_state=42,
         fit_params: Optional[Dict[str, Any]] = None,
         filter_params: Optional[Dict[str, Any]] = None,
-        use_hash: bool = True,
     ):
         self.n_components = n_components
         self.method = method
         self.random_state = random_state
         self._fit_params = fit_params or {}
         self.filter_params = filter_params or {"l_freq": 1.0, "h_freq": None}
-        self.use_hash = use_hash
+
+    def _get_effective_filter_params(self, raw: mne.io.RawArray) -> Dict:
+        """Determine effective filtering parameters considering both data and processing.
+
+        Arguments
+        ---------
+        raw : mne.io.RawArray
+            The raw EEG data.
+
+        Returns
+        -------
+        dict
+            Effective filter parameters considering both intrinsic and applied filters.
+        """
+        # Get the intrinsic highpass from the data
+        data_highpass = raw.info["highpass"]
+
+        # Determine effective highpass
+        if self.filter_params and "l_freq" in self.filter_params:
+            # If we're applying additional filtering, effective highpass is the higher value
+            effective_highpass = max(
+                data_highpass, self.filter_params["l_freq"]
+            )
+        else:
+            effective_highpass = data_highpass
+
+        # Similarly for lowpass
+        data_lowpass = raw.info["lowpass"]
+        if self.filter_params and "h_freq" in self.filter_params:
+            # For lowpass, take the lower value if we're applying additional filtering
+            effective_lowpass = (
+                min(data_lowpass, self.filter_params["h_freq"])
+                if self.filter_params["h_freq"]
+                else data_lowpass
+            )
+        else:
+            effective_lowpass = data_lowpass
+
+        return {
+            "effective_highpass": effective_highpass,
+            "effective_lowpass": effective_lowpass,
+            "original_data_highpass": data_highpass,
+            "original_data_lowpass": data_lowpass,
+            "additional_filtering": bool(self.filter_params),
+            "filter_params": self.filter_params,
+        }
 
     def _get_data_params(self, raw: mne.io.RawArray) -> Dict:
-        """Extract relevant parameters from raw.info.
+        """Extract relevant parameters from raw.info and processing.
 
         Arguments
         ---------
@@ -77,11 +121,14 @@ class ICAProcessor:
         dict
             Dictionary containing relevant data parameters.
         """
+        filter_info = self._get_effective_filter_params(raw)
+
         return {
-            "highpass": raw.info["highpass"],
-            "lowpass": raw.info["lowpass"],
+            "effective_highpass": filter_info["effective_highpass"],
+            "effective_lowpass": filter_info["effective_lowpass"],
             "sfreq": raw.info["sfreq"],
             "n_channels": len(raw.info["ch_names"]),
+            "filtering_applied": filter_info["additional_filtering"],
         }
 
     def _get_ica_params(self) -> Dict:
@@ -96,12 +143,12 @@ class ICAProcessor:
             "n_components": self.n_components,
             "method": self.method,
             "random_state": self.random_state,
-            "fit_params": self.fit_params,
+            "fit_params": self._fit_params,
             "filter_params": self.filter_params,
         }
 
     def _get_params_hash(self, raw: mne.io.RawArray) -> str:
-        """Generate hash based on both data and ICA parameters.
+        """Generate hash based on effective parameters.
 
         Arguments
         ---------
@@ -113,25 +160,28 @@ class ICAProcessor:
         str
             8-character hexadecimal hash of the parameters.
         """
-        # Only include parameters that affect the ICA computation
+        filter_info = self._get_effective_filter_params(raw)
+
         hash_params = {
             "data_params": {
-                "highpass": raw.info["highpass"],
-                "lowpass": raw.info["lowpass"],
+                "effective_highpass": filter_info["effective_highpass"],
+                "effective_lowpass": filter_info["effective_lowpass"],
                 "sfreq": raw.info["sfreq"],
                 "n_channels": len(raw.info["ch_names"]),
             },
             "ica_params": {
                 "n_components": self.n_components,
                 "method": self.method,
-                "filter_params": self.filter_params,
+                "random_state": self.random_state,
+                "fit_params": self._fit_params,
             },
+            "filter_params": filter_info["filter_params"],
         }
         param_str = json.dumps(hash_params, sort_keys=True)
         return hashlib.md5(param_str.encode()).hexdigest()[:8]
 
     def get_ica_metadata(self, raw: mne.io.RawArray) -> Dict:
-        """Generate complete metadata including both data and ICA parameters.
+        """Generate complete metadata including effective parameters.
 
         Arguments
         ---------
@@ -143,9 +193,12 @@ class ICAProcessor:
         dict
             Complete metadata dictionary.
         """
+        filter_info = self._get_effective_filter_params(raw)
+
         return {
             "data_params": self._get_data_params(raw),
             "ica_params": self._get_ica_params(),
+            "filter_info": filter_info,
             "metadata": {
                 "creation_date": datetime.now().isoformat(),
                 "raw_filename": str(raw.filenames[0])
@@ -174,13 +227,9 @@ class ICAProcessor:
         """
         bids_path = get_bids_path_from_fname(raw_path)
 
-        if self.use_hash:
-            param_hash = self._get_params_hash(raw)
-            folder_name = f"ica-{self.method}-{param_hash}"
-            desc = f"ica{param_hash}"
-        else:
-            folder_name = f"ica{self.method}"
-            desc = "ica"
+        param_hash = self._get_params_hash(raw)
+        folder_name = f"ica-{self.method}-{param_hash}"
+        desc = f"ica{param_hash}"
 
         # For derivatives, you can put them in a derivatives folder:
         bids_path.root = bids_path.root / ".." / "derivatives" / folder_name
@@ -266,11 +315,7 @@ class ICAProcessor:
         return True
 
     def compute_ica(self, raw: mne.io.RawArray, ica_path: Path) -> ICA:
-        """Compute ICA solution and save to disk.
-
-        If filter_params is provided, applies a high-pass filter before ICA computation.
-        This step can be skipped if the data is already filtered by setting
-        filter_params to None during ICAProcessor initialization.
+        """Compute ICA solution considering effective filtering.
 
         Arguments
         ---------
@@ -284,12 +329,13 @@ class ICAProcessor:
         mne.preprocessing.ICA
             The computed ICA solution.
         """
-        if self.filter_params is not None:
-            # Apply high-pass filter only if filter parameters are provided
+        filter_info = self._get_effective_filter_params(raw)
+
+        # Only apply additional filtering if needed
+        if filter_info["additional_filtering"]:
             raw_filtered = raw.copy()
             raw_filtered.filter(**self.filter_params)
         else:
-            # Use raw data directly if no filtering is needed
             raw_filtered = raw
 
         ica = ICA(
@@ -299,7 +345,6 @@ class ICAProcessor:
             **self._fit_params,
         )
         ica.fit(raw_filtered)
-        ica.save(ica_path)
         return ica
 
     @property

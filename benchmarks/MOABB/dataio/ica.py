@@ -44,7 +44,7 @@ class ICAProcessor:
     ...     fit_params={"max_iter": 500}
     ... )
     >>> # Use in a SpeechBrain pipeline
-    >>> pipeline.add_dynamic_item(ica_processor.dynamic_item)
+    >>> # Dynammic item to be used in pipeline: ica_processor.dynamic_item 
     """
 
     def __init__(

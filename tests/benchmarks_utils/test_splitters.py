@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
 import logging
-from pathlib import Path
 from functools import cache
 
 import mne
@@ -17,10 +16,8 @@ cached_create_filter = cache(mne.filter.create_filter)
 
 
 @pytest.fixture
-def dummy_dataset():
-    path = Path("~/mne_data/")
-
-    fake_dataset_folder = path / "MNE-BIDS-Fake"
+def dummy_dataset(tmp_path):
+    fake_dataset_folder = tmp_path / "MNE-BIDS-Fake"
 
     if not fake_dataset_folder.exists():
         fake_dataset_folder.mkdir(parents=True)
@@ -28,7 +25,7 @@ def dummy_dataset():
     dataset = EpochedEEGDataset.from_moabb(
         FakeDataset(n_sessions=2, n_runs=1, n_subjects=3, paradigm="imagery"),
         fake_dataset_folder / "MNE-BIDS-Fake.json",
-        save_path=path / "MNE-BIDS-Fake-Epoched",
+        save_path=tmp_path / "MNE-BIDS-Fake-Epoched",
         tmin=0,
         tmax=4.0,
         output_keys=["label", "subject", "session", "epoch"],

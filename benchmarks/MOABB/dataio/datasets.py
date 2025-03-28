@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from functools import cache
 from pathlib import Path
-from typing import Any, Hashable, Iterable, Optional, Self, TypedDict
+from typing import Any, Hashable, Iterable, Optional, TypedDict
 
 import mne
 import numpy as np
@@ -119,7 +119,7 @@ class RawEEGDataset(DynamicItemDataset):
         json_path: Path | str,
         subjects=None,
         **cls_kwargs,
-    ) -> Self:
+    ):
         """Creates a DynamicItemDataset from a BIDS EEG Dataset.
 
         Arguments
@@ -153,7 +153,7 @@ class RawEEGDataset(DynamicItemDataset):
         subjects=None,
         save_path: Optional[str] = None,
         **cls_kwargs,
-    ) -> Self:
+    ):
         """Creates a DynamicItemDataset from a MOABB Dataset.
 
         The MOABB dataset will be first converted to BIDS format, and
@@ -402,7 +402,7 @@ class EpochedEEGDataset(RawEEGDataset):
         subjects=None,
         save_path: str | None = None,
         **cls_kwargs,
-    ) -> Self:
+    ):
         if "tmin" not in cls_kwargs:
             cls_kwargs.update(tmin=0)
         if "tmax" not in cls_kwargs:

@@ -45,7 +45,7 @@ class ICAProcessor:
     ...     fit_params={"max_iter": 500}
     ... )
     >>> # Use in a SpeechBrain pipeline
-    >>> # Dynammic item to be used in pipeline: ica_processor.dynamic_item 
+    >>> # Dynammic item to be used in pipeline: ica_processor.dynamic_item
     """
 
     def __init__(
@@ -64,7 +64,6 @@ class ICAProcessor:
         self.filter_params = filter_params or {"l_freq": 1.0, "h_freq": None}
         self.use_hash = use_hash
 
-
     def _get_data_params(self, raw: mne.io.RawArray) -> Dict:
         """Extract relevant parameters from raw.info.
 
@@ -79,10 +78,10 @@ class ICAProcessor:
             Dictionary containing relevant data parameters.
         """
         return {
-            'highpass': raw.info['highpass'],
-            'lowpass': raw.info['lowpass'],
-            'sfreq': raw.info['sfreq'],
-            'n_channels': len(raw.info['ch_names']),
+            "highpass": raw.info["highpass"],
+            "lowpass": raw.info["lowpass"],
+            "sfreq": raw.info["sfreq"],
+            "n_channels": len(raw.info["ch_names"]),
         }
 
     def _get_ica_params(self) -> Dict:
@@ -94,11 +93,11 @@ class ICAProcessor:
             Dictionary containing ICA processing parameters.
         """
         return {
-            'n_components': self.n_components,
-            'method': self.method,
-            'random_state': self.random_state,
-            'fit_params': self.fit_params,
-            'filter_params': self.filter_params,
+            "n_components": self.n_components,
+            "method": self.method,
+            "random_state": self.random_state,
+            "fit_params": self.fit_params,
+            "filter_params": self.filter_params,
         }
 
     def _get_params_hash(self, raw: mne.io.RawArray) -> str:
@@ -116,17 +115,17 @@ class ICAProcessor:
         """
         # Only include parameters that affect the ICA computation
         hash_params = {
-            'data_params': {
-                'highpass': raw.info['highpass'],
-                'lowpass': raw.info['lowpass'],
-                'sfreq': raw.info['sfreq'],
-                'n_channels': len(raw.info['ch_names'])
+            "data_params": {
+                "highpass": raw.info["highpass"],
+                "lowpass": raw.info["lowpass"],
+                "sfreq": raw.info["sfreq"],
+                "n_channels": len(raw.info["ch_names"]),
             },
-            'ica_params': {
-                'n_components': self.n_components,
-                'method': self.method,
-                'filter_params': self.filter_params
-            }
+            "ica_params": {
+                "n_components": self.n_components,
+                "method": self.method,
+                "filter_params": self.filter_params,
+            },
         }
         param_str = json.dumps(hash_params, sort_keys=True)
         return hashlib.md5(param_str.encode()).hexdigest()[:8]
@@ -145,15 +144,19 @@ class ICAProcessor:
             Complete metadata dictionary.
         """
         return {
-            'data_params': self._get_data_params(raw),
-            'ica_params': self._get_ica_params(),
-            'metadata': {
-                'creation_date': datetime.now().isoformat(),
-                'raw_filename': str(raw.filenames[0]) if raw.filenames else None
-            }
+            "data_params": self._get_data_params(raw),
+            "ica_params": self._get_ica_params(),
+            "metadata": {
+                "creation_date": datetime.now().isoformat(),
+                "raw_filename": str(raw.filenames[0])
+                if raw.filenames
+                else None,
+            },
         }
 
-    def get_ica_path(self, raw: mne.io.RawArray, raw_path: Union[str, Path]) -> tuple[Path, Path]:
+    def get_ica_path(
+        self, raw: mne.io.RawArray, raw_path: Union[str, Path]
+    ) -> tuple[Path, Path]:
         """Generate path where ICA solution should be stored.
 
         Arguments
@@ -181,15 +184,12 @@ class ICAProcessor:
 
         # For derivatives, you can put them in a derivatives folder:
         bids_path.root = bids_path.root / ".." / "derivatives" / folder_name
-        
+
         # Keep the same base entities:
         bids_path.update(
-            suffix="eeg",
-            extension=".fif",
-            description=desc,
-            check=True,
+            suffix="eeg", extension=".fif", description=desc, check=True,
         )
-        
+
         # Make sure the folder is created
         bids_path.fpath.parent.mkdir(parents=True, exist_ok=True)
 
@@ -198,7 +198,13 @@ class ICAProcessor:
 
         return ica_path, metadata_path
 
-    def save_ica(self, ica: ICA, ica_path: Path, metadata_path: Path, raw: mne.io.RawArray):
+    def save_ica(
+        self,
+        ica: ICA,
+        ica_path: Path,
+        metadata_path: Path,
+        raw: mne.io.RawArray,
+    ):
         """Save ICA solution and metadata to disk.
 
         Arguments
@@ -224,7 +230,9 @@ class ICAProcessor:
         with metadata_path.open("w") as f:
             json.dump(metadata, f, indent=2)
 
-    def check_ica_metadata(self, raw: mne.io.RawArray, metadata_path: Path) -> bool:
+    def check_ica_metadata(
+        self, raw: mne.io.RawArray, metadata_path: Path
+    ) -> bool:
         """Check if existing ICA metadata matches current parameters.
 
         Arguments
@@ -247,12 +255,12 @@ class ICAProcessor:
 
         # Check data parameters
         current_data_params = self._get_data_params(raw)
-        if saved_metadata['data_params'] != current_data_params:
+        if saved_metadata["data_params"] != current_data_params:
             return False
 
         # Check ICA parameters
         current_ica_params = self._get_ica_params()
-        if saved_metadata['ica_params'] != current_ica_params:
+        if saved_metadata["ica_params"] != current_ica_params:
             return False
 
         return True
@@ -322,7 +330,9 @@ class ICAProcessor:
 
             ica_path, metadata_path = self.get_ica_path(raw, fpath)
 
-            if ica_path.exists() and self.check_ica_metadata(raw, metadata_path):
+            if ica_path.exists() and self.check_ica_metadata(
+                raw, metadata_path
+            ):
                 ica = mne.preprocessing.read_ica(ica_path, verbose="ERROR")
             else:
                 ica = self.compute_ica(raw, ica_path)

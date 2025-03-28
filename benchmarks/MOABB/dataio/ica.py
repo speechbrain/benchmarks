@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Union, Optional, Dict, Any
 import json
 import hashlib
+from datetime import datetime
 
 import mne
 from mne.preprocessing import ICA
@@ -63,63 +64,102 @@ class ICAProcessor:
         self.filter_params = filter_params or {"l_freq": 1.0, "h_freq": None}
         self.use_hash = use_hash
 
-    def _get_params_hash(self) -> str:
-        """Generate a short hash of the ICA parameters.
+
+    def _get_data_params(self, raw: mne.io.RawArray) -> Dict:
+        """Extract relevant parameters from raw.info.
 
         Arguments
         ---------
-        None
-            Uses instance attributes n_components, method, and filter_params.
+        raw : mne.io.RawArray
+            The raw EEG data.
+
+        Returns
+        -------
+        dict
+            Dictionary containing relevant data parameters.
+        """
+        return {
+            'highpass': raw.info['highpass'],
+            'lowpass': raw.info['lowpass'],
+            'sfreq': raw.info['sfreq'],
+            'n_channels': len(raw.info['ch_names']),
+        }
+
+    def _get_ica_params(self) -> Dict:
+        """Get ICA-specific processing parameters.
+
+        Returns
+        -------
+        dict
+            Dictionary containing ICA processing parameters.
+        """
+        return {
+            'n_components': self.n_components,
+            'method': self.method,
+            'random_state': self.random_state,
+            'fit_params': self.fit_params,
+            'filter_params': self.filter_params,
+        }
+
+    def _get_params_hash(self, raw: mne.io.RawArray) -> str:
+        """Generate hash based on both data and ICA parameters.
+
+        Arguments
+        ---------
+        raw : mne.io.RawArray
+            The raw EEG data.
 
         Returns
         -------
         str
             8-character hexadecimal hash of the parameters.
         """
-        # Select critical parameters that affect the ICA computation
-        # not accessible from ICA object for standarization
-        base_params = {
-            "n_components": self.n_components,
-            "method": self.method,
-            "filter_params": self.filter_params,
+        # Only include parameters that affect the ICA computation
+        hash_params = {
+            'data_params': {
+                'highpass': raw.info['highpass'],
+                'lowpass': raw.info['lowpass'],
+                'sfreq': raw.info['sfreq'],
+                'n_channels': len(raw.info['ch_names'])
+            },
+            'ica_params': {
+                'n_components': self.n_components,
+                'method': self.method,
+                'filter_params': self.filter_params
+            }
         }
-        # Create a deterministic string representation and hash it
-        param_str = json.dumps(base_params, sort_keys=True)
-        return hashlib.md5(param_str.encode()).hexdigest()[
-            :8
-        ]  # First 8 chars are enough
+        param_str = json.dumps(hash_params, sort_keys=True)
+        return hashlib.md5(param_str.encode()).hexdigest()[:8]
 
-    def get_ica_metadata(self) -> Dict:
-        """Generate metadata dictionary for the ICA parameters.
+    def get_ica_metadata(self, raw: mne.io.RawArray) -> Dict:
+        """Generate complete metadata including both data and ICA parameters.
 
         Arguments
         ---------
-        None
-            Uses instance attributes.
+        raw : mne.io.RawArray
+            The raw EEG data.
 
         Returns
         -------
         dict
-            Dictionary containing all ICA parameters:
-            - n_components
-            - method
-            - random_state
-            - filter_params
-            - fit_params
+            Complete metadata dictionary.
         """
         return {
-            "n_components": self.n_components,
-            "method": self.method,
-            "random_state": self.random_state,
-            "filter_params": self.filter_params,
-            "fit_params": self.fit_params,
+            'data_params': self._get_data_params(raw),
+            'ica_params': self._get_ica_params(),
+            'metadata': {
+                'creation_date': datetime.now().isoformat(),
+                'raw_filename': str(raw.filenames[0]) if raw.filenames else None
+            }
         }
 
-    def get_ica_path(self, raw_path: Union[str, Path]) -> tuple[Path, Path]:
+    def get_ica_path(self, raw: mne.io.RawArray, raw_path: Union[str, Path]) -> tuple[Path, Path]:
         """Generate path where ICA solution should be stored.
 
         Arguments
         ---------
+        raw : mne.io.RawArray
+            The raw EEG data.
         raw_path : str | Path
             Path to the raw data file.
 
@@ -132,22 +172,24 @@ class ICAProcessor:
         bids_path = get_bids_path_from_fname(raw_path)
 
         if self.use_hash:
-            param_hash = self._get_params_hash()
+            param_hash = self._get_params_hash(raw)
             folder_name = f"ica-{self.method}-{param_hash}"
             desc = f"ica{param_hash}"
         else:
             folder_name = f"ica{self.method}"
-            desc = f"ica"
+            desc = "ica"
 
         # For derivatives, you can put them in a derivatives folder:
         bids_path.root = bids_path.root / ".." / "derivatives" / folder_name
+        
         # Keep the same base entities:
         bids_path.update(
-            suffix="eeg",  # override or confirm suffix
+            suffix="eeg",
             extension=".fif",
-            description=desc,  # <-- This sets a desc=ica entity
-            check=True,  # If you do not want BIDSPath to fail on derivative checks
+            description=desc,
+            check=True,
         )
+        
         # Make sure the folder is created
         bids_path.fpath.parent.mkdir(parents=True, exist_ok=True)
 
@@ -156,7 +198,7 @@ class ICAProcessor:
 
         return ica_path, metadata_path
 
-    def save_ica(self, ica: ICA, ica_path: Path, metadata_path: Path):
+    def save_ica(self, ica: ICA, ica_path: Path, metadata_path: Path, raw: mne.io.RawArray):
         """Save ICA solution and metadata to disk.
 
         Arguments
@@ -167,31 +209,35 @@ class ICAProcessor:
             Path where to save the ICA solution.
         metadata_path : Path
             Path where to save the metadata JSON.
+        raw : mne.io.RawArray
+            The raw EEG data used for ICA.
 
         Returns
         -------
         None
-    """
+        """
         # Save ICA solution
         ica.save(ica_path, overwrite=True)
 
-        # Save metadata
+        # Save metadata including data parameters
+        metadata = self.get_ica_metadata(raw)
         with metadata_path.open("w") as f:
-            json.dump(self.get_ica_metadata(), f)
+            json.dump(metadata, f, indent=2)
 
-    def check_ica_metadata(self, metadata_path: Path) -> bool:
+    def check_ica_metadata(self, raw: mne.io.RawArray, metadata_path: Path) -> bool:
         """Check if existing ICA metadata matches current parameters.
 
-         Arguments
+        Arguments
         ---------
+        raw : mne.io.RawArray
+            The raw EEG data to check against.
         metadata_path : Path
-            Path to the metadata JSON file to check.
+            Path to the metadata JSON file.
 
         Returns
         -------
         bool
-            True if metadata exists and matches current parameters,
-            False otherwise.
+            True if metadata exists and matches both data and ICA parameters.
         """
         if not metadata_path.exists():
             return False
@@ -199,8 +245,17 @@ class ICAProcessor:
         with metadata_path.open() as f:
             saved_metadata = json.load(f)
 
-        current_metadata = self.get_ica_metadata()
-        return saved_metadata == current_metadata
+        # Check data parameters
+        current_data_params = self._get_data_params(raw)
+        if saved_metadata['data_params'] != current_data_params:
+            return False
+
+        # Check ICA parameters
+        current_ica_params = self._get_ica_params()
+        if saved_metadata['ica_params'] != current_ica_params:
+            return False
+
+        return True
 
     def compute_ica(self, raw: mne.io.RawArray, ica_path: Path) -> ICA:
         """Compute ICA solution and save to disk.
@@ -265,13 +320,13 @@ class ICAProcessor:
         def process(raw: mne.io.RawArray, fpath: Union[str, Path]):
             """Process raw data with ICA, computing or loading from cache."""
 
-            ica_path, metadata_path = self.get_ica_path(fpath)
+            ica_path, metadata_path = self.get_ica_path(raw, fpath)
 
-            if ica_path.exists() and self.check_ica_metadata(metadata_path):
+            if ica_path.exists() and self.check_ica_metadata(raw, metadata_path):
                 ica = mne.preprocessing.read_ica(ica_path, verbose="ERROR")
             else:
                 ica = self.compute_ica(raw, ica_path)
-                self.save_ica(ica, ica_path, metadata_path)
+                self.save_ica(ica, ica_path, metadata_path, raw)
 
             # Create a copy of the raw data before applying ICA
             raw_ica = raw.copy()

@@ -231,8 +231,8 @@ class ICAProcessor:
         folder_name = f"ica-{self.method}-{param_hash}"
         desc = f"ica{param_hash}"
 
-        # For derivatives, you can put them in a derivatives folder:
-        bids_path.root = bids_path.root / ".." / "derivatives" / folder_name
+        # For processors, you can put them in a processors folder:
+        bids_path.root = bids_path.root / ".." / "processors" / folder_name
 
         # Keep the same base entities:
         bids_path.update(

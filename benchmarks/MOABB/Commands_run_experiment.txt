@@ -1,0 +1,1 @@
+python run_experiments.py     --hparams=hparams/MotorImagery/BNCI2014001/EEGNet.yaml     --data_folder=./eeg_data     --output_folder=./results/test_run     --nsbj=9     --nsess=2     --seed=12346     --nruns=1     --train_mode=leave-one-session-out

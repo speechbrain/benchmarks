@@ -55,7 +55,7 @@ def prepare_dataset(hparams):
             # Other dataset parameters
             tmin=hparams["tmin"],
             tmax=hparams["tmax"],
-            output_keys=["label", "subject", "session", "epoch",],
+            output_keys=["label", "subject", "session", "epoch"],
             preload=True,
             **hparams.get("dataset_kwargs", {}),
         )

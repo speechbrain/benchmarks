@@ -1,1 +1,0 @@
-{"processing_params": "Pipeline(steps=[(<StepType.RAW: 'raw'>,\n                 SetRawAnnotations(event_id={'feet': 3, 'left_hand': 1,\n                                             'right_hand': 2, 'tongue': 4},\n                                   interval=[2, 6]))])"}

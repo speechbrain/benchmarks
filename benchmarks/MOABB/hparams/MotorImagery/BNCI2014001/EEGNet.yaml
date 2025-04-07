@@ -1,6 +1,9 @@
 seed: 1234
 __set_torchseed: !apply:torch.manual_seed [!ref <seed>]
 
+#OVERRIDES
+
+
 # DIRECTORIES
 data_folder: !PLACEHOLDER  #'/path/to/dataset'. The dataset will be automatically downloaded in this folder
 cached_data_folder: !PLACEHOLDER #'path/to/pickled/dataset'
@@ -39,6 +42,34 @@ C: 22
 test_with: 'last' # 'last' or 'best'
 test_key: "acc" # Possible opts: "loss", "f1", "auc", "acc"
 
+# DATASET
+
+# Get target subject
+#target_subject: !ref <dataset>.subject_list[!ref <target_subject_idx>]#
+
+# Create the subjects list
+#subjects: [!ref <target_subject>]
+
+# Create dataset using EpochedEEGDataset
+#dataset_class: !new:dataio.datasets.EpochedEEGDataset
+
+#json_path: !apply:os.path.join [!ref <cached_data_folder>, "index.json"]
+#save_path: !ref <data_folder>
+#dynamic_items:
+#    - !name:dataio.preprocessing.to_tensor
+#output_keys: ["label", "subject", "session", "epoch"]
+#preload: True
+
+#from_moabb_datset: !apply: !ref <dataset_class>.from_moabb
+#    - !ref <dataset>
+#    - !ref <json_path>
+#    - !ref <subjects>
+#    - !ref <save_path>
+#    - !ref <dynamic_items>
+#    - !ref <output_keys>
+#    - !ref <preload>
+#    - !ref <tmin>
+#    - !ref <tmax>
 # METRICS
 f1: !name:sklearn.metrics.f1_score
     average: 'macro'
@@ -52,7 +83,7 @@ metrics:
 n_train_examples: 100  # it will be replaced in the train script
 # checkpoints to average
 avg_models: 10 # @orion_step1: --avg_models~"uniform(1, 15,discrete=True)"
-number_of_epochs: 862 # @orion_step1: --number_of_epochs~"uniform(250, 1000, discrete=True)"
+number_of_epochs: 800 # @orion_step1: --number_of_epochs~"uniform(250, 1000, discrete=True)"
 lr: 0.0001 # @orion_step1: --lr~"choices([0.01, 0.005, 0.001, 0.0005, 0.0001])"
 # Learning rate scheduling (cyclic learning rate is used here)
 max_lr: !ref <lr> # Upper bound of the cycle (max value of the lr)

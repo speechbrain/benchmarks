@@ -181,7 +181,7 @@ d_model: 1024 # @orion_step1: --d_model~"choices([512, 768, 1024])"
 share_emb: False
 qk_norm: True
 nhead: 16
-num_layers_ar: 12 # @orion_step1: --num_layers_ar~"choices([6, 9, 12])" # @orion_step1: --num_layers_ar~"choices([6, 9, 12])"
+num_layers_ar: 12 # @orion_step1: --num_layers_ar~"choices([6, 9, 12])"
 num_layers_nar: 12 # @orion_step1: --num_layers_nar~"choices([6, 9, 12])"
 dropout: 0.2
 vocab_size: 1000

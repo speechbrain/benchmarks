@@ -290,10 +290,6 @@ get_flag() {
     local pattern="$2"
     local filter="$3"
 
-    if [[ -z "$filter" ]]; then
-      filter=".*"
-    fi
-
     # Check if the file exists
     if [ ! -f "$file_path" ]; then
         echo "Error: File '$file_path' not found."

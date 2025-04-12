@@ -297,7 +297,7 @@ get_flag() {
     fi
 
     # Use grep to find all lines containing the pattern and then extract the flags using sed
-    grep -o "$pattern.*" "$file_path" | sed "s/$pattern//" | grep $filter | tr -d '\n'
+    grep -o "$pattern.*" "$file_path" | sed "s/$pattern//" | grep "$filter" | tr -d '\n'
 }
 
 

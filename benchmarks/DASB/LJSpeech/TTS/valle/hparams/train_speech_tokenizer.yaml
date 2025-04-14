@@ -88,7 +88,7 @@ lr_annealing_mode: step
 
 # Feature parameters
 sample_rate: 22050
-model_sample_rate: 24000
+model_sample_rate: 16000
 max_audio_length: 1000
 text_max_length: 500
 n_ctx: !ref <max_audio_length> + <text_max_length>

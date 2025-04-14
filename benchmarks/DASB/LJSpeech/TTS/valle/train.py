@@ -613,13 +613,25 @@ def dataio_prepare(hparams):
         """Processes the transcriptions to generate proper labels"""
         return label_encoder.encode_sequence_torch(label)
 
+    layer_idx = None
+    if "speech_model_layers" in hparams:
+        layer_idx = get_selected_layer_indexes(
+            hparams["available_speech_model_layers"],
+            hparams["speech_model_layers"],
+        )
+
+    if layer_idx is not None:
+        num_codebooks = layer_idx
+    else:
+        num_codebooks = hparams["audio_tokens_per_step"]    
+
     @sb.utils.data_pipeline.takes("uttid", "tokens")
     @sb.utils.data_pipeline.provides(
         "audio", "prefix", "prompt", "prefix_length", "length"
     )
     def prompt_pipeline(id, tokens):
         audio = tokens_loader.tokens_by_uttid(
-            id, num_codebooks=hparams["audio_tokens_per_step"]
+            id, num_codebooks=num_codebooks
         )
         if hparams["flip_layers"]:
             audio = audio.flip(-1)
@@ -756,6 +768,27 @@ def init_sequence_encoder(hparams):
     encoder.update_from_iterable(tokens, sequence_input=False)
     encoder.expect_len(len(tokens) + hparams["special_num_tokens"])
     return encoder
+
+
+def get_selected_layer_indexes(available_layers, selected_layers):
+    """Finds the layers of selected layers
+
+    Arguments
+    ---------
+    available_layers : list
+        The available layers
+    selected_layers : list
+        The selected layers
+
+    Returns
+    -------
+    layer_idx : list    
+        The layer indexes
+    """
+    if not (selected_layers and available_layers):
+        return None
+    layer_idx = [available_layers.index(layer) for layer in selected_layers]
+    return layer_idx
 
 
 def read_token_list(file_name):

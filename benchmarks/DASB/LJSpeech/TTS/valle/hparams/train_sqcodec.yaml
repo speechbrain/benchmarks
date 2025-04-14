@@ -76,14 +76,26 @@ overfit_test: False
 overfit_test_sample_count: !ref <batch_size>
 overfit_test_epoch_data_count: 1000
 data_scale: null
+multispeaker_pretrain: True
 
 # index
 pad_index: 0
 bos_index: 1
 eos_index: 2
 eot_index: 3
-special_tokens: ["<bos>", "<eos>", "<eot>"]
-special_num_tokens: 4
+eop_index: 4
+special_tokens: !apply:speechbrain.utils.hparams.choice
+    value: !ref <multispeaker_pretrain>
+    choices: 
+        True: ["<bos>", "<eos>", "<eot>", "<eop>"]
+        False: ["<bos>", "<eos>", "<eot>"]
+
+special_num_tokens: !apply:speechbrain.utils.hparams.choice
+    value: !ref <multispeaker_pretrain>
+    choices:
+        True: 5
+        False: 4
+spk_prompt_length: 150
 
 # stages related parameters
 lr: 0.001 # @orion_step1: --lr~"loguniform(0.00001,0.1)"

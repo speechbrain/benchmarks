@@ -629,6 +629,45 @@ def dataio_prepare(hparams):
     @sb.utils.data_pipeline.provides(
         "audio", "prefix", "prompt", "prefix_length", "length"
     )
+    def prompt_pipeline_spk(id, tokens):
+        audio = tokens_loader.tokens_by_uttid(
+            id, num_codebooks=hparams["audio_tokens_per_step"]
+        )
+        if hparams["flip_layers"]:
+            audio = audio.flip(-1)
+        yield audio
+        num_tracks = audio.size(1)
+        spk_prompt = torch.randint(
+            0,
+            hparams["vocab_size"],
+            (hparams["spk_prompt_length"], num_tracks)
+        )
+        prefix = torch.cat(
+            [
+                torch.ones(1, num_tracks) * hparams["bos_index"],
+                tokens.unsqueeze(-1).expand(len(tokens), num_tracks),
+                torch.ones(1, num_tracks) * hparams["eot_index"],
+                spk_prompt + hparams["audio_token_shift"] + offsets,
+                torch.ones(1, num_tracks) * hparams["eop_index"],
+            ]
+        )
+        yield prefix
+        prompt = torch.cat(
+            [
+                prefix,
+                torch.ones(1, num_tracks) * hparams["bos_index"],
+                audio + hparams["audio_token_shift"] + offsets,
+                torch.ones(1, num_tracks) * hparams["eos_index"],
+            ]
+        ).int()
+        yield prompt
+        yield len(prefix)
+        yield len(prompt)
+
+    @sb.utils.data_pipeline.takes("uttid", "tokens")
+    @sb.utils.data_pipeline.provides(
+        "audio", "prefix", "prompt", "prefix_length", "length"
+    )
     def prompt_pipeline(id, tokens):
         audio = tokens_loader.tokens_by_uttid(
             id, num_codebooks=num_codebooks
@@ -657,13 +696,18 @@ def dataio_prepare(hparams):
         yield len(prefix)
         yield len(prompt)
 
+
     @sb.utils.data_pipeline.takes("wav")
     @sb.utils.data_pipeline.provides("sig")
     def sig_pipeline(wav):
         sig = sb.dataio.dataio.read_audio(wav)
         return sig
 
-    dynamic_items = [sig_pipeline, text_pipeline, tokens_pipeline, prompt_pipeline]
+    dynamic_items = [sig_pipeline, text_pipeline, tokens_pipeline]
+    if hparams["multispeaker_pretrain"]:
+        dynamic_items.append(prompt_pipeline_spk)
+    else:
+        dynamic_items.append(prompt_pipeline)
 
     init_sequence_encoder(hparams)
     use_spk_emb = hparams.get("use_spk_emb", False)

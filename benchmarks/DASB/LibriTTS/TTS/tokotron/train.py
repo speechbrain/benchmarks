@@ -1015,7 +1015,7 @@ if __name__ == "__main__":
 
     # Load best checkpoint for evaluation
     if hparams["testing"]:
-        test_summary_file = Path(hparams["output_folder"]) / "eval" / "test" / "summary.json"
+        test_summary_file = Path(hparams["output_folder"]).glob("eval/test/*/summary.json")
         if test_summary_file.exists():
             logging.info("Test run already completed: %s", test_summary_file)
         else:

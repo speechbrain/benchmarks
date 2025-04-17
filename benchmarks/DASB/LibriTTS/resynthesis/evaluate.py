@@ -17,7 +17,6 @@ from types import SimpleNamespace
 from tqdm.auto import tqdm
 from pathlib import Path
 from hyperpyyaml import load_hyperpyyaml
-from speechbrain.dataio.batch import PaddedData
 from speechbrain.utils.distributed import run_on_main
 from torch import nn
 
@@ -35,6 +34,7 @@ class VocoderEvaluator:
     run_opts : dict
         Run options
     """
+
     def __init__(self, hparams, run_opts):
         self.hparams = SimpleNamespace(**hparams, run_opts=None)
         if run_opts is None:
@@ -107,7 +107,7 @@ class VocoderEvaluator:
             ids=batch.uttid,
             wavs=wav_rec.squeeze(1),
             length=batch.sig.lengths,
-            sample_rate=self.hparams.model_sample_rate
+            sample_rate=self.hparams.model_sample_rate,
         )
 
     def get_wav_rec(self, batch):
@@ -124,13 +124,12 @@ class VocoderEvaluator:
             The audio representation
         """
         if self.hparams.representation_mode == "discrete":
-            audio = self.modules.tokenizer.sig_to_tokens(batch.sig.data, batch.sig.lengths)
+            audio = self.modules.tokenizer.sig_to_tokens(
+                batch.sig.data, batch.sig.lengths
+            )
             wav_rec = self.modules.tokenizer.tokens_to_sig(audio)
         else:
-            audio = self.modules.ssl_model(
-                batch.sig.data,
-                batch.sig.lengths,
-            )
+            audio = self.modules.ssl_model(batch.sig.data, batch.sig.lengths,)
             audio = audio.permute(1, 2, 0, 3)[:, :, self.hparams.num_codebooks]
             wav_rec = self.vocoder(audio)
         return wav_rec
@@ -169,9 +168,7 @@ def dataio_prepare(hparams):
     def sig_pipeline(wav):
         sig = sb.dataio.dataio.read_audio(wav)
         sig = torchaudio.functional.resample(
-            sig,
-            hparams["sample_rate"],
-            hparams["model_sample_rate"],
+            sig, hparams["sample_rate"], hparams["model_sample_rate"],
         )
         return sig
 

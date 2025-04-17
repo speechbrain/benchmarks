@@ -95,7 +95,7 @@ ssl_model: !apply:speechbrain.utils.hparams.choice
       freeze_feature_extractor: !ref <freeze_feature_extractor>
       output_all_hiddens: True
       save_path: !ref <ssl_folder>
-    
+
 
 vocoder_src: !apply:speechbrain.utils.hparams.choice
   value: !ref <ssl_model_type>
@@ -103,7 +103,7 @@ vocoder_src: !apply:speechbrain.utils.hparams.choice
     wavlm: !ref speechbrain/hifigan-wavlm-l1-3-7-12-18-23-continuous-LibriTTS
     hubert: !ref chaanks/hifigan-hubert-l1-3-7-12-18-23-LibriTTS
 
-  
+
 vocoder: !name:speechbrain.inference.vocoders.HIFIGAN.from_hparams
   source: !ref <vocoder_src>
   savedir: !ref <pretrained_model_save_folder>

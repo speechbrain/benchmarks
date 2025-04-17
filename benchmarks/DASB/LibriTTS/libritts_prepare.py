@@ -109,16 +109,40 @@ def prepare_libritts(
     # If specific splits are provided, creates data manifest files accordingly
     if train_split:
         wav_list = prepare_split(data_folder, train_split)
-        create_json(wav_list, save_json_train, sample_rate, data_folder, alignments_folder, model_name, skip_resample)
+        create_json(
+            wav_list,
+            save_json_train,
+            sample_rate,
+            data_folder,
+            alignments_folder,
+            model_name,
+            skip_resample,
+        )
     if valid_split:
         wav_list = prepare_split(data_folder, valid_split)
         # TODO add better way to speedup evaluation
         if max_valid_size is not None and len(wav_list) > max_valid_size:
             wav_list = random.sample(wav_list, max_valid_size)
-        create_json(wav_list, save_json_valid, sample_rate, data_folder, alignments_folder, model_name, skip_resample)
+        create_json(
+            wav_list,
+            save_json_valid,
+            sample_rate,
+            data_folder,
+            alignments_folder,
+            model_name,
+            skip_resample,
+        )
     if test_split:
         wav_list = prepare_split(data_folder, test_split)
-        create_json(wav_list, save_json_test, sample_rate, data_folder, alignments_folder, model_name, skip_resample)
+        create_json(
+            wav_list,
+            save_json_test,
+            sample_rate,
+            data_folder,
+            alignments_folder,
+            model_name,
+            skip_resample,
+        )
 
     if skip(save_json_train, save_json_valid, save_json_test):
         logger.info("Preparation completed.")
@@ -132,12 +156,29 @@ def prepare_libritts(
         data_split = split_sets(wav_list, split_ratio)
         # Creating json files
         create_json(
-            data_split["train"], save_json_train, sample_rate, alignments_folder, model_name, skip_resample
+            data_split["train"],
+            save_json_train,
+            sample_rate,
+            alignments_folder,
+            model_name,
+            skip_resample,
         )
         create_json(
-            data_split["valid"], save_json_valid, sample_rate, alignments_folder, model_name, skip_resample
+            data_split["valid"],
+            save_json_valid,
+            sample_rate,
+            alignments_folder,
+            model_name,
+            skip_resample,
         )
-        create_json(data_split["test"], save_json_test, sample_rate, alignments_folder, model_name, skip_resample)
+        create_json(
+            data_split["test"],
+            save_json_test,
+            sample_rate,
+            alignments_folder,
+            model_name,
+            skip_resample,
+        )
 
 
 def prepare_split(data_folder, split_list):
@@ -180,7 +221,15 @@ def prepare_split(data_folder, split_list):
     return wav_list
 
 
-def create_json(wav_list, json_file, sample_rate, data_folder, alignments_folder=None, model_name=None, skip_resample=False):
+def create_json(
+    wav_list,
+    json_file,
+    sample_rate,
+    data_folder,
+    alignments_folder=None,
+    model_name=None,
+    skip_resample=False,
+):
     """
     Creates the json file given a list of wav files.
     Arguments
@@ -266,7 +315,9 @@ def create_json(wav_list, json_file, sample_rate, data_folder, alignments_folder
             "segment": True if "train" in json_file else False,
         }
         if alignments_folder is not None:
-            alignments_file_name = get_alignment_path(data_folder, alignments_folder, wav_file)
+            alignments_file_name = get_alignment_path(
+                data_folder, alignments_folder, wav_file
+            )
             alignments = parse_alignments(alignments_file_name)
             json_dict[uttid].update(alignments)
 
@@ -309,9 +360,16 @@ def get_alignment_path(data_folder, alignments_folder, file_name):
         file_name_rel = file_name.relative_to(data_folder)
     data_slice = file_name_rel.parts[0]
 
-    textgrid_folder = file_name_rel.relative_to(Path(data_slice) / "LibriTTS" / data_slice).parent.parent
+    textgrid_folder = file_name_rel.relative_to(
+        Path(data_slice) / "LibriTTS" / data_slice
+    ).parent.parent
     textgrid_file_name = f"{file_name_rel.stem}.TextGrid"
-    textgrid_path = Path(alignments_folder) / data_slice / textgrid_folder / textgrid_file_name
+    textgrid_path = (
+        Path(alignments_folder)
+        / data_slice
+        / textgrid_folder
+        / textgrid_file_name
+    )
 
     return textgrid_path
 
@@ -382,6 +440,7 @@ def check_folders(*folders):
             return False
     return True
 
+
 def parse_alignments(file_name):
     """Parses a given LibriSpeech-Alignments TextGrid file and
     converts the results to the desired format (to be used in JSON
@@ -417,7 +476,7 @@ def parse_alignments(file_name):
             "wrd_start": [],
             "wrd_end": [],
             "wrd_count": 0,
-            "unk_count": None
+            "unk_count": None,
         }
 
     text_grid = textgrids.TextGrid()

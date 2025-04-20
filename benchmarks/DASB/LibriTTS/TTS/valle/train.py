@@ -1336,8 +1336,8 @@ if __name__ == "__main__":
 
     # Load best checkpoint for evaluation
     if hparams["testing"]:
-        test_summary_file = Path(hparams["output_folder"]) / "eval" / "test" / "summary.json"
-        if test_summary_file.exists():
+        test_summary_file = next(Path(hparams["output_folder"]).glob("eval/test/*/summary.json"), None)
+        if test_summary_file is not None:
             logging.info("Test run already completed: %s", test_summary_file)
         else:
             test_key_kind = hparams["test_key_kind"]

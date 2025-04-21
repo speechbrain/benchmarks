@@ -13,6 +13,7 @@ Authors
 
 import logging
 import speechbrain as sb
+import os
 import torch
 import sys
 import shutil
@@ -727,6 +728,19 @@ def get_offsets(vocab_size, tracks):
     return torch.arange(tracks) * vocab_size
 
 
+def apply_mem_fraction():
+    """Applies the memory fraction, based on environment variables, useful for cases where
+    multiple experiments share a large GPU"""
+    if not torch.cuda.is_available():
+        return
+    mem_fraction = os.environ.get("SB_CUDA_MEM_FRACTION")
+    if mem_fraction:
+        fraction, device = mem_fraction.split(":")
+        fraction, device = float(fraction), int(device)
+        logger.info("Using %f of GPU %f", fraction, device)
+        torch.cuda.set_per_process_memory_fraction(fraction, device)
+
+
 def init_sequence_encoder(hparams):
     """Initialize a sequence encoder
 
@@ -894,6 +908,9 @@ if __name__ == "__main__":
 
     # Initialize ddp (useful only for multi-GPU DDP training)
     sb.utils.distributed.ddp_init_group(run_opts)
+
+    # Applies the memory fraction for a shared GPU
+    apply_mem_fraction()
 
     # Load hyperparameters file with command-line overrides
     with open(hparams_file) as fin:

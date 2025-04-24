@@ -704,7 +704,7 @@ def dataio_prepare(hparams):
         return sig
 
     dynamic_items = [sig_pipeline, text_pipeline, tokens_pipeline]
-    if hparams["multispeaker_pretrain"]:
+    if hparams.get("multispeaker_pretrain"):
         dynamic_items.append(prompt_pipeline_spk)
     else:
         dynamic_items.append(prompt_pipeline)

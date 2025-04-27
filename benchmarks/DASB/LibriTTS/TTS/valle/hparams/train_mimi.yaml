@@ -209,7 +209,7 @@ model: !new:model.valle.ValleLM # yamllint disable-line rule:line-length
 inference_opts: !name:model.valle.SpeechLMInferenceOptions
     start: !ref <bos_index>
     eos: !ref <eos_index>
-    minlenratio: 1.0
+    minlenratio: 0.0
     maxlenratio: !ref <max_length_ratio>
     nq: !ref <audio_tokens_per_step>
 

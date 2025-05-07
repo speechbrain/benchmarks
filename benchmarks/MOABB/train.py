@@ -21,14 +21,12 @@ from torch.nn import init
 from torch.utils.data import random_split
 
 
-
 from dataio.splitters import CrossSessionSplitter, CrossSubjectSplitter
-
 
 
 def prepare_dataset(hparams):
     """Create and preprocess dataset using new data loading system."""
-    
+
     dataset = hparams["EEG_dataset"]
     # 1) Create and update label encoder with all raw labels from the dataset
     label_encoder = sb.dataio.encoder.CategoricalEncoder()
@@ -94,8 +92,7 @@ def load_hparams_and_prepare_data(hparams_file, run_opts, overrides):
     # Initial hparams load
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
-    
-    
+
     # Prepare dataset
     dataset = prepare_dataset(hparams)
 

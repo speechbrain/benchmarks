@@ -12,7 +12,8 @@ import torch
 from speechbrain.utils.data_pipeline import provides, takes
 
 
-mne.set_log_level('ERROR')
+mne.set_log_level("ERROR")
+
 
 @takes("epoch")
 @provides("epoch")
@@ -27,7 +28,9 @@ cached_create_filter = cache(mne.filter.create_filter)
 
 
 def bandpass_resample(target_sfreq, fmin, fmax):
-    @takes("epoch", "info", )
+    @takes(
+        "epoch", "info",
+    )
     @provides("epoch")
     def _bandpass_resample(epoch, info):
         """Bandpass filter and resample an epoch."""
@@ -65,4 +68,3 @@ def bandpass_resample(target_sfreq, fmin, fmax):
         yield target_sfreq
 
     return _bandpass_resample
-

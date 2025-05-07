@@ -152,7 +152,6 @@ class ExperimentRunner:
 
             subprocess.run(cmd)
 
-
     def parse_results(self, output_folder_exp: Path, run_name: str):
         """Parse results for current run."""
         cmd = [

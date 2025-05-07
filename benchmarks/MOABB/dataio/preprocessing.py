@@ -12,6 +12,8 @@ import torch
 from speechbrain.utils.data_pipeline import provides, takes
 
 
+mne.set_log_level('ERROR')
+
 @takes("epoch")
 @provides("epoch")
 def to_tensor(epoch):
@@ -24,10 +26,10 @@ def to_tensor(epoch):
 cached_create_filter = cache(mne.filter.create_filter)
 
 
-def bandpass_resample():
-    @takes("epoch", "info", "target_sfreq", "fmin", "fmax")
-    @provides("epoch", "sfreq", "target_sfreq", "fmin", "fmax")
-    def _bandpass_resample(epoch, info, target_sfreq, fmin, fmax):
+def bandpass_resample(target_sfreq, fmin, fmax):
+    @takes("epoch", "info", )
+    @provides("epoch")
+    def _bandpass_resample(epoch, info):
         """Bandpass filter and resample an epoch."""
 
         bandpass = cached_create_filter(
@@ -64,42 +66,3 @@ def bandpass_resample():
 
     return _bandpass_resample
 
-
-'''def bandpass_resample(target_sfreq, fmin, fmax):
-    """Create a dynamic item that bandpass filters and resamples an epoch."""
-
-    @takes("epoch", "info")
-    @provides("epoch")
-    def _bandpass_resample(epoch, info):
-        bandpass = cached_create_filter(
-            None,
-            info["sfreq"],
-            l_freq=fmin,
-            h_freq=fmax,
-            method="fir",
-            fir_design="firwin",
-            verbose=False,
-        )
-        breakpoint()
-        # Check that filter length is reasonable
-        filter_length = len(bandpass)
-        len_x = epoch.shape[-1]
-        if filter_length > len_x:
-            logging.warning(
-                "filter_length (%i) is longer than the signal (%i), "
-                "distortion is likely. Reduce filter length or filter a longer signal.",
-                filter_length,
-                len_x,
-            )
-
-        filtered = mne.filter.resample(
-            epoch,
-            up=target_sfreq,
-            down=info["sfreq"],
-            method="polyphase",
-            window=bandpass,
-        )
-        yield filtered
-
-    return _bandpass_resample
-'''

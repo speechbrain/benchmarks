@@ -9,7 +9,6 @@ Victor Cruz, 2025
 
 import pickle
 import os
-from pathlib import Path
 import torch
 from hyperpyyaml import load_hyperpyyaml
 
@@ -21,59 +20,18 @@ import speechbrain as sb
 from torch.nn import init
 from torch.utils.data import random_split
 
-from speechbrain.dataio.encoder import CategoricalEncoder
 
-from dataio.datasets import RawEEGDataset, EpochedEEGDataset
+
 from dataio.splitters import CrossSessionSplitter, CrossSubjectSplitter
-from dataio.preprocessing import to_tensor  # , bandpass_resample
+
 
 
 def prepare_dataset(hparams):
     """Create and preprocess dataset using new data loading system."""
-
-    if True:
-        # Determine dataset class based on config
-        dataset_class = (
-            EpochedEEGDataset
-            if hparams.get("use_epochs", True)
-            else RawEEGDataset
-        )
-
-        # Create dataset
-        dataset = dataset_class.from_moabb(
-            dataset=hparams["dataset"],
-            json_path=Path(hparams["cached_data_folder"]) / "index.json",
-            subjects=[
-                hparams["dataset"].subject_list[hparams["target_subject_idx"]]
-            ],
-            save_path=hparams["data_folder"],
-            # Add preprocessing pipeline
-            dynamic_items=[
-                # bandpass_resample,
-                to_tensor,
-            ],
-            # Other dataset parameters
-            tmin=hparams["tmin"],
-            tmax=hparams["tmax"],
-            output_keys=["label", "subject", "session", "epoch"],
-            preload=True,
-            **hparams.get("dataset_kwargs", {}),
-        )
-    # dataset = hparams["from_moabb_datset"]
-    # dataset_class = hparams["dataset_class"]
-    # dataset = dataset_class.from_moabb(
-    #    dataset=hparams["dataset_moabb"],
-    #    json_path=os.path.join(hparams["cached_data_folder"], "index.json"),
-    #    subjects=hparams["subjects"],
-    #    save_path=hparams["data_folder"],
-    #    dynamic_items=hparams["dynamic_items"],
-    #    output_keys=hparams["output_keys"],
-    #    preload=hparams["preload"],
-    #    tmin=hparams["tmin"],
-    #    tmax=hparams["tmax"],
-    # )
+    
+    dataset = hparams["EEG_dataset"]
     # 1) Create and update label encoder with all raw labels from the dataset
-    label_encoder = CategoricalEncoder()
+    label_encoder = sb.dataio.encoder.CategoricalEncoder()
     label_encoder.update_from_didataset(dataset, "label")
 
     # 2) Define a small helper function that calls the encoder
@@ -136,7 +94,8 @@ def load_hparams_and_prepare_data(hparams_file, run_opts, overrides):
     # Initial hparams load
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
-
+    
+    
     # Prepare dataset
     dataset = prepare_dataset(hparams)
 

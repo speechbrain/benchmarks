@@ -148,18 +148,10 @@ class ExperimentRunner:
                 f"--target_session_idx={target_session_idx}",
                 f"--data_iterator_name={self.args.train_mode}",
             ]
+            print(cmd)
 
-            # if self.args.dry_run:
-            #    cmd.append("--dry_run=True")
             subprocess.run(cmd)
-            # if result.returncode != 0:
-            #    if self.args.dry_run:
-            #        raise Exception("Dry run failed")
-            #    print(f"Warning: Training failed for subject {target_subject_idx}")
-            # if self.args.dry_run:
-            #    raise DryRunComplete("Dry run successful")
-        # except DryRunComplete:
-        #    raise
+
 
     def parse_results(self, output_folder_exp: Path, run_name: str):
         """Parse results for current run."""

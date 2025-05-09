@@ -2,7 +2,7 @@ seed: 1234
 __set_torchseed: !apply:torch.manual_seed [!ref <seed>]
 
 #OVERRIDES
-
+num_workers: 4
 
 # DIRECTORIES
 data_folder: !PLACEHOLDER  #'/path/to/dataset'. The dataset will be automatically downloaded in this folder
@@ -11,7 +11,7 @@ output_folder: !PLACEHOLDER #'path/to/results'
 
 # DATASET HPARS
 # Defining the MOABB dataset.
-dataset: !new:moabb.datasets.BNCI2014001
+dataset: !new:moabb.datasets.BNCI2014_001
 save_prepared_dataset: True # set to True if you want to save the prepared dataset as a pkl file to load and use afterwards
 data_iterator_name: !PLACEHOLDER
 target_subject_idx: !PLACEHOLDER
@@ -87,16 +87,8 @@ EEG_dataset: !apply:dataio.datasets.EpochedEEGDataset.from_moabb
     preload: !ref <preload>
     tmin: !ref <tmin>
     tmax: !ref <tmax>
-#from_moabb_datset: !apply: !ref <dataset_class>.from_moabb
-#    - !ref <dataset>
-#    - !ref <json_path>
-#    - !ref <subjects>
-#    - !ref <save_path>
-#    - !ref <dynamic_items>
-#    - !ref <output_keys>
-#    - !ref <preload>
-#    - !ref <tmin>
-#    - !ref <tmax>
+
+
 # METRICS
 f1: !name:sklearn.metrics.f1_score
     average: 'macro'

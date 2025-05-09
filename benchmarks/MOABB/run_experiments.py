@@ -23,7 +23,8 @@ import random
 # from typing import Optional
 import string
 
-# from utils.exceptions import DryRunComplete
+
+from train import load_hparams_and_prepare_data, run_experiment
 
 
 class ExperimentRunner:
@@ -136,21 +137,29 @@ class ExperimentRunner:
         for target_subject_idx in range(self.args.nsbj):
             print(f"Subject {target_subject_idx}")
 
-            cmd = [
-                "python",
-                "train.py",
-                self.args.hparams,
-                f"--seed={self.args.seed}",
-                f"--data_folder={self.args.data_folder}",
-                f"--cached_data_folder={self.args.cached_data_folder}",
-                f"--output_folder={output_folder_exp}",
-                f"--target_subject_idx={target_subject_idx}",
-                f"--target_session_idx={target_session_idx}",
-                f"--data_iterator_name={self.args.train_mode}",
-            ]
-            print(cmd)
+            # create overrides
+            overrides = {
+                "seed": self.args.seed,
+                "data_folder": self.args.data_folder,
+                "cached_data_folder": self.args.cached_data_folder,
+                "output_folder": str(output_folder_exp),
+                "target_subject_idx": target_subject_idx,
+                "target_session_idx": target_session_idx,
+                "data_iterator_name": self.args.train_mode,
+            }
+            
+            # Create run_opts (empty for now, add parameters if needed)
+            run_opts = {}
 
-            subprocess.run(cmd)
+            # Load hyperparameters and prepare data
+            hparams, datasets = load_hparams_and_prepare_data(
+                self.args.hparams,
+                run_opts,
+                overrides
+            )
+            
+            # Run experiment
+            run_experiment(hparams, run_opts, datasets)
 
     def parse_results(self, output_folder_exp: Path, run_name: str):
         """Parse results for current run."""
@@ -204,14 +213,6 @@ class ExperimentRunner:
 
         # Final aggregation
         self.aggregate_final_results()
-        # except DryRunComplete:
-        #    print("Dry run validation completed successfully")
-        #    return True
-        # except Exception as e:
-        #    if self.args.dry_run:
-        #        print(f"Dry run failed: {str(e)}")
-        #        return False
-        #    raise
 
 
 if __name__ == "__main__":

@@ -330,6 +330,8 @@ class ASRSpeechEvaluator(SpeechEvaluator):
         wer_metric, cer_metric = init_asr_metrics()
         pred = self._replace_blanks(details["pred"])
         pred_ref = self._replace_blanks(details["pred_ref"])
+        pred = [item.split(" ") for item in pred]
+        pred_ref = [item.split(" ") for item in pred_ref]
         wer_metric.append(ids, pred, pred_ref)
         cer_metric.append(ids, pred, pred_ref)
         dwer = torch.tensor(

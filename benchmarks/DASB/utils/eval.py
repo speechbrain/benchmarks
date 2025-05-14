@@ -483,8 +483,10 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         predicted_words = [self.normalize(text) for text in predicted_words]
         ids = range(1, len(wavs) + 1)
         wer_metric, cer_metric = init_asr_metrics()
-        wer_metric.append(ids, predicted_words, text)
-        cer_metric.append(ids, predicted_words, text)
+        predicted_words_split = [item.split(" ") for item in predicted_words]
+        text_split = [item.split(" ") for item in text]
+        wer_metric.append(ids, predicted_words_split, text_split)
+        cer_metric.append(ids, predicted_words_split, text_split)
         wer = torch.tensor(
             [score["WER"] for score in wer_metric.scores], device=wavs.device
         )

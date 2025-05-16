@@ -1321,51 +1321,52 @@ if __name__ == "__main__":
             },
         )
 
-    # We can now directly create the datasets for training, valid, and test
-    datasets, resample_fn = dataio_prepare(hparams)
+    if not hparams.get("prep_only"):
+        # We can now directly create the datasets for training, valid, and test
+        datasets, resample_fn = dataio_prepare(hparams)
 
-    # Apply overfit test settings
-    datasets = apply_overfit_test(hparams, datasets)
-    audio_keys = ["audio_tokens"]
+        # Apply overfit test settings
+        datasets = apply_overfit_test(hparams, datasets)
+        audio_keys = ["audio_tokens"]
 
-    # Trainer initialization
-    tts_brain = VALLEBrain(
-        modules=hparams["modules"],
-        opt_class=hparams["opt_class"],
-        hparams=hparams,
-        run_opts=run_opts,
-        checkpointer=hparams["checkpointer"],
-    )
+        # Trainer initialization
+        tts_brain = VALLEBrain(
+            modules=hparams["modules"],
+            opt_class=hparams["opt_class"],
+            hparams=hparams,
+            run_opts=run_opts,
+            checkpointer=hparams["checkpointer"],
+        )
 
-    tts_brain.resample_fn = resample_fn
+        tts_brain.resample_fn = resample_fn
 
-    # The `fit()` method iterates the training loop, calling the methods
-    # necessary to update the parameters of the model. Since all objects
-    # with changing state are managed by the Checkpointer, training can be
-    # stopped at any point, and will be resumed on next call.
-    tts_brain.fit(
-        tts_brain.hparams.epoch_counter,
-        datasets["train"],
-        datasets["valid"],
-        train_loader_kwargs=hparams["train_dataloader_opts"],
-        valid_loader_kwargs=hparams["valid_dataloader_opts"],
-    )
+        # The `fit()` method iterates the training loop, calling the methods
+        # necessary to update the parameters of the model. Since all objects
+        # with changing state are managed by the Checkpointer, training can be
+        # stopped at any point, and will be resumed on next call.
+        tts_brain.fit(
+            tts_brain.hparams.epoch_counter,
+            datasets["train"],
+            datasets["valid"],
+            train_loader_kwargs=hparams["train_dataloader_opts"],
+            valid_loader_kwargs=hparams["valid_dataloader_opts"],
+        )
 
-    # Load best checkpoint for evaluation
-    if hparams["testing"]:
-        test_summary_file = next(Path(hparams["output_folder"]).glob("eval/test/*/summary.json"), None)
-        if test_summary_file is not None:
-            logging.info("Test run already completed: %s", test_summary_file)
-        else:
-            test_key_kind = hparams["test_key_kind"]
-            test_key = hparams["test_key"]
-            eval_kwargs = {
-                f"{test_key_kind}_key": test_key
-            }
-            eval_dataset = datasets["test"]
-            eval_dataset = select_eval_subset(eval_dataset, hparams)
-            tts_brain.evaluate(
-                test_set=eval_dataset,
-                test_loader_kwargs=hparams["test_dataloader_opts"],
-                **eval_kwargs
-            )
+        # Load best checkpoint for evaluation
+        if hparams["testing"]:
+            test_summary_file = next(Path(hparams["output_folder"]).glob("eval/test/*/summary.json"), None)
+            if test_summary_file is not None:
+                logging.info("Test run already completed: %s", test_summary_file)
+            else:
+                test_key_kind = hparams["test_key_kind"]
+                test_key = hparams["test_key"]
+                eval_kwargs = {
+                    f"{test_key_kind}_key": test_key
+                }
+                eval_dataset = datasets["test"]
+                eval_dataset = select_eval_subset(eval_dataset, hparams)
+                tts_brain.evaluate(
+                    test_set=eval_dataset,
+                    test_loader_kwargs=hparams["test_dataloader_opts"],
+                    **eval_kwargs
+                )

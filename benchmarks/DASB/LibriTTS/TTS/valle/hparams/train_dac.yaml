@@ -76,6 +76,7 @@ max_grad_norm: 1.0
 sorting: random
 num_workers: 4
 skip_prep: False
+prep_only: False
 overfit_test: False
 overfit_test_sample_count: !ref <batch_size>
 overfit_test_epoch_data_count: 1000

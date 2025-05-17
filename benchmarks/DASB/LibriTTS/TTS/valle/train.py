@@ -874,6 +874,19 @@ def dataio_prepare(hparams):
             dynamic_dataset = dynamic_dataset.filtered_sorted(
                 key_test={"has_alignments": lambda value: value}
             )
+        duration_min = hparams.get("duration_min")
+        duration_max = hparams.get("duration_max")
+        if duration_min or duration_max:
+            key_min_value = None
+            key_max_value = None
+            if duration_min:
+                key_min_value = {"duration": duration_min}
+            if duration_max:
+                key_max_value = {"duration": duration_max}
+            dynamic_dataset = dynamic_dataset.filtered_sorted(
+                key_min_value=key_min_value,
+                key_max_value=key_max_value,
+            )
 
         datasets[dataset] = dynamic_dataset
         hparams[f"{dataset}_dataloader_opts"]["shuffle"] = False

@@ -53,6 +53,11 @@ flip_layers: False
 use_token_offsets: True
 splits: ["train", "valid", "test"]
 
+# Duration Filter
+duration_min: null
+duration_max: null
+
+
 ckpt_key: dwer
 ckpt_key_kind: min
 ckpt_keep: 2

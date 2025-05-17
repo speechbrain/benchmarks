@@ -887,6 +887,14 @@ def dataio_prepare(hparams):
                 key_min_value=key_min_value,
                 key_max_value=key_max_value,
             )
+        dynamic_dataset = dynamic_dataset.filtered_sorted(
+            key_test={
+                "wrd": lambda wrd: not any(
+                    "{" in item
+                    for item in wrd
+                )
+            }
+        )
 
         datasets[dataset] = dynamic_dataset
         hparams[f"{dataset}_dataloader_opts"]["shuffle"] = False

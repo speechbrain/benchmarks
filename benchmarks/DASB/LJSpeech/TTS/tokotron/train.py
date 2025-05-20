@@ -935,8 +935,8 @@ if __name__ == "__main__":
                 logging.info("Test run already completed: %s", test_summary_file)
             else:
                 eval_kwargs = {}
-                test_key_kind = hparams["test_key_kind"]
-                test_key = hparams["test_key"]
+                test_key_kind = hparams.get("test_key_kind", "min")
+                test_key = hparams.get("test_key")
                 if test_key:
                     eval_kwargs = {
                         f"{test_key_kind}_key": test_key

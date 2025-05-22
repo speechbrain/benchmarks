@@ -204,6 +204,17 @@ class SpeechEvaluator:
             )
         return audio
 
+    def on_evaluation_start(self):
+        """Invoked when evaluation starts"""
+        pass
+
+    def on_evaluation_end(self):
+        """Invoked when evaluation ends"""
+        pass
+
+    def global_metrics(self):
+        return {}
+
 
 def _unbatchify(value):
     """Removes the batch dimension from the tensor. If a single
@@ -238,7 +249,24 @@ class SpeechEvaluationRegressionModel(Pretrained):
 
 
 class ASRSpeechEvaluator(SpeechEvaluator):
-    """A superclass for ASR speech evaluators"""
+    """A superclass for ASR speech evaluators
+    
+    Arguments
+    ---------
+    sample_rate : int
+        The sample rate used by the underlying ASR system
+    metric_mode : str
+        macro = metrics are evaluated per utterance and aggregated
+        micro = metrics are evaluated globally
+    """
+
+    def __init__(self, sample_rate=16000, metric_mode="macro"):
+        super().__init__(sample_rate=sample_rate)
+        self.metric_mode = metric_mode
+        self.metrics = {}
+
+    def on_evaluation_start(self):
+        self.metrics = {}
 
     def evaluate(
         self,
@@ -327,20 +355,31 @@ class ASRSpeechEvaluator(SpeechEvaluator):
 
         """
         ids = range(1, len(details["pred"]) + 1)
-        wer_metric, cer_metric = init_asr_metrics()
+        wer_metric, cer_metric = self.get_asr_metrics("diff")
         pred = self._replace_blanks(details["pred"])
         pred_ref = self._replace_blanks(details["pred_ref"])
         pred = [item.split(" ") for item in pred]
         pred_ref = [item.split(" ") for item in pred_ref]
         wer_metric.append(ids, pred, pred_ref)
         cer_metric.append(ids, pred, pred_ref)
+        count = len(ids)
         dwer = torch.tensor(
-            [score["WER"] for score in wer_metric.scores], device=device
+            [score["WER"] for score in wer_metric.scores[-count:]], device=device
         )
         dcer = torch.tensor(
-            [score["WER"] for score in cer_metric.scores], device=device
+            [score["WER"] for score in cer_metric.scores[-count:]], device=device
         )
         return {"dwer": dwer, "dcer": dcer}
+
+    def get_asr_metrics(self, kind="regular"):
+        if self.metric_mode == "micro":
+            if kind not in self.metrics:
+                metrics = init_asr_metrics()
+                self.metrics[kind] = metrics
+            metrics = self.metrics[kind]
+        else:
+            metrics = init_asr_metrics()
+        return metrics
 
     def _replace_blanks(self, preds):
         """Replaces blanks with single spaces, preventing an exception
@@ -350,6 +389,19 @@ class ASRSpeechEvaluator(SpeechEvaluator):
         ---------
         """
         return [" " if item == "" else item for item in preds]
+
+    def global_metrics(self):
+        global_metrics = {}
+        if self.metric_mode == "micro":
+            wer_metric, cer_metric = self.get_asr_metrics("diff")
+            if wer_metric.scores:
+                global_metrics["wer_micro"] = wer_metric.summarize("WER")
+                global_metrics["cer_micro"] = cer_metric.summarize("WER")
+            dwer_metric, dcer_metric = self.get_asr_metrics("diff")
+            if dwer_metric.scores:
+                global_metrics["dwer_micro"] = dwer_metric.summarize("WER")
+                global_metrics["dcer_micro"] = dcer_metric.summarize("WER")
+        return global_metrics
 
 
 class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
@@ -383,12 +435,13 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         source,
         savedir=None,
         sample_rate=22050,
+        metric_mode="macro",
         min_decode_ratio=0.0,
         max_decode_ratio=1.0,
         run_opts=None,
         unbatch=True,
     ):
-        super().__init__(sample_rate=sample_rate)
+        super().__init__(sample_rate=sample_rate, metric_mode=metric_mode)
         if run_opts is None:
             run_opts = {}
         if savedir is None:
@@ -484,16 +537,17 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         )
         predicted_words = [self.normalize(text) for text in predicted_words]
         ids = range(1, len(wavs) + 1)
-        wer_metric, cer_metric = init_asr_metrics()
+        wer_metric, cer_metric = self.get_asr_metrics()
         predicted_words_split = [item.split(" ") for item in predicted_words]
         text_split = [item.split(" ") for item in text]
         wer_metric.append(ids, predicted_words_split, text_split)
         cer_metric.append(ids, predicted_words_split, text_split)
+        count = len(ids)
         wer = torch.tensor(
-            [score["WER"] for score in wer_metric.scores], device=wavs.device
+            [score["WER"] for score in wer_metric.scores[-count:]], device=wavs.device
         )
         cer = torch.tensor(
-            [score["WER"] for score in cer_metric.scores], device=wavs.device
+            [score["WER"] for score in cer_metric.scores[-count:]], device=wavs.device
         )
         return {
             "wer": wer,

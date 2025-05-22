@@ -8,6 +8,7 @@ eval_subset: null
 eval_asr_beam_size: 66
 eval_asr_type: encoder_decoder
 eval_asr_source: openai/whisper-small
+eval_asr_metric_mode: micro
 eval_spk_sim_source: microsoft/wavlm-base-sv
 evaluations: utmos,asr,spk_sim
 tmp_folder: null
@@ -19,11 +20,17 @@ eval_utmos_domain_id: null
 eval_utmos_judge_id: null
 eval_perf: False
 
+# Inference Fit
+inference_fit_top_k: [20, 30]
+inference_fit_sampling_temperature: [0.7, 0.8, 1.0, 1.2]
+inference_fit_key_metric: dwer
+inference_fit_key_metric_kind: min
 
 eval_asr: !name:utils.eval.WhisperASRSpeechEvaluator
   source: !ref <eval_asr_source>
   sample_rate: !ref <eval_sample_rate>
   savedir: !ref <pretrained_model_save_folder>
+  metric_mode: !ref <eval_asr_metric_mode>
 
 eval_utmos: !name:utils.eval.UTMOSSpeechEvaluator
   source: !ref <eval_utmos_source>
@@ -51,7 +58,22 @@ eval_summary:
   spk_sim:
     descriptive: ["score"]
 
+dwer_metric_key: !apply:speechbrain.utils.hparams.choice
+  value: !ref <eval_asr_metric_mode>
+  choices:
+    macro: asr_dwer_median
+    micro: asr_dwer_micro
+
 eval_summary_log:
   utmos: utmos_utmos_mean
-  dwer: asr_dwer_median
+  dwer: !ref <dwer_metric_key>
+  spk_sim: spk_sim_score_mean
+
+inference_fit_space:
+    top_k: !ref <inference_fit_top_k>
+    sampling_temperature: !ref <inference_fit_sampling_temperature>
+
+inference_fit_metrics:
+  utmos: utmos_utmos_mean
+  dwer: !ref <dwer_metric_key>
   spk_sim: spk_sim_score_mean

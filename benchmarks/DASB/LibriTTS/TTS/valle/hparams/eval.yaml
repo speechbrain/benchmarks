@@ -22,8 +22,8 @@ eval_utmos_judge_id: null
 eval_perf: False
 
 # Inference Fit
-inference_fit_top_k: [20, 30]
-inference_fit_sampling_temperature: [0.7, 0.8, 1.0, 1.2]
+inference_fit_top_k: [10, 20, 30]
+inference_fit_sampling_temperature: [0.7, 0.8, 1.0, 1.2, 1.3]
 inference_fit_key_metric: dwer
 inference_fit_key_metric_kind: min
 

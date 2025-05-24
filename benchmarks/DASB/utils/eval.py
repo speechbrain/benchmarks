@@ -393,7 +393,7 @@ class ASRSpeechEvaluator(SpeechEvaluator):
     def global_metrics(self):
         global_metrics = {}
         if self.metric_mode == "micro":
-            wer_metric, cer_metric = self.get_asr_metrics("diff")
+            wer_metric, cer_metric = self.get_asr_metrics("regular")
             if wer_metric.scores:
                 global_metrics["wer_micro"] = wer_metric.summarize("WER")
                 global_metrics["cer_micro"] = cer_metric.summarize("WER")

@@ -73,6 +73,8 @@ class SpeechEvaluationMetricStats(MetricStats):
         self.read_reports()
         self.create_reports()
         self.item_ids = []
+        for evaluator_key in self.enabled_evaluators:
+            self.evaluators[evaluator_key].on_evaluation_start()
 
     def on_evaluation_end(self):
         """Invoked at the beginning of the evaluation cycle. The default
@@ -80,6 +82,8 @@ class SpeechEvaluationMetricStats(MetricStats):
         """
         logger.info("Ending evaluation")
         self.write_summary()
+        for evaluator_key in self.enabled_evaluators:
+            self.evaluators[evaluator_key].on_evaluation_end()
 
     def create_reports(self):
         """Creates report files and report writers"""

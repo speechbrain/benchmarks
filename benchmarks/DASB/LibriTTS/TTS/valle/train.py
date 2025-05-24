@@ -1373,6 +1373,7 @@ if __name__ == "__main__":
                 "seed": hparams["seed"],
                 "alignments_folder": hparams.get("alignments_folder"),
                 "model_name": hparams["model"].__class__.__name__,
+                "max_valid_size": hparams.get("max_valid_size", 10000)
             },
         )
 

@@ -12,11 +12,16 @@ Authors
 
 # Implementation of Vall-E: https://arxiv.org/abs/2301.02111
 
+from io import StringIO
 import logging
+import re
+import string
 import torch
 import inspect
+import torchaudio
 from typing import Tuple, Optional
 from speechbrain.dataio.dataio import length_to_mask
+from speechbrain.utils.metric_stats import ErrorRateStats
 
 from torch import Tensor
 from torch import nn
@@ -24,6 +29,13 @@ from torch.nn import functional as F
 from dataclasses import dataclass
 
 from speechbrain.nnet.losses import reduce_loss, truncate
+from speechbrain.lobes.models.huggingface_transformers import Whisper
+from speechbrain.decoders.seq2seq import S2SWhisperGreedySearcher
+from speechbrain.utils.data_utils import batch_pad_right
+from speechbrain.utils.logger import get_logger
+from utils.data import undo_padding_tensor
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -353,11 +365,13 @@ class ValleLM(nn.Module):
             if torch.any(modality_change_mask):
                 modality_index = torch.where(
                     modality_change_mask, prev_tok[:, 0], modality_index,
-                ).flatten().squeeze()
-                if modality_index.dim() == 0:
-                    modality_index = modality_index.unsqueeze(0)
-                if modality_index.size(0) > 1:
-                    modality_index = modality_index[0:1]
+                )
+                if is_flattened:
+                    modality_index = modality_index.flatten().squeeze()
+                    if modality_index.dim() == 0:
+                        modality_index = modality_index.unsqueeze(0)
+                    if modality_index.size(0) > 1:
+                        modality_index = modality_index[0:1]
                 mask = modality_index_to_mask(modality_index, opts)
                 logging.warning(
                     f"Step {step}: change modality index {modality_index}"
@@ -486,10 +500,10 @@ class ValleLM(nn.Module):
             gen_tokens_list.append(gen_tokens[b][:item_finish_idx])
             gen_scores_list.append(gen_scores[b][:item_finish_idx])
         return gen_tokens_list, gen_scores_list
-    
+
     def apply_lm_head(self, x, track):
         """Applies the language model head
-        
+
         Arguments
         ---------
         """
@@ -1228,3 +1242,164 @@ def masked_nll_loss(
     loss *= mask
     loss = reduce_loss(loss, mask, reduction, 0.0, log_probabilities, targets)
     return loss
+
+
+class SampleSelector:
+    """A base class for sample selectors"""
+
+    def select(self, tokens, scores, label):
+        """Performs selection
+
+        Arguments
+        ---------
+        tokens : list
+            The generated tokens
+
+        scores : list
+            The scores
+
+        label : str
+            The label for the sample
+        """
+        raise NotImplementedError()
+
+
+class DefaultSampleSelector(SampleSelector):
+    def __init__(self, **kwargs):
+        pass
+
+    def select(self, tokens, scores, text):
+        return tokens[0]
+
+
+RE_PUNCTUATION = re.compile(
+    "|".join(re.escape(char) for char in string.punctuation)
+)
+
+
+class WhisperASRSampleSelector(SampleSelector):
+    """A selector implemented using Whisper
+    
+    Arguments
+    ---------
+    tokenizer: BaseTokenizer
+        A tokenizer interface
+    source : str
+        The source for the Whisper model
+    savedir : str
+        The path where the Whisper model will be saved
+    model : Whisper
+        Alternatively, a pre-initialized Whisper model instance
+    sample_rate : int
+        The sample rate of the underlying Whisper model
+    tokenizer_sample_rate : int
+        The sample rate of the tokenizer provided
+    min_decode_ratio : float
+        The minimum decode ratio for ASR
+    max_decode_ratio : float
+        The maximum decode ratio for ASR
+    language : str
+        The ASR language
+    debug : bool
+        Whether debug mode is enabled. This will trigger
+        more verbose logging, including a WER report
+    """
+    def __init__(
+        self,
+        tokenizer,
+        source=None,
+        savedir=None,
+        model=None,
+        sample_rate=16000,
+        tokenizer_sample_rate=16000,
+        min_decode_ratio=0.0,
+        max_decode_ratio=1.0,
+        language="english",
+        token_shift=0,
+        offsets=None,
+        debug=False
+    ):
+        self.tokenizer = tokenizer
+        self.sample_rate = sample_rate
+        self.tokenizer_sample_rate = tokenizer_sample_rate
+        if model is not None:
+            self.model = model
+        else:
+            self.model = Whisper(
+                source, savedir, sample_rate, freeze=True, freeze_encoder=True,
+            )
+        self.model.tokenizer.set_prefix_tokens(language, "transcribe", False)
+        self.searcher = S2SWhisperGreedySearcher(
+            self.model,
+            min_decode_ratio=min_decode_ratio,
+            max_decode_ratio=max_decode_ratio,
+        )
+        self.token_shift = token_shift
+        self.offsets = offsets
+        self.debug = debug
+
+    def select(self, tokens, scores, text):
+        tokens, length = batch_pad_right(tokens)
+        tokens_shift = tokens - self.token_shift
+        if self.offsets is not None:
+            tokens_shift = tokens_shift - self.offsets
+        tokens_shift = tokens_shift.clip(0)
+        wav = self.tokenizer.tokens_to_sig(tokens_shift)
+        if self.sample_rate != self.tokenizer_sample_rate:
+            wav = torchaudio.functional.resample(
+                wav,
+                orig_freq=self.tokenizer_sample_rate,
+                new_freq=self.sample_rate
+            )
+        wav = undo_padding_tensor(wav, length)
+        metric = ErrorRateStats()
+        text = text.split(" ")
+        ids = range(len(wav))
+        preds = [self.predict(wav_item).split(" ") for wav_item in wav]
+        metric.append(ids, preds, [text] * len(wav))
+        sample_scores = [score["WER"] for score in metric.scores]
+        idx = torch.argmin(torch.tensor(sample_scores)).item()
+        logger.info(
+            "Ground truth text: %s, sample scores: %s, best: #%d",
+            text,
+            sample_scores,
+            idx
+        )
+        if self.debug:
+            sio = StringIO()
+            metric.write_stats(sio)
+            logger.info("%s", sio.getvalue())
+        return tokens[idx]
+
+    def predict(self, wav):
+        if wav.dim() < 2:
+            wav = wav.unsqueeze(0)
+        wav = self.model.pad_or_trim(wav)
+        mels = self.model.log_mel_spectrogram(wav)
+        enc_out = self.model.forward_encoder(mels)
+        pred, _, _, _ = self.searcher(enc_out.detach(), torch.tensor(1., device=wav.device))
+        pred = self.model.tokenizer.batch_decode(
+            pred, skip_special_tokens=True
+        )[0]
+        pred = self.normalize(pred)
+        return pred
+    
+    def normalize(self, text):
+        """Performs text normalization (uppercase, remove whitespace,
+        remove punctuation)
+
+        Arguments
+        ---------
+        text : str
+            Unnormalized text
+
+        Returns
+        -------
+        text : str
+            Normalized text
+        """
+        text = text.upper()
+        text = text.strip()
+        text = RE_PUNCTUATION.sub("", text)
+        return text
+

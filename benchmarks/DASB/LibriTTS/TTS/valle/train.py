@@ -38,6 +38,7 @@ base_dir = str(Path(__file__).resolve().parent.parent.parent.parent)
 sys.path.append(base_dir)
 
 from evaluation import SpeechEvaluationMetricStats  # noqa: E402
+from model.valle import DefaultSampleSelector
 
 logger = logging.getLogger(__name__)
 
@@ -273,7 +274,7 @@ class VALLEBrain(sb.Brain):
                 self.evaluation_metric.on_evaluation_start()
                 self.is_evaluating = True
             else:
-                logger.info("No evaluation on epoch %d", epoch)
+                logger.info("No evaluation on epoch %d", epoch)            
         elif stage == sb.Stage.TEST:
             self.evaluation_metric.on_evaluation_start()
             self.is_evaluating = True
@@ -282,6 +283,22 @@ class VALLEBrain(sb.Brain):
         )
         dataset = stage.name.lower()
         self.resample_fn[dataset](epoch=epoch or 0)
+        self.init_sample_selector(stage)
+
+    def init_sample_selector(self, stage):
+        """Initializes the sample selector"""
+        if stage == sb.Stage.TRAIN:
+            self.sample_selector = None
+        else:
+            sample_selector = getattr(
+                self.hparams, "sample_selector", None
+            )
+            if not sample_selector:
+                sample_selector = DefaultSampleSelector
+            self.sample_selector = sample_selector(
+                token_shift=self.hparams.audio_token_shift,
+                offsets=self.offsets
+            )
 
     def apply_curriculum(self):
         """Applies curriculum settings, if specified, training only the autoregressive part - or
@@ -484,12 +501,22 @@ class VALLEBrain(sb.Brain):
             self.modules.model.module.inference
             if hasattr(self.modules.model, "module")
             else self.modules.model.inference
-        )        
+        )
+        logger.info("Running inference")
         inference_results = [
             inference(
                 prefix=prefix_item.unsqueeze(0), opts=self._get_inference_opts()
             )
             for prefix_item in prefix_items
+        ]
+        logger.info("Running selection")
+        inference_results = [
+            self.sample_selector.select(
+                tokens,
+                scores,
+                label
+            )
+            for (tokens, scores), label in zip(inference_results, batch.label_norm_eval)
         ]
         inferred_tokens = [
             self._pad_inferred_sample(result)
@@ -513,8 +540,8 @@ class VALLEBrain(sb.Brain):
         sample : torch.Tensor
             A sample, padded if needed
         """
-        if result[0]:
-            sample = result[0][0]
+        if result is not None:
+            sample = result
         else:
             sample = torch.zeros(
                 1000, self.hparams.audio_tokens_per_step, device=self.device
@@ -579,8 +606,15 @@ class VALLEBrain(sb.Brain):
 
     def _get_eval_output_folder(self, stage):
         epoch = self.hparams.epoch_counter.current
+        eval_folder_name = None
+        if stage == sb.Stage.TEST and self.hparams.eval_folder:
+            eval_folder_name = self.hparams.eval_folder
+        if not eval_folder_name:
+            eval_folder_name = stage.name.lower()
+        if self.hparams.eval_suffix:
+            eval_folder_name += self.hparams.eval_suffix
         output_folder = (
-            Path(self.hparams.output_folder) / "eval" / stage.name.lower()
+            Path(self.hparams.output_folder) / "eval" / eval_folder_name
         )
         if epoch is not None:
             output_folder = output_folder / str(epoch)
@@ -1384,7 +1418,9 @@ if __name__ == "__main__":
                 eval_kwargs = {
                     f"{test_key_kind}_key": test_key
                 }
-                eval_dataset = datasets["test"]
+                eval_dataset_key = hparams["eval_dataset"]
+                logger.info("Performing final evaluation on the %s dataset", eval_dataset_key)
+                eval_dataset = datasets[eval_dataset_key]
                 eval_dataset = select_eval_subset(eval_dataset, hparams)
                 tts_brain.evaluate(
                     test_set=eval_dataset,

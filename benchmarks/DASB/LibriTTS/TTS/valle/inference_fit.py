@@ -339,9 +339,10 @@ if __name__ == "__main__":
             eval_hparams_file,
         )
     hparams = load_hyperpyyaml(yaml_content, overrides, overrides_must_match=True)
-    from train import dataio_prepare
+    from train import dataio_prepare, select_eval_subset # noqa
     datasets, _ = dataio_prepare(hparams)
     dataset = datasets["valid"]
+    dataset = select_eval_subset(dataset, hparams)
 
     inference_fit = InferenceFit(hparams, run_opts)
     inference_fit.fit(dataset)

@@ -1,5 +1,6 @@
-eval_dataset: valid
+eval_dataset: test
 eval_suffix: ""
+eval_folder: null
 eval_sample_rate: 16000
 eval_spk_sim_sample_rate: 16000
 eval_samples: null

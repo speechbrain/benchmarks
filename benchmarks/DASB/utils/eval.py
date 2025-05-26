@@ -321,6 +321,7 @@ class ASRSpeechEvaluator(SpeechEvaluator):
                 length=length_ref,
                 text=text,
                 sample_rate=sample_rate_ref,
+                metric_key="ref",
             )
             details.update(
                 {f"{key}_ref": value for key, value in details_ref.items()}
@@ -459,7 +460,7 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         self.unbatch = unbatch
         self.to(device)
 
-    def evaluate_samples(self, wavs, length, text, sample_rate):
+    def evaluate_samples(self, wavs, length, text, sample_rate, metric_key="regular"):
         """Evaluates a batch of samples
 
         Arguments
@@ -472,6 +473,8 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
             Text labels corresponding to the waveforms
         sample_rate : int
             The sample rate of the waveforms
+        metric_key : str
+            The key for metrics
 
         Returns
         -------
@@ -487,24 +490,25 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
                     torch.ones(1, device=wavs.device),
                     text[idx : idx + 1],
                     sample_rate,
+                    metric_key,
                 )
                 for idx in range(batch_size)
             ]
             result = {
+                "pred": [result["pred"][0] for result in results],
+                "target": text,
                 "wer": torch.stack(
                     [result["wer"] for result in results]
                 ).squeeze(-1),
                 "cer": torch.stack(
                     [result["cer"] for result in results]
                 ).squeeze(-1),
-                "pred": [result["pred"][0] for result in results],
-                "target": text,
             }
             return result
         else:
             return self._evaluate_samples(wavs, length, text, sample_rate)
 
-    def _evaluate_samples(self, wavs, length, text, sample_rate):
+    def _evaluate_samples(self, wavs, length, text, sample_rate, metric_key):
         """Evaluates a batch of samples. This function is meant
         to be used internally. evaluate_samples will call
         it multiple times if unbatch is enabled.
@@ -519,6 +523,8 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
             Text labels corresponding to the waveforms
         sample_rate : int
             The sample rate of the waveforms
+        metric_key : bool
+            Whether to compute the metrics            
 
         Returns
         -------
@@ -537,7 +543,7 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         )
         predicted_words = [self.normalize(text) for text in predicted_words]
         ids = range(1, len(wavs) + 1)
-        wer_metric, cer_metric = self.get_asr_metrics()
+        wer_metric, cer_metric = self.get_asr_metrics(metric_key)
         predicted_words_split = [item.split(" ") for item in predicted_words]
         text_split = [item.split(" ") for item in text]
         wer_metric.append(ids, predicted_words_split, text_split)
@@ -549,12 +555,13 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         cer = torch.tensor(
             [score["WER"] for score in cer_metric.scores[-count:]], device=wavs.device
         )
-        return {
+        result = {
             "wer": wer,
             "cer": cer,
             "pred": predicted_words,
             "target": text,
         }
+        return result
 
     def normalize(self, text):
         """Performs text normalization (uppercase, remove whitespace,

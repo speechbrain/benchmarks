@@ -129,6 +129,8 @@ spk_prompt_length: 150
 n_ctx: !ref <max_audio_length> + <text_max_length> + <spk_prompt_length>
 infer_max_audio_length: !ref <max_audio_length>
 max_length_ratio: 10.0
+inference_nbest: 1
+inference_sampling_temperature: 1.0
 debug_infer_max_audio_length: 10
 
 # Label encoder
@@ -198,6 +200,13 @@ sample_dataloader_opts:
 token_model_kwargs:
     SSL_layers: !ref <speech_model_layers>
 
+# Sample Selector
+sample_selection: default
+sample_selector_source: openai/whisper-small
+sample_selector_sample_rate: 16000
+sample_selector_debug: False
+
+
 ####################### Model parameters ###########################
 # Transformer
 d_model: 1024 # @orion_step1: --d_model~"choices([512, 768, 1024])"
@@ -258,6 +267,9 @@ inference_opts: !name:model.valle.SpeechLMInferenceOptions
     minlenratio: 1.0
     maxlenratio: !ref <max_length_ratio>
     nq: !ref <audio_tokens_per_step>
+    nbest: !ref <inference_nbest>
+    sampling_temperature: !ref <inference_sampling_temperature>
+
 
 tokenizer: !new:utils.tokenizer_interface.DiscreteSSLTokenizer
     save_path: !ref <kmeans_cache_dir>/<ssl_model_type>
@@ -301,3 +313,15 @@ train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
 
 spk_sampler: !name:speechbrain.dataio.sampler.ReproducibleRandomSampler
     seed: !ref <seed>
+
+sample_selector: !apply:speechbrain.utils.hparams.choice
+    value: !ref <sample_selection>
+    choices:
+        default: !name:model.valle.DefaultSampleSelector
+        asr: !name:model.valle.WhisperASRSampleSelector
+            tokenizer: !ref <tokenizer>
+            source: !ref <sample_selector_source>
+            sample_rate: !ref <sample_selector_sample_rate>
+            tokenizer_sample_rate: !ref <model_sample_rate>
+            savedir: !ref <pretrained_model_save_folder>
+            debug: !ref <sample_selector_debug>

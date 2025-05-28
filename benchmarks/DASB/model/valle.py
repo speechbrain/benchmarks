@@ -1327,7 +1327,8 @@ class WhisperASRSampleSelector(SampleSelector):
         else:
             self.model = Whisper(
                 source, savedir, sample_rate, freeze=True, freeze_encoder=True,
-            )
+            ).to("cuda")
+        self.model.device = "cuda"
         self.model.tokenizer.set_prefix_tokens(language, "transcribe", False)
         self.searcher = S2SWhisperGreedySearcher(
             self.model,

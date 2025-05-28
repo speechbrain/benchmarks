@@ -1317,18 +1317,20 @@ class WhisperASRSampleSelector(SampleSelector):
         language="english",
         token_shift=0,
         offsets=None,
-        debug=False
+        debug=False,
+        device="cuda"
     ):
         self.tokenizer = tokenizer
         self.sample_rate = sample_rate
         self.tokenizer_sample_rate = tokenizer_sample_rate
+        # TODO: Pass the device
         if model is not None:
             self.model = model
         else:
             self.model = Whisper(
                 source, savedir, sample_rate, freeze=True, freeze_encoder=True,
-            ).to("cuda")
-        self.model.device = "cuda"
+            ).to(device)
+        self.model.device = device
         self.model.tokenizer.set_prefix_tokens(language, "transcribe", False)
         self.searcher = S2SWhisperGreedySearcher(
             self.model,
@@ -1338,6 +1340,11 @@ class WhisperASRSampleSelector(SampleSelector):
         self.token_shift = token_shift
         self.offsets = offsets
         self.debug = debug
+        tokenizer.device = device
+        if hasattr(tokenizer, "codec_vocoder"):
+            tokenizer.codec_vocoder.to(device)
+            tokenizer.codec_vocoder.device = device
+
 
     def select(self, tokens, scores, text):
         tokens, length = batch_pad_right(tokens)

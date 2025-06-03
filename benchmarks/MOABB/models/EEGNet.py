@@ -240,6 +240,7 @@ class EEGNet(torch.nn.Module):
         x : torch.Tensor (batch, time, EEG channel, channel)
             Input to convolve. 4d tensors are expected.
         """
+        x = x.transpose(1, 2)
         x = self.conv_module(x)
         x = self.dense_module(x)
         return x

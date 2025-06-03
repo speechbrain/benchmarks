@@ -157,5 +157,8 @@ dmypy.json
 # Log folders
 **/log/
 
+# Datasets folders
+**/eeg_data/
+
 # Mac OS
 .DS_Store

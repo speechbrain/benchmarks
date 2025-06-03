@@ -1,42 +1,181 @@
 """
-This script implements raining neural networks to decode single EEG trials using various paradigms on MOABB datasets.
-For a list of supported datasets and paradigms, please refer to the official documentation at http://moabb.neurotechx.com/docs/api.html.
+Training neural networks for MOABB datasets using the new data loading system.
 
-To run training (e.g., architecture: EEGNet; dataset: BNCI2014001) for a specific subject, recording session and training strategy:
-    > python train.py hparams/MotorImagery/BNCI2014001/EEGNet.yaml --data_folder=eeg_data --cached_data_folder=eeg_pickled_data --target_subject_idx=0 --target_session_idx=0 --data_iterator_name=leave-one-session-out
-
-Author
-------
-Davide Borra, 2022
-Mirco Ravanelli, 2023
+Authors
+-------
+Victor Cruz, 2025
+(Based on original work by Davide Borra and Mirco Ravanelli)
 """
 
 import pickle
 import os
 import torch
 from hyperpyyaml import load_hyperpyyaml
-from torch.nn import init
+
 import numpy as np
 import logging
 import sys
-from utils.dataio_iterators import LeaveOneSessionOut, LeaveOneSubjectOut
-from torchinfo import summary
-import speechbrain as sb
 import yaml
+import speechbrain as sb
+from torch.nn import init
+import json
+from torch.utils.data import random_split
+
+
+from dataio.splitters import CrossSessionSplitter, CrossSubjectSplitter
+
+
+def prepare_dataset(hparams):
+    """Create and preprocess dataset using new data loading system."""
+
+    dataset = hparams["EEG_dataset"]
+    # 1) Create and update label encoder with all raw labels from the dataset
+    label_encoder = sb.dataio.encoder.CategoricalEncoder()
+    label_encoder.update_from_didataset(dataset, "label")
+
+    # 2) Define a small helper function that calls the encoder
+    def encode_label_func(raw_label):
+        # This returns a Tensor containing the encoded label
+        return label_encoder.encode_label_torch(raw_label)
+
+    # 3) Add a dynamic item that calls our helper function
+    dataset.add_dynamic_item(
+        encode_label_func, takes=["label"], provides="encoded_label",
+    )
+
+    # 4) Change the dataset output keys to produce encoded_label instead of raw "label"
+    #    (You can keep "label" too if you want both.)
+    dataset.set_output_keys(["encoded_label", "subject", "session", "epoch"])
+
+    return dataset
+
+
+def prepare_splits(hparams, dataset):
+    """Create train/valid/test splits using new splitter system."""
+
+    # Create appropriate splitter
+    if hparams["data_iterator_name"] == "leave-one-session-out":
+        splitter = CrossSessionSplitter(dataset, leave_k_out=1)
+    elif hparams["data_iterator_name"] == "leave-one-subject-out":
+        splitter = CrossSubjectSplitter(dataset, leave_k_out=1)
+    else:
+        raise ValueError(f"Unknown split type: {hparams['data_iterator_name']}")
+
+    # Get specific split based on session index
+    split = list(splitter)[hparams["target_session_idx"]]
+    train_dataset = split["train"]
+    total_len = len(train_dataset)
+    val_ratio = hparams["valid_ratio"]
+    train_len = int(total_len * (1 - val_ratio))
+    val_len = total_len - train_len
+
+    generator = torch.Generator().manual_seed(hparams["seed"])
+    train_subset, valid_subset = random_split(
+        train_dataset, [train_len, val_len], generator=generator
+    )
+    num_workers = hparams["num_workers"]
+
+    if num_workers is None:
+        num_workers = torch.get_num_threads() - 1
+
+    # Create dataloaders
+    train_loader = torch.utils.data.DataLoader(
+        train_subset,
+        batch_size=hparams["batch_size"],
+        shuffle=True,
+        num_workers=num_workers,
+    )
+    valid_loader = torch.utils.data.DataLoader(
+        valid_subset, batch_size=hparams["batch_size"], num_workers=num_workers
+    )
+    test_loader = torch.utils.data.DataLoader(
+        split["test"], batch_size=hparams["batch_size"], num_workers=num_workers
+    )
+
+    return {"train": train_loader, "valid": valid_loader, "test": test_loader}
+
+
+def load_hparams_and_prepare_data(hparams_file, run_opts, overrides):
+    """Load hyperparameters and prepare datasets."""
+    if "SB_YAML_OVERRIDES" in os.environ:
+        overrides = dict(overrides)  # make a copy
+        overrides.update(json.loads(os.environ["SB_YAML_OVERRIDES"]))
+    # Initial hparams load
+    with open(hparams_file) as fin:
+        hparams = load_hyperpyyaml(fin, overrides)
+
+    # Prepare dataset
+    dataset = prepare_dataset(hparams)
+
+    # Update overrides based on actual data shape
+    example_batch = next(iter(dataset))
+
+    overrides.update(
+        T=example_batch["epoch"].shape[1],  # Time dimension
+        C=example_batch["epoch"].shape[0],  # Channel dimension
+        n_train_examples=len(dataset),
+    )
+
+    # Reload hparams with shape information
+    with open(hparams_file) as fin:
+        hparams = load_hyperpyyaml(fin, overrides)
+
+    # Create splits
+    datasets = prepare_splits(hparams, dataset)
+
+    # Setup experiment directory
+    hparams["exp_dir"] = os.path.join(
+        hparams["output_folder"],
+        hparams["data_iterator_name"],
+        f"sub-{hparams['target_subject_idx']:03d}",
+        f"sess-{hparams['target_session_idx']:03d}",
+    )
+
+    # Create experiment directory and save config
+    sb.create_experiment_directory(
+        experiment_directory=hparams["exp_dir"],
+        hyperparams_to_save=hparams_file,
+        overrides=overrides,
+    )
+
+    return hparams, datasets
+
+
+def perform_evaluation(brain, hparams, datasets, dataset_key="test"):
+    """This function perform the evaluation stage on a dataset and save the performance metrics in a pickle file"""
+    brain.log_test_as_valid = dataset_key == "valid"
+
+    min_key, max_key = None, None
+    if hparams["test_key"] == "loss":
+        min_key = hparams["test_key"]
+    else:
+        max_key = hparams["test_key"]
+    # perform evaluation
+    brain.evaluate(
+        datasets[dataset_key],
+        progressbar=False,
+        min_key=min_key,
+        max_key=max_key,
+    )
+    # saving metrics on the desired dataset in a pickle file
+    metrics_fpath = os.path.join(
+        hparams["exp_dir"], "{0}_metrics.pkl".format(dataset_key)
+    )
+    with open(metrics_fpath, "wb") as handle:
+        pickle.dump(
+            brain.last_eval_stats, handle, protocol=pickle.HIGHEST_PROTOCOL
+        )
+
+
+# Keep existing MOABBBrain class and run_experiment function
+# Only modify their data handling to work with new dataset format
 
 
 class MOABBBrain(sb.Brain):
-    """
-    This class implements a brain for the MOABB benchmark.
-
-    This class inherits from the Brain class in SpeechBrain.
-    The Brain class is the main class that handles training, validation,
-    testing, and checkpointing.
-
-    """
+    """Modified Brain class for MOABB experiments with new data format."""
 
     def init_model(self, model):
-        """Function to initialize neural network modules"""
+        """Initialize neural network modules"""
         for mod in model.modules():
             if hasattr(mod, "weight"):
                 if not ("Norm" in mod.__class__.__name__):
@@ -48,8 +187,13 @@ class MOABBBrain(sb.Brain):
                     init.constant_(mod.bias, 0)
 
     def compute_forward(self, batch, stage):
-        "Given an input batch it computes the model output."
-        inputs = batch[0].to(self.device)
+        """Given an input batch it computes the model output."""
+        # Extract EEG data from batch dictionary
+        inputs = batch["epoch"].to(self.device)
+
+        # Add channel dimension if needed
+        if len(inputs.shape) == 3:
+            inputs = inputs.unsqueeze(-1)
 
         # Perform data augmentation
         if stage == sb.Stage.TRAIN and hasattr(self.hparams, "augment"):
@@ -62,11 +206,13 @@ class MOABBBrain(sb.Brain):
         # Normalization
         if hasattr(self.hparams, "normalize"):
             inputs = self.hparams.normalize(inputs)
+
         return self.modules.model(inputs)
 
     def compute_objectives(self, predictions, batch, stage):
-        "Given the network predictions and targets computes the loss."
-        targets = batch[1].to(self.device)
+        """Compute loss given predictions and targets."""
+        # Get labels from batch
+        targets = batch["encoded_label"].to(self.device)
 
         # Target augmentation
         N_augments = int(predictions.shape[0] / targets.shape[0])
@@ -74,46 +220,32 @@ class MOABBBrain(sb.Brain):
 
         loss = self.hparams.loss(
             predictions,
-            targets,
+            targets.squeeze(-1),
             weight=torch.FloatTensor(self.hparams.class_weights).to(
                 self.device
             ),
         )
+
         if stage != sb.Stage.TRAIN:
             # From log to linear predictions
             tmp_preds = torch.exp(predictions)
             self.preds.extend(tmp_preds.detach().cpu().numpy())
-            self.targets.extend(batch[1].detach().cpu().numpy())
+            self.targets.extend(batch["encoded_label"].detach().cpu().numpy())
         else:
             if hasattr(self.hparams, "lr_annealing"):
                 self.hparams.lr_annealing.on_batch_end(self.optimizer)
         return loss
 
-    def on_fit_start(self,):
-        """Gets called at the beginning of ``fit()``"""
-        self.init_model(self.hparams.model)
-        self.init_optimizers()
-        in_shape = (
-            (1,)
-            + tuple(np.floor(self.hparams.input_shape[1:-1]).astype(int))
-            + (1,)
-        )
-        model_summary = summary(
-            self.hparams.model, input_size=in_shape, device=self.device
-        )
-        with open(
-            os.path.join(self.hparams.exp_dir, "model.txt"), "w"
-        ) as text_file:
-            text_file.write(str(model_summary))
-
     def on_stage_start(self, stage, epoch=None):
-        "Gets called when a stage (either training, validation, test) starts."
+        """Gets called when a stage (either training, validation, test) starts."""
         if stage != sb.Stage.TRAIN:
             self.preds = []
             self.targets = []
 
     def on_stage_end(self, stage, stage_loss, epoch=None):
         """Gets called at the end of a epoch."""
+        # Rest of the method remains the same as it handles metrics and checkpointing
+        # which don't need to change for the new data format
         if stage == sb.Stage.TRAIN:
             self.train_loss = stage_loss
         else:
@@ -127,6 +259,8 @@ class MOABBBrain(sb.Brain):
                 self.last_eval_stats[metric_key] = self.hparams.metrics[
                     metric_key
                 ](y_true=y_true, y_pred=y_pred)
+
+            # ... rest of the method stays the same ...
             if stage == sb.Stage.VALID:
                 # Learning rate scheduler
                 if hasattr(self.hparams, "lr_annealing"):
@@ -253,18 +387,22 @@ class MOABBBrain(sb.Brain):
 
 
 def run_experiment(hparams, run_opts, datasets):
-    """This function performs a single training (e.g., single cross-validation fold)"""
-    idx_examples = np.arange(datasets["train"].dataset.tensors[0].shape[0])
+    """Run a single experiment with the new data format."""
+    # Calculate class weights
+    train_labels = [batch["encoded_label"] for batch in datasets["train"]]
+    train_labels = torch.cat(train_labels)
+    # train_labels = [ label  for batch in datasets["train"] for label in batch["label"]]
+    # unique_labels, label_indices = np.unique(train_labels, return_inverse=True)
+    # train_labels_tensor = torch.tensor(label_indices)
+
     n_examples_perclass = [
-        idx_examples[
-            np.where(datasets["train"].dataset.tensors[1] == c)[0]
-        ].shape[0]
-        for c in range(hparams["n_classes"])
+        (train_labels == c).sum().item() for c in range(hparams["n_classes"])
     ]
     n_examples_perclass = np.array(n_examples_perclass)
     class_weights = n_examples_perclass.max() / n_examples_perclass
     hparams["class_weights"] = class_weights
 
+    # Setup checkpointer
     checkpointer = sb.utils.checkpoints.Checkpointer(
         checkpoints_dir=os.path.join(hparams["exp_dir"], "save"),
         recoverables={
@@ -272,28 +410,31 @@ def run_experiment(hparams, run_opts, datasets):
             "counter": hparams["epoch_counter"],
         },
     )
+
+    # Setup logger
     hparams["train_logger"] = sb.utils.train_logger.FileTrainLogger(
         save_file=os.path.join(hparams["exp_dir"], "train_log.txt")
     )
+
+    # Log dataset info
     logger = logging.getLogger(__name__)
-    logger.info("Experiment directory: {0}".format(hparams["exp_dir"]))
-    logger.info(
-        "Input shape: {0}".format(
-            datasets["train"].dataset.tensors[0].shape[1:]
-        )
-    )
-    logger.info(
-        "Training set avg value: {0}".format(
-            datasets["train"].dataset.tensors[0].mean()
-        )
-    )
-    datasets_summary = "Number of examples: {0} (training), {1} (validation), {2} (test)".format(
-        datasets["train"].dataset.tensors[0].shape[0],
-        datasets["valid"].dataset.tensors[0].shape[0],
-        datasets["test"].dataset.tensors[0].shape[0],
+    logger.info(f"Experiment directory: {hparams['exp_dir']}")
+
+    # Get example batch for logging
+    example_batch = next(iter(datasets["train"]))
+    logger.info(f"Input shape: {example_batch['epoch'].shape[1:]}")
+    logger.info(f"Training set avg value: {example_batch['epoch'].mean():.3f}")
+
+    # Log dataset sizes
+    datasets_summary = (
+        f"Number of examples: "
+        f"{len(datasets['train'].dataset)} (training), "
+        f"{len(datasets['valid'].dataset)} (validation), "
+        f"{len(datasets['test'].dataset)} (test)"
     )
     logger.info(datasets_summary)
 
+    # Create brain and run training
     brain = MOABBBrain(
         modules={"model": hparams["model"]},
         opt_class=hparams["optimizer"],
@@ -301,126 +442,54 @@ def run_experiment(hparams, run_opts, datasets):
         run_opts=run_opts,
         checkpointer=checkpointer,
     )
-    # training
+    # if False:  # hparams["dry_run"]:
+    #   try:
+    #        # Test forward pass with a batch
+    #        batch = next(iter(datasets["train"]))
+    #        with torch.no_grad():
+    #            brain.compute_forward(batch, sb.Stage.TRAIN)
+    #        logger.info("✓ Dry run successful - model forward pass works")
+    #        raise DryRunComplete("Model validation successful")
+    #    except DryRunComplete:
+    #        raise
+    #    except Exception as e:
+    #        logger.error(f"✗ Dry run failed: {str(e)}")
+    #        raise
+
+    # Training
     brain.fit(
         epoch_counter=hparams["epoch_counter"],
         train_set=datasets["train"],
         valid_set=datasets["valid"],
         progressbar=False,
     )
-    # evaluation after loading model using specific key
+
+    # Evaluation
     perform_evaluation(brain, hparams, datasets, dataset_key="test")
-    # After the first evaluation only 1 checkpoint (best overall or averaged) is stored.
-    # Setting avg_models to 1 to prevent deleting the checkpoint in subsequent calls of the evaluation stage.
     brain.hparams.avg_models = 1
     perform_evaluation(brain, hparams, datasets, dataset_key="valid")
 
 
-def perform_evaluation(brain, hparams, datasets, dataset_key="test"):
-    """This function perform the evaluation stage on a dataset and save the performance metrics in a pickle file"""
-    brain.log_test_as_valid = dataset_key == "valid"
-
-    min_key, max_key = None, None
-    if hparams["test_key"] == "loss":
-        min_key = hparams["test_key"]
-    else:
-        max_key = hparams["test_key"]
-    # perform evaluation
-    brain.evaluate(
-        datasets[dataset_key],
-        progressbar=False,
-        min_key=min_key,
-        max_key=max_key,
-    )
-    # saving metrics on the desired dataset in a pickle file
-    metrics_fpath = os.path.join(
-        hparams["exp_dir"], "{0}_metrics.pkl".format(dataset_key)
-    )
-    with open(metrics_fpath, "wb") as handle:
-        pickle.dump(
-            brain.last_eval_stats, handle, protocol=pickle.HIGHEST_PROTOCOL
-        )
-
-
-def prepare_dataset_iterators(hparams):
-    """Preprocesses the dataset and partitions it into train, valid and test sets."""
-    # defining data iterator to use
-    print("Prepare dataset iterators...")
-    if hparams["data_iterator_name"] == "leave-one-session-out":
-        data_iterator = LeaveOneSessionOut(
-            seed=hparams["seed"]
-        )  # within-subject and cross-session
-    elif hparams["data_iterator_name"] == "leave-one-subject-out":
-        data_iterator = LeaveOneSubjectOut(
-            seed=hparams["seed"]
-        )  # cross-subject and cross-session
-    else:
-        raise ValueError(
-            "Unknown data_iterator_name: %s" % hparams["data_iterator_name"]
-        )
-
-    tail_path, datasets = data_iterator.prepare(
-        data_folder=hparams["data_folder"],
-        dataset=hparams["dataset"],
-        cached_data_folder=hparams["cached_data_folder"],
-        batch_size=hparams["batch_size"],
-        valid_ratio=hparams["valid_ratio"],
-        target_subject_idx=hparams["target_subject_idx"],
-        target_session_idx=hparams["target_session_idx"],
-        events_to_load=hparams["events_to_load"],
-        original_sample_rate=hparams["original_sample_rate"],
-        sample_rate=hparams["sample_rate"],
-        fmin=hparams["fmin"],
-        fmax=hparams["fmax"],
-        tmin=hparams["tmin"],
-        tmax=hparams["tmax"],
-        save_prepared_dataset=hparams["save_prepared_dataset"],
-        n_steps_channel_selection=hparams["n_steps_channel_selection"],
-        seed_nodes=hparams.get("seed_nodes", ["Cz"]),
-    )
-    return tail_path, datasets
-
-
-def load_hparams_and_dataset_iterators(hparams_file, run_opts, overrides):
-    """Loads the hparams and datasets, injecting appropriate overrides
-    for the shape of the dataset.
-    """
-    with open(hparams_file) as fin:
-        hparams = load_hyperpyyaml(fin, overrides)
-
-    tail_path, datasets = prepare_dataset_iterators(hparams)
-    # override C and T, to be sure that network input shape matches the dataset (e.g., after time cropping or channel sampling)
-    overrides.update(
-        T=datasets["train"].dataset.tensors[0].shape[1],
-        C=datasets["train"].dataset.tensors[0].shape[-2],
-        n_train_examples=datasets["train"].dataset.tensors[0].shape[0],
-    )
-
-    # loading hparams for the each training and evaluation processes
-    with open(hparams_file) as fin:
-        hparams = load_hyperpyyaml(fin, overrides)
-    hparams["exp_dir"] = os.path.join(hparams["output_folder"], tail_path)
-
-    # creating experiment directory
-    sb.create_experiment_directory(
-        experiment_directory=hparams["exp_dir"],
-        hyperparams_to_save=hparams_file,
-        overrides=overrides,
-    )
-
-    return hparams, datasets
-
-
 if __name__ == "__main__":
     argv = sys.argv[1:]
+    # try:
     # loading hparams to prepare the dataset and the data iterators
     hparams_file, run_opts, overrides = sb.core.parse_arguments(argv)
     overrides = yaml.load(
         overrides, yaml.SafeLoader
     )  # Convert overrides to a dict
-    hparams, datasets = load_hparams_and_dataset_iterators(
+    hparams, datasets = load_hparams_and_prepare_data(
         hparams_file, run_opts, overrides
     )
-
+    # print("Start Training")
     # Run training
     run_experiment(hparams, run_opts, datasets)
+    # except DryRunComplete:
+    #    print("Dry run successful")
+    #    sys.exit(0)
+    # except Exception as e:
+    #    print(f"Error during execution: {str(e)}")
+    #    if overrides.get("dry_run", False):
+    #        print("Dry run failed")
+    #        sys.exit(1)
+    #    raise

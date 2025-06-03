@@ -1,6 +1,9 @@
 seed: 1234
 __set_torchseed: !apply:torch.manual_seed [!ref <seed>]
 
+#OVERRIDES
+num_workers: 4
+
 # DIRECTORIES
 data_folder: !PLACEHOLDER  #'/path/to/dataset'. The dataset will be automatically downloaded in this folder
 cached_data_folder: !PLACEHOLDER #'path/to/pickled/dataset'
@@ -8,7 +11,7 @@ output_folder: !PLACEHOLDER #'path/to/results'
 
 # DATASET HPARS
 # Defining the MOABB dataset.
-dataset: !new:moabb.datasets.BNCI2014001
+dataset: !new:moabb.datasets.BNCI2014_001
 save_prepared_dataset: True # set to True if you want to save the prepared dataset as a pkl file to load and use afterwards
 data_iterator_name: !PLACEHOLDER
 target_subject_idx: !PLACEHOLDER
@@ -17,7 +20,7 @@ events_to_load: null # all events will be loaded
 original_sample_rate: 250 # Original sampling rate provided by dataset authors
 sample_rate: 125 # Target sampling rate (Hz)
 # band-pass filtering cut-off frequencies
-fmin: 0.13 # @orion_step1: --fmin~"uniform(0.1, 5, precision=2)"
+fmin: 1.0 # @orion_step1: --fmin~"uniform(0.1, 5, precision=2)" # note undefined when under .5
 fmax: 46.0 # @orion_step1: --fmax~"uniform(20.0, 50.0, precision=3)"
 n_classes: 4
 # tmin, tmax respect to stimulus onset that define the interval attribute of the dataset class
@@ -39,6 +42,53 @@ C: 22
 test_with: 'last' # 'last' or 'best'
 test_key: "acc" # Possible opts: "loss", "f1", "auc", "acc"
 
+# DATASET
+# ─── Subject extraction helpers ──────────────────────────────────────────────
+# 1) Grab the whole subject_list from the BNCI2014001 object
+subject_list: !apply:getattr                 # → dataset.subject_list
+    - !ref <dataset>                         # first arg = the object
+    - subject_list                           # second arg = attribute name
+
+# 2) Pick the single subject we want with operator.getitem(list, idx)
+target_subject: !apply:operator.getitem
+    - !ref <subject_list>            # the list
+    - !ref <target_subject_idx>      # the integer index supplied on CLI
+
+# Get target subject
+#target_subject:  # TODD
+
+# Create the subjects list
+subjects: [!ref <target_subject>]
+
+# Create dataset using EpochedEEGDataset
+#dataset_class: !new:dataio.datasets.EpochedEEGDataset
+
+json_path: !apply:os.path.join [!ref <cached_data_folder>, "index.json"]
+save_path: !ref <data_folder>
+# dynamic items list
+bandpass_resample: !apply:dataio.preprocessing.bandpass_resample
+    target_sfreq: !ref <sample_rate>
+    fmin: !ref <fmin>
+    fmax: !ref <fmax>
+
+dynamic_items:
+    - !ref <bandpass_resample>
+    - !name:dataio.preprocessing.to_tensor
+output_keys: ["label", "subject", "session", "epoch"]
+preload: True
+
+EEG_dataset: !apply:dataio.datasets.EpochedEEGDataset.from_moabb
+    dataset: !ref <dataset>
+    json_path: !ref <json_path>
+    subjects: !ref <subjects>
+    save_path: !ref <save_path>
+    dynamic_items: !ref <dynamic_items>
+    output_keys: !ref <output_keys>
+    preload: !ref <preload>
+    tmin: !ref <tmin>
+    tmax: !ref <tmax>
+
+
 # METRICS
 f1: !name:sklearn.metrics.f1_score
     average: 'macro'
@@ -52,7 +102,7 @@ metrics:
 n_train_examples: 100  # it will be replaced in the train script
 # checkpoints to average
 avg_models: 10 # @orion_step1: --avg_models~"uniform(1, 15,discrete=True)"
-number_of_epochs: 862 # @orion_step1: --number_of_epochs~"uniform(250, 1000, discrete=True)"
+number_of_epochs: 10 # @orion_step1: --number_of_epochs~"uniform(250, 1000, discrete=True)"
 lr: 0.0001 # @orion_step1: --lr~"choices([0.01, 0.005, 0.001, 0.0005, 0.0001])"
 # Learning rate scheduling (cyclic learning rate is used here)
 max_lr: !ref <lr> # Upper bound of the cycle (max value of the lr)
@@ -165,3 +215,29 @@ model: !new:models.EEGNet.EEGNet
     dense_max_norm: !ref <dense_max_norm>
     dropout: !ref <dropout>
     dense_n_neurons: !ref <n_classes>
+
+# Search Space
+# the search space is defined as a dictionary of parameter names and a dictionary of possible values
+# the values can be sampled from a uniform distribution, a discrete uniform distribution or a choice of values
+search_space:
+    fmin:
+        type: uniform
+        min: 0.1
+        max: 5.0
+        precision: 2
+    dropout:
+        type: uniform
+        min: 0.0
+        max: 0.5
+        precision: 3
+    cnn_temporal_kernels:
+        type: discrete_uniform
+        min: 4
+        max: 64
+    batch_size_exponent:
+        type: discrete_uniform
+        min: 4
+        max: 6
+    lr:
+        type: choice
+        values: [0.01, 0.005, 0.001, 0.0005, 0.0001]

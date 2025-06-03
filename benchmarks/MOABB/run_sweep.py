@@ -31,6 +31,7 @@ Victor Cruz
 from __future__ import annotations
 
 import sys
+import json
 from typing import Dict, List
 import hashlib
 import os
@@ -127,7 +128,6 @@ def run_single_experiment(
     # Pass the sampled hyper-params to the child process via an env var
     # understood by SpeechBrain.  (Simplest zero-boilerplate path.)
     if hyperparams:
-        import os, json, subprocess
 
         env = dict(os.environ)
         env["SB_YAML_OVERRIDES"] = json.dumps(hyperparams)

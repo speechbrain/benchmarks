@@ -18,6 +18,7 @@ import sys
 import yaml
 import speechbrain as sb
 from torch.nn import init
+import json
 from torch.utils.data import random_split
 
 
@@ -93,7 +94,9 @@ def prepare_splits(hparams, dataset):
 
 def load_hparams_and_prepare_data(hparams_file, run_opts, overrides):
     """Load hyperparameters and prepare datasets."""
-
+    if "SB_YAML_OVERRIDES" in os.environ:
+        overrides = dict(overrides)            # make a copy
+        overrides.update(json.loads(os.environ["SB_YAML_OVERRIDES"]))
     # Initial hparams load
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)

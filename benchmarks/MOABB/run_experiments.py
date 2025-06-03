@@ -90,6 +90,7 @@ class ExperimentRunner:
             default=False,
             help="Validate setup without running",
         )
+        parser.add_argument("--device", type=str, default="cuda", help="Device to run on (cuda or cpu)")
 
         args = parser.parse_args(args)
 
@@ -149,7 +150,7 @@ class ExperimentRunner:
             }
             
             # Create run_opts (empty for now, add parameters if needed)
-            run_opts = {}
+            run_opts = {"device":self.args.device}
 
             # Load hyperparameters and prepare data
             hparams, datasets = load_hparams_and_prepare_data(

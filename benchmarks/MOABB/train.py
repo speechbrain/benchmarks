@@ -75,7 +75,7 @@ def prepare_splits(hparams, dataset):
     )
     num_workers = hparams["num_workers"]
 
-    if num_workers == None:
+    if num_workers is None:
         num_workers = torch.get_num_threads() - 1
 
     # Create dataloaders

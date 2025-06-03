@@ -74,13 +74,16 @@ def prepare_splits(hparams, dataset):
         train_dataset, [train_len, val_len], generator=generator
     )
     num_workers = hparams["num_workers"]
-    
+
     if num_workers == None:
         num_workers = torch.get_num_threads() - 1
-    
+
     # Create dataloaders
     train_loader = torch.utils.data.DataLoader(
-        train_subset, batch_size=hparams["batch_size"], shuffle=True, num_workers=num_workers
+        train_subset,
+        batch_size=hparams["batch_size"],
+        shuffle=True,
+        num_workers=num_workers,
     )
     valid_loader = torch.utils.data.DataLoader(
         valid_subset, batch_size=hparams["batch_size"], num_workers=num_workers
@@ -95,7 +98,7 @@ def prepare_splits(hparams, dataset):
 def load_hparams_and_prepare_data(hparams_file, run_opts, overrides):
     """Load hyperparameters and prepare datasets."""
     if "SB_YAML_OVERRIDES" in os.environ:
-        overrides = dict(overrides)            # make a copy
+        overrides = dict(overrides)  # make a copy
         overrides.update(json.loads(os.environ["SB_YAML_OVERRIDES"]))
     # Initial hparams load
     with open(hparams_file) as fin:

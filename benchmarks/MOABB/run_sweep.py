@@ -25,7 +25,7 @@ Design goals
 
 Author
 ------
-Victor Cruz 
+Victor Cruz
 """
 
 from __future__ import annotations
@@ -74,6 +74,7 @@ def parse_top_level_cli(argv: List[str]) -> tuple[str, Dict, Dict]:
 def params_hash(params):
     return hashlib.md5(str(sorted(params.items())).encode()).hexdigest()[:8]
 
+
 # -----------------------------------------------------------------------------
 
 
@@ -96,8 +97,7 @@ SB_CLI_KEYS = {
 
 
 def build_experimentrunner_argv(
-    hparams_file: str,
-    common_cli: Dict,
+    hparams_file: str, common_cli: Dict,
 ) -> List[str]:
     """
     Convert a dictionary of CLI options into a flat list of CLI tokens
@@ -114,9 +114,7 @@ def build_experimentrunner_argv(
 
 
 def run_single_experiment(
-    hparams_file: str,
-    common_cli: Dict,
-    hyperparams: Dict,
+    hparams_file: str, common_cli: Dict, hyperparams: Dict,
 ):
     """
     Launch one ExperimentRunner with the supplied hyper-parameters.
@@ -173,11 +171,15 @@ def optuna_sweep(hparams_file: str, common_cli: Dict, n_trials: int):
                 params[k] = trial.suggest_categorical(k, spec[1])
         trial_id = params_hash(params)
         common_cli_trial = dict(common_cli)
-        
+
         # Run the experiment; replace with metric parsing if desired.
-        common_cli_trial['output_folder'] = f"{common_cli['output_folder']}/trial-{trial_id}"
+        common_cli_trial[
+            "output_folder"
+        ] = f"{common_cli['output_folder']}/trial-{trial_id}"
         run_single_experiment(hparams_file, common_cli_trial, params)
-        metrics_path = os.path.join(common_cli_trial['output_folder'], "aggregated_performance.txt")  # Or your own metric file
+        metrics_path = os.path.join(
+            common_cli_trial["output_folder"], "aggregated_performance.txt"
+        )  # Or your own metric file
         acc = None
         with open(metrics_path, "r") as f:
             for line in f:
@@ -187,7 +189,7 @@ def optuna_sweep(hparams_file: str, common_cli: Dict, n_trials: int):
                     if "avg:" in tokens:
                         avg_idx = tokens.index("avg:") + 1
                         acc = float(tokens[avg_idx])
-                    else:                       # fallback to the first number
+                    else:  # fallback to the first number
                         acc = float(tokens[1].lstrip("[").rstrip("]"))
                     break
         if acc is None:

@@ -111,6 +111,7 @@ class InferenceFit:
         return metrics
 
     def evaluate_batch(self, batch, params):
+        batch = batch.to(self.device)
         audio_tokens, audio_length = self.inference(batch, params)
         wav = self.create_waveform(audio_tokens, audio_length)
         wav = wav.squeeze(1)

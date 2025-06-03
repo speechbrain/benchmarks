@@ -1,1 +1,3 @@
 python run_experiments.py     --hparams=hparams/MotorImagery/BNCI2014001/EEGNet.yaml     --data_folder=./eeg_data     --output_folder=./results/test_run     --nsbj=9     --nsess=2     --seed=12346     --nruns=1     --train_mode=leave-one-session-out
+
+python run_sweep.py --hparams hparams/MotorImagery/BNCI2014001/EEGNet.yaml --sweep_type optuna --n_trials 2     --data_folder eeg_data --output_folder results/htop/test_run5 --cached_data_folder eeg_data/cache     --nsbj 9 --nsess 2 --seed 1234 --nruns 1 --eval_metric acc --eval_set test --data_iterator_name leave-one-session-out --device cuda

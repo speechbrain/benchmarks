@@ -220,24 +220,24 @@ model: !new:models.EEGNet.EEGNet
 # the search space is defined as a dictionary of parameter names and a dictionary of possible values
 # the values can be sampled from a uniform distribution, a discrete uniform distribution or a choice of values
 search_space:
-  fmin:
-    type: uniform
-    min: 0.1
-    max: 5.0
-    precision: 2
-  dropout:
-    type: uniform
-    min: 0.0
-    max: 0.5
-    precision: 3
-  cnn_temporal_kernels:
-    type: discrete_uniform
-    min: 4
-    max: 64
-  batch_size_exponent:
-    type: discrete_uniform
-    min: 4
-    max: 6
-  lr:
-    type: choice
-    values: [0.01, 0.005, 0.001, 0.0005, 0.0001]
+    fmin:
+        type: uniform
+        min: 0.1
+        max: 5.0
+        precision: 2
+    dropout:
+        type: uniform
+        min: 0.0
+        max: 0.5
+        precision: 3
+    cnn_temporal_kernels:
+        type: discrete_uniform
+        min: 4
+        max: 64
+    batch_size_exponent:
+        type: discrete_uniform
+        min: 4
+        max: 6
+    lr:
+        type: choice
+        values: [0.01, 0.005, 0.001, 0.0005, 0.0001]

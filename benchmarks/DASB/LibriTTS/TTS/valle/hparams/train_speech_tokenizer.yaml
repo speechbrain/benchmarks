@@ -111,6 +111,7 @@ infer_max_audio_length: !ref <max_audio_length>
 max_length_ratio: 10.0
 inference_nbest: 1
 inference_sampling_temperature: 1.0
+inference_top_k: 20
 debug_infer_max_audio_length: 10
 
 # Label encoder
@@ -227,6 +228,7 @@ inference_opts: !name:model.valle.SpeechLMInferenceOptions
     nq: !ref <audio_tokens_per_step>
     nbest: !ref <inference_nbest>
     sampling_temperature: !ref <inference_sampling_temperature>
+    top_k: !ref <inference_top_k>
 
 
 tokenizer: !new:utils.tokenizer_interface.SpeechTokenizerWrapper

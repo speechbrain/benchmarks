@@ -113,7 +113,6 @@ max_length_ratio: 10.0
 inference_nbest: 1
 inference_sampling_temperature: 1.0
 inference_top_k: 20
-inference_top_k: 20
 debug_infer_max_audio_length: 10
 
 # Label encoder

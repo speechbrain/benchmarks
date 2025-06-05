@@ -7,6 +7,7 @@ Authors
  * Artem Ploujnikov 2024
 """
 
+import json
 import speechbrain as sb
 import sys
 import csv
@@ -72,11 +73,32 @@ class InferenceFit:
         logger.info("Parameter Space: %s", format_space(self.space))
         evaluations = self.enumerate_param_space()
         for idx, params in enumerate(tqdm(evaluations, desc="Parameter space")):
-            eval_result = self.evaluate(dataset, params)
+            if self.is_completed(params):
+                eval_result = self.get_result(params)
+            else:
+                eval_result = self.evaluate(dataset, params)
             self.result.append({"idx": idx, **params, **eval_result})
         self.best = self.find_best()
         return self.result, self.best
-    
+
+    def is_completed(self, params):
+        folder_name = params_to_folder_name(params)
+        path = self.output_folder / folder_name / "summary.json"
+        return path.exists()
+
+    def get_result(self, params):
+        params_str = format_params(params)
+        logger.info("Retrieving params for completed run %s", params_str)
+        folder_name = params_to_folder_name(params)
+        path = self.output_folder / folder_name / "summary.json"
+        with open(path) as summary_file:
+            summary = json.load(summary_file)
+            result = {
+                key: summary.get(value, 0.0)
+                for key, value in self.hparams.inference_fit_metrics.items()
+            }
+        return result
+
     def find_best(self):
         best = self.result[0]
         op = (

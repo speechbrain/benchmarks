@@ -263,12 +263,15 @@ lr_annealing: !new:speechbrain.nnet.schedulers.NoamScheduler
     lr_initial: !ref <lr>
     n_warmup_steps: !ref <lr_warmup_steps>
 
+generator: !new:model.custom_model.SaveableGenerator
+
 checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
     checkpoints_dir: !ref <save_folder>
     recoverables:
         model: !ref <model>
         lr_scheduler: !ref <lr_annealing>
         counter: !ref <epoch_counter>
+        generator: !ref <generator>
 
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
     limit: !ref <number_of_epochs>

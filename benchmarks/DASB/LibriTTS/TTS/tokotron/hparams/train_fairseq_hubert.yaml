@@ -13,12 +13,12 @@ train_log: !ref <output_folder>/train_log.txt
 testing: True # If set to True, the test evlaution is done, otherwise skipped.
 
 # Data files
-data_folder: !PLACEHOLDER # e.g., /path/to/LibriSpeech
-prepare_save_folder: !ref <data_folder>/prepared
+data_folder: !PLACEHOLDER
+cached_data_folder: !PLACEHOLDER
+data_folder_alignments: null # e.g., /path/to/LibriSpeech
+prepare_save_folder: !ref <cached_data_folder>
 pretrained_model_save_folder: !ref <prepare_save_folder>
 representation_mode: discrete
-vocoder_model_name: vocos
-vocoder_model_path: !ref <pretrained_model_save_folder>/<vocoder_model_name>
 prepare_archive_path: null
 prepare_skip_ignore_folders: False
 data_mode: lite
@@ -37,17 +37,39 @@ frozen_split_path: null
 sample_path: null
 progress_folder: !ref <output_folder>/progress
 progress_current: !ref <progress_folder>/current
-progress_meta: !ref <progress_folder>/meta.yaml
 init_from: null
 num_audio_samples: 32
 samples_interval: 5
 
+tokens_folder: !PLACEHOLDER # Path to the folder where extracted tokens are saved.
+
+tokens_loader: !new:utils.tokens.TokensLoader
+    data_path: !ref <tokens_folder>
+
+# Position shift
+use_position_shift: True
+max_position_shift: 1000
+position_shift_seed: 42
+position_shift_probability: 1.0
+
 freeze_token_model: True
-token_model_src: "fnlp/SpeechTokenizer"
+
 g2p_src: flexthink/soundchoice-g2p
+kmeans_cache_dir: !ref <save_folder>/kmeans_checkpoint
+kmeans_dataset: LibriSpeech
+model_path: !ref <pretrained_model_save_folder>/fairseq-hubert
+feature_extractor_path: !ref <model_path>/mhubert_base_25hz_cp_mls_cv_sp_fisher.pt
+kmeans_path: !ref <model_path>/mhubert_base_25hz_cp_mls_cv_sp_fisher_L11_km500.bin
+vocoder_dense_model_name: "mhubert-base-25hz"
+vocoder_quantizer_model_name: "kmeans"
+vocoder_vocab_size: 500
+
+available_speech_model_layers: [1, 3, 7, 12, 18, 23]
+speech_model_layers: !ref <available_speech_model_layers>
+select_layers: null
 token_offset: 1
-vocoder_takes_spk_emb: False
 spk_emb_src: speechbrain/spkrec-ecapa-voxceleb-mel-spec
+spk_emb_shuffle: True
 
 splits: ["train", "valid", "test"]
 split_ratio: [90, 5, 5]
@@ -61,6 +83,7 @@ number_of_epochs: 1000
 reset_annealing_epoch: null
 batch_size: 16
 valid_batch_size: !ref <batch_size>
+batch_size_guided: 2
 extract_features_batch_size: 32
 grad_accumulation_factor: 1
 max_grad_norm: 0.01
@@ -93,10 +116,11 @@ gate_loss_gamma: 0.01
 gate_loss_max_weight: 1.
 
 # Inference parameters
-inference_mode: autoregressive
 eos_mode: gate
-decoder_mode: autoregressive
 scale_factor: 4
+
+# Embedding Injection
+spk_emb_injection: null
 
 # Beam Search-specific parameters
 min_decode_ratio: 1.0
@@ -105,16 +129,16 @@ beam_size: 5
 
 
 # Feature parameters
-sample_rate: 22050
+sample_rate: 24000
 model_sample_rate: 16000
-max_audio_length: 5000
-infer_max_audio_length: 1000
+max_audio_length: 2000
+infer_max_audio_length: !ref <max_audio_length>
 debug_infer_max_audio_length: 10
 
 # Label encoder
 label_encoder: !new:speechbrain.dataio.encoder.TextEncoder
-token_list_file_text: ./hparams/char_en.txt
-token_list_file_phn: ./hparams/arpabet.txt
+token_list_file_text: char_en.txt
+token_list_file_phn: arpabet.txt
 token_list_file: !apply:speechbrain.utils.hparams.choice
     value: !ref <input>
     choices:
@@ -122,7 +146,7 @@ token_list_file: !apply:speechbrain.utils.hparams.choice
         phonemes: !ref <token_list_file_phn>
 
 # Gate offset
-gate_offset: !apply:benchmarks.DASB.model.Tokotron.distance_diff_loss_ramp
+gate_offset: !apply:Tokotron.distance_diff_loss_ramp
     beta: !ref <gate_loss_beta>
     gamma: !ref <gate_loss_gamma>
     max_weight: !ref <gate_loss_max_weight>
@@ -131,11 +155,9 @@ silence_padding: !ref <gate_offset>
 use_silence_padding: True
 
 
-# Token model (pretrained)
 spk_emb_model: !name:speechbrain.inference.encoders.MelSpectrogramEncoder.from_hparams
     source: !ref <spk_emb_src>
     savedir: !ref <pretrained_model_save_folder>/ecapa
-
 
 # Dataloader options
 train_dataloader_opts:
@@ -167,15 +189,8 @@ sample_dataloader_opts:
         padding_kwargs:
             value: !ref <pad_index>
 
-extract_features_opts:
-    dataloader_opts:
-        batch_size: !ref <extract_features_batch_size>
-        num_workers: !ref <num_workers>
-    token_model: !ref <token_model>
-    sample_rate: !ref <sample_rate>
-    model_sample_rate: !ref <model_sample_rate>
-    spk_emb_model: !ref <spk_emb_model>
-
+token_model_kwargs:
+    SSL_layers: !ref <speech_model_layers>
 
 ####################### Model parameters ###########################
 # Transformer
@@ -183,17 +198,21 @@ d_model: 512
 nhead: 4
 enc_num_layers: 6 # @orion_step1: --enc_num_layers~"choices([3, 6, 12])"
 dec_num_layers: 12 # @orion_step1: --dec_num_layers~"choices([3, 6, 12])"
+layerwise_renorm: True
 d_ffn: 2048
-z_dim: 128
-hidden_dim: 2048
-n_dim: 16
-decoder_chunk_size: -1
 transformer_dropout: 0.2
 target_dropout: 0.2
 activation: !name:torch.nn.GELU
-audio_num_tokens: 1024
-audio_emb_size: 128
-audio_emb_freeze: True
+vocab_size: 1000
+audio_dim: 1024
+audio_emb_size: !apply:speechbrain.utils.hparams.choice
+    value: !ref <representation_mode>
+    choices:
+        discrete: 1024
+        continuous: 128
+audio_emb_freeze: False
+audio_emb_lr: 0.00001
+audio_emb_weight_decay: 0.001
 audio_emb_pretrained: False
 text_num_tokens: 39
 phn_num_tokens: 52
@@ -204,24 +223,19 @@ input_num_tokens: !apply:speechbrain.utils.hparams.choice
         phonemes: !ref <phn_num_tokens>
 audio_tokens_per_step: 6
 attention_type: regularMHA
-
 ############################## models ################################
 emb:
     spk:
         kind: "pretrained"
         dim: 192
-        vocoder: !ref <vocoder_takes_spk_emb>
+        injection: !ref <spk_emb_injection>
 
-model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel # yamllint disable-line rule:line-length
-    input_num_tokens: !ref <input_num_tokens>
-    audio_num_tokens: !ref <audio_num_tokens>
+model: !new:Tokotron.TokotronTransformerModel
+    input_num_tokens: !ref <input_num_tokens> # yamllint disable-line rule:line-length
+    audio_num_tokens: !ref <vocab_size>
     audio_tokens_per_step: !ref <audio_tokens_per_step>
     d_model: !ref <d_model>
     d_ffn: !ref <d_ffn>
-    z_dim: !ref <z_dim>
-    hidden_dim: !ref <hidden_dim>
-    n_dim: !ref <n_dim>
-    decoder_chunk_size: !ref <decoder_chunk_size>
     nhead: !ref <nhead>
     enc_num_layers: !ref <enc_num_layers>
     dec_num_layers: !ref <dec_num_layers>
@@ -229,7 +243,6 @@ model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel # yamllint d
     target_dropout: !ref <target_dropout>
     activation: !ref <activation>
     attention_type: !ref <attention_type>
-    vocoder: !ref <vocoder>
     gate_threshold: !ref <gate_threshold>
     gate_offset: !ref <gate_offset>
     audio_emb_size: !ref <audio_emb_size>
@@ -239,11 +252,19 @@ model: !new:benchmarks.DASB.model.Tokotron.TokotronTransformerModel # yamllint d
     infer_max_audio_length: !ref <infer_max_audio_length>
     audio_token_shift: !ref <audio_token_shift>
     scale_factor: !ref <scale_factor>
+    representation_mode: !ref <representation_mode>
     emb: !ref <emb>
+  
+vocoder: !apply:textless.vocoders.hifigan.vocoder.CodeHiFiGANVocoder.by_name
+  dense_model_name: !ref <vocoder_dense_model_name> #"mhubert-base-25hz"
+  quantizer_model_name: !ref <vocoder_quantizer_model_name> # "kmeans",
+  vocab_size: !ref <vocoder_vocab_size> #500
 
-tokenizer: !new:utils.tokenizer_interface.SpeechTokenizerWrapper
-    source: fnlp/SpeechTokenizer  # Only the 24kHz version supports mono audio
-    save_path: !ref <pretrained_model_save_folder>
+tokenizer: !new:utils.tokenizer_interface.FairseqHuBERTTokenizer
+  feat_extractor_path: !ref <feature_extractor_path>
+  km_path: !ref <kmeans_path>
+  layer: !ref <layer>
+  vocoder: !ref <vocoder>
 
 modules:
     model: !ref <model>
@@ -253,8 +274,7 @@ modules:
 # define two optimizers here for two-stage training
 opt_class: !name:torch.optim.Adam
     lr: !ref <lr>
-
-compute_cost: !new:benchmarks.DASB.model.Tokotron.TokotronLoss
+compute_cost: !new:Tokotron.TokotronLoss
     guided_attention_weight: !ref <guided_attention_weight>
     guided_attention_sigma: !ref <guided_attention_sigma>
     gate_weight: !ref <gate_loss_weight>
@@ -267,6 +287,7 @@ compute_cost: !new:benchmarks.DASB.model.Tokotron.TokotronLoss
     eos_width: !ref <eos_width>
     audio_tokens_per_step: !ref <audio_tokens_per_step>
     audio_token_shift: !ref <audio_token_shift>
+    representation_mode: !ref <representation_mode>
 
 
 lr_annealing: !new:speechbrain.nnet.schedulers.NoamScheduler
@@ -288,3 +309,6 @@ epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
 
 train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
     save_file: !ref <train_log>
+
+spk_sampler: !name:speechbrain.dataio.sampler.ReproducibleRandomSampler
+    seed: !ref <seed>

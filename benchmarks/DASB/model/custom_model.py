@@ -1,7 +1,14 @@
 import math
+import re
+import speechbrain as sb
 import torch
+
 from speechbrain.nnet.linear import Linear
 from model.sq_codec import tokens_to_ternary, ternary_logits_to_tokens
+from speechbrain.utils.logger import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class AttentionMLP(torch.nn.Module):
@@ -222,3 +229,61 @@ class TernaryLogitTokenizer(torch.nn.Module):
             dim=1
         )
         return token_logits
+
+
+@sb.utils.checkpoints.register_checkpoint_hooks
+class SaveableGenerator:
+    """A wrapper that can be used to store the state of
+    the random number generator in a checkpoint. It helps
+    with reproducibility in long-running experiments.
+
+    Currently, this only supports CPU and Cuda devices
+    natively. If you need training on other architectures,
+    consider implementing a custom generator.
+
+    Running it on an unsupported device not using the Torch
+    generator interface will simply fail to restore the
+    state but will not cause an error.
+
+    Arguments
+    ---------
+    generators : list, optional
+        A list of generator objects. If not provided, 
+    """
+
+    def __init__(self, generators=None):
+        if generators is None:
+            generators = {
+                "default": torch.default_generator
+            }
+            if torch.cuda.is_available():
+                for idx, generator in torch.cuda.default_generators:
+                    generators[f"cuda:{idx}"] = generator
+        self.generators = generators
+
+    @sb.utils.checkpoints.mark_as_saver
+    def _save(self, path):
+        save_dict = {
+            key: generator.get_state()
+            for key, generator in self.generators.items()
+        }
+        torch.save(save_dict, path)
+
+    @sb.utils.checkpoints.mark_as_loader
+    def _recover(self, path, end_of_epoch):
+        del end_of_epoch
+        save_dict = torch.load(path)
+        for key, state in save_dict.items():
+            if key == "default":
+                torch.default_generator.set_state(state)
+                continue
+            match = re.match(r"cuda:(\d+)", key)
+            if match:
+                if not torch.cuda.is_available():
+                    logger.warn("Unable to restore RNG for %s, CUDA unavailable", key)
+                    continue
+                idx = match.group(1)
+                if idx > torch.cuda.device_count() - 1:
+                    logger.warn("Unable to restore RNG for %s, device not found", key)
+                    continue
+                torch.cuda.default_generators[idx].set_state(state)

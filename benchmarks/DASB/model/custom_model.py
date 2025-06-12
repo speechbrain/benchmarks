@@ -257,8 +257,9 @@ class SaveableGenerator:
                 "default": torch.default_generator
             }
             if torch.cuda.is_available():
-                for idx, generator in torch.cuda.default_generators:
-                    generators[f"cuda:{idx}"] = generator
+                for idx in range(torch.cuda.device_count()):
+                    generators[f"cuda:{idx}"] = _CudaDefaultGeneratorWrapper(idx)
+
         self.generators = generators
 
     @sb.utils.checkpoints.mark_as_saver
@@ -282,8 +283,42 @@ class SaveableGenerator:
                 if not torch.cuda.is_available():
                     logger.warn("Unable to restore RNG for %s, CUDA unavailable", key)
                     continue
-                idx = match.group(1)
+                idx = int(match.group(1))
                 if idx > torch.cuda.device_count() - 1:
                     logger.warn("Unable to restore RNG for %s, device not found", key)
                     continue
-                torch.cuda.default_generators[idx].set_state(state)
+            self.generators[key].set_state(state)
+
+
+class _CudaDefaultGeneratorWrapper:
+    """A generator wrapper for default generators - because torch no longer
+    exposes default_generators
+
+    This class should not be used outside of SaveableGenerator
+
+    Arguments
+    ---------
+    device : int|str
+        The device index or identifier"""
+    def __init__(self, device):
+        self.device = device
+
+    def get_state(self):
+        """Returns the generator state
+
+        Returns
+        -------
+        result : torch.Tensor
+            The generator state
+        """
+        return torch.cuda.get_rng_state(self.device)
+
+    def set_state(self, new_state):
+        """"Sets the generator state
+
+        Arguments
+        ---------
+        new_state : dict
+            The new state
+        """
+        torch.cuda.set_rng_state(new_state, self.device)

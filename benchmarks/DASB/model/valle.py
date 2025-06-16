@@ -1303,6 +1303,9 @@ class WhisperASRSampleSelector(SampleSelector):
     debug : bool
         Whether debug mode is enabled. This will trigger
         more verbose logging, including a WER report
+    token_model_kwargs : dict
+        Additional arguments for the tokenizer
+        decoding function
     """
     def __init__(
         self,
@@ -1318,7 +1321,8 @@ class WhisperASRSampleSelector(SampleSelector):
         token_shift=0,
         offsets=None,
         debug=False,
-        device="cuda"
+        token_model_kwargs=None,
+        device="cuda",
     ):
         self.tokenizer = tokenizer
         self.sample_rate = sample_rate
@@ -1340,11 +1344,13 @@ class WhisperASRSampleSelector(SampleSelector):
         self.token_shift = token_shift
         self.offsets = offsets
         self.debug = debug
+        if token_model_kwargs is None:
+            token_model_kwargs = {}
+        self.token_model_kwargs = token_model_kwargs
         tokenizer.device = device
         if hasattr(tokenizer, "codec_vocoder"):
             tokenizer.codec_vocoder.to(device)
             tokenizer.codec_vocoder.device = device
-
 
     def select(self, tokens, scores, text):
         tokens, length = batch_pad_right(tokens)
@@ -1352,7 +1358,7 @@ class WhisperASRSampleSelector(SampleSelector):
         if self.offsets is not None:
             tokens_shift = tokens_shift - self.offsets
         tokens_shift = tokens_shift.clip(0)
-        wav = self.tokenizer.tokens_to_sig(tokens_shift)
+        wav = self.tokenizer.tokens_to_sig(tokens_shift, **self.token_model_kwargs)
         if self.sample_rate != self.tokenizer_sample_rate:
             wav = torchaudio.functional.resample(
                 wav,

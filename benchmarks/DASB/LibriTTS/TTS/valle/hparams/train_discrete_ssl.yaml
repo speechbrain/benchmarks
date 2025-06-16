@@ -329,4 +329,5 @@ sample_selector: !apply:speechbrain.utils.hparams.choice
             sample_rate: !ref <sample_selector_sample_rate>
             tokenizer_sample_rate: !ref <model_sample_rate>
             savedir: !ref <pretrained_model_save_folder>
+            token_model_kwargs: !ref <token_model_kwargs>
             debug: !ref <sample_selector_debug>

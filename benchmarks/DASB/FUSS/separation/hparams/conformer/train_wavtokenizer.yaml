@@ -1,0 +1,224 @@
+# ###########################################################################################
+# Model: Conformer with Wavtokenizer audio representations
+# Authors: Luca Della Libera 2024
+# ###########################################################################################
+
+experiment_name: wavtokenizer
+
+# Seed needs to be set at top of YAML
+seed: 0
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+testing: False # If set to True, the test evlaution is done, otherwise skipped.
+
+# Data preparation
+data_folder: !PLACEHOLDER
+train_csv: !ref <save_folder>/train.csv
+valid_csv: !ref <save_folder>/validation.csv
+test_csv: !ref <save_folder>/eval.csv
+splits: [train, validation, eval]
+num_speakers: 4
+add_noise: False
+version: wav16k/min
+
+# Output folders
+output_folder: !ref results/<experiment_name>/<seed>
+save_folder: !ref <output_folder>/save
+cache_folder: !name:huggingface_hub.constants.HUGGINGFACE_HUB_CACHE
+
+# Save options
+compute_metrics: True
+save_audios: True
+
+# Preprocessing parameters
+train_remove_if_longer: 1000.0  # Seconds
+valid_remove_if_longer: 1000.0  # Seconds
+test_remove_if_longer: 1000.0  # Seconds
+sorting: random
+use_cache: True
+
+# Training parameters
+num_epochs: 40
+grad_accumulation_factor: 16
+train_batch_size: 1
+valid_batch_size: 1
+test_batch_size: 1
+dataloader_workers: 8
+nonfinite_patience: 10
+max_grad_norm: 5.0
+precision: fp32
+ckpt_interval_minutes: 6000
+keep_checkpoints: 1
+augment: False
+augment_prob: 0.75
+use_pit: True
+
+# Optimizer parameters
+lr: 0.0003578 # @orion_step1: --lr~"loguniform(0.00005,0.001)"
+weight_decay: 0.01
+improvement_threshold: 0.0025
+annealing_factor: 0.9
+patient: 1
+
+# EnCodec parameters
+# sample_rate: [24000, 24000, 24000, 24000]
+# vocab_size: [1024, 1024, 1024, 1024]
+# num_codebooks: [2, 4, 8, 16, 32]
+# bandwidth: [1.5, 3.0, 6.0, 12.0, 24.0]
+sample_rate: 24000
+vocab_size: 4096
+num_codebooks: 1
+bandwidth: 2
+
+# Embedding parameters
+embedding_dim: 1024
+pretrain_embedding: False  # If True, must match the codec's embedding size (128)
+freeze_embedding: False
+
+# Encoder parameters
+dropout: 0.1
+activation: !name:torch.nn.GELU
+d_model: 256
+nhead: 4
+num_layers: 6
+d_ffn: 2048
+max_length: 2000
+causal: False
+
+# Augmentation
+drop_freq: !new:speechbrain.augment.time_domain.DropFreq
+    drop_freq_low: 0  # Min frequency band dropout probability
+    drop_freq_high: 1  # Max frequency band dropout probability
+    drop_freq_count_low: 1  # Min number of frequency bands to drop
+    drop_freq_count_high: 3  # Max number of frequency bands to drop
+    drop_freq_width: 0.05  # Width of frequency bands to drop
+
+drop_chunk: !new:speechbrain.augment.time_domain.DropChunk
+    drop_length_low: 1  # Min number of audio chunks to drop
+    drop_length_high: 5  # Max number of audio chunks to drop
+    drop_count_low: 1000  # Min length of audio chunks to drop
+    drop_count_high: 2000  # Max length of audio chunks to drop
+
+augmentation: !new:speechbrain.augment.augmenter.Augmenter
+    parallel_augment: False
+    concat_original: False
+    repeat_augment: 1
+    shuffle_augmentations: False
+    min_augmentations: 2
+    max_augmentations: 2
+    augment_prob: !ref <augment_prob>
+    augmentations: [!ref <drop_freq>, !ref <drop_chunk>]
+
+model_hub: novateur/WavTokenizer-medium-music-audio-75token
+config: wavtokenizer_mediumdata_music_audio_frame75_3s_nq1_code4096_dim512_kmeans200_attn.yaml
+checkpoint: wavtokenizer_medium_music_audio_320_24k_v2.ckpt
+
+# Modules
+codec: !new:speechbrain.lobes.models.discrete.wavtokenizer.WavTokenizer
+  source: !ref <model_hub>
+  save_path: !ref <save_folder>
+  checkpoint: !ref <checkpoint>
+  config: !ref <config>
+  sample_rate: !ref <sample_rate>
+  freeze: True
+
+embedding: !new:model.custom_model.Discrete_EmbeddingLayer
+    num_codebooks: !ref <num_codebooks>
+    vocab_size: !ref <vocab_size>
+    emb_dim: !ref <embedding_dim>
+    freeze: !ref <freeze_embedding>
+
+attention_mlp: !new:model.custom_model.AttentionMLP
+    input_dim: !ref <embedding_dim>
+    hidden_dim: !ref <embedding_dim>
+
+encoder: !new:speechbrain.lobes.models.transformer.TransformerASR.TransformerASR
+    input_size: !ref <embedding_dim>
+    tgt_vocab: -1
+    d_model: !ref <d_model>
+    nhead: !ref <nhead>
+    num_encoder_layers: !ref <num_layers>
+    num_decoder_layers: 0
+    d_ffn: !ref <d_ffn>
+    dropout: !ref <dropout>
+    activation: !ref <activation>
+    max_length: !ref <max_length>
+    encoder_module: conformer
+    normalize_before: True
+    causal: !ref <causal>
+
+head: !new:torch.nn.Linear
+    in_features: !ref <d_model>
+    out_features: !ref <num_speakers> * <num_codebooks> * <vocab_size>
+
+modules:
+    embedding: !ref <embedding>
+    attention_mlp: !ref <attention_mlp>
+    encoder: !ref <encoder>
+    head: !ref <head>
+
+model: !new:torch.nn.ModuleList
+    [[!ref <embedding>,
+      !ref <attention_mlp>,
+      !ref <encoder>,
+      !ref <head>]]
+
+# Loss functions
+ce_loss: !name:speechbrain.nnet.losses.nll_loss
+    label_smoothing: 0.0
+    allowed_len_diff: 0
+    reduction: mean
+
+# Optimizers
+opt_class: !name:torch.optim.AdamW
+    lr: !ref <lr>
+    betas: (0.9, 0.98)
+    eps: 1.e-8
+    weight_decay: !ref <weight_decay>
+
+# Schedulers
+scheduler: !new:speechbrain.nnet.schedulers.NewBobScheduler
+    initial_value: !ref <lr>
+    improvement_threshold: !ref <improvement_threshold>
+    annealing_factor: !ref <annealing_factor>
+    patient: !ref <patient>
+
+# Dataloaders
+train_dataloader_kwargs:
+    batch_size: !ref <train_batch_size>
+    num_workers: !ref <dataloader_workers>
+    pin_memory: True
+    shuffle: !apply:str.__eq__ [!ref <sorting>, random]
+
+valid_dataloader_kwargs:
+    batch_size: !ref <valid_batch_size>
+    num_workers: !ref <dataloader_workers>
+    pin_memory: True
+
+test_dataloader_kwargs:
+    batch_size: !ref <test_batch_size>
+    num_workers: !ref <dataloader_workers>
+    pin_memory: True
+
+# Performance metrics
+ter_computer: !name:speechbrain.utils.metric_stats.MetricStats
+    metric: !name:speechbrain.nnet.losses.classification_error
+        reduction: batch
+
+bsseval_computer: !name:metrics.bsseval.BSSEval
+    sample_rate: !ref <sample_rate>
+    n_sources: !ref <num_speakers>
+    permutation_invariant: !ref <use_pit>
+
+# Counters, checkpointers, loggers, etc.
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+    limit: !ref <num_epochs>
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+    checkpoints_dir: !ref <save_folder>
+    recoverables:
+        model: !ref <model>
+        scheduler: !ref <scheduler>
+        counter: !ref <epoch_counter>
+
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+    save_file: !ref <output_folder>/train_log.txt

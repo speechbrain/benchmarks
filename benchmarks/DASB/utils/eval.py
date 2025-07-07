@@ -250,7 +250,7 @@ class SpeechEvaluationRegressionModel(Pretrained):
 
 class ASRSpeechEvaluator(SpeechEvaluator):
     """A superclass for ASR speech evaluators
-    
+
     Arguments
     ---------
     sample_rate : int
@@ -365,10 +365,12 @@ class ASRSpeechEvaluator(SpeechEvaluator):
         cer_metric.append(ids, pred, pred_ref)
         count = len(ids)
         dwer = torch.tensor(
-            [score["WER"] for score in wer_metric.scores[-count:]], device=device
+            [score["WER"] for score in wer_metric.scores[-count:]],
+            device=device,
         )
         dcer = torch.tensor(
-            [score["WER"] for score in cer_metric.scores[-count:]], device=device
+            [score["WER"] for score in cer_metric.scores[-count:]],
+            device=device,
         )
         return {"dwer": dwer, "dcer": dcer}
 
@@ -460,7 +462,9 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         self.unbatch = unbatch
         self.to(device)
 
-    def evaluate_samples(self, wavs, length, text, sample_rate, metric_key="regular"):
+    def evaluate_samples(
+        self, wavs, length, text, sample_rate, metric_key="regular"
+    ):
         """Evaluates a batch of samples
 
         Arguments
@@ -524,7 +528,7 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         sample_rate : int
             The sample rate of the waveforms
         metric_key : bool
-            Whether to compute the metrics            
+            Whether to compute the metrics
 
         Returns
         -------
@@ -550,10 +554,12 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         cer_metric.append(ids, predicted_words_split, text_split)
         count = len(ids)
         wer = torch.tensor(
-            [score["WER"] for score in wer_metric.scores[-count:]], device=wavs.device
+            [score["WER"] for score in wer_metric.scores[-count:]],
+            device=wavs.device,
         )
         cer = torch.tensor(
-            [score["WER"] for score in cer_metric.scores[-count:]], device=wavs.device
+            [score["WER"] for score in cer_metric.scores[-count:]],
+            device=wavs.device,
         )
         result = {
             "wer": wer,

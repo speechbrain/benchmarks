@@ -126,7 +126,9 @@ class SQCodec(nn.Module):
         exp_model_config = OmegaConf.load(config)
         scalar_codec = ScalarModel(**exp_model_config.generator.config)
         device = next(iter(scalar_codec.parameters())).device
-        parameter_dict = torch.load(self.ckpt_path, map_location=device, weights_only=False)
+        parameter_dict = torch.load(
+            self.ckpt_path, map_location=device, weights_only=False
+        )
         scalar_codec.load_state_dict(parameter_dict["codec_model"])
         return scalar_codec
 
@@ -1290,6 +1292,7 @@ class TernaryEmbedding(nn.Module):
     ---------
     num_digits : int
         The number of ternary digits"""
+
     def __init__(self, num_digits, emb_size=512, flat=False):
         super().__init__()
         self.num_digits = num_digits
@@ -1338,7 +1341,9 @@ def decimal_to_ternary_matrix(decimals, D):
         corresponds to a batch, and each column is represented as a ternary number.
     """
     B, T = decimals.shape
-    ternary_matrix = torch.zeros((B, D, T), dtype=torch.long, device=decimals.device)
+    ternary_matrix = torch.zeros(
+        (B, D, T), dtype=torch.long, device=decimals.device
+    )
     for pos in range(D):
         ternary_matrix[:, pos, :] = decimals % 3  # Modulo operation
         decimals //= 3  # Floor division for next ternary digit
@@ -1403,13 +1408,17 @@ def ternary_matrix_to_decimal_torch(matrix):
     ) = (
         matrix.shape
     )  # B is the batch size, D is the number of digits, N is the number of ternary numbers
-    powers_of_three = 3 ** torch.arange(D, device=matrix.device)  # [3^0, 3^1, ..., 3^(D-1)]
+    powers_of_three = 3 ** torch.arange(
+        D, device=matrix.device
+    )  # [3^0, 3^1, ..., 3^(D-1)]
 
     # Reshape powers_of_three for broadcasting: [D] -> [1, D, 1]
     powers_of_three = powers_of_three[:, None]  # Shape [D, 1]
 
     # Compute dot product using broadcasting: matrix * powers_of_three along D axis
-    decimals = torch.sum(matrix * powers_of_three, axis=1)  # Sum along the D axis
+    decimals = torch.sum(
+        matrix * powers_of_three, axis=1
+    )  # Sum along the D axis
 
     return decimals
 
@@ -1442,7 +1451,7 @@ def ternary_to_decimal(ternary, n_codebook=4):
         (Batch x Length x num_positions) - ternary digits
     n_codebooks : torch.Tensor
         The number of codebooks
-    
+
     Returns
     -------
     result: torch.Tensor
@@ -1473,7 +1482,9 @@ def ternary_logits_to_tokens(logits, n_codebook=4):
         Token IDs
     """
     ternary_matrix = logits_to_ternary(logits)
-    tokens = ternary_to_decimal(ternary_matrix.transpose(-1, -2), n_codebook=n_codebook)
+    tokens = ternary_to_decimal(
+        ternary_matrix.transpose(-1, -2), n_codebook=n_codebook
+    )
     return tokens
 
 
@@ -1498,10 +1509,9 @@ def tokens_to_ternary(tokens, D=9):
     batch_size = tokens.size(0)
     n_codebook = tokens.size(2)
     tokens = tokens.view(batch_size, -1, n_codebook).permute(2, 0, 1).clone()
-    ternary_matrix = torch.cat([
-        decimal_to_ternary_matrix(item, D=D) - 1
-        for item in tokens
-    ], dim=1)
+    ternary_matrix = torch.cat(
+        [decimal_to_ternary_matrix(item, D=D) - 1 for item in tokens], dim=1
+    )
     ternary_matrix = ternary_matrix.transpose(1, 2)
     if not has_batch:
         ternary_matrix = ternary_matrix[0]
@@ -1525,7 +1535,15 @@ def logits_to_ternary(logits):
     return ternary
 
 
-def ternary_loss(predictions, targets, length=None, mask=None, targets_type="ternary", num_positions=9, reduction="mean"):
+def ternary_loss(
+    predictions,
+    targets,
+    length=None,
+    mask=None,
+    targets_type="ternary",
+    num_positions=9,
+    reduction="mean",
+):
     if targets.dim() < 3:
         targets = targets.unsqueeze(-1)
     if targets_type == "tokens":
@@ -1534,15 +1552,10 @@ def ternary_loss(predictions, targets, length=None, mask=None, targets_type="ter
     targets_cat = targets + 1
     predictions_loss = predictions.permute(0, 3, 1, 2).contiguous()
     loss = nn.functional.nll_loss(
-        predictions_loss,
-        targets_cat,
-        reduction="none"
+        predictions_loss, targets_cat, reduction="none"
     )
     if length is not None:
-        mask = length_to_mask(
-            length * max_len,
-            max_len
-        )
+        mask = length_to_mask(length * max_len, max_len)
     mask = mask.unsqueeze(-1)
     if mask is not None:
         loss = loss * mask

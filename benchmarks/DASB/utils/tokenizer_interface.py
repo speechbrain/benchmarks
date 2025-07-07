@@ -7,6 +7,8 @@ Authors
 ---------
 * Pooneh Mousavi, 2024
 """
+
+import importlib
 import sys
 import os
 import torch
@@ -559,17 +561,18 @@ class ESPNetEncodecInterface(BaseTokenizer, nn.Module):
             filename=self.model_ckpt,
             source=self.source,
             savedir=str(self.save_path),
-            save_filename=str(Path(self.model_ckpt).name)
+            save_filename=str(Path(self.model_ckpt).name),
         )
         config_file_name = fetch(
             filename=self.model_config,
             source=self.source,
             savedir=str(self.save_path),
-            save_filename="config.yaml"
+            save_filename="config.yaml",
         )
         with open(config_file_name) as config_file:
             config = yaml.safe_load(config_file)
         from espnet2.gan_codec.encodec.encodec import Encodec as ESPNetEncodec
+
         self.encodec = ESPNetEncodec(**config["codec_conf"])
         device = next(iter(self.encodec.parameters())).device
         state_dict = torch.load(ckpt_file_name, map_location=device)
@@ -581,7 +584,7 @@ class ESPNetEncodecInterface(BaseTokenizer, nn.Module):
 
     def _load_espnet(self):
         try:
-            import espnet2
+            importlib.import_module("espnet2")
         except ModuleNotFoundError:
             self._download_espnet()
 
@@ -590,13 +593,17 @@ class ESPNetEncodecInterface(BaseTokenizer, nn.Module):
         espnet_path = self.save_path / "espnet"
         if not espnet_path.exists():
             logger.info("Cloining %s into %s", self.espnet_repo, espnet_path)
-            cmd = shlex.join(["git", "clone", self.espnet_repo, str(espnet_path)])
+            cmd = shlex.join(
+                ["git", "clone", self.espnet_repo, str(espnet_path)]
+            )
             run_shell(cmd)
         else:
             logger.info("%s already exists", espnet_path)
         if self.espnet_commit:
             logger.info("Checking out %s", self.espnet_commit)
-            cmd = shlex.join(["git", "-C", str(espnet_path), "checkout", self.espnet_commit])
+            cmd = shlex.join(
+                ["git", "-C", str(espnet_path), "checkout", self.espnet_commit]
+            )
             run_shell(cmd)
         logger.info("Installing")
         cmd = shlex.join(["pip", "install", "-e", str(espnet_path)])
@@ -609,7 +616,7 @@ class ESPNetEncodecInterface(BaseTokenizer, nn.Module):
         if signal.dim() < 3:
             signal = signal.unsqueeze(1)
         tokens = self.encodec.encode(signal)
-        return tokens.permute(1, 2, 0)[:, :, :self.n_codebook]
+        return tokens.permute(1, 2, 0)[:, :, : self.n_codebook]
 
     @torch.no_grad()
     def tokens_to_sig(self, tokens, **kwargs):

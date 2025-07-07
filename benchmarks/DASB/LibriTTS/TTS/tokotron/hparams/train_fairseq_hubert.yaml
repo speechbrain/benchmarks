@@ -254,17 +254,17 @@ model: !new:Tokotron.TokotronTransformerModel
     scale_factor: !ref <scale_factor>
     representation_mode: !ref <representation_mode>
     emb: !ref <emb>
-  
+
 vocoder: !apply:textless.vocoders.hifigan.vocoder.CodeHiFiGANVocoder.by_name
-  dense_model_name: !ref <vocoder_dense_model_name> #"mhubert-base-25hz"
-  quantizer_model_name: !ref <vocoder_quantizer_model_name> # "kmeans",
-  vocab_size: !ref <vocoder_vocab_size> #500
+    dense_model_name: !ref <vocoder_dense_model_name> #"mhubert-base-25hz"
+    quantizer_model_name: !ref <vocoder_quantizer_model_name> # "kmeans",
+    vocab_size: !ref <vocoder_vocab_size> #500
 
 tokenizer: !new:utils.tokenizer_interface.FairseqHuBERTTokenizer
-  feat_extractor_path: !ref <feature_extractor_path>
-  km_path: !ref <kmeans_path>
-  layer: !ref <layer>
-  vocoder: !ref <vocoder>
+    feat_extractor_path: !ref <feature_extractor_path>
+    km_path: !ref <kmeans_path>
+    layer: !ref <layer>
+    vocoder: !ref <vocoder>
 
 modules:
     model: !ref <model>

@@ -25,7 +25,11 @@ from speechbrain.utils.data_utils import batch_pad_right
 from speechbrain.nnet.attention import RelPosEncXL
 from speechbrain.nnet.embedding import Embedding
 from speechbrain.nnet.linear import Linear
-from speechbrain.nnet.losses import kldiv_loss, mse_loss, compute_masked_loss, nll_loss
+from speechbrain.nnet.losses import (
+    kldiv_loss,
+    mse_loss,
+    compute_masked_loss,
+)
 from speechbrain.dataio.dataio import length_to_mask
 from speechbrain.utils.data_utils import concat_padded_features
 from speechbrain.nnet.schedulers import NoamScheduler
@@ -446,7 +450,7 @@ class TokotronTransformerAutoregressiveInference(nn.Module):
         audio_dim=1024,
         show_inference_progress=True,
         transform_audio=None,
-        feed_audio=None
+        feed_audio=None,
     ):
         super().__init__()
         self.decoder = None
@@ -722,7 +726,7 @@ class TokotronTransformerModel(nn.Module):
         emb=None,
         audio_emb=None,
         out_proj=None,
-        multihead_input=True
+        multihead_input=True,
     ):
         super().__init__()
         self.in_emb = Embedding(
@@ -1290,7 +1294,9 @@ class TokotronLoss(nn.Module):
         max_len = out_len - 1
         if self.multihead_output:
             out_reshaped = (
-                out.transpose(1, 2).reshape(batch_size * heads, out_len, tok_dim)
+                out.transpose(1, 2).reshape(
+                    batch_size * heads, out_len, tok_dim
+                )
             )[:, :max_len]
         else:
             out_reshaped = out
@@ -1329,14 +1335,14 @@ class TokotronLoss(nn.Module):
                 )
 
         audio_reshaped = audio_reshaped[:, :max_len]
-        if self.multihead_output:        
+        if self.multihead_output:
             lengths_reshaped = (
                 audio_length.unsqueeze(-1)
                 .expand(batch_size, heads)
                 .reshape(batch_size * heads)
             )
         else:
-            lengths_reshaped = audio_length            
+            lengths_reshaped = audio_length
         seq_loss = self.seq_cost(
             out_reshaped[:, :tok_len],
             audio_reshaped,
@@ -1903,7 +1909,6 @@ def get_silence_token(
     unsqueeze=False,
     device=None,
     num_codebooks=None,
-
 ):
     """Attempts to find out the silence tokens for a given model,
     if applicable

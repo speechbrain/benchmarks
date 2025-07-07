@@ -246,10 +246,14 @@ class SpeechEvaluationMetricStats(MetricStats):
             ).items()
         }
         for evaluator_key in self.enabled_evaluators:
-            result.update({
-                f"{evaluator_key}_{stat_key}": value
-                for stat_key, value in
-                self.evaluators[evaluator_key].global_metrics().items()})
+            result.update(
+                {
+                    f"{evaluator_key}_{stat_key}": value
+                    for stat_key, value in self.evaluators[evaluator_key]
+                    .global_metrics()
+                    .items()
+                }
+            )
         if field is not None:
             result = result[field]
         return result

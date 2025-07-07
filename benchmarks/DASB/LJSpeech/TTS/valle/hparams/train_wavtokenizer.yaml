@@ -177,7 +177,7 @@ audio_token_shift: !apply:speechbrain.utils.hparams.choice
         text: !ref <text_num_tokens> +  <special_num_tokens>
         phonemes: !ref <phn_num_tokens> + <special_num_tokens>
 
-audio_tokens_per_step:  1
+audio_tokens_per_step: 1
 bandwidth: 6
 
 

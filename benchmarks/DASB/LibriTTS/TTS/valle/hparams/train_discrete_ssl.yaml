@@ -244,7 +244,7 @@ audio_token_shift: !apply:speechbrain.utils.hparams.choice
         phonemes: !ref <phn_num_tokens> + <special_num_tokens>
 
 audio_tokens_per_step: 6
-flatten: false
+flatten: False
 
 freeze_lm_head: False
 

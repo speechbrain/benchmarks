@@ -335,21 +335,33 @@ class TokotronBrain(sb.Brain):
     def check_init(self):
         init_from = getattr(self.hparams, "init_from", None)
         if init_from is not None:
-            logger.info("Initializing with pre-trained weights from %s", init_from)
+            logger.info(
+                "Initializing with pre-trained weights from %s", init_from
+            )
             init_from_path = Path(init_from)
             model_path = init_from_path / "model.ckpt"
             with open(model_path, "rb") as model_file:
-                model_state_dict = torch.load(model_file, map_location=self.device)
+                model_state_dict = torch.load(
+                    model_file, map_location=self.device
+                )
                 tgt_state_dict = self.modules.model.state_dict()
                 ignore_keys = []
                 for k, v in model_state_dict.items():
-                    if k in tgt_state_dict and tgt_state_dict[k].shape != v.shape:
+                    if (
+                        k in tgt_state_dict
+                        and tgt_state_dict[k].shape != v.shape
+                    ):
                         logger.warning("Ignoring shape mismatch for %s", k)
                         ignore_keys.append(k)
                 for k in ignore_keys:
                     del model_state_dict[k]
-                self.modules.model.load_state_dict(model_state_dict, strict=False)
-            logger.info("Successfully initialized with pre-trained weights from %s", init_from)
+                self.modules.model.load_state_dict(
+                    model_state_dict, strict=False
+                )
+            logger.info(
+                "Successfully initialized with pre-trained weights from %s",
+                init_from,
+            )
 
     @torch.no_grad()
     def evaluate_batch(self, batch, stage):
@@ -525,7 +537,7 @@ def dataio_prepare(hparams):
                     hparams["speech_model_layers"]
                     if "speech_model_layers" in hparams
                     else audio_tokens_per_step
-                )
+                ),
             )
         else:
             silence_padding = get_silence_repr(hparams["ssl_model"],)
@@ -552,11 +564,9 @@ def dataio_prepare(hparams):
 
     tokens_loader = hparams.get("tokens_loader")
     if layer_idx is not None:
-        tokens_loader_kwargs = {
-            "num_codebooks": layer_idx
-        }
+        tokens_loader_kwargs = {"num_codebooks": layer_idx}
     else:
-        tokens_loader_kwargs = {"num_codebooks": audio_tokens_per_step}    
+        tokens_loader_kwargs = {"num_codebooks": audio_tokens_per_step}
 
     @sb.utils.data_pipeline.takes("uttid")
     @sb.utils.data_pipeline.provides("audio_pad", "audio_bos")
@@ -633,6 +643,28 @@ def dataio_prepare(hparams):
             )
             resample_fn[dataset](epoch=0)
 
+    sort_datasets(datasets, hparams)
+    # Exclude samples without phonemes
+    if hparams["input"] == "phonemes":
+        for key in datasets:
+            datasets[key] = datasets[key].filtered_sorted(
+                key_test={"phn": lambda value: value}
+            )
+    datasets["sample"] = select_sample(hparams, datasets)
+    return datasets, silence_padding, resample_fn
+
+
+def sort_datasets(datasets, hparams):
+    """Sorts datasets according to hyperparameters
+
+    Arguments
+    ---------
+    datasets : dict
+        a key -> value dictionary of datasets (the keys are "train", "valid" and "test")
+    hparams : dict
+        a dictionary of hyperparameters
+    """
+
     # Sorting training data with ascending order makes the code  much
     # faster  because we minimize zero-padding. In most of the cases, this
     # does not harm the performance.
@@ -654,15 +686,6 @@ def dataio_prepare(hparams):
         raise NotImplementedError(
             "sorting must be random, ascending or descending"
         )
-
-    # Exclude samples without phonemes
-    if hparams["input"] == "phonemes":
-        for key in datasets:
-            datasets[key] = datasets[key].filtered_sorted(
-                key_test={"phn": lambda value: value}
-            )
-    datasets["sample"] = select_sample(hparams, datasets)
-    return datasets, silence_padding, resample_fn
 
 
 def select_sample(hparams, datasets):
@@ -1015,17 +1038,18 @@ if __name__ == "__main__":
 
     # Load best checkpoint for evaluation
     if hparams["testing"]:
-        test_summary_file = next(Path(hparams["output_folder"]).glob("eval/test/*/summary.json"), None)
+        test_summary_file = next(
+            Path(hparams["output_folder"]).glob("eval/test/*/summary.json"),
+            None,
+        )
         if test_summary_file is not None:
             logging.info("Test run already completed: %s", test_summary_file)
         else:
             test_key_kind = hparams["test_key_kind"]
             test_key = hparams["test_key"]
-            eval_kwargs = {
-                f"{test_key_kind}_key": test_key
-            }
+            eval_kwargs = {f"{test_key_kind}_key": test_key}
             tts_brain.evaluate(
                 test_set=datasets["test"],
                 test_loader_kwargs=hparams["test_dataloader_opts"],
-                **eval_kwargs
+                **eval_kwargs,
             )

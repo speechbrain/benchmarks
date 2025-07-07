@@ -32,8 +32,10 @@ from train import undo_padding_tensor, get_offsets  # noqa: E402
 
 logger = get_logger(__name__)
 
+
 class InferenceFit:
     """An inference fit wrapper"""
+
     def __init__(self, hparams, run_opts):
         device = run_opts.get("device", "cpu")
         self.hparams = SimpleNamespace(**hparams)
@@ -50,7 +52,9 @@ class InferenceFit:
         if not self.hparams.use_token_offsets:
             self.offsets = torch.zeros_like(self.offsets)
         self.output_folder_rel = "eval/inference_fit"
-        self.output_folder = Path(self.hparams.output_folder) / self.output_folder_rel
+        self.output_folder = (
+            Path(self.hparams.output_folder) / self.output_folder_rel
+        )
         self.token_model_kwargs = getattr(
             self.hparams, "token_model_kwargs", {}
         )
@@ -120,8 +124,12 @@ class InferenceFit:
         params_str = format_params(params)
         logger.info("Starting evaluation of %s", params_str)
         folder_name = params_to_folder_name(params)
-        self.evaluation_metric.on_evaluation_start(f"{self.output_folder_rel}/{folder_name}")
-        for batch in tqdm(dataloader, desc="Evaluation run", total=len(dataset)):
+        self.evaluation_metric.on_evaluation_start(
+            f"{self.output_folder_rel}/{folder_name}"
+        )
+        for batch in tqdm(
+            dataloader, desc="Evaluation run", total=len(dataset)
+        ):
             self.evaluate_batch(batch, params)
         logger.info("Finished evaluation of %s", params_str)
         self.evaluation_metric.on_evaluation_end()
@@ -184,13 +192,13 @@ class InferenceFit:
         inference = self.modules.model.inference
         inference_results = [
             inference(
-                prefix=prefix_item.unsqueeze(0), opts=self._get_inference_opts(params)
+                prefix=prefix_item.unsqueeze(0),
+                opts=self._get_inference_opts(params),
             )
             for prefix_item in prefix_items
         ]
         inferred_tokens = [
-            self._pad_inferred_sample(result)
-            for result in inference_results
+            self._pad_inferred_sample(result) for result in inference_results
         ]
         audio, audio_length = batch_pad_right(inferred_tokens)
         audio_length = audio_length.to(self.device)
@@ -220,10 +228,7 @@ class InferenceFit:
         min_length = getattr(self.hparams, "infer_min_length", 10)
         sample_length, tracks = sample.shape
         if sample_length < min_length:
-            sample = pad_right_to(
-                sample,
-                (min_length, tracks),
-            )[0]
+            sample = pad_right_to(sample, (min_length, tracks),)[0]
         return sample
 
     def create_waveform(self, audio, length):
@@ -246,9 +251,7 @@ class InferenceFit:
         if hasattr(tokenizer, "codec_vocoder"):
             tokenizer.codec_vocoder.to(self.device)
             tokenizer.codec_vocoder.device = self.device
-        wav = tokenizer.tokens_to_sig(
-            audio, **self.token_model_kwargs
-        )
+        wav = tokenizer.tokens_to_sig(audio, **self.token_model_kwargs)
         wav = clean_padding(wav, length)
         wav = wav.to(self.device)
         return wav
@@ -263,8 +266,7 @@ class InferenceFit:
         if not self.hparams.use_token_offsets:
             tracks = torch.zeros_like(tracks)
         track_start = (
-            self.hparams.audio_token_shift
-            + tracks * self.hparams.vocab_size
+            self.hparams.audio_token_shift + tracks * self.hparams.vocab_size
         )
         if self.hparams.flip_layers:
             track_start = track_start.flip(0)
@@ -280,17 +282,13 @@ class InferenceFit:
             ).expand_as(mask)
         ] = True
         return self.hparams.inference_opts(
-            masks={self.hparams.bos_index: mask},
-            **params,
-            device=self.device,
+            masks={self.hparams.bos_index: mask}, **params, device=self.device,
         )
 
     def recover(self):
         test_key_kind = hparams["test_key_kind"]
         test_key = hparams["test_key"]
-        kwargs = {
-            f"{test_key_kind}_key": test_key
-        }
+        kwargs = {f"{test_key_kind}_key": test_key}
         logger.info("Revovering a checkpoint")
         ckpt = self.hparams.checkpointer.recover_if_possible(**kwargs)
         if not ckpt:
@@ -317,23 +315,16 @@ def enumerate_space(space, entry=None, points=None):
 
 def format_space(space):
     return ", ".join(
-        f"{parameter}: {values}"
-        for parameter, values in space.items()
+        f"{parameter}: {values}" for parameter, values in space.items()
     )
 
 
 def format_params(params):
-    return ", ".join(
-        f"{key}={value}"
-        for key, value in params.items()
-    )
+    return ", ".join(f"{key}={value}" for key, value in params.items())
 
 
 def params_to_folder_name(params):
-    params_str = "-".join(
-        f"{key}-{value}"
-        for key, value in params.items()
-    )
+    params_str = "-".join(f"{key}-{value}" for key, value in params.items())
     return f"eval-{params_str}"
 
 
@@ -361,8 +352,11 @@ if __name__ == "__main__":
             "%s not found - not using evaluation hyperparameters",
             eval_hparams_file,
         )
-    hparams = load_hyperpyyaml(yaml_content, overrides, overrides_must_match=True)
-    from train import dataio_prepare, select_eval_subset # noqa
+    hparams = load_hyperpyyaml(
+        yaml_content, overrides, overrides_must_match=True
+    )
+    from train import dataio_prepare, select_eval_subset  # noqa
+
     datasets, _ = dataio_prepare(hparams)
     dataset = datasets["valid"]
     dataset = select_eval_subset(dataset, hparams)

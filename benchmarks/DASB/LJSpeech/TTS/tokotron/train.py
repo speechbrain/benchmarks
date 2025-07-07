@@ -283,7 +283,9 @@ class TokotronBrain(sb.Brain):
             self.hparams, "token_model_kwargs", {}
         )
 
-        self.transform_audio = getattr(self.hparams, "transform_audio", torch.nn.Identity())
+        self.transform_audio = getattr(
+            self.hparams, "transform_audio", torch.nn.Identity()
+        )
 
     def on_stage_end(self, stage, stage_loss, epoch):
         """Gets called at the end of an epoch.
@@ -330,14 +332,14 @@ class TokotronBrain(sb.Brain):
                 valid_stats=stage_stats,
             )
 
-            # Save the current checkpoint and delete previous checkpoints.        
+            # Save the current checkpoint and delete previous checkpoints.
             ckpt_kwargs = {
                 f"{self.hparams.ckpt_key_kind}_keys": [self.hparams.ckpt_key],
             }
             self.checkpointer.save_and_keep_only(
                 meta={"loss": stage_stats["loss"], **eval_summary_stats},
                 num_to_keep=hparams["ckpt_keep"],
-                **ckpt_kwargs
+                **ckpt_kwargs,
             )
 
     def get_summary_stats(self):
@@ -578,7 +580,7 @@ def dataio_prepare(hparams):
                 hparams["speech_model_layers"]
                 if "speech_model_layers" in hparams
                 else audio_tokens_per_step
-            )
+            ),
         )
         if silence_token.dim() == 2:
             silence_token = silence_token.squeeze(-1)
@@ -652,6 +654,22 @@ def dataio_prepare(hparams):
         datasets[dataset] = dynamic_dataset
         hparams[f"{dataset}_dataloader_opts"]["shuffle"] = False
 
+    sort_datasets(datasets, hparams)
+    apply_data_scale(datasets, hparams)
+
+    return datasets, silence_padding
+
+
+def sort_datasets(datasets, hparams):
+    """Sorts datasets according to hyperparameters
+
+    Arguments
+    ---------
+    datasets : dict
+        a key -> value dictionary of datasets (the keys are "train", "valid" and "test")
+    hparams : dict
+        a dictionary of hyperparameters
+    """
     # Sorting training data with ascending order makes the code  much
     # faster  because we minimize zero-padding. In most of the cases, this
     # does not harm the performance.
@@ -666,21 +684,31 @@ def dataio_prepare(hparams):
         hparams["train_dataloader_opts"]["shuffle"] = False
 
     elif hparams["sorting"] == "random":
-        hparams["train_dataloader_opts"]["shuffle"] = True
-        pass
-
+        if not hparams["overfit_test"]:
+            hparams["train_dataloader_opts"]["shuffle"] = True
     else:
         raise NotImplementedError(
             "sorting must be random, ascending or descending"
         )
+
+
+def apply_data_scale(datasets, hparams):
+    """Selects a fractional dataset if the corresponding parameter is specified,
+    using random sampling
+
+    Arguments
+    ---------
+    datasets : dict
+        a dictionary of datasets
+    hparams : dict
+        parsed hyperparameters
+    """
     data_scale = hparams.get("data_scale")
     if data_scale:
         scaled_data_count = int(len(datasets["train"]) * data_scale)
         datasets["train"] = datasets["train"].filtered_sorted(
             select_n=scaled_data_count
         )
-
-    return datasets, silence_padding
 
 
 def init_sequence_encoder(hparams):
@@ -926,27 +954,33 @@ if __name__ == "__main__":
 
     # Load best checkpoint for evaluation
     if hparams["testing"]:
-        test_summary_file = Path(hparams["output_folder"]) / "eval" / "test" / "summary.json"
+        test_summary_file = (
+            Path(hparams["output_folder"]) / "eval" / "test" / "summary.json"
+        )
         if test_summary_file.exists():
             logging.info("Test run already completed: %s", test_summary_file)
         else:
-            test_summary_file = Path(hparams["output_folder"]) / "eval" / "test" / "summary.json"
+            test_summary_file = (
+                Path(hparams["output_folder"])
+                / "eval"
+                / "test"
+                / "summary.json"
+            )
             if test_summary_file.exists():
-                logging.info("Test run already completed: %s", test_summary_file)
+                logging.info(
+                    "Test run already completed: %s", test_summary_file
+                )
             else:
                 eval_kwargs = {}
                 test_key_kind = hparams.get("test_key_kind", "min")
                 test_key = hparams.get("test_key")
                 if test_key:
-                    eval_kwargs = {
-                        f"{test_key_kind}_key": test_key
-                    }
+                    eval_kwargs = {f"{test_key_kind}_key": test_key}
                 tts_brain.evaluate(
                     test_set=datasets["test"],
                     test_loader_kwargs=hparams["test_dataloader_opts"],
-                    **eval_kwargs
+                    **eval_kwargs,
                 )
-
 
     # Save final checkpoint (fixed name)
     tts_brain.checkpointer.save_checkpoint(name="latest")

@@ -4,7 +4,7 @@ import speechbrain as sb
 import torch
 
 from speechbrain.nnet.linear import Linear
-from model.sq_codec import tokens_to_ternary, ternary_logits_to_tokens
+from model.sq_codec import tokens_to_ternary
 from speechbrain.utils.logger import get_logger
 
 
@@ -132,20 +132,16 @@ class TernaryPredictionHead(torch.nn.Module):
     num_positions : int
         the number of positions
     """
+
     def __init__(self, d_model, num_positions, d_hidden=512, norm=True):
         super().__init__()
         self.num_positions = num_positions
         self.d_model = d_model
         self.norm = torch.nn.LayerNorm(d_model) if norm else torch.nn.Identity()
-        self.lin_hidden = Linear(
-            input_size=d_model,
-            n_neurons=d_hidden,
-        )
+        self.lin_hidden = Linear(input_size=d_model, n_neurons=d_hidden,)
         self.act = torch.nn.LeakyReLU()
         self.lin_p = Linear(
-            input_size=d_hidden,
-            n_neurons=num_positions * 3,
-            bias=False
+            input_size=d_hidden, n_neurons=num_positions * 3, bias=False
         )
 
     def forward(self, x, track=None):
@@ -193,9 +189,12 @@ class TernaryLogitTokenizer(torch.nn.Module):
         "probability" : treats the outputs as a probability distribution
         "argmax" : "hard" mode, only the top probability is used. Cannot be used with
         top_k sampling with k > 1
-        
+
     """
-    def __init__(self, num_positions, num_tokens=None, num_tracks=4, chunk_size=10):
+
+    def __init__(
+        self, num_positions, num_tokens=None, num_tracks=4, chunk_size=10
+    ):
         super().__init__()
         self.num_positions = num_positions
         if num_tokens is None:
@@ -204,30 +203,45 @@ class TernaryLogitTokenizer(torch.nn.Module):
         self.num_tracks = num_tracks
         self.chunk_size = chunk_size
         self.register_buffer("vocab", torch.arange(num_tokens))
-        self.register_buffer("vocab_ternary", tokens_to_ternary(self.vocab[None, None, None, :], D=num_positions) + 1)
+        self.register_buffer(
+            "vocab_ternary",
+            tokens_to_ternary(self.vocab[None, None, None, :], D=num_positions)
+            + 1,
+        )
         self.register_buffer("idx", torch.arange(3)[None, None, None, None, :])
 
     def forward(self, logits):
         batch_size, max_len, num_positions, _ = logits.shape
         logits = logits.softmax(-1)
-        logits = logits.reshape(batch_size, max_len, self.num_tracks, 1, num_positions // self.num_tracks, 3)
+        logits = logits.reshape(
+            batch_size,
+            max_len,
+            self.num_tracks,
+            1,
+            num_positions // self.num_tracks,
+            3,
+        )
         chunks = logits.chunk(
-            dim=1,
-            chunks=math.ceil(logits.size(1) / self.chunk_size)
+            dim=1, chunks=math.ceil(logits.size(1) / self.chunk_size)
         )
         token_logits_chunks = []
         for chunk in chunks:
-            token_logits_raw = torch.where(
-                self.vocab_ternary[:, None, None, :, :, None] == self.idx,
-                chunk,
-                torch.ones_like(chunk)
-            ).prod(-1).log().sum(-1).exp()
+            token_logits_raw = (
+                torch.where(
+                    self.vocab_ternary[:, None, None, :, :, None] == self.idx,
+                    chunk,
+                    torch.ones_like(chunk),
+                )
+                .prod(-1)
+                .log()
+                .sum(-1)
+                .exp()
+            )
             token_logits_raw_sum = token_logits_raw.sum(-1, keepdim=True)
-            token_logits_chunks.append((token_logits_raw / token_logits_raw_sum).squeeze(2))
-        token_logits = torch.cat(
-            token_logits_chunks,
-            dim=1
-        )
+            token_logits_chunks.append(
+                (token_logits_raw / token_logits_raw_sum).squeeze(2)
+            )
+        token_logits = torch.cat(token_logits_chunks, dim=1)
         return token_logits
 
 
@@ -248,17 +262,17 @@ class SaveableGenerator:
     Arguments
     ---------
     generators : list, optional
-        A list of generator objects. If not provided, 
+        A list of generator objects. If not provided,
     """
 
     def __init__(self, generators=None):
         if generators is None:
-            generators = {
-                "default": torch.default_generator
-            }
+            generators = {"default": torch.default_generator}
             if torch.cuda.is_available():
                 for idx in range(torch.cuda.device_count()):
-                    generators[f"cuda:{idx}"] = _CudaDefaultGeneratorWrapper(idx)
+                    generators[f"cuda:{idx}"] = _CudaDefaultGeneratorWrapper(
+                        idx
+                    )
 
         self.generators = generators
 
@@ -281,11 +295,15 @@ class SaveableGenerator:
             match = re.match(r"cuda:(\d+)", key)
             if match:
                 if not torch.cuda.is_available():
-                    logger.warn("Unable to restore RNG for %s, CUDA unavailable", key)
+                    logger.warn(
+                        "Unable to restore RNG for %s, CUDA unavailable", key
+                    )
                     continue
                 idx = int(match.group(1))
                 if idx > torch.cuda.device_count() - 1:
-                    logger.warn("Unable to restore RNG for %s, device not found", key)
+                    logger.warn(
+                        "Unable to restore RNG for %s, device not found", key
+                    )
                     continue
             self.generators[key].set_state(state)
 
@@ -300,6 +318,7 @@ class _CudaDefaultGeneratorWrapper:
     ---------
     device : int|str
         The device index or identifier"""
+
     def __init__(self, device):
         self.device = device
 

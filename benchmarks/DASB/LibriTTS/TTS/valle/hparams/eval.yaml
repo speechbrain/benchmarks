@@ -71,8 +71,8 @@ eval_summary_log:
   spk_sim: spk_sim_score_mean
 
 inference_fit_space:
-    top_k: !ref <inference_fit_top_k>
-    sampling_temperature: !ref <inference_fit_sampling_temperature>
+  top_k: !ref <inference_fit_top_k>
+  sampling_temperature: !ref <inference_fit_sampling_temperature>
 
 inference_fit_metrics:
   utmos: utmos_utmos_mean

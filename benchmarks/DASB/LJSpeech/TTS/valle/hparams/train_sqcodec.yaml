@@ -169,9 +169,9 @@ input_num_tokens: !apply:speechbrain.utils.hparams.choice
 model_vocab_size: !ref <vocab_size> * 2
 
 audio_token_shift: 19683
- 
+
 audio_tokens_per_step: 4
-flatten: true
+flatten: True
 ternary_num_digits: 10
 pred_mode: ternary
 freeze_lm_head: False

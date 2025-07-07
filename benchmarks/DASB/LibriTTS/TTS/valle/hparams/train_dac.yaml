@@ -201,7 +201,7 @@ audio_token_shift: !apply:speechbrain.utils.hparams.choice
         phonemes: !ref <phn_num_tokens> + <special_num_tokens>
 
 audio_tokens_per_step: 2
-flatten: false
+flatten: False
 
 # Model Settings
 model_type: 24khz
@@ -229,7 +229,7 @@ inference_opts: !name:model.valle.SpeechLMInferenceOptions
     nq: !ref <audio_tokens_per_step>
     nbest: !ref <inference_nbest>
     sampling_temperature: !ref <inference_sampling_temperature>
-    top_k: !ref <inference_top_k>    
+    top_k: !ref <inference_top_k>
 
 
 tokenizer: !new:utils.tokenizer_interface.DACTokenizer

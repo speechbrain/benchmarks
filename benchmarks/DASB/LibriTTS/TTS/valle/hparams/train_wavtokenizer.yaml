@@ -199,7 +199,7 @@ audio_token_shift: !apply:speechbrain.utils.hparams.choice
         phonemes: !ref <phn_num_tokens> + <special_num_tokens>
 
 audio_tokens_per_step: 1
-flatten: false
+flatten: False
 
 # Model Settings
 model_hub: novateur/WavTokenizer-medium-music-audio-75token

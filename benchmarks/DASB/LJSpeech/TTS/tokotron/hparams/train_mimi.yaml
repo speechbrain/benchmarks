@@ -154,7 +154,7 @@ transformer_dropout: 0.2
 target_dropout: 0.2
 activation: !name:torch.nn.GELU
 audio_num_tokens: 2048
-audio_emb_size: 1024    
+audio_emb_size: 1024
 audio_emb_freeze: False
 audio_emb_pretrained: False
 audio_token_offsets: False
@@ -166,7 +166,7 @@ input_num_tokens: !apply:speechbrain.utils.hparams.choice
         text: !ref <text_num_tokens>
         phonemes: !ref <phn_num_tokens>
 audio_tokens_per_step: 2
-flatten: false
+flatten: False
 attention_type: regularMHA
 
 ############################## models ################################

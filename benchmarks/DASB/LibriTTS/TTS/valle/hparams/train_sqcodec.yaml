@@ -184,7 +184,7 @@ model_vocab_size: !ref <vocab_size> * 2
 
 audio_token_shift: 19683
 audio_tokens_per_step: 4
-flatten: true
+flatten: True
 ternary_num_digits: 10
 pred_mode: ternary
 
@@ -211,7 +211,7 @@ model: !new:model.valle.ValleLM # yamllint disable-line rule:line-length
     qk_norm: !ref <qk_norm>
     lm_head: !ref <lm_head>
     emb: !ref <emb>
-    logits_to_probs: !ref <logits_to_probs>    
+    logits_to_probs: !ref <logits_to_probs>
 
 inference_opts: !name:model.valle.SpeechLMInferenceOptions
     start: !ref <bos_index>
@@ -240,7 +240,7 @@ logits_to_probs: !apply:speechbrain.utils.hparams.choice
 
 emb: !new:speechbrain.nnet.containers.Sequential
     ternary: !new:model.sq_codec.TernaryEmbedding
-        num_digits: !ref <ternary_num_digits>    
+        num_digits: !ref <ternary_num_digits>
         flat: True
     linear: !new:speechbrain.nnet.linear.Linear
         input_size: !ref <ternary_num_digits> * <audio_tokens_per_step>
@@ -276,12 +276,15 @@ lr_annealing: !new:speechbrain.nnet.schedulers.NoamScheduler
     lr_initial: !ref <lr>
     n_warmup_steps: !ref <lr_warmup_steps>
 
+generator: !new:model.custom_model.SaveableGenerator
+
 checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
     checkpoints_dir: !ref <save_folder>
     recoverables:
         model: !ref <model>
         lr_scheduler: !ref <lr_annealing>
         counter: !ref <epoch_counter>
+        generator: !ref <generator>
 
 epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
     limit: !ref <number_of_epochs>

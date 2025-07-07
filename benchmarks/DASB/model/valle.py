@@ -135,7 +135,7 @@ class ValleLM(nn.Module):
             n_layer=ar_layer,
             qk_norm=qk_norm,
             dropout=dropout,
-            target_dropout=target_dropout
+            target_dropout=target_dropout,
         )
         if nq > 1:
             # NOTE: An NAR encoder is not needed if there is only one track
@@ -217,9 +217,13 @@ class ValleLM(nn.Module):
                 :, 1:
             ]  # [B, T, V]
             max_len = dec_seq.size(1)
-            mask = length_to_mask(dec_seq_lengths * max_len - 1, max_len - 1).bool()
+            mask = length_to_mask(
+                dec_seq_lengths * max_len - 1, max_len - 1
+            ).bool()
             mask = mask.unsqueeze(1).unsqueeze(1)  # [B, 1, 1, T]
-            h_nar = self.nar_decoder(input_nar_emb, nar_level_idx - 1, mask=mask)
+            h_nar = self.nar_decoder(
+                input_nar_emb, nar_level_idx - 1, mask=mask
+            )
 
         # Logits
         logits_ar, logits_nar = None, None
@@ -255,32 +259,7 @@ class ValleLM(nn.Module):
         mask = torch.logical_or(level_mask, prefix_mask)
         return dec_seq_emb.masked_fill(~mask, 0.0).sum(2)
 
-    @torch.no_grad()
-    def inference(
-        self, prefix, opts, enc_seq=None, suffix=None,
-    ):
-        """Vall-E Inference.
-
-        Arguments
-        ---------
-        prefix : torch.Tensor
-            Prefix part of dec_seq (B, T, nq).
-        opts : SpeechLMInferenceOptions
-            inference options.
-        enc_seq : torch.Tensor
-            Encoder token sequence (B, T, nq).
-        suffix : torch.Tensor
-            suffix part of dec_seq (B, T, nq),
-            usually the target sequence for teacher-forcing.
-
-        Returns
-        -------
-        gen_tokens_list : list
-            Generated tokens
-        gen_scores_list : list
-            The scores associated with the generated tokens
-        """
-
+    def _init_inference(self, prefix, opts, enc_seq, suffix):
         # (1) initialization
         cache = self.ar_decoder.init()
 
@@ -324,6 +303,59 @@ class ValleLM(nn.Module):
         if is_flattened:
             prev_tok = prev_tok.expand(1, tracks)
         mask_cache = []
+        return (
+            prefix_emb,
+            generated,
+            finish_idx,
+            cache,
+            modality_index,
+            mask,
+            mask_cache,
+            prev_tok,
+            minlen,
+            maxlen,
+            is_flattened,
+        )
+
+    @torch.inference_mode()
+    def inference(
+        self, prefix, opts, enc_seq=None, suffix=None,
+    ):
+        """Vall-E Inference.
+
+        Arguments
+        ---------
+        prefix : torch.Tensor
+            Prefix part of dec_seq (B, T, nq).
+        opts : SpeechLMInferenceOptions
+            inference options.
+        enc_seq : torch.Tensor
+            Encoder token sequence (B, T, nq).
+        suffix : torch.Tensor
+            suffix part of dec_seq (B, T, nq),
+            usually the target sequence for teacher-forcing.
+
+        Returns
+        -------
+        gen_tokens_list : list
+            Generated tokens
+        gen_scores_list : list
+            The scores associated with the generated tokens
+        """
+        (
+            prefix_emb,
+            generated,
+            finish_idx,
+            cache,
+            modality_index,
+            mask,
+            mask_cache,
+            prev_tok,
+            minlen,
+            maxlen,
+            is_flattened,
+        ) = self._init_inference(prefix, opts, enc_seq, suffix)
+
         modality_tokens = torch.tensor(
             list(opts.masks.keys()), device=prefix.device
         )
@@ -334,15 +366,13 @@ class ValleLM(nn.Module):
                 prev_tok = prev_tok.unsqueeze(1)
             prev_emb = self.emb(prev_tok).squeeze(2)  # [B, 1, D]
             h_ar = self.ar_decoder(prev_emb, kv_cache=cache)
-            logits = self.logits_to_probs(self.apply_lm_head(h_ar, 0))  # [B, 1, V]
+            logits = self.logits_to_probs(
+                self.apply_lm_head(h_ar, 0)
+            )  # [B, 1, V]
             if logits.dim() < 4:
                 logits = logits.unsqueeze(-2)
             gen_tok, gen_score = logits_to_tokens(
-                logits,
-                opts,
-                mask,
-                allow_eos=step >= minlen,
-                nq_level=0,
+                logits, opts, mask, allow_eos=step >= minlen, nq_level=0,
             )
             # [B, 1, 1] -> [B, 1]
             gen_tok, gen_score = gen_tok.squeeze(1), gen_score.squeeze(1)
@@ -403,10 +433,12 @@ class ValleLM(nn.Module):
             valid_idx = finish_idx.ne(-1).nonzero(as_tuple=True)[0]
         if len(valid_idx) == 0:
             self.ar_decoder.reset()
-            logging.warning(f"No valid examples. Return None")
+            logging.warning("No valid examples. Return None")
             return [], []
         elif len(valid_idx) < prefix.size(0):
-            logging.info(f"Only {len(valid_idx)} of {prefix.size(0)} are valid")
+            logging.info(
+                "Only %d of %d are valid", len(valid_idx), prefix.size(0)
+            )
 
         finish_idx = finish_idx[valid_idx]
         prefix_emb = prefix_emb[valid_idx]
@@ -426,70 +458,18 @@ class ValleLM(nn.Module):
         self.ar_decoder.reset()
 
         # (4) non-auto-regressive loop on the remained code layers
-        # (4.1) NAR initialization
-        if opts.search_algo == "teacher_force":
-            prev_tok = suffix[:, :, 0]
-        else:
-            prev_tok = gen_tokens_ar[:, :, 0]
-        start_token = torch.tensor(
-            [opts.start], device=prefix.device
-        )[None, None, :]
-
-        # (4.2) NAR loop
         if self.nq > 1:
-            start_emb = self.emb(start_token).squeeze().tile(
-                len(valid_idx), 1, 1
-            )  # [B, 1, D]
-            prev_emb = torch.cat(
-                [prefix_emb[:, 1:], start_emb, self.emb(prev_tok)], dim=1
-            )  # [B, T, D]
-
-            ones = torch.ones_like(valid_idx)
-            mask = length_to_mask(prefix.size(1) + finish_idx + 1).bool()
-            mask = mask.unsqueeze(1).unsqueeze(1)
-            generated = {"token": [], "score": []}
-
-            mask_cache = [mask_cache[0]] * prefix.size(1) + mask_cache
-            vocab_mask = torch.cat(mask_cache, dim=1)
-
-            for step in range(1, opts.nq):
-                h_nar = self.nar_decoder(
-                    prev_emb, ones * step - 1, mask=mask
-                )  # [B, T, D]
-                
-                logits = self.apply_lm_head(h_nar, step)
-                logits = self.logits_to_probs(logits)
-                gen_tok, gen_score = logits_to_tokens(
-                    logits.unsqueeze(2),
-                    opts,
-                    vocab_mask,
-                    search_algo="greedy_search",
-                    allow_eos=False,
-                    nq_level=step,
-                )
-                gen_tok, gen_score = (
-                    gen_tok.squeeze(2),
-                    gen_score.squeeze(2),
-                )  # [B, T]
-
-                generated["token"].append(gen_tok[:, prefix.size(1) :])
-                generated["score"].append(gen_score[:, prefix.size(1) :])
-
-                if opts.search_algo == "teacher_force":
-                    prev_tok = suffix[:, :, step]
-                else:
-                    prev_tok = generated["token"][-1]
-                prev_emb[:, prefix.size(1) :] += self.emb(prev_tok)  # [B, T, D]
-                prev_emb[:, prefix.size(1) - 1 : prefix.size(1)] += start_emb
-
-            # (5) combine AR and NAR results
-            gen_tokens_nar = torch.stack(generated["token"], dim=2)  # [B, T, nq]
-            gen_scores_nar = torch.stack(generated["score"], dim=2)
-
-            gen_tokens = torch.cat(
-                [gen_tokens_ar, gen_tokens_nar], dim=2
-            )  # [B, T, nq]
-            gen_scores = torch.cat([gen_scores_ar, gen_scores_nar], dim=2)
+            gen_tokens, gen_scores = self._nar_inference(
+                opts,
+                gen_tokens_ar,
+                gen_scores_ar,
+                valid_idx,
+                prefix_emb,
+                prefix,
+                suffix,
+                finish_idx,
+                mask_cache,
+            )
         else:
             gen_tokens = gen_tokens_ar
             gen_scores = gen_scores_ar
@@ -500,6 +480,83 @@ class ValleLM(nn.Module):
             gen_tokens_list.append(gen_tokens[b][:item_finish_idx])
             gen_scores_list.append(gen_scores[b][:item_finish_idx])
         return gen_tokens_list, gen_scores_list
+
+    def _nar_inference(
+        self,
+        opts,
+        gen_tokens_ar,
+        gen_scores_ar,
+        valid_idx,
+        prefix_emb,
+        prefix,
+        suffix,
+        finish_idx,
+        mask_cache,
+    ):
+        # (4.1) NAR initialization
+        if opts.search_algo == "teacher_force":
+            prev_tok = suffix[:, :, 0]
+        else:
+            prev_tok = gen_tokens_ar[:, :, 0]
+        start_token = torch.tensor([opts.start], device=prefix.device)[
+            None, None, :
+        ]
+
+        start_emb = (
+            self.emb(start_token).squeeze().tile(len(valid_idx), 1, 1)
+        )  # [B, 1, D]
+        prev_emb = torch.cat(
+            [prefix_emb[:, 1:], start_emb, self.emb(prev_tok)], dim=1
+        )  # [B, T, D]
+
+        ones = torch.ones_like(valid_idx)
+        mask = length_to_mask(prefix.size(1) + finish_idx + 1).bool()
+        mask = mask.unsqueeze(1).unsqueeze(1)
+        generated = {"token": [], "score": []}
+
+        mask_cache = [mask_cache[0]] * prefix.size(1) + mask_cache
+        vocab_mask = torch.cat(mask_cache, dim=1)
+
+        # (4.2) NAR loop
+        for step in range(1, opts.nq):
+            h_nar = self.nar_decoder(
+                prev_emb, ones * step - 1, mask=mask
+            )  # [B, T, D]
+
+            logits = self.apply_lm_head(h_nar, step)
+            logits = self.logits_to_probs(logits)
+            gen_tok, gen_score = logits_to_tokens(
+                logits.unsqueeze(2),
+                opts,
+                vocab_mask,
+                search_algo="greedy_search",
+                allow_eos=False,
+                nq_level=step,
+            )
+            gen_tok, gen_score = (
+                gen_tok.squeeze(2),
+                gen_score.squeeze(2),
+            )  # [B, T]
+
+            generated["token"].append(gen_tok[:, prefix.size(1) :])
+            generated["score"].append(gen_score[:, prefix.size(1) :])
+
+            if opts.search_algo == "teacher_force":
+                prev_tok = suffix[:, :, step]
+            else:
+                prev_tok = generated["token"][-1]
+            prev_emb[:, prefix.size(1) :] += self.emb(prev_tok)  # [B, T, D]
+            prev_emb[:, prefix.size(1) - 1 : prefix.size(1)] += start_emb
+
+        # (5) combine AR and NAR results
+        gen_tokens_nar = torch.stack(generated["token"], dim=2)  # [B, T, nq]
+        gen_scores_nar = torch.stack(generated["score"], dim=2)
+
+        gen_tokens = torch.cat(
+            [gen_tokens_ar, gen_tokens_nar], dim=2
+        )  # [B, T, nq]
+        gen_scores = torch.cat([gen_scores_ar, gen_scores_nar], dim=2)
+        return gen_tokens, gen_scores
 
     def apply_lm_head(self, x, track):
         """Applies the language model head
@@ -630,7 +687,8 @@ class TransformerDecoder(nn.Module):
         The target dropout probability
     layer_class : type
         The layer type to be used
-    """    
+    """
+
     def __init__(
         self,
         n_ctx,
@@ -1279,7 +1337,7 @@ RE_PUNCTUATION = re.compile(
 
 class WhisperASRSampleSelector(SampleSelector):
     """A selector implemented using Whisper
-    
+
     Arguments
     ---------
     tokenizer: BaseTokenizer
@@ -1307,6 +1365,7 @@ class WhisperASRSampleSelector(SampleSelector):
         Additional arguments for the tokenizer
         decoding function
     """
+
     def __init__(
         self,
         tokenizer,
@@ -1358,12 +1417,14 @@ class WhisperASRSampleSelector(SampleSelector):
         if self.offsets is not None:
             tokens_shift = tokens_shift - self.offsets
         tokens_shift = tokens_shift.clip(0)
-        wav = self.tokenizer.tokens_to_sig(tokens_shift, **self.token_model_kwargs)
+        wav = self.tokenizer.tokens_to_sig(
+            tokens_shift, **self.token_model_kwargs
+        )
         if self.sample_rate != self.tokenizer_sample_rate:
             wav = torchaudio.functional.resample(
                 wav,
                 orig_freq=self.tokenizer_sample_rate,
-                new_freq=self.sample_rate
+                new_freq=self.sample_rate,
             )
         wav = undo_padding_tensor(wav, length)
         metric = ErrorRateStats()
@@ -1377,7 +1438,7 @@ class WhisperASRSampleSelector(SampleSelector):
             "Ground truth text: %s, sample scores: %s, best: #%d",
             text,
             sample_scores,
-            idx
+            idx,
         )
         if self.debug:
             sio = StringIO()
@@ -1391,13 +1452,15 @@ class WhisperASRSampleSelector(SampleSelector):
         wav = self.model.pad_or_trim(wav)
         mels = self.model.log_mel_spectrogram(wav)
         enc_out = self.model.forward_encoder(mels)
-        pred, _, _, _ = self.searcher(enc_out.detach(), torch.tensor(1., device=wav.device))
+        pred, _, _, _ = self.searcher(
+            enc_out.detach(), torch.tensor(1.0, device=wav.device)
+        )
         pred = self.model.tokenizer.batch_decode(
             pred, skip_special_tokens=True
         )[0]
         pred = self.normalize(pred)
         return pred
-    
+
     def normalize(self, text):
         """Performs text normalization (uppercase, remove whitespace,
         remove punctuation)
@@ -1416,4 +1479,3 @@ class WhisperASRSampleSelector(SampleSelector):
         text = text.strip()
         text = RE_PUNCTUATION.sub("", text)
         return text
-

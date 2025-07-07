@@ -198,7 +198,7 @@ class VALLEBrain(sb.Brain):
         logits_nar,
         targets_nar,
         mask,
-        reduction="batch"
+        reduction="batch",
     ):
         """Computes an autoregressive/non-autoregressive loss breakdown,
         to be used for metrics/stats
@@ -213,7 +213,7 @@ class VALLEBrain(sb.Brain):
             The non-autoregressive predictions
         targets_nar : torch.Tensor
             The targets for non-autoregressive prediction
-        
+
         Returns
         -------
         stats: dict
@@ -222,13 +222,11 @@ class VALLEBrain(sb.Brain):
         stats = {}
         if self.train_ar:
             stats["loss_ar"] = self.hparams.compute_cost(
-                logits_ar, targets=targets_ar, mask=mask,
-                reduction=reduction,
+                logits_ar, targets=targets_ar, mask=mask, reduction=reduction,
             )
         if self.train_nar:
             stats["loss_nar"] = self.hparams.compute_cost(
-                logits_nar, targets=targets_nar, mask=mask,
-                reduction=reduction,
+                logits_nar, targets=targets_nar, mask=mask, reduction=reduction,
             )
         return stats
 
@@ -280,11 +278,13 @@ class VALLEBrain(sb.Brain):
         if self.hparams.audio_tokens_per_step == 1 or self.hparams.flatten:
             # NOTE: If there is only one track it's autoregressive
             self.train_nar = False
-        elif self.hparams.number_of_epochs_ar is not None and epoch <= self.hparams.number_of_epochs_ar:
-            self.train_nar = False
         elif (
-            self.hparams.number_of_epochs_nar is not None
-            and epoch <= (self.hparams.number_of_epochs_ar + self.hparams.number_of_epochs_nar)
+            self.hparams.number_of_epochs_ar is not None
+            and epoch <= self.hparams.number_of_epochs_ar
+        ):
+            self.train_nar = False
+        elif self.hparams.number_of_epochs_nar is not None and epoch <= (
+            self.hparams.number_of_epochs_ar + self.hparams.number_of_epochs_nar
         ):
             self.train_ar = False
             if self.hparams.freeze_lm_head:
@@ -367,7 +367,7 @@ class VALLEBrain(sb.Brain):
                 audio_tokens, audio_length = self.inference(batch)
                 if self.hparams.flip_layers:
                     audio_tokens = audio_tokens.flip(2)
-                wav = self.create_waveform(audio_tokens, audio_length)                
+                wav = self.create_waveform(audio_tokens, audio_length)
                 wav = wav.squeeze(1)
                 self.save_samples(
                     batch=batch, wav=wav, length=audio_length, stage=stage
@@ -438,7 +438,7 @@ class VALLEBrain(sb.Brain):
             self.checkpointer.save_and_keep_only(
                 meta={"loss": stage_stats["loss"], **eval_summary_stats},
                 num_to_keep=hparams["ckpt_keep"],
-                **ckpt_kwargs
+                **ckpt_kwargs,
             )
         elif stage == sb.Stage.TEST:
             self.hparams.train_logger.log_stats(
@@ -498,8 +498,7 @@ class VALLEBrain(sb.Brain):
         if not self.hparams.use_token_offsets:
             tracks = torch.zeros_like(tracks)
         track_start = (
-            self.hparams.audio_token_shift
-            + tracks * self.hparams.vocab_size
+            self.hparams.audio_token_shift + tracks * self.hparams.vocab_size
         )
         if self.hparams.flip_layers:
             track_start = track_start.flip(0)
@@ -523,7 +522,9 @@ class VALLEBrain(sb.Brain):
         samples = undo_padding_tensor(wav, length)
         for uttid, sample in zip(batch.uttid, samples):
             file_name = output_folder / f"pred_{uttid}.wav"
-            write_audio(file_name, sample.detach().cpu(), self.hparams.model_sample_rate)
+            write_audio(
+                file_name, sample.detach().cpu(), self.hparams.model_sample_rate
+            )
 
     def save_eval(self, stage):
         """Saves evaluation results
@@ -652,7 +653,12 @@ def dataio_prepare(hparams):
         sig = sb.dataio.dataio.read_audio(wav)
         return sig
 
-    dynamic_items = [sig_pipeline, text_pipeline, tokens_pipeline, prompt_pipeline]
+    dynamic_items = [
+        sig_pipeline,
+        text_pipeline,
+        tokens_pipeline,
+        prompt_pipeline,
+    ]
 
     init_sequence_encoder(hparams)
     use_spk_emb = hparams.get("use_spk_emb", False)
@@ -761,7 +767,7 @@ def init_sequence_encoder(hparams):
         an encoder instance"""
     encoder = hparams["label_encoder"]
     token_list_file_name = hparams["token_list_file"]
-    tokens = read_token_list(token_list_file_name)    
+    tokens = read_token_list(token_list_file_name)
     encoder.add_unk()
     for token in hparams["special_tokens"]:
         token_key = token.replace("<", "").replace(">", "")
@@ -990,17 +996,17 @@ if __name__ == "__main__":
 
     # Load best checkpoint for evaluation
     if hparams["testing"]:
-        test_summary_file = Path(hparams["output_folder"]) / "eval" / "test" / "summary.json"
+        test_summary_file = (
+            Path(hparams["output_folder"]) / "eval" / "test" / "summary.json"
+        )
         if test_summary_file.exists():
             logging.info("Test run already completed: %s", test_summary_file)
         else:
             test_key_kind = hparams["test_key_kind"]
             test_key = hparams["test_key"]
-            eval_kwargs = {
-                f"{test_key_kind}_key": test_key
-            }
+            eval_kwargs = {f"{test_key_kind}_key": test_key}
             tts_brain.evaluate(
                 test_set=datasets["test"],
                 test_loader_kwargs=hparams["test_dataloader_opts"],
-                **eval_kwargs
+                **eval_kwargs,
             )

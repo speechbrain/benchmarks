@@ -38,9 +38,10 @@ base_dir = str(Path(__file__).resolve().parent.parent.parent.parent)
 sys.path.append(base_dir)
 
 from evaluation import SpeechEvaluationMetricStats  # noqa: E402
-from model.valle import DefaultSampleSelector
+from model.valle import DefaultSampleSelector  # noqa: E402
 
 logger = logging.getLogger(__name__)
+
 
 # Brain class for speech recognition training
 class VALLEBrain(sb.Brain):
@@ -85,9 +86,7 @@ class VALLEBrain(sb.Brain):
         if hasattr(tokenizer, "codec_vocoder"):
             tokenizer.codec_vocoder.to(self.device)
             tokenizer.codec_vocoder.device = self.device
-        wav = tokenizer.tokens_to_sig(
-            audio, **self.token_model_kwargs
-        )
+        wav = tokenizer.tokens_to_sig(audio, **self.token_model_kwargs)
         wav = clean_padding(wav, length)
         wav = wav.to(self.device)
         return wav
@@ -196,7 +195,7 @@ class VALLEBrain(sb.Brain):
 
         loss = torch.mean(torch.stack(loss_components))
         return loss
-    
+
     def compute_loss_stats(
         self,
         logits_ar,
@@ -204,11 +203,11 @@ class VALLEBrain(sb.Brain):
         logits_nar,
         targets_nar,
         mask,
-        reduction="batch"
+        reduction="batch",
     ):
         """Computes an autoregressive/non-autoregressive loss breakdown,
         to be used for metrics/stats
-        
+
         Arguments
         ---------
         logits_ar : torch.Tensor
@@ -219,7 +218,7 @@ class VALLEBrain(sb.Brain):
             The non-autoregressive predictions
         targets_nar : torch.Tensor
             The targets for non-autoregressive prediction
-        
+
         Returns
         -------
         stats: dict
@@ -228,13 +227,11 @@ class VALLEBrain(sb.Brain):
         stats = {}
         if self.train_ar:
             stats["loss_ar"] = self.hparams.compute_cost(
-                logits_ar, targets=targets_ar, mask=mask,
-                reduction=reduction,
+                logits_ar, targets=targets_ar, mask=mask, reduction=reduction,
             )
         if self.train_nar:
             stats["loss_nar"] = self.hparams.compute_cost(
-                logits_nar, targets=targets_nar, mask=mask,
-                reduction=reduction,
+                logits_nar, targets=targets_nar, mask=mask, reduction=reduction,
             )
         return stats
 
@@ -258,7 +255,7 @@ class VALLEBrain(sb.Brain):
         if hasattr(hparams, "speech_model_layers"):
             self.layer_idx = get_selected_layer_indexes(
                 hparams.available_speech_model_layers,
-                hparams.speech_model_layers
+                hparams.speech_model_layers,
             )
         else:
             self.layer_idx = None
@@ -274,7 +271,7 @@ class VALLEBrain(sb.Brain):
                 self.evaluation_metric.on_evaluation_start()
                 self.is_evaluating = True
             else:
-                logger.info("No evaluation on epoch %d", epoch)            
+                logger.info("No evaluation on epoch %d", epoch)
         elif stage == sb.Stage.TEST:
             self.evaluation_metric.on_evaluation_start()
             self.is_evaluating = True
@@ -290,14 +287,11 @@ class VALLEBrain(sb.Brain):
         if stage == sb.Stage.TRAIN:
             self.sample_selector = None
         else:
-            sample_selector = getattr(
-                self.hparams, "sample_selector", None
-            )
+            sample_selector = getattr(self.hparams, "sample_selector", None)
             if not sample_selector:
                 sample_selector = DefaultSampleSelector
             self.sample_selector = sample_selector(
-                token_shift=self.hparams.audio_token_shift,
-                offsets=self.offsets
+                token_shift=self.hparams.audio_token_shift, offsets=self.offsets
             )
 
     def apply_curriculum(self):
@@ -314,11 +308,13 @@ class VALLEBrain(sb.Brain):
         if self.hparams.audio_tokens_per_step == 1 or self.hparams.flatten:
             # NOTE: If there is only one track it's autoregressive
             self.train_nar = False
-        elif self.hparams.number_of_epochs_ar is not None and epoch <= self.hparams.number_of_epochs_ar:
-            self.train_nar = False
         elif (
-            self.hparams.number_of_epochs_nar is not None
-            and epoch <= (self.hparams.number_of_epochs_ar + self.hparams.number_of_epochs_nar)
+            self.hparams.number_of_epochs_ar is not None
+            and epoch <= self.hparams.number_of_epochs_ar
+        ):
+            self.train_nar = False
+        elif self.hparams.number_of_epochs_nar is not None and epoch <= (
+            self.hparams.number_of_epochs_ar + self.hparams.number_of_epochs_nar
         ):
             self.train_ar = False
             if self.hparams.freeze_lm_head:
@@ -471,7 +467,7 @@ class VALLEBrain(sb.Brain):
             self.checkpointer.save_and_keep_only(
                 meta={"loss": stage_stats["loss"], **eval_summary_stats},
                 num_to_keep=hparams["ckpt_keep"],
-                **ckpt_kwargs
+                **ckpt_kwargs,
             )
         elif stage == sb.Stage.TEST:
             self.hparams.train_logger.log_stats(
@@ -511,16 +507,13 @@ class VALLEBrain(sb.Brain):
         ]
         logger.info("Running selection")
         inference_results = [
-            self.sample_selector.select(
-                tokens,
-                scores,
-                label
+            self.sample_selector.select(tokens, scores, label)
+            for (tokens, scores), label in zip(
+                inference_results, batch.label_norm_eval
             )
-            for (tokens, scores), label in zip(inference_results, batch.label_norm_eval)
         ]
         inferred_tokens = [
-            self._pad_inferred_sample(result)
-            for result in inference_results
+            self._pad_inferred_sample(result) for result in inference_results
         ]
         audio, audio_length = batch_pad_right(inferred_tokens)
         audio_length = audio_length.to(self.device)
@@ -549,10 +542,7 @@ class VALLEBrain(sb.Brain):
         min_length = getattr(self.hparams, "infer_min_length", 10)
         sample_length, tracks = sample.shape
         if sample_length < min_length:
-            sample = pad_right_to(
-                sample,
-                (min_length, tracks),
-            )[0]
+            sample = pad_right_to(sample, (min_length, tracks),)[0]
         return sample
 
     def _get_inference_opts(self):
@@ -565,8 +555,7 @@ class VALLEBrain(sb.Brain):
         if not self.hparams.use_token_offsets:
             tracks = torch.zeros_like(tracks)
         track_start = (
-            self.hparams.audio_token_shift
-            + tracks * self.hparams.vocab_size
+            self.hparams.audio_token_shift + tracks * self.hparams.vocab_size
         )
         if self.hparams.flip_layers:
             track_start = track_start.flip(0)
@@ -626,7 +615,7 @@ class VALLEBrain(sb.Brain):
         if self.hparams.lr_annealing_mode == "step":
             self.hparams.lr_annealing(self.optimizer)
         return loss
-    
+
     def fit(
         self,
         epoch_counter,
@@ -688,7 +677,7 @@ class VALLEBrain(sb.Brain):
         if not (
             isinstance(train_set, DataLoader)
             or isinstance(train_set, LoopedLoader)
-        ):        
+        ):
             train_set = self.make_dataloader(
                 train_set, stage=sb.Stage.TRAIN, **train_loader_kwargs
             )
@@ -698,7 +687,7 @@ class VALLEBrain(sb.Brain):
             valid_set = sample_dataset(
                 dataset=valid_set,
                 count=self.hparams.valid_inter_data_count,
-                seed=self.hparams.seed
+                seed=self.hparams.seed,
             )
 
         valid_set = self.make_dataloader(
@@ -726,7 +715,6 @@ class VALLEBrain(sb.Brain):
                 or self._optimizer_step_limit_exceeded
             ):
                 break
-
 
 
 INPUT_FEATURE_MAP = {"text": "label_norm", "phonemes": "phn"}
@@ -767,7 +755,7 @@ def dataio_prepare(hparams):
         hparams["vocab_size"], hparams["audio_tokens_per_step"]
     ).unsqueeze(0)
     if not hparams["use_token_offsets"]:
-        offsets = torch.zeros_like(offsets)    
+        offsets = torch.zeros_like(offsets)
     if hparams["flip_layers"]:
         offsets = offsets.flip(-1)
 
@@ -785,7 +773,6 @@ def dataio_prepare(hparams):
         num_codebooks = layer_idx
     else:
         num_codebooks = hparams["audio_tokens_per_step"]
-
 
     @sb.utils.data_pipeline.takes("label")
     @sb.utils.data_pipeline.provides("label_norm", "label_norm_eval")
@@ -824,9 +811,7 @@ def dataio_prepare(hparams):
         "audio", "prefix", "prompt", "prefix_length", "length"
     )
     def prompt_pipeline(id, tokens, spk_prompt):
-        audio = tokens_loader.tokens_by_uttid(
-            id, num_codebooks=num_codebooks
-        )
+        audio = tokens_loader.tokens_by_uttid(id, num_codebooks=num_codebooks)
         if hparams["flip_layers"]:
             audio = audio.flip(-1)
         yield audio
@@ -904,35 +889,80 @@ def dataio_prepare(hparams):
             spk_samplers=spk_samplers,
         )
         resample_fn[dataset](epoch=0)
-        if hparams["input"] == "phonemes":
-            dynamic_dataset = dynamic_dataset.filtered_sorted(
-                key_test={"has_alignments": lambda value: value}
-            )
-        duration_min = hparams.get("duration_min")
-        duration_max = hparams.get("duration_max")
-        if duration_min or duration_max:
-            key_min_value = None
-            key_max_value = None
-            if duration_min:
-                key_min_value = {"duration": duration_min}
-            if duration_max:
-                key_max_value = {"duration": duration_max}
-            dynamic_dataset = dynamic_dataset.filtered_sorted(
-                key_min_value=key_min_value,
-                key_max_value=key_max_value,
-            )
-        dynamic_dataset = dynamic_dataset.filtered_sorted(
-            key_test={
-                "wrd": lambda wrd: not any(
-                    "{" in item
-                    for item in wrd
-                )
-            }
-        )
+        dataset = filter_alignments(dataset, hparams)
+        dataset = filter_duration(dataset, hparams)
 
         datasets[dataset] = dynamic_dataset
         hparams[f"{dataset}_dataloader_opts"]["shuffle"] = False
 
+    sort_datasets(datasets, hparams)
+
+    return datasets, resample_fn
+
+
+def filter_duration(dataset, hparams):
+    """Filters the dataset by sample duration
+
+    Arguments
+    ---------
+    dataset: speechbrain.dataio.dataset.DynamicItemDataset
+        A dataset
+    hparams: dict
+        Hyperparameters
+
+    Returns
+    -------
+    result : speechbrain.dataio.dataset.DynamicItemDataset
+        A filtered dataset
+    """
+    duration_min = hparams.get("duration_min")
+    duration_max = hparams.get("duration_max")
+    if duration_min or duration_max:
+        key_min_value = None
+        key_max_value = None
+        if duration_min:
+            key_min_value = {"duration": duration_min}
+        if duration_max:
+            key_max_value = {"duration": duration_max}
+        dataset = dataset.filtered_sorted(
+            key_min_value=key_min_value, key_max_value=key_max_value,
+        )
+    return dataset
+
+
+def filter_alignments(dataset, hparams):
+    """Filters the dataset by the presence of alignments if
+    phonemes are selected as a source
+
+    Arguments
+    ---------
+    dataset: speechbrain.dataio.dataset.DynamicItemDataset
+        A dataset
+    hparams: dict
+        Hyperparameters
+
+    Returns
+    -------
+    result : speechbrain.dataio.dataset.DynamicItemDataset
+        A filtered dataset
+    """
+    if hparams["input"] == "phonemes":
+        dataset = dataset.filtered_sorted(
+            key_test={"has_alignments": lambda value: value}
+        )
+    return dataset
+
+
+def sort_datasets(datasets, hparams):
+    """Sorts datasets according to hyperparameters
+
+    Arguments
+    ---------
+    datasets : dict
+        a key -> value dictionary of datasets (the keys are "train", "valid" and "test")
+    hparams : dict
+        a dictionary of hyperparameters
+    """
     # Sorting training data with ascending order makes the code  much
     # faster  because we minimize zero-padding. In most of the cases, this
     # does not harm the performance.
@@ -953,7 +983,6 @@ def dataio_prepare(hparams):
         raise NotImplementedError(
             "sorting must be random, ascending or descending"
         )
-    return datasets, resample_fn
 
 
 def sample_dataset(dataset, count, seed):
@@ -974,14 +1003,8 @@ def sample_dataset(dataset, count, seed):
     generator = torch.Generator()
     generator.manual_seed(seed)
     indexes = torch.randperm(len(dataset)).tolist()[:count]
-    data_ids = [
-        dataset.data_ids[idx]
-        for idx in indexes
-    ]
-    return FilteredSortedDynamicItemDataset(
-        dataset,
-        data_ids,
-    )
+    data_ids = [dataset.data_ids[idx] for idx in indexes]
+    return FilteredSortedDynamicItemDataset(dataset, data_ids,)
 
 
 def get_offsets(vocab_size, tracks):
@@ -1132,7 +1155,7 @@ def get_selected_layer_indexes(available_layers, selected_layers):
 
     Returns
     -------
-    layer_idx : list    
+    layer_idx : list
         The layer indexes
     """
     if not (selected_layers and available_layers):
@@ -1260,9 +1283,13 @@ def select_eval_subset(dataset, hparams, key="eval_subset"):
         with open(eval_subset_path) as eval_subset_file:
             eval_subset_ids = [line.strip() for line in eval_subset_file]
         existing_ids = dataset.data_ids
-        eval_subset_ids = [uttid for uttid in eval_subset_ids if uttid in existing_ids]
+        eval_subset_ids = [
+            uttid for uttid in eval_subset_ids if uttid in existing_ids
+        ]
         if not eval_subset_ids:
-            raise ValueError("{eval_subset_path}: no items found in the dataset")
+            raise ValueError(
+                "{eval_subset_path}: no items found in the dataset"
+            )
         subset = FilteredSortedDynamicItemDataset(dataset, eval_subset_ids)
     else:
         subset = dataset
@@ -1373,7 +1400,7 @@ if __name__ == "__main__":
                 "seed": hparams["seed"],
                 "alignments_folder": hparams.get("alignments_folder"),
                 "model_name": hparams["model"].__class__.__name__,
-                "max_valid_size": hparams.get("max_valid_size", 10000)
+                "max_valid_size": hparams.get("max_valid_size", 10000),
             },
         )
 
@@ -1410,21 +1437,27 @@ if __name__ == "__main__":
 
         # Load best checkpoint for evaluation
         if hparams["testing"]:
-            test_summary_file = next(Path(hparams["output_folder"]).glob("eval/test/*/summary.json"), None)
+            test_summary_file = next(
+                Path(hparams["output_folder"]).glob("eval/test/*/summary.json"),
+                None,
+            )
             if test_summary_file is not None:
-                logging.info("Test run already completed: %s", test_summary_file)
+                logging.info(
+                    "Test run already completed: %s", test_summary_file
+                )
             else:
                 test_key_kind = hparams["test_key_kind"]
                 test_key = hparams["test_key"]
-                eval_kwargs = {
-                    f"{test_key_kind}_key": test_key
-                }
+                eval_kwargs = {f"{test_key_kind}_key": test_key}
                 eval_dataset_key = hparams["eval_dataset"]
-                logger.info("Performing final evaluation on the %s dataset", eval_dataset_key)
+                logger.info(
+                    "Performing final evaluation on the %s dataset",
+                    eval_dataset_key,
+                )
                 eval_dataset = datasets[eval_dataset_key]
                 eval_dataset = select_eval_subset(eval_dataset, hparams)
                 tts_brain.evaluate(
                     test_set=eval_dataset,
                     test_loader_kwargs=hparams["test_dataloader_opts"],
-                    **eval_kwargs
+                    **eval_kwargs,
                 )

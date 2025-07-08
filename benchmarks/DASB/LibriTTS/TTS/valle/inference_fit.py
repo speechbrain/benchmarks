@@ -34,7 +34,15 @@ logger = get_logger(__name__)
 
 
 class InferenceFit:
-    """An inference fit wrapper"""
+    """A wrapper class for hyperparameter fitting
+
+    Arguments
+    ---------
+    hparams : dict
+        Parsed hyperparameters
+    run_opts : dict
+        Parsed run options
+    """
 
     def __init__(self, hparams, run_opts):
         device = run_opts.get("device", "cpu")
@@ -64,8 +72,8 @@ class InferenceFit:
 
         Arguments
         ---------
-        dataset: DynamicItemDataset
-            a dataset
+        dataset: speechbrain.dataio.dataset.DynamicItemDataset
+            A dataset instance
 
         Returns
         -------
@@ -86,11 +94,35 @@ class InferenceFit:
         return self.result, self.best
 
     def is_completed(self, params):
+        """Determines whether the fitting run has been completed
+
+        Arguments
+        ---------
+        params : torch.Tensor
+            the parameters to evaluate
+
+        Returns
+        -------
+        result : bool
+            Whether the run has been completed
+        """
         folder_name = params_to_folder_name(params)
         path = self.output_folder / folder_name / "summary.json"
         return path.exists()
 
     def get_result(self, params):
+        """Retrieves the result for a completed run
+
+        Arguments
+        ---------
+        params : torch.Tensor
+            A hyperparameter search entry
+
+        Returns
+        -------
+        result : dict
+            The result of the run
+        """
         params_str = format_params(params)
         logger.info("Retrieving params for completed run %s", params_str)
         folder_name = params_to_folder_name(params)
@@ -104,6 +136,13 @@ class InferenceFit:
         return result
 
     def find_best(self):
+        """Finds the best run result based on the metric chosen
+
+        Returns
+        -------
+        result : dict
+            The best result
+        """
         best = self.result[0]
         op = (
             operator.lt
@@ -117,9 +156,31 @@ class InferenceFit:
         return best
 
     def enumerate_param_space(self):
+        """Enumerates the parameter space
+
+        Returns
+        -------
+        result : generator
+            The parameter space (each element is a dictionary of hyperparameters)
+        """
         return enumerate_space(self.space)
 
     def evaluate(self, dataset, params):
+        """Performs evaluation at a particular point
+        in the hyperparameter space
+
+        Arguments
+        ---------
+        dataset : speechbrain.dataio.dataset.DynamicItemDataset
+            A dataset instance
+        params : dict
+            The hyperparameter dictionary
+
+        Returns
+        -------
+        metrics : dictionary
+            a key/value dictionary with the metrics computed
+        """
         dataloader = sb.dataio.dataloader.make_dataloader(dataset)
         params_str = format_params(params)
         logger.info("Starting evaluation of %s", params_str)
@@ -141,6 +202,14 @@ class InferenceFit:
         return metrics
 
     def evaluate_batch(self, batch, params):
+        """Evaluates a single batch
+
+        Arguments
+        ---------
+        batch : PaddedBatch
+            A single batch of data
+        params : dict
+            A set of hyperparameters to try"""
         batch = batch.to(self.device)
         audio_tokens, audio_length = self.inference(batch, params)
         wav = self.create_waveform(audio_tokens, audio_length)
@@ -155,6 +224,7 @@ class InferenceFit:
         )
 
     def write_report(self):
+        """Outputs the hyperparameter fitting report"""
         if self.result is None:
             logger.warning("Nothing to report")
             return
@@ -286,6 +356,7 @@ class InferenceFit:
         )
 
     def recover(self):
+        """Recovers a checkpoint according to the settings specified"""
         test_key_kind = hparams["test_key_kind"]
         test_key = hparams["test_key"]
         kwargs = {f"{test_key_kind}_key": test_key}
@@ -298,6 +369,24 @@ class InferenceFit:
 
 
 def enumerate_space(space, entry=None, points=None):
+    """Enumerates the hyperparameter space for a full
+    grid search
+
+    Arguments
+    ---------
+    space : dict
+        A key -> value dictionary with hyperparameter names as keys
+        and sets of values to try as values
+    entry : dict
+        The entry being constructed
+    points : list
+        The list of points being constructed
+
+    Returns
+    -------
+    result : list
+        All configurations to try
+    """
     if points is None:
         points = []
     if not space:
@@ -314,16 +403,51 @@ def enumerate_space(space, entry=None, points=None):
 
 
 def format_space(space):
+    """Formats a hyperparameter space for display
+
+    Arguments
+    ---------
+    space : dict
+        A space definition
+
+    Returns
+    -------
+    result : str
+        A formatted space for display"""
     return ", ".join(
         f"{parameter}: {values}" for parameter, values in space.items()
     )
 
 
 def format_params(params):
+    """Formats a set of hyperparameters (a single point in the hyperparameter
+    space) for display
+
+    Arguments
+    ---------
+    params : dict
+        A dictionary of hyperparameter values
+
+    Returns
+    -------
+    result : str
+        A formatted hyperparameter dictionary
+    """
     return ", ".join(f"{key}={value}" for key, value in params.items())
 
 
 def params_to_folder_name(params):
+    """Formats a dictionary of hyperparameters as a folder name (for ease of reading)
+
+    Arguments
+    ---------
+    params : dict
+        A dictionary of hyperparameter values
+
+    Returns
+    -------
+    result : str
+        The corresponding folder name"""
     params_str = "-".join(f"{key}-{value}" for key, value in params.items())
     return f"eval-{params_str}"
 

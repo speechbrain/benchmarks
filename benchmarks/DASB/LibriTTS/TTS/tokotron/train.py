@@ -134,6 +134,26 @@ class TokotronBrain(sb.Brain):
         return predictions, features
 
     def prepare_features(self, batch):
+        """Prepares Tokotron TTS features
+
+        Arguments
+        ---------
+        batch : PaddedBatch
+            A batch of data
+
+        Returns
+        -------
+        audio_bos : torch.Tensor
+            Audio represnetations (discrete or continuous) with the BOS marker
+        audio_bos_length : torch.Tensor
+            Relative lengths of audio representations with the BOS marker
+        audio_tgt : torch.Tensor
+            Audio prediction targets
+        audio_tgt_length : torch.Tensor
+            Audio prediction targets - relative lengths
+        spk_emb : torch.Tensor
+            Speaker embeddings
+        """
         if self.hparams.spk_emb_shuffle:
             wav, wav_length = batch.spk_emb_random_match
         else:

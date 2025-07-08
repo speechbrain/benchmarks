@@ -518,6 +518,19 @@ class VALLEBrain(sb.Brain):
         )
 
     def save_samples(self, batch, wav, length, stage):
+        """Saves audio samples
+
+        Arguments
+        ---------
+        batch : PaddedBatch
+            An audio batch
+        wav : torch.Tensor
+            Generated audio
+        length : torch.Tensor
+            Relative lengths
+        stage : speechbrain.Stage
+            The training stage
+        """
         output_folder = self._get_eval_output_folder(stage)
         samples = undo_padding_tensor(wav, length)
         for uttid, sample in zip(batch.uttid, samples):

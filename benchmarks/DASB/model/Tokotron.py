@@ -78,16 +78,22 @@ TokotronInfernceOutput = namedtuple(
 
 
 class EosMode(Enum):
+    """The method of determining end-of-sequence"""
+
     GATE = "gate"
     TOKEN = "token"
 
 
 class DecoderMode(Enum):
+    """The method of determining what type of decoder to use"""
+
     AUTOREGRESSIVE = "autoregressive"
     FORWARD = "forward"
 
 
 class RepresentationMode(Enum):
+    """Inidcates the type of representations to use for audio (discrete or continuous)"""
+
     DISCRETE = "discrete"
     CONTINUOUS = "continuous"
 
@@ -1817,10 +1823,30 @@ class TargetedNoamScheduler(NoamScheduler):
 
 
 class PositionalEncoding(TransformerPositionalEncoding):
+    """A wrapper for the positional encoding that does not try
+    to be loaded from state dictionaries"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def load_state_dict(self, state_dict, strict=True, assign=False):
+        """Copy parameters and buffers from :attr:`state_dict` into this module and its descendants.
+
+        Arguments
+        ---------
+        state_dict : dict
+            A dict containing parameters and persistent buffers.
+        strict : (bool, optional)
+            Whether to strictly enforce that the keys
+        assign (bool, optional): whether to assign items in the state
+            dictionary to their corresponding keys in the module
+
+        Returns
+        -------
+        ``NamedTuple`` with ``missing_keys`` and ``unexpected_keys`` fields:
+            * **missing_keys** is a list of str containing the missing keys
+            * **unexpected_keys** is a list of str containing the unexpected keys
+        """
         pass
 
 

@@ -3,9 +3,7 @@
 """
 
 import json
-import os
 import re
-import speechbrain as sb
 
 from pathlib import Path
 from speechbrain.lobes.models.g2p.dataio import build_token_char_map

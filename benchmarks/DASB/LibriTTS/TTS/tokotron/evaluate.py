@@ -169,6 +169,23 @@ class TokotronEvaluator:
             self.perf_writer.writeheader()
 
     def infer(self, tokens, tokens_length, emb):
+        """Performs inference
+
+        Arguments
+        ---------
+        tokens : torch.Tensor
+            A token sequence
+        tokens_length : torch.Tensor
+            Relative lengths
+        emb : dict
+            Embeddings for conditioning
+
+        Returns
+        -------
+        wav : torch.Tensor
+            The waveform
+        stats : dict
+            Statistics"""
         stats = {}
         if self.hparams.eval_perf:
             flop_counter = FlopCounterMode()
@@ -190,6 +207,21 @@ class TokotronEvaluator:
         return infer_out, stats
 
     def vocoder(self, infer_out, emb):
+        """Runs the vocoder to create a waveform
+
+        Arguments
+        ---------
+        infer_out : Tokotron.TokotronInfernceOutput
+            Inference output
+        emb : dict
+            Embeddings for conditioning
+
+        Returns
+        -------
+        wav : torch.Tensor
+            The waveform
+        stats : dict
+            Statistics"""
         stats = {}
         if self.hparams.eval_perf:
             flop_counter = FlopCounterMode()
@@ -363,6 +395,14 @@ class TokotronEvaluator:
             json.dump(summary, output_file, indent=4)
 
     def write_perf_stats(self, uttid, details):
+        """Outputs performance statistics
+
+        Arguments
+        ---------
+        uttid : list
+            A list of utterance IDs
+        details : dict
+            Performance details"""
         self.perf_writer.writerow({"uttid": " ".join(uttid), **details})
         self.perf_file.flush()
 
@@ -408,6 +448,19 @@ RE_NON_ASCII = re.compile(r"[^\x00-\x7F]+")
 
 
 def ascii_only(values):
+    """Retains only ASCII characters from the values in a
+    dictionary
+
+    Arguments
+    ---------
+    values : dict
+        a key/value dictionary
+
+    Returns
+    -------
+    result : dict
+        The same dictionary but with non-ASCII characters
+    """
     return {
         key: RE_NON_ASCII.sub("", value) if isinstance(value, str) else value
         for key, value in values.items()

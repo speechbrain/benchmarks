@@ -235,6 +235,23 @@ class ValleLM(nn.Module):
         return logits_ar, logits_nar
 
     def prepare_input(self, dec_seq_emb, prefix_len, level):
+        """Prepares the input sequence by adding up
+        embeddings that are not masked
+
+        Arguments
+        ---------
+        dec_seq_emb : torch.Tensor
+            The decoder sequence embedding
+        prefix_len : torch.Tensor
+            The prefix lengths
+        level : int | torch.Tensor
+            The level number or a level mask
+
+        Returns
+        -------
+        result : torch.Tensor
+            The combined embedding
+        """
         # NOTE(Jinchuan): have to use "expand" here but maybe lead to extra memory usage.
         # This is because both prefix_mask and level_mask are broadcastable and will
         # trigger user warning.
@@ -790,7 +807,23 @@ class LayerNorm(nn.LayerNorm):
 
 
 class Linear(nn.Linear):
+    """A linear layer wrapper that performs automatic
+    type conversions
+    """
+
     def forward(self, x: Tensor) -> Tensor:
+        """Computes the forward pass
+
+        Arguments
+        ---------
+        x : torch.Tensor
+            The input data
+
+        Returns
+        -------
+        result : torch.Tensor
+            The result
+        """
         return F.linear(
             x,
             self.weight.to(x.dtype),
@@ -873,6 +906,31 @@ class ResidualAttentionBlockAdaLN(ResidualAttentionBlock):
 
 
 class ValleNARDecoder(TransformerDecoder):
+    """The VALL-E non-autoregressive decoder
+
+    Arguments
+    ---------
+    n_level : int
+        The number of levels
+    n_ctx : int
+        The context length
+    n_state : int
+        The number of states
+    n_head : int
+        The number of attention heads
+    n_layer : int
+        The number of layers
+    causal : bool
+        Whether to operate in causal mode (i.e. avoid attending
+        to future steps)
+    qk_norm : bool
+        Queries/Keys Normalization
+    dropout : float
+        The dropout probability
+    layer_class : type
+        The layer class to use
+    """
+
     def __init__(
         self,
         n_level,
@@ -885,30 +943,6 @@ class ValleNARDecoder(TransformerDecoder):
         dropout=0.0,
         layer_class=ResidualAttentionBlockAdaLN,
     ):
-        """The VALL-E non-autoregressive decoder
-
-        Arguments
-        ---------
-        n_level : int
-            The number of levels
-        n_ctx : int
-            The context length
-        n_state : int
-            The number of states
-        n_head : int
-            The number of attention heads
-        n_layer : int
-            The number of layers
-        causal : bool
-            Whether to operate in causal mode (i.e. avoid attending
-            to future steps)
-        qk_norm : bool
-            Queries/Keys Normalization
-        dropout : float
-            The dropout probability
-        layer_class : type
-            The layer class to use
-        """
         super().__init__(
             n_ctx=n_ctx,
             n_state=n_state,
@@ -1125,6 +1159,20 @@ def install_kv_cache_hook(model, cache):
     hooks = []
 
     def save_to_cache(module, _, output):
+        """Saves the output in the module cache
+
+        Arguments
+        ---------
+        module : torch.Tensor
+            A module instance
+        output : torch.Tensor
+            The module output
+
+        Returns
+        -------
+        result : torch.Tensor
+            Concatenated outputs
+        """
         if module not in cache:
             # save as-is, for the first token or cross attention
             cache[module] = output
@@ -1132,8 +1180,15 @@ def install_kv_cache_hook(model, cache):
             cache[module] = torch.cat([cache[module], output], dim=1).detach()
         return cache[module]
 
-    def install_hooks(layer: torch.nn.Module):
-        if isinstance(layer, MultiHeadAttention):
+    def install_hooks(layer):
+        """Installs the forward/backward hooks
+
+        Arguments
+        ---------
+        layer : torch.nn.Module
+            A layer instance
+        """
+        if isinstance(layer):
             hooks.append(layer.key.register_forward_hook(save_to_cache))
             hooks.append(layer.value.register_forward_hook(save_to_cache))
 
@@ -1255,8 +1310,22 @@ def install_continuous_features(
 
 
 def modality_index_to_mask(
-    modality_index: torch.Tensor, inference_opts: SpeechLMInferenceOptions,
+    modality_index, inference_opts,
 ):
+    """Converts a modality index to a mask
+
+    Arguments
+    ---------
+    modality_index : int
+        The modality index
+    inference_opts : SpeechLMInferenceOptions
+        The inference options
+
+    Returns
+    -------
+    result : torch.Tensor
+        The result
+    """
     assert modality_index.dim() == 1
     modality_index = modality_index.cpu().tolist()
     mask = torch.stack(
@@ -1305,7 +1374,7 @@ def masked_nll_loss(
 class SampleSelector:
     """A base class for sample selectors"""
 
-    def select(self, tokens, scores, label):
+    def select(self, tokens, scores, text):
         """Performs selection
 
         Arguments
@@ -1316,17 +1385,33 @@ class SampleSelector:
         scores : list
             The scores
 
-        label : str
+        text : str
             The label for the sample
         """
         raise NotImplementedError()
 
 
 class DefaultSampleSelector(SampleSelector):
+    """A default no-op sample selector that simply selects the
+    first sample (useful only when nbest=1)"""
+
     def __init__(self, **kwargs):
         pass
 
     def select(self, tokens, scores, text):
+        """Performs selection
+
+        Arguments
+        ---------
+        tokens : list
+            The generated tokens
+
+        scores : list
+            The scores
+
+        text : str
+            The label for the sample
+        """
         return tokens[0]
 
 
@@ -1364,6 +1449,8 @@ class WhisperASRSampleSelector(SampleSelector):
     token_model_kwargs : dict
         Additional arguments for the tokenizer
         decoding function
+    device : str | torch.Device
+        The target device
     """
 
     def __init__(
@@ -1412,6 +1499,19 @@ class WhisperASRSampleSelector(SampleSelector):
             tokenizer.codec_vocoder.device = device
 
     def select(self, tokens, scores, text):
+        """Performs selection
+
+        Arguments
+        ---------
+        tokens : list
+            The generated tokens
+
+        scores : list
+            The scores
+
+        text : str
+            The label for the sample
+        """
         tokens, length = batch_pad_right(tokens)
         tokens_shift = tokens - self.token_shift
         if self.offsets is not None:
@@ -1447,6 +1547,18 @@ class WhisperASRSampleSelector(SampleSelector):
         return tokens[idx]
 
     def predict(self, wav):
+        """Makes an ASR prediction
+
+        Arguments
+        ---------
+        wav : torch.Tensor
+            A raw waveform
+
+        Returns
+        -------
+        text : str
+            The text predicted by the ASR
+        """
         if wav.dim() < 2:
             wav = wav.unsqueeze(0)
         wav = self.model.pad_or_trim(wav)

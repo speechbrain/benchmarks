@@ -213,6 +213,12 @@ class SpeechEvaluator:
         pass
 
     def global_metrics(self):
+        """Returns global metrics (not tied to a specific sample)
+
+        Returns
+        -------
+        metrics : dict
+            A dictionary of metrics"""
         return {}
 
 
@@ -266,6 +272,7 @@ class ASRSpeechEvaluator(SpeechEvaluator):
         self.metrics = {}
 
     def on_evaluation_start(self):
+        """Invoked when evaluation starts"""
         self.metrics = {}
 
     def evaluate(
@@ -375,6 +382,21 @@ class ASRSpeechEvaluator(SpeechEvaluator):
         return {"dwer": dwer, "dcer": dcer}
 
     def get_asr_metrics(self, kind="regular"):
+        """Returns the ASR metrics
+
+        Arguments
+        ---------
+        kind : the kind of metrics to obtain
+            'regular' - a new metric for each sample
+            'micro' - a global shared metric
+
+        Returns
+        -------
+        wer_metric : ErrorRateStats
+            the Word Error Rate (WER) metric
+        cer_metric : ErrorRateStats
+            the Character Error Rate (CER) metric
+        """
         if self.metric_mode == "micro":
             if kind not in self.metrics:
                 metrics = init_asr_metrics()
@@ -394,6 +416,12 @@ class ASRSpeechEvaluator(SpeechEvaluator):
         return [" " if item == "" else item for item in preds]
 
     def global_metrics(self):
+        """Returns global metrics (not tied to a specific sample)
+
+        Returns
+        -------
+        metrics : dict
+            A dictionary of metrics"""
         global_metrics = {}
         if self.metric_mode == "micro":
             wer_metric, cer_metric = self.get_asr_metrics("regular")

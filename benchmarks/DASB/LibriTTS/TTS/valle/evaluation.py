@@ -1,3 +1,8 @@
+"""TTS evaluation tools
+
+Authors
+ * Artem Ploujnikov 2024
+"""
 import json
 import torch
 import logging

@@ -575,6 +575,19 @@ class VALLEBrain(sb.Brain):
         )
 
     def save_samples(self, batch, wav, length, stage):
+        """Saves audio samples
+
+        Arguments
+        ---------
+        batch : PaddedBatch
+            An audio batch
+        wav : torch.Tensor
+            Generated audio
+        length : torch.Tensor
+            Relative lengths
+        stage : speechbrain.Stage
+            The training stage
+        """
         output_folder = self._get_eval_output_folder(stage)
         samples = undo_padding_tensor(wav, length)
         for uttid, sample in zip(batch.uttid, samples):
@@ -611,6 +624,19 @@ class VALLEBrain(sb.Brain):
         return output_folder
 
     def fit_batch(self, batch):
+        """Fit one batch, using the default implementation with per-step
+        annealing
+
+        Arguments
+        ---------
+        batch : list of torch.Tensors
+            Batch of data to use for training. Default implementation assumes
+            this batch has two elements: inputs and targets.
+
+        Returns
+        -------
+        detached loss
+        """
         loss = super().fit_batch(batch)
         if self.hparams.lr_annealing_mode == "step":
             self.hparams.lr_annealing(self.optimizer)

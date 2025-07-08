@@ -134,7 +134,10 @@ class Separation(sb.Brain):
             )  # [B, N, H]
 
         # Forward encoder
-        hyp_embs = self.modules.encoder.encode(in_embs, in_lens)  # [B, N, H]
+        if hasattr(self.modules.encoder, 'encode'):
+            hyp_embs = self.modules.encoder.encode(in_embs, in_lens)  # [B, N, H]
+        else:
+            hyp_embs = self.modules.encoder(in_embs)  # [B, N, H]
 
         # Forward head
         log_probs = (

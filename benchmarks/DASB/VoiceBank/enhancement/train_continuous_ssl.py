@@ -22,6 +22,7 @@ from speechbrain.utils.distributed import if_main_process, run_on_main
 
 _CACHE = {}
 
+
 # To use in configuration files
 def len_(SSL_layers, embedding_dim):
     return len(SSL_layers) * embedding_dim

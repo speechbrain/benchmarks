@@ -7,7 +7,6 @@ Authors
 import speechbrain as sb
 import torch
 import torchaudio
-from speechbrain.dataio.dataio import merge_csvs
 from transformers.models.hubert.modeling_hubert import (
     HubertEncoderStableLayerNorm,
 )
@@ -142,10 +141,14 @@ def dataio_prepare(
         num_codebooks = hparams["num_codebooks"]
 
         def toks_pipeline(id):
-            in_toks = tokens_loader_in.tokens_by_uttid(id, num_codebooks=num_codebooks)
+            in_toks = tokens_loader_in.tokens_by_uttid(
+                id, num_codebooks=num_codebooks
+            )
             yield in_toks
 
-            out_toks = tokens_loader_out.tokens_by_uttid(id, num_codebooks=num_codebooks)
+            out_toks = tokens_loader_out.tokens_by_uttid(
+                id, num_codebooks=num_codebooks
+            )
             yield out_toks
 
         sb.dataio.dataset.add_dynamic_item(

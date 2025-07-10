@@ -140,21 +140,22 @@ scheduler: !new:speechbrain.nnet.schedulers.NewBobScheduler
 
 # Token loaders
 tokens_loader_in: !new:utils.tokens.TokensLoader
-   data_path: !ref <tokens_folder>/input
+    data_path: !ref <tokens_folder>/input
 
 tokens_loader_out: !new:utils.tokens.TokensLoader
-   data_path: !ref <tokens_folder>/output
+    data_path: !ref <tokens_folder>/output
+
 
 # Codec
 codec: !name:utils.tokenizer_interface.DiscreteSSLTokenizer
     save_path: !ref <save_folder>
     ssl_model: !new:speechbrain.lobes.models.huggingface_transformers.wav2vec2.Wav2Vec2
-      source: facebook/wav2vec2-large
-      output_norm: False
-      freeze: True
-      freeze_feature_extractor: True
-      output_all_hiddens: True
-      save_path: !ref <save_folder>
+        source: facebook/wav2vec2-large
+        output_norm: False
+        freeze: True
+        freeze_feature_extractor: True
+        output_all_hiddens: True
+        save_path: !ref <save_folder>
     vocoder_repo_id: speechbrain/hifigan-wav2vec2-k1000-LibriTTS
     kmeans_dataset: !ref <kmeans_dataset>
     num_clusters: !ref <vocab_size>

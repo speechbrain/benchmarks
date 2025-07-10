@@ -57,7 +57,11 @@ if __name__ == "__main__":
     data_folder = hparams["data_folder"]
 
     datasets = []
-    for csv_path in [hparams["train_csv"], hparams["valid_csv"], hparams["test_csv"]]:
+    for csv_path in [
+        hparams["train_csv"],
+        hparams["valid_csv"],
+        hparams["test_csv"],
+    ]:
         name = pl.Path(csv_path).stem
         dataset = sb.dataio.dataset.DynamicItemDataset.from_csv(
             csv_path=csv_path, replacements={"DATA_ROOT": data_folder},

@@ -26,7 +26,7 @@ class Enhancement(sb.Brain):
         # toks: [B, N, K]
         self.hparams.codec.to(self.device).eval()
         self.hparams.codec.device = self.device
-        if  hasattr(self.hparams.codec, "codec_vocoder"):
+        if hasattr(self.hparams.codec, "codec_vocoder"):
             self.hparams.codec.codec_vocoder.device = self.device
         kwargs = {}
         if hasattr(self.hparams, "SSL_layers"):
@@ -49,12 +49,14 @@ class Enhancement(sb.Brain):
 
         # Forward encoder
         if hasattr(self.modules.encoder, "encode"):
-            hyp_embs = self.modules.encoder.encode(in_embs, in_lens)  # [B, N, H]
+            hyp_embs = self.modules.encoder.encode(
+                in_embs, in_lens
+            )  # [B, N, H]
         else:
             abs_length = (in_embs.shape[1] * in_lens).ceil().long()
             for i in range(len(abs_length)):
                 if abs_length[i] < in_embs.shape[1]:
-                    in_embs[i, abs_length[i]:] = 0
+                    in_embs[i, abs_length[i] :] = 0
             hyp_embs = self.modules.encoder(in_embs)  # [B, N, H]
 
         # Forward head
@@ -244,9 +246,9 @@ if __name__ == "__main__":
     )
 
     # Log number of parameters/buffers
-    #codec_params = sum(
+    # codec_params = sum(
     #    [x.numel() for x in hparams["codec"].state_dict().values()]
-    #)
+    # )
     model_params = sum(
         [
             x.numel()
@@ -256,7 +258,7 @@ if __name__ == "__main__":
     )
     hparams["train_logger"].log_stats(
         stats_meta={
-            #f"Codec parameters/buffers (M)": f"{codec_params / 1e6:.2f}",
+            # f"Codec parameters/buffers (M)": f"{codec_params / 1e6:.2f}",
             "Model parameters/buffers (M)": f"{model_params / 1e6:.2f}",
         },
     )

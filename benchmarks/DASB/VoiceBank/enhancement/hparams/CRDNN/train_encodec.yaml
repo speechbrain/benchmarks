@@ -149,10 +149,11 @@ scheduler: !new:speechbrain.nnet.schedulers.NewBobScheduler
 
 # Token loaders
 tokens_loader_in: !new:utils.tokens.TokensLoader
-   data_path: !ref <tokens_folder>/input
+    data_path: !ref <tokens_folder>/input
 
 tokens_loader_out: !new:utils.tokens.TokensLoader
-   data_path: !ref <tokens_folder>/output
+    data_path: !ref <tokens_folder>/output
+
 
 # Codec
 codec: !name:utils.tokenizer_interface.EncodecTokenizer

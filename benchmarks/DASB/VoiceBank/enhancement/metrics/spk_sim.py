@@ -16,6 +16,7 @@ __all__ = ["SpkSimWavLM"]
 
 SAMPLE_RATE = 16000
 
+
 class SpkSimWavLM(MetricStats):
     def __init__(self, model_hub, save_path, sample_rate):
         self.sample_rate = sample_rate

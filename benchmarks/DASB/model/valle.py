@@ -1,4 +1,4 @@
-"""An adaptation of ESPNET VALL-E
+"""An adaptation of ESPNET VALL-E for SpeechBrain
 Originally by Jinchuan Tian
 
 https://github.com/espnet/espnet

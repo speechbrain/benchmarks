@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.5.0  # Use the ref you want to point at
+    rev: v5.0.0  # Use the ref you want to point at
     hooks:
       - id: trailing-whitespace
         types: [file, text]
@@ -21,7 +21,7 @@ repos:
         types: [python]
         additional_dependencies: ['click==8.0.4']
   - repo: https://github.com/PyCQA/flake8
-    rev: 3.7.9
+    rev: 7.0.0
     hooks:
       - id: flake8
         types: [python]

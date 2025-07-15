@@ -175,8 +175,8 @@ class ASR(sb.Brain):
                         param.grad = None
 
             self.scaler.unscale_(self.optimizer)
-            if self.check_gradients():
-                self.scaler.step(self.optimizer)
+            self.check_gradients()
+            self.scaler.step(self.optimizer)
             self.scaler.update()
             self.zero_grad()
             self.optimizer_step += 1
@@ -232,8 +232,8 @@ class ASR(sb.Brain):
                     else:
                         param.grad = None
 
-            if self.check_gradients():
-                self.optimizer.step()
+            self.check_gradients()
+            self.optimizer.step()
             self.zero_grad()
             self.optimizer_step += 1
 
@@ -431,7 +431,7 @@ def train(hparams, run_opts):
 
     # Testing
     test(
-        hparams, run_opts, hparams["base_locales"], f"wer_test_before.txt",
+        hparams, run_opts, hparams["base_locales"], "wer_test_before.txt",
     )
 
     # Train on new locales

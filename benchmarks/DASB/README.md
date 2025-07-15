@@ -158,8 +158,6 @@ bash run_experiments.sh --hparams benchmarks/DASB/LibriSpeech/ASR/hparams/LSTM/t
 
 This workflow ensures flexibility, efficiency, and reproducibility for both training scenarios. Adapt the recipes as needed for your specific requirements!
 
-Here's a polished and formatted version for clarity, suitable for a README or documentation:
-
 
 # 🎛️ Hyperparameter Tuning
 

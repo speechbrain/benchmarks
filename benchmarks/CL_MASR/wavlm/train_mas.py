@@ -63,7 +63,7 @@ class ASR(sb.Brain):
 
         if stage == sb.Stage.TRAIN and hasattr(self.hparams, "mas_params"):
             for name, param in self.modules.wavlm.named_parameters():
-                if not param.requires_grad or param.grad is None:
+                if not param.requires_grad:
                     continue
                 old_param, importance = self.hparams.mas_params
                 loss += (
@@ -421,7 +421,7 @@ def train(hparams, run_opts):
 
     # Testing
     test(
-        hparams, run_opts, hparams["base_locales"], f"wer_test_before.txt",
+        hparams, run_opts, hparams["base_locales"], "wer_test_before.txt",
     )
 
     # Train on new locales

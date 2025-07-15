@@ -192,7 +192,7 @@ def unzip_buckeye(buckeye_dir):
     for zip_fil in files:
         if ".py" not in zip_fil:
             os.system(
-                f"unzip -q {os.path.join(buckeye_dir,zip_fil)} -d {buckeye_dir}"
+                f"unzip -q {os.path.join(buckeye_dir, zip_fil)} -d {buckeye_dir}"
             )
     files = os.listdir(buckeye_dir)
     for under_dir in files:

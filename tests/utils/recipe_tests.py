@@ -41,11 +41,11 @@ def check_row_for_test(row, filters_fields, filters, test_field):
     test = True
     for i, field in enumerate(filters_fields):
         field_values = filters[i]
-        if type(field_values) == str:
+        if isinstance(field_values, str):
             # ... AND ... filter
             if not (field_values == row[field]):
                 test = False
-        elif type(field_values) == list:  # type(field) == list
+        elif isinstance(field_values, list):  # type(field) == list
             # ... AND (... OR ...) ... filter; at least one entry of the list matches
             test_flag = False
             for filt in field_values:
@@ -138,7 +138,7 @@ def prepare_test(
         ) as csvf:
             reader = csv.DictReader(csvf, delimiter=",", skipinitialspace=True)
             for row_id, row in enumerate(reader):
-                recipe_id = f"{recipe_csvfile[:-4]}_row_{row_id+2:02d}"
+                recipe_id = f"{recipe_csvfile[:-4]}_row_{row_id + 2:02d}"
                 if not (
                     check_row_for_test(row, filters_fields, filters, test_field)
                 ):

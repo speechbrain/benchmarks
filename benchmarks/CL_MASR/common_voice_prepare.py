@@ -111,7 +111,7 @@ def prepare_common_voice(
     _LOGGER.info(
         "----------------------------------------------------------------------",
     )
-    _LOGGER.info(f"Merging TSV files...")
+    _LOGGER.info("Merging TSV files...")
     for split, max_duration in zip(_SPLITS, max_durations):
         tsv_files = [
             os.path.join(data_folder, locale, f"{split}_with_duration.tsv")
@@ -126,7 +126,7 @@ def prepare_common_voice(
     _LOGGER.info(
         "----------------------------------------------------------------------",
     )
-    _LOGGER.info(f"Creating data manifest CSV files...")
+    _LOGGER.info("Creating data manifest CSV files...")
     for split in _SPLITS:
         preprocess_tsv_file(
             os.path.join(data_folder, f"{split}_with_duration.tsv"),

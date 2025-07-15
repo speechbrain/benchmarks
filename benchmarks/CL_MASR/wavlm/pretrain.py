@@ -341,7 +341,7 @@ def train(hparams, run_opts):
 
     # Testing
     test(
-        hparams, run_opts, hparams["locales"], f"wer_test.txt",
+        hparams, run_opts, hparams["locales"], "wer_test.txt",
     )
 
 

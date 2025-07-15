@@ -313,7 +313,7 @@ if __name__ == "__main__":
     )
     hparams["train_logger"].log_stats(
         stats_meta={
-            f"SSL parameters/buffers (M)": f"{ssl_params / 1e6:.2f}",
+            "SSL parameters/buffers (M)": f"{ssl_params / 1e6:.2f}",
             "Model parameters/buffers (M)": f"{model_params / 1e6:.2f}",
         },
     )

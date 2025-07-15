@@ -332,7 +332,7 @@ def train(hparams, run_opts):
     """
     # Testing
     test(
-        hparams, run_opts, hparams["base_locales"], f"wer_test_before.txt",
+        hparams, run_opts, hparams["base_locales"], "wer_test_before.txt",
     )
 
     # Train on new locales
@@ -413,7 +413,7 @@ def train(hparams, run_opts):
         hparams,
         run_opts,
         hparams["base_locales"] + hparams["new_locales"],
-        f"wer_test_after.txt",
+        "wer_test_after.txt",
     )
 
 

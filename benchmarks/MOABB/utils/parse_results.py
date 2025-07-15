@@ -68,7 +68,7 @@ def visualize_results(paradigm: str, results: dict, vis_metrics: list) -> None:
     """
     print("\n----", paradigm.name, "----")
     for key in results:
-        if type(results[key]) == dict:
+        if isinstance(results[key], dict):
             for m in vis_metrics:
                 print(
                     key,

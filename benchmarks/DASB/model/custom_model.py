@@ -57,22 +57,31 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
         num_codebooks,
         vocab_size,
         emb_dim,
-        pad_index=0,
         init=False,
         freeze=False,
+        hidden_dim=None,
     ):
         super(Discrete_EmbeddingLayer, self).__init__()
         self.vocab_size = vocab_size
-        self.num_codebooks = num_codebooks
+        self.num_codebooks = (
+            len(num_codebooks)
+            if isinstance(num_codebooks, list)
+            else num_codebooks
+        )
         self.freeze = freeze
         self.embedding = torch.nn.Embedding(
-            num_codebooks * vocab_size, emb_dim
+            self.num_codebooks * vocab_size, emb_dim
         ).requires_grad_(not self.freeze)
         self.init = init
 
+        # Add a linear layer to match dimensions if necessary
+        if hidden_dim is not None and hidden_dim != emb_dim:
+            self.proj_layer = torch.nn.Linear(emb_dim, hidden_dim)
+        else:
+            self.proj_layer = None
+
     def init_embedding(self, weights):
-        with torch.no_grad():
-            self.embedding.weight = torch.nn.Parameter(weights)
+        self.embedding.weight.data.copy_(weights)
 
     def forward(self, in_tokens):
         """Computes the embedding for discrete tokens.
@@ -97,4 +106,6 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
             )
             # Forward Pass to embedding and
             in_embs = self.embedding(in_tokens)
+            if self.proj_layer is not None:
+                in_embs = self.proj_layer(in_embs)
             return in_embs

@@ -25,17 +25,31 @@ For detailed information, refer to [paper](https://arxiv.org/pdf/2406.14294):
 
 # Table of Contents
 
-- [Table of Contents](#table-of-contents)
-- [Installation](#-installation)
-- [Discrete Audio Encoder](#-Discrete-Audio-Encoder)
-- [Datasets and Recipes](#-Datasets-and-Recipes)
-- [Quickstart](#-quickstart)
-  - [Running a single task](#Running-a-single-task)
-  - [Running multiple tasks](#Runnin-multiple-tasks)
-- [‍Incorporating Your Audio Tokenizer](#-Incorporating-Your-Audio-Tokenizer)
-- [Results](#-results)
-- [Contact](#-contact)
-- [Citing](#-citing)
+Here’s the updated **Table of Contents** for your GitHub README with corrections and better alignment:
+
+---
+
+# 📑 Table of Contents
+
+- [DASB - Discrete Audio and Speech Benchmark](#dasb---discrete-audio-and-speech-benchmark)
+- [🛠️ Installation](#-installation)
+- [🎌 Discrete Audio Encoder](#-discrete-audio-encoder)
+- [⚡ Datasets and Recipes](#-datasets-and-recipes)
+- [📖 Training Scenarios](#-training-scenarios)
+  - [On-the-Fly Token Extraction](#on-the-fly-token-extraction)
+  - [Offline Token Extraction](#offline-token-extraction)
+- [🎛️ Hyperparameter Tuning](#%EF%B8%8F-hyperparameter-tuning)
+- [📝 Incorporating Your Audio Tokenizer](#-incorporating-your-audio-tokenizer)
+- [📈 Results](#-results)
+  - [Ranking](#ranking)
+  - [Benchmarking Results for Discriminative Tasks](#benchmarking-results-for-discriminative-tasks)
+  - [Benchmarking Results for Generative Tasks](#benchmarking-results-for-generative-tasks)
+- [📧 Contact](#-contact)
+- [📖 Citing](#-citing)
+
+---
+
+This structure provides a clear and logical flow, ensuring users can easily navigate the document. Each major section is linked appropriately, with sub-sections for detailed content. Let me know if additional adjustments are required!
 
 # 🛠️ Installation
 
@@ -98,51 +112,164 @@ To set up SpeechBrain-DASB, follow these steps:
 | Libri2Mix                                | Speech Separation                    | Conformer                   | CRDNN                         | [github.com/JorisCos/LibriMix](https://github.com/JorisCos/LibriMix)                  |
 | LJSpeech                                 | Text-to-Speech                       | Shallow Transformer         | Deep Transformer              | [keithito.com/LJ-Speech-Dataset/](https://keithito.com/LJ-Speech-Dataset/)            |
 
-# ▶️ Quickstart
+# 📖 Training Scenarios
 
-## Running a single task
+We offer two different training scenarios: **on-the-fly token extraction** and **offline token extraction**.
 
-If you have specific discrete model and want to benchmark it for a specific task, you need to run the following command:
-   ```
-   python LibriSpeech/ASR/LSTM/train_[tokenzier_name].py LibriSpeech/ASR/LSTM/hparams/train_[tokenzier_name].yaml --output_folder my-output-folder --data_folder mypath/to/LibriSpeech
-   ```
+## On-the-Fly Token Extraction
+In this scenario, audio tokens are extracted dynamically during training. To enhance efficiency, we use a caching mechanism where tokens are saved in memory during the first epoch and retrieved for subsequent epochs. However, this approach has some limitations:
+- It works best when the dataset is small, the bitrate is low, and batching is sorted (not random).
+- It is unsuitable when data augmentation is required.
 
-## Running multiple tasks
+You can also disable the caching mechanism if needed.
 
-To run all tasks, make the following changes:
+Currently, the on-the-fly token extraction is applied only in the recipe located at:
+`LibriSpeech/ASR-on-the-fly`
 
-1. Edit the `run_discriminative_benchmark.sh` and `run_genarative_benchmark.sh` files and modify tokenizer related values for example the bitrate , number of codebooks, and etc.
-2. Choose a set of tasks from the provided list and, for each task, select a downstream architecture from the available options (see list below).
-3. Update the variables defined in `run_benchmark.sh` with two lists of equal size. In the `ConsideredTasks` list, specify the tasks you want to run (e.g., `'LibriSpeechASR' 'LibriSpeechASR' 'IEMOCAP'`). In the `Downstreams` list, specify the corresponding downstream architecture for each task (e.g., `'BiLSTM'`, `contextnet`, `'ecapa_tdnn'`).
+If you wish to adapt this strategy for your own recipe, you can copy and modify the existing recipe as needed. Here's how to run the on-the-fly recipe:
 
-   For example, if you set `ConsideredTasks=('LibriSpeechASR' 'LibriSpeechASR' 'IEMOCAP')` and `Downstreams=('BiLSTM', 'contextnet', 'ecapa_tdnn')`, the benchmark will be executed as follows:
-   - LibriSpeechASR with BiLSTM as the probing head
-   - LibriSpeechASR with contextnet as the probing head
-   - IEMOCAP with ecapa_tdnn as the probing head.
+```bash
+python LibriSpeech/ASR-on-the-fly/train.py LibriSpeech/ASR-on-the-fly/hparams/LSTM/{TOKENIZER}.yaml --data_folder=path/LibriSpeech --output_folder=path/results/LibriSpeech/ASR/{TOKENIZER}/LSTM
+```
 
-3. Run the following command:
-   ```
-   bash run_discriminative_benchmark.sh [tokenzier_name]
-   bash run_genarative_benchmark.sh [tokenzier_name]
-   ```
-   You could also pass extra arguments as far as they are consistent  across all tasks.
+> **Note:** On-the-fly extraction can be time-consuming, which is why we also provide an alternative approach: **offline token extraction**.
 
-   For generative task, make sure to set the `utmos_path` required for TTS evaluation.
+
+## Offline Token Extraction
+In this scenario, all tokens are pre-extracted in a separate recipe. We recommend using the highest number of codebooks available for token extraction and then choosing the desired settings during training.
+
+### Token Extraction Command
+To extract tokens, use the following command:
+
+```bash
+python LibriSpeech/extraction/extract.py benchmarks/DASB/LibriSpeech/extraction/hparams/{tokenizer}.yaml --data_folder=path/LibriSpeech --num_codebooks=32
+```
+
+If you wish to initialize your embedding layer with the tokenizer's embeddings while training your downstream model, set the flag `save_embedding` to `True`. For discrete SSL tokenizers, you can specify a list of layers for `--num_codebooks` instead of a single number (e.g., `--num_codebooks=[3,7,12]`).
+
+### Training with Pre-Extracted Tokens
+Once tokens are extracted and saved, you can train a downstream model using the following command:
+
+```bash
+bash run_experiments.sh --hparams benchmarks/DASB/LibriSpeech/ASR/hparams/LSTM/train.yaml --data_folder LibriSpeech --cached_data_folder cache/ --output_folder results/LibriSpeech/ASR/encodec/LSTM --task ASR --dataset LibriSpeech --seed 1986 --nruns 2 --eval_metric WER --tokens_folder LibriSpeech/extraction-emb/speech_tokenizer/save/librispeech/
+```
+
+---
+
+This workflow ensures flexibility, efficiency, and reproducibility for both training scenarios. Adapt the recipes as needed for your specific requirements!
+
+Here's a polished and formatted version for clarity, suitable for a README or documentation:
+
+
+# 🎛️ Hyperparameter Tuning
+
+Efficient hyperparameter tuning is critical when introducing novel models or experimenting with diverse datasets. Our benchmark establishes a standardized protocol for hyperparameter tuning, leveraging [Orion](https://orion.readthedocs.io/en/stable/) to ensure fair and consistent model comparisons.
+
+---
+
+## **Overview**
+
+Hyperparameter tuning is managed using the `./run_hparam_optimization.sh` script. This script coordinates multiple hyperparameter trials via `run_experiments.sh`.
+
+
+
+## **Incorporating Orion Flags in Hparam Files**
+
+To enable tuning, Orion flags should be directly embedded in the YAML hparam file using comments. For example, to optimize the learning rate (`lr`) parameter within a defined range, include the following line in the YAML file:
+
+```yaml
+lr_model: 0.0001 # @orion_step1: --lr_model~"loguniform(0.00001,0.5)"
+```
+
+
+
+## **Workflow of the Script**
+
+The script operates as follows:
+
+1. **Scans** the YAML hparam file for Orion flags.
+2. **Executes** hyperparameter tuning using the `orion-hunt` command.
+3. **Saves** the best hyperparameters for reference via `torch-info`.
+4. **Iterates** until encountering flags such as `@orion_step<stepid>` in the YAML file.
+
+
+
+## **Running Hyperparameter Optimization**
+
+You can perform hyperparameter optimization using a command like this:
+
+```bash
+bash run_hparam_optimization.sh \
+  --exp_name 'ASR-encodec-LSTM_hopt' \
+  --hparams LibriSpeech/ASR/hparams/LSTM/train.yaml \
+  --data_folder path/LibriSpeech \
+  --cached_data_folder path/cache/ \
+  --output_folder results/LibriSpeech/ASR/encodec/LSTM \
+  --task ASR \
+  --dataset LibriSpeech \
+  --seed 1986 \
+  --nruns 1 \
+  --nruns_eval 5 \
+  --eval_metric WER \
+  --exp_max_trials 50 \
+  --tokens_folder results/LibriSpeech/extraction-emb/encodec/save/librispeech/ \
+  --run_name encodec
+```
+
+For more details on the arguments and customization options, refer to `./run_hparam_optimization.sh`.
+
+
+### **Notes**
+
+1. **Execution Time**:
+   - Hyperparameter tuning may take several hours or even days, depending on the model complexity and dataset.
+
+2. **GPU vs. CPU**:
+   - By default, models are trained on GPU. To train on CPU instead, include the `--device cpu` flag.
+
+3. **Monitoring Progress**:
+   - Use the following command to monitor optimization status:
+     ```bash
+     orion status --all
+     ```
+   - Ensure that Orion-specific environment variables are set in your bash environment. For example:
+     ```bash
+     export ORION_DB_ADDRESS=results/LibriSpeech/ASR/encodec/LSTM/hopt/ASR-encodec-LSTM_hopt.pkl
+     export ORION_DB_TYPE=pickleddb
+     ```
+     Adjust `ORION_DB_ADDRESS` according to your experiment.
+
+4. **Resuming Optimization**:
+   - You can interrupt the script at any point. It will resume from the last completed trial.
+
+5. **Repetition of Optimization**:
+   - For multiple repetitions of the same hyperparameter optimization, modify the `--exp_name` parameter.
+
+6. **System Requirements**:
+   - The script is designed for Linux-based systems. A bash script is provided instead of Python due to its ability to manage diverse training loops across various subjects and sessions.
+
+---
+
+This protocol ensures fair model comparison across diverse tasks and datasets. All reported results are derived using this standardized hyperparameter tuning methodology, enabling consistent assessments across models.
+
 # 📝 ‍Incorporating Your Audio Tokenizer
 
 Let's now assume you've designed an audio and speech tokenizer in PyTorch and wish to integrate it into our benchmark.
 You're in luck because we've made this step as simple as possible for you!
 Here are the steps you should follow:
 
-1. Write your model's code in a Python library saved in `benchmarks/DASB/model` (e.g., `benchmarks/MOABB/models/my_model.py`).
 
-2. Create a YAML and py file for each task you want to experiment with. Thankfully, you don't have to start from scratch. For example, if you're working with LibriSpeech/ASR/LSTM, copy `benchmarks/DASB/LibriSpeech/ASR/contextnet/hparams/train_encodec.yaml` and save it in the same folder with a different name (e.g., `train_my_model.yaml` and `train_my_model.py`).
+1. Write your model's code in a Python library saved in `benchmarks/DASB/model` (e.g., `benchmarks/DASB/models/my_model.py`).
 
-3. Edit the relevant section of your `train_my_model.yaml` and `train_my_model.py`. Redefine the `codec:` to reference your custom model (e.g., `codec: !new:models.my_model.my_model`).
+2. Add the tokenizer to `utils/tokenizer_interface.py` and ensure the `encode` and `decode` functions are consistent in functionality and output shape with the other tokenizers.
 
-4. Ensure you include the hyperparameters specific to your model.
+3. Create a YAML and Python file for each task you want to experiment with. Thankfully, you don't have to start from scratch. For example, you can copy `LibriSpeech/extraction/hparams/encodec.yaml`, adapt it based on your needs, and save it in the same folder with a different name (e.g., `LibriSpeech/extraction/hparams/{YOUR_TOKENIZER_NAME}.yaml`).
 
-5. Now, follow the instructions above to run an experiments across tasks.
+4. Edit the relevant sections of your `{YOUR_TOKENIZER_NAME}.yaml`. Redefine the `tokenizer:` field to reference your custom model (e.g., `tokenizer: !new:tokenizer_interface.your_tokenizer`).
+
+5. Ensure you include the hyperparameters specific to your model.
+
+6. Now, follow the instructions provided earlier to run experiments across tasks.
 **Note**: If you're not familiar with YAML, you can refer to our [HyperPyYAML tutorial](https://speechbrain.github.io/tutorial_basics.html) on the SpeechBrain website for guidance.
 
 # 📈 Results

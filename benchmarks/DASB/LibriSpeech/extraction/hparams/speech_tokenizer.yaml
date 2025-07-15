@@ -1,0 +1,54 @@
+# ############################################################################
+# Auido Tokenizer: Speech Tokenizer
+# Extraction: Librispeech 960h
+# Authors: Jarod Duret 2024
+# ############################################################################
+# Seed needs to be set at top of yaml, before objects with parameters are made
+
+seed: 1986
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+output_folder: !ref results/speech_tokenizer
+save_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/extraction_log.txt
+
+# Data files
+data_folder: !PLACEHOLDER  # e.g., /path/to/LibriSpeech
+train_splits: ["train-clean-100"] #, "train-clean-360", "train-other-500"
+dev_splits: ["dev-clean"]
+test_splits: ["dev-clean", "test-clean", "test-other"]
+skip_prep: False
+train_csv: !ref <output_folder>/train.csv
+valid_csv: !ref <output_folder>/dev-clean.csv
+test_csv:
+  - !ref <output_folder>/test-clean.csv
+  - !ref <output_folder>/test-other.csv
+
+batch_size: 8
+num_workers: 8
+src_key: wav
+id_key: id
+
+# Dataloader options
+dataloader_opts:
+  batch_size: !ref <batch_size>
+  shuffle: True
+  num_workers: !ref <num_workers>
+
+vocab_size: 1024
+num_codebooks: 8
+sample_rate: 16000
+encoder_dim: 1024
+freeze_embedding: False
+save_embedding: False
+
+# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
+tokenizer: !new:utils.tokenizer_interface.SpeechTokenizer
+  source: fnlp/SpeechTokenizer  # Only the 24kHz version supports mono audio
+  save_path: !ref <save_folder>
+
+tokens_extractor: !new:utils.tokens.TokensExtractor
+  tokenizer: !ref <tokenizer>
+  sample_rate: !ref <sample_rate>
+  src_key: !ref <src_key>
+  id_key: !ref <id_key>
+  dataloader_opts: !ref <dataloader_opts>

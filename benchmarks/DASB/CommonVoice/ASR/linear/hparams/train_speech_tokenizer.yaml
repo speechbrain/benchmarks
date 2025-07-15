@@ -19,7 +19,7 @@ train_log: !ref <output_folder>/train_log.txt
 
 
 # Data files
-data_folder: !PLACEHOLDER  # e.g, /local/cv-corpus-11.0-2022-09-21/<language>
+data_folder: /data/anakuzne/cv/cv-corpus-17.0-2024-03-15/cy  # e.g, /local/cv-corpus-11.0-2022-09-21/<language>
 train_tsv_file: !ref <data_folder>/train.tsv  # Standard CommonVoice .tsv files
 dev_tsv_file: !ref <data_folder>/dev.tsv  # Standard CommonVoice .tsv files
 test_tsv_file: !ref <data_folder>/test.tsv  # Standard CommonVoice .tsv files

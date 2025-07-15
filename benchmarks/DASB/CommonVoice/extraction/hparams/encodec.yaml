@@ -1,0 +1,70 @@
+# ############################################################################
+# Auido Tokenizer: Encodec
+# Extraction: Librispeech 960h
+# Authors: Jarod Duret 2024
+# ############################################################################
+# Seed needs to be set at top of yaml, before objects with parameters are made
+
+seed: 1986
+__set_seed: !apply:torch.manual_seed [!ref <seed>]
+output_folder: !ref results/encodec
+save_folder: !ref <output_folder>/save
+train_log: !ref <output_folder>/extraction_log.txt
+
+# Data files
+data_folder: /data/anakuzne/cv/cv-corpus-17.0-2024-03-15/cy
+train_tsv_file: !ref <data_folder>/train.tsv
+dev_tsv_file: !ref <data_folder>/dev.tsv
+test_tsv_file: !ref <data_folder>/test.tsv
+
+train_csv: !ref <save_folder>/train.csv
+dev_csv: !ref <save_folder>/dev.csv
+test_csv: !ref <save_folder>/test.csv
+
+language: cy
+accented_letters: True
+skip_prep: False
+convert_to_wav: False
+
+# We remove utterance slonger than 10s in the train/dev/test sets as
+# longer sentences certainly correspond to "open microphones".
+avoid_if_longer_than: 10.0
+
+batch_size: 8
+num_workers: 8
+src_key: wav
+id_key: id
+
+# Dataloader options
+dataloader_opts:
+  batch_size: !ref <batch_size>
+  shuffle: True
+  num_workers: !ref <num_workers>
+
+# EnCodec parameters
+# sample_rate: [24000, 24000, 24000, 24000]
+# vocab_size: [1024, 1024, 1024, 1024]
+# bandwidth: [1.5, 3.0, 6.0, 12.0, 24.0]
+# num_codebooks: [2, 4, 8, 16, 32]
+bandwidth: 24.0
+num_codebooks: 32
+vocab_size: 1024
+sample_rate: 24000
+save_embedding: False
+
+# EnCodec model (see https://huggingface.co/docs/transformers/v4.31.0/en/model_doc/encodec)
+tokenizer: !new:utils.tokenizer_interface.EncodecTokenizer
+  source: facebook/encodec_24khz  # Only the 24kHz version supports mono audio
+  save_path: !ref <save_folder>
+  sample_rate: !ref <sample_rate>
+  bandwidth: !ref <bandwidth>
+  flat_embeddings: False
+  freeze: True
+  renorm_embeddings: False
+
+tokens_extractor: !new:utils.tokens.TokensExtractor
+  tokenizer: !ref <tokenizer>
+  sample_rate: !ref <sample_rate>
+  src_key: !ref <src_key>
+  id_key: !ref <id_key>
+  dataloader_opts: !ref <dataloader_opts>

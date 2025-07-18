@@ -7,31 +7,51 @@ Authors:
 """
 
 from speechbrain.inference.interfaces import Pretrained
-from speechbrain.inference.ASR import EncoderDecoderASR
 from speechbrain.lobes.models.huggingface_transformers import Whisper
+from speechbrain.lobes.models.huggingface_transformers.wav2vec2 import Wav2Vec2
 from speechbrain.dataio.dataset import FilteredSortedDynamicItemDataset
+from speechbrain.dataio.dataio import length_to_mask
 from speechbrain.decoders.seq2seq import S2SWhisperGreedySearcher
 from speechbrain.dataio.batch import PaddedBatch
 from speechbrain.utils.metric_stats import ErrorRateStats
-from speechbrain.utils.superpowers import run_shell
+from speechbrain.utils.data_utils import pad_right_to
+from speechbrain.utils.fetching import fetch
 from collections import namedtuple
 from pathlib import Path
-import os
+from torch import nn
 import torch
 import torchaudio
 import re
 import string
 import logging
-import shutil
-import shlex
-import subprocess
+
 
 logger = logging.getLogger(__name__)
+
+
+has_transformers = False
+try:
+    from transformers import AutoModelForAudioXVector
+
+    has_transformers = True
+except ImportError:
+    logger.warning(
+        "transformers library not found - some evaluators may be disabled"
+    )
+
 
 RE_PUNCTUATION = re.compile(
     "|".join(re.escape(char) for char in string.punctuation)
 )
 
+
+SAMPLE_RATE = 16000
+DEFAULT_ENCODER_HUB = "chaanks/wav2vec2-small"
+DEFAULT_MODEL_URL = "https://huggingface.co/chaanks/UTMOS/resolve/main"
+DEFAULT_MODEL_NAME = "utmos.ckpt"
+DEFAULT_SAVE_DIR = "./pretrained_models"
+DEFAULT_JUDGE_ID = 288
+DEFAULT_DOMAIN_ID = 0
 
 SpeechEvaluationResult = namedtuple(
     "SpeechEvaluationResult", ["score", "details"]
@@ -184,6 +204,23 @@ class SpeechEvaluator:
             )
         return audio
 
+    def on_evaluation_start(self):
+        """Invoked when evaluation starts"""
+        pass
+
+    def on_evaluation_end(self):
+        """Invoked when evaluation ends"""
+        pass
+
+    def global_metrics(self):
+        """Returns global metrics (not tied to a specific sample)
+
+        Returns
+        -------
+        metrics : dict
+            A dictionary of metrics"""
+        return {}
+
 
 def _unbatchify(value):
     """Removes the batch dimension from the tensor. If a single
@@ -217,79 +254,26 @@ class SpeechEvaluationRegressionModel(Pretrained):
         return self.mods.model(wavs, length)
 
 
-class RegressionModelSpeechEvaluator(SpeechEvaluator):
-    """A speech evaluator that uses a regression model
-    that produces a quality score (e.g. SSL fine-tuning)
-    for a sample of speech
+class ASRSpeechEvaluator(SpeechEvaluator):
+    """A superclass for ASR speech evaluators
 
     Arguments
     ---------
-    source : str
-        The source model path or HuggingFace hub name
     sample_rate : int
-        The audio sample rate this evaluator expects
+        The sample rate used by the underlying ASR system
+    metric_mode : str
+        macro = metrics are evaluated per utterance and aggregated
+        micro = metrics are evaluated globally
     """
 
-    def __init__(self, source, sample_rate=None, *args, **kwargs):
+    def __init__(self, sample_rate=16000, metric_mode="macro"):
         super().__init__(sample_rate=sample_rate)
-        self.model = SpeechEvaluationRegressionModel.from_hparams(
-            source, *args, **kwargs
-        )
+        self.metric_mode = metric_mode
+        self.metrics = {}
 
-    def evaluate(
-        self,
-        wavs,
-        length,
-        text=None,
-        wavs_ref=None,
-        length_ref=None,
-        sample_rate=None,
-        sample_rate_ref=None,
-    ):
-        """Evaluates a batch of waveforms
-
-        Arguments
-        ---------
-        Arguments
-        ---------
-        wavs: torch.Tensor
-            the waveforms to evaluate
-
-        length: torch.Tensor
-            relative lengths (a 1-D tensor)
-
-        text : list, optional
-            Ground truth text
-
-        wavs_ref : torch.Tensor
-            the reference waveforms
-
-        length_ref : torch.Tensor
-            the reference waveform lengths
-
-        sample_rate : int, optional
-            The sample rate of the audio. If not provided,
-            the audio is assumed to be at the same sample
-            rate as the model
-
-        sample_rate_ref : int, optional
-            The sample rate of the reference samples
-
-        Returns
-        -------
-        result : SpeechEvaluationResult
-            an aggregated speech evaluation result with a score
-            for each item
-        """
-        wavs = self.resample(wavs, sample_rate)
-        scores = self.model(wavs, length)
-        while scores.dim() > 1 and scores.size(-1) == 1:
-            scores = scores.squeeze(-1)
-        return SpeechEvaluationResult(score=scores, details={"score": scores})
-
-
-class ASRSpeechEvaluator(SpeechEvaluator):
-    """A superclass for ASR speech evaluators"""
+    def on_evaluation_start(self):
+        """Invoked when evaluation starts"""
+        self.metrics = {}
 
     def evaluate(
         self,
@@ -344,6 +328,7 @@ class ASRSpeechEvaluator(SpeechEvaluator):
                 length=length_ref,
                 text=text,
                 sample_rate=sample_rate_ref,
+                metric_key="ref",
             )
             details.update(
                 {f"{key}_ref": value for key, value in details_ref.items()}
@@ -378,18 +363,48 @@ class ASRSpeechEvaluator(SpeechEvaluator):
 
         """
         ids = range(1, len(details["pred"]) + 1)
-        wer_metric, cer_metric = init_asr_metrics()
+        wer_metric, cer_metric = self.get_asr_metrics("diff")
         pred = self._replace_blanks(details["pred"])
         pred_ref = self._replace_blanks(details["pred_ref"])
+        pred = [item.split(" ") for item in pred]
+        pred_ref = [item.split(" ") for item in pred_ref]
         wer_metric.append(ids, pred, pred_ref)
         cer_metric.append(ids, pred, pred_ref)
+        count = len(ids)
         dwer = torch.tensor(
-            [score["WER"] for score in wer_metric.scores], device=device
+            [score["WER"] for score in wer_metric.scores[-count:]],
+            device=device,
         )
         dcer = torch.tensor(
-            [score["WER"] for score in cer_metric.scores], device=device
+            [score["WER"] for score in cer_metric.scores[-count:]],
+            device=device,
         )
         return {"dwer": dwer, "dcer": dcer}
+
+    def get_asr_metrics(self, kind="regular"):
+        """Returns the ASR metrics
+
+        Arguments
+        ---------
+        kind : the kind of metrics to obtain
+            'regular' - a new metric for each sample
+            'micro' - a global shared metric
+
+        Returns
+        -------
+        wer_metric : ErrorRateStats
+            the Word Error Rate (WER) metric
+        cer_metric : ErrorRateStats
+            the Character Error Rate (CER) metric
+        """
+        if self.metric_mode == "micro":
+            if kind not in self.metrics:
+                metrics = init_asr_metrics()
+                self.metrics[kind] = metrics
+            metrics = self.metrics[kind]
+        else:
+            metrics = init_asr_metrics()
+        return metrics
 
     def _replace_blanks(self, preds):
         """Replaces blanks with single spaces, preventing an exception
@@ -400,104 +415,24 @@ class ASRSpeechEvaluator(SpeechEvaluator):
         """
         return [" " if item == "" else item for item in preds]
 
-
-class EncoderDecoderASRSpeechEvaluator(ASRSpeechEvaluator):
-    """A speech evaluator implementation based on ASR.
-    Computes the Word Error Rate (WER), Character Error Rate (CER)
-    and a few other metrics
-
-    Arguments
-    ---------
-    sample_rate : int
-        The audio sample rate this evaluator expects
-    """
-
-    def __init__(self, source, sample_rate=None, *args, **kwargs):
-        super().__init__(sample_rate=sample_rate)
-        self.asr = EncoderDecoderASR.from_hparams(source, *args, **kwargs)
-        self.device = next(self.asr.mods.parameters()).device
-
-    def evaluate_samples(self, wavs, length, text, sample_rate):
-        wavs = self.resample(wavs, sample_rate)
-        if text is None:
-            raise ValueError("This evaluator requires ground-truth text")
-        predicted_words, scores, log_probs = self.transcribe_batch_with_details(
-            wavs, length
-        )
-        ids = range(1, len(wavs) + 1)
-        wer_metric, cer_metric = init_asr_metrics()
-        wer_metric.append(ids, predicted_words, text)
-        cer_metric.append(ids, predicted_words, text)
-        wer = torch.tensor(
-            [score["WER"] for score in wer_metric.scores], device=wavs.device
-        )
-        cer = torch.tensor(
-            [score["WER"] for score in cer_metric.scores], device=wavs.device
-        )
-        prob_mean = log_probs.exp().mean(dim=-1)
-        return {
-            "wer": wer,
-            "cer": cer,
-            "beam_score": scores,
-            "prob_mean": prob_mean,
-            "pred": predicted_words,
-            "target": text,
-        }
-
-    def transcribe_batch_with_details(self, wavs, wav_lens):
-        """Transcribes the input audio into a sequence of words
-
-        The waveforms should already be in the model's desired format.
-        You can call:
-        ``normalized = EncoderDecoderASR.normalizer(signal, sample_rate)``
-        to get a correctly converted signal in most cases.
-
-        Arguments
-        ---------
-        predicted_words : list
-            The raw ASR predictions, fully decoded
-        best_scores : list
-            The best scores (from beam search)
-        best_log_probs : list
-            The best predicted log-probabilities (from beam search)
-
+    def global_metrics(self):
+        """Returns global metrics (not tied to a specific sample)
 
         Returns
         -------
-        predicted_words : list
-            The predictions
-
-        best_scores : torch.Tensor
-            The best scores (from beam search)
-
-        best_log_probs : torch.Tensor
-            The best log-probabilities
-
-        """
-        with torch.no_grad():
-            wav_lens = wav_lens.to(self.device)
-            encoder_out = self.asr.encode_batch(wavs, wav_lens)
-            (
-                hyps,
-                best_lens,
-                best_scores,
-                best_log_probs,
-            ) = self.asr.mods.decoder(encoder_out, wav_lens)
-            predicted_words = [
-                self.asr.tokenizer.decode_ids(token_seq) for token_seq in hyps
-            ]
-        return predicted_words, best_scores, best_log_probs
-
-    def to(self, device):
-        """Transfers this module to the spcieifed device
-
-        Arguments
-        ---------
-        device : str | torch.Device
-            the target device
-        """
-        self.asr = self.asr.to(device)
-        return self
+        metrics : dict
+            A dictionary of metrics"""
+        global_metrics = {}
+        if self.metric_mode == "micro":
+            wer_metric, cer_metric = self.get_asr_metrics("regular")
+            if wer_metric.scores:
+                global_metrics["wer_micro"] = wer_metric.summarize("WER")
+                global_metrics["cer_micro"] = cer_metric.summarize("WER")
+            dwer_metric, dcer_metric = self.get_asr_metrics("diff")
+            if dwer_metric.scores:
+                global_metrics["dwer_micro"] = dwer_metric.summarize("WER")
+                global_metrics["dcer_micro"] = dcer_metric.summarize("WER")
+        return global_metrics
 
 
 class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
@@ -531,12 +466,13 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         source,
         savedir=None,
         sample_rate=22050,
+        metric_mode="macro",
         min_decode_ratio=0.0,
         max_decode_ratio=1.0,
         run_opts=None,
         unbatch=True,
     ):
-        super().__init__(sample_rate=sample_rate)
+        super().__init__(sample_rate=sample_rate, metric_mode=metric_mode)
         if run_opts is None:
             run_opts = {}
         if savedir is None:
@@ -554,7 +490,9 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         self.unbatch = unbatch
         self.to(device)
 
-    def evaluate_samples(self, wavs, length, text, sample_rate):
+    def evaluate_samples(
+        self, wavs, length, text, sample_rate, metric_key="regular"
+    ):
         """Evaluates a batch of samples
 
         Arguments
@@ -567,6 +505,8 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
             Text labels corresponding to the waveforms
         sample_rate : int
             The sample rate of the waveforms
+        metric_key : str
+            The key for metrics
 
         Returns
         -------
@@ -582,24 +522,25 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
                     torch.ones(1, device=wavs.device),
                     text[idx : idx + 1],
                     sample_rate,
+                    metric_key,
                 )
                 for idx in range(batch_size)
             ]
             result = {
+                "pred": [result["pred"][0] for result in results],
+                "target": text,
                 "wer": torch.stack(
                     [result["wer"] for result in results]
                 ).squeeze(-1),
                 "cer": torch.stack(
                     [result["cer"] for result in results]
                 ).squeeze(-1),
-                "pred": [result["pred"][0] for result in results],
-                "target": text,
             }
             return result
         else:
             return self._evaluate_samples(wavs, length, text, sample_rate)
 
-    def _evaluate_samples(self, wavs, length, text, sample_rate):
+    def _evaluate_samples(self, wavs, length, text, sample_rate, metric_key):
         """Evaluates a batch of samples. This function is meant
         to be used internally. evaluate_samples will call
         it multiple times if unbatch is enabled.
@@ -614,6 +555,8 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
             Text labels corresponding to the waveforms
         sample_rate : int
             The sample rate of the waveforms
+        metric_key : bool
+            Whether to compute the metrics
 
         Returns
         -------
@@ -632,21 +575,27 @@ class WhisperASRSpeechEvaluator(ASRSpeechEvaluator):
         )
         predicted_words = [self.normalize(text) for text in predicted_words]
         ids = range(1, len(wavs) + 1)
-        wer_metric, cer_metric = init_asr_metrics()
-        wer_metric.append(ids, predicted_words, text)
-        cer_metric.append(ids, predicted_words, text)
+        wer_metric, cer_metric = self.get_asr_metrics(metric_key)
+        predicted_words_split = [item.split(" ") for item in predicted_words]
+        text_split = [item.split(" ") for item in text]
+        wer_metric.append(ids, predicted_words_split, text_split)
+        cer_metric.append(ids, predicted_words_split, text_split)
+        count = len(ids)
         wer = torch.tensor(
-            [score["WER"] for score in wer_metric.scores], device=wavs.device
+            [score["WER"] for score in wer_metric.scores[-count:]],
+            device=wavs.device,
         )
         cer = torch.tensor(
-            [score["WER"] for score in cer_metric.scores], device=wavs.device
+            [score["WER"] for score in cer_metric.scores[-count:]],
+            device=wavs.device,
         )
-        return {
+        result = {
             "wer": wer,
             "cer": cer,
             "pred": predicted_words,
             "target": text,
         }
+        return result
 
     def normalize(self, text):
         """Performs text normalization (uppercase, remove whitespace,
@@ -743,171 +692,320 @@ class BulkSpeechEvaluator:
         raise NotImplementedError()
 
 
-UTMOS_REPO = "https://huggingface.co/spaces/sarulab-speech/UTMOS-demo"
-
-
-class UTMOSSpeechEvaluator(BulkSpeechEvaluator):
-    """An evaluation wrapper for UTMOS
-
-    Github: https://github.com/sarulab-speech/UTMOS22
-    HuggingFace: https://huggingface.co/spaces/sarulab-speech/UTMOS-demo
+class UTMOSModel(nn.Module):
+    """The UTMOS model wrapper
 
     Arguments
     ---------
-    model_path : str | path-like
-        The path where the HuggingFace repository was extracted
-    output_folder : str | path-like
-        The folder where results will be output
-    ckpt_path : str | path-like
-        The path to the checkpoint to be used
-    script : str | path-like
-        The path to the evaluation script, defaults to the bundled
-        predict.py
-    python : str | path-like, optional
-        The path to the Python interpreter to be used, defaults to
-        "python". Depending on the environment, it might need to be
-        changed (e.g. to "python3" or an absolute path to the interpreter)
-    use_python : bool
-        Whether to launch the script using python. This flag will need to be
-        set to False in environments where running UTMOS requires a wrapper shell
-        script (e.g. to initialize a different Python virtual environment from
-        the one in which SpeechBrain is running)
-    tmp_folder : str | path-like, optional
-        The temporary folder where files will be copied for evaluation. If
-        omitted, it will be set to output_folder. This can be useful on
-        compute environments that provide fast local storage (e.g. certain
-        compute clusters)
-    repo : str
-        The repor
+    source : str
+        The WavLM source
+    save_path : str | path-like
+        The path where the model will be saved
+    features_dim : int, optional
+        The features dimension
+    num_domains : int, optional
+        The number of domains
+    domain_dim : int, optional
+        The dimension of each domain
+    num_judges : int, optional
+        The number of "judges"
+    judge_dim : int, optional
+        The dimension of each judge
+    decoder_hidden_size : int, optional
+        The size of the decoder hidden state
+    multiplier : float, optional
+        The number that the raw model output is multiplied by
+        to compute the score
+    offset : float, optional
+        The number that (raw output * multiplier) will be added
+        to in order to get the score
     """
 
     def __init__(
         self,
-        model_path,
-        output_folder,
-        ckpt_path,
-        script="predict.py",
-        python="python",
-        use_python=True,
-        batch_size=8,
-        tmp_folder=None,
-        repo=UTMOS_REPO,
+        source,
+        save_path,
+        features_dim=768,
+        num_domains=3,
+        domain_dim=128,
+        num_judges=3000,
+        judge_dim=128,
+        decoder_hidden_size=512,
+        multiplier=2.0,
+        offset=3.0,
     ):
-        self.output_folder = Path(output_folder)
-        rand = torch.randint(1, 999999999, (1,)).item()
-        if tmp_folder is None:
-            tmp_folder = self.output_folder
-        else:
-            tmp_folder = Path(tmp_folder)
-        self.eval_path = (tmp_folder / f"eval_{rand}").absolute()
-        self.model_path = Path(model_path).absolute()
-        script = self.model_path / script
-        self.script = script
-        self.ckpt_path = Path(ckpt_path).absolute()
-        self.batch_size = batch_size
-        self.python = python
-        self.use_python = use_python
-        self.repo = repo
-        self.install()
+        super().__init__()
 
-    def install(self):
-        if self.model_path.exists():
-            logger.info("UTMOS is already installed in %s", self.model_path)
-            return
-        logger.info(
-            "Attempting to install UTMOS from %s to %s",
-            self.repo,
-            self.model_path,
+        self.ssl_encoder = Wav2Vec2(
+            source,
+            save_path,
+            freeze=True,
+            output_norm=False,
+            freeze_feature_extractor=True,
+            output_all_hiddens=False,
         )
-        cmd = shlex.join(
-            [
-                "git",
-                "-C",
-                str(self.model_path.parent),
-                "clone",
-                self.repo,
-                str(self.model_path.name),
-            ]
-        )
-        output, err, return_code = run_shell(cmd)
-        if return_code != 0:
-            raise CommandError(cmd, output, err, return_code)
-        logger.info("Repository clone successful, performing an LFS fetch")
-        cwd = Path.cwd()
-        try:
-            os.chdir(self.model_path)
-            cmd = shlex.join(["git", "lfs", "fetch"])
-            output, err, return_code = run_shell(cmd)
-            if return_code != 0:
-                raise CommandError(cmd, output, err, return_code)
-        finally:
-            os.chdir(cwd)
-        if not self.ckpt_path.exists():
-            raise ValueError("ckpt_path {ckpt_path} does not exist")
 
-    def evaluate_files(self, file_names, text, file_names_ref=None):
-        """Evaluates multiple files
+        self.domain_embedding = nn.Embedding(num_domains, domain_dim)
+        self.judge_embedding = nn.Embedding(num_judges, judge_dim)
+
+        self.decoder = nn.LSTM(
+            input_size=features_dim + domain_dim + judge_dim,
+            hidden_size=decoder_hidden_size,
+            num_layers=1,
+            batch_first=True,
+            bidirectional=True,
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Linear(decoder_hidden_size * 2, 2048),
+            torch.nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(2048, 1),
+        )
+        self.multiplier = multiplier
+        self.offset = offset
+
+    def forward(self, wav, domain_id=None, judge_id=None):
+        """Computes the forward pass
 
         Arguments
         ---------
-        file_names : list
-            A list of files
+        wav : torch.Tensor
+            The raw waveforms
+        domain_id : torch.Tensor
+            The domain identifiers
+        judge_id : torch.Tensor
+            The judge identifier
 
-        text : list
-            File transcripts (not required for all evaluators)
-            Not used in this evaluator
+        Returns
+        -------
+        result : torch.Tensor
+            The predicted rating(s)
+        """
 
-        file_names_ref : list, optional
-            A list of reference files / ground truths (if applicable)
-            Not used in this evaluator
+        if domain_id is None:
+            domain_id = torch.zeros(
+                len(wav), dtype=torch.int, device=wav.device
+            )
+        if judge_id is None:
+            judge_id = (
+                torch.ones(len(wav), dtype=torch.int, device=wav.device)
+                * DEFAULT_JUDGE_ID
+            )
+
+        ssl_features = self.ssl_encoder(wav)
+        domain_emb = self.domain_embedding(domain_id)
+        judge_emb = self.judge_embedding(judge_id)
+
+        domain_emb = domain_emb.unsqueeze(1).expand(
+            -1, ssl_features.size(1), -1
+        )
+        judge_emb = judge_emb.unsqueeze(1).expand(-1, ssl_features.size(1), -1)
+        concatenated_feature = torch.cat(
+            [ssl_features, domain_emb, judge_emb], dim=2
+        )
+
+        decoder_output, _ = self.decoder(concatenated_feature)
+        pred = self.classifier(decoder_output)
+
+        return pred.mean(dim=1).squeeze(1) * self.multiplier + self.offset
+
+
+class UTMOSSpeechEvaluator(SpeechEvaluator):
+    """The UTMOS speech evaluator wrapper
+
+    Github: https://github.com/sarulab-speech/UTMOS22
+    HuggingFace: https://huggingface.co/spaces/sarulab-speech/UTMOS-demo
+
+
+    Arguments
+    ---------
+    source : str, optional
+        The WavLM source
+    save_path : str | path-like, optional
+        The path where the model will be saved
+    model_name : str
+        The name of the model hub
+    model_url : str
+        The model URL (if applicable)
+    domain_id : int
+        The domain ID of the underlying model
+    judge_id : int
+        The judge ID to use (given UTMOS was trained as an ensemble
+        of judges)
+    run_opts: dict, optional
+        The run options
+    sample_rate : int
+        The sample rate of the underlying model
+    """
+
+    def __init__(
+        self,
+        source=None,
+        save_path=None,
+        model_name=None,
+        model_url=None,
+        domain_id=None,
+        judge_id=None,
+        run_opts=None,
+        sample_rate=16000,
+    ):
+        super().__init__(sample_rate=sample_rate)
+        self.model = UTMOSModel(source=source, save_path=save_path,)
+        if run_opts is not None:
+            device = run_opts.get("device")
+            if device:
+                self.model = self.model.to(device)
+        fetch(model_name, model_url, save_path)
+        model_path = Path(save_path) / model_name
+        state_dict = torch.load(model_path)
+        self.model.load_state_dict(state_dict)
+        self.model.eval()
+
+        self.domain_id = domain_id
+        self.judge_id = judge_id
+
+    def evaluate(
+        self,
+        wavs,
+        length,
+        text=None,
+        wavs_ref=None,
+        length_ref=None,
+        sample_rate=None,
+        sample_rate_ref=None,
+    ):
+        """Evaluates a batch of waveforms using UTMOS
+
+        Arguments
+        ---------
+        wavs: torch.Tensor
+            the waveforms to evaluate
+        length: torch.Tensor
+            relative lengths (a 1-D tensor)
+        text : list, optional
+            Ground truth text. Ignored for UTMOS.
+        wavs_ref : torch.Tensor
+            the reference waveforms. Ignored for UTMOS.
+        length_ref : torch.Tensor
+            the reference waveform lengths. Ignored for UTMOS.
+        sample_rate : int, optional
+            The sample rate of the audio. If not provided,
+            the audio is assumed to be at the same sample
+            rate as the model
+        sample_rate_ref : int, optional
+            The sample rate of the reference samples. Ignored for UTMOS.
 
         Returns
         -------
         result : SpeechEvaluationResult
-            a consolidated evaluation result
+            an aggregated speech evaluation result with a score
+            for each item
         """
-        current_path = os.getcwd()
-        try:
-            self.eval_path.mkdir(parents=True, exist_ok=True)
-            logger.info("Copying the files to '%s'", self.eval_path)
-            for file_name in file_names:
-                target_file_name = self.eval_path / Path(file_name).name
-                shutil.copy(file_name, target_file_name)
-
-            logger.info("Running evaluation")
-            result_path = self.eval_path / "result.txt"
-            os.chdir(self.model_path)
-            cmd = [
-                str(self.script),
-                "--mode",
-                "predict_dir",
-                "--bs",
-                str(self.batch_size),
-                "--inp_dir",
-                str(self.eval_path),
-                "--out_path",
-                str(result_path),
-                "--ckpt_path",
-                str(self.ckpt_path),
-            ]
-            if self.use_python:
-                cmd = [self.python] + cmd
-
-            output = subprocess.check_output(cmd)
-            logger.info("Evaluation finished, output: %s", output)
-            file_names = [path.name for path in self.eval_path.glob("*.wav")]
-            with open(result_path) as result_path:
-                scores = [float(line.strip()) for line in result_path]
-            score_map = dict(zip(file_names, scores))
-            scores_ordered = [
-                score_map[Path(file_name).name] for file_name in file_names
-            ]
-            return SpeechEvaluationResult(
-                scores_ordered, {"utmos": scores_ordered}
+        wavs = self.resample(wavs, sample_rate=sample_rate)
+        domain_id, judge_id = None, None
+        if self.domain_id is not None:
+            domain_id = (
+                torch.ones(len(wavs), device=wavs.device) * self.domain_id
             )
-        finally:
-            os.chdir(current_path)
-            shutil.rmtree(self.eval_path)
+        if self.judge_id is not None:
+            judge_id = torch.ones(len(wavs), device=wavs.device) * self.judge_id
+
+        scores = self.model(wav=wavs, domain_id=domain_id, judge_id=judge_id)
+        return SpeechEvaluationResult(score=scores, details={"utmos": scores})
+
+
+class SpkSimWavLM(SpeechEvaluator):
+    """A speaker similarity evaluator based on WavLM / XVector
+
+    Arguments
+    ---------
+    source : str
+        The model hub to use
+    savedir : str
+        The path where the model will be saved
+    model_sample_rate : int, optional
+        The sample rate to which all samples will be resampled
+        before being processed
+    """
+
+    def __init__(
+        self,
+        source,
+        savedir,
+        model_sample_rate=16000,
+        run_opts=None,
+        *args,
+        **kwargs,
+    ):
+        if not has_transformers:
+            raise ValueError(
+                "Unable to use the SpkSimWavLM evaluator because the "
+                "transformers library is not enabled"
+            )
+        if run_opts is None:
+            run_opts = {}
+        device = run_opts.get("device")
+        self.model = AutoModelForAudioXVector.from_pretrained(
+            source, cache_dir=savedir, *args, **kwargs
+        )
+        if device is not None:
+            self.model = self.model.to(device)
+
+        self.model.eval()
+        self.model_sample_rate = model_sample_rate
+        self.device = next(self.model.parameters()).device
+
+    def evaluate(
+        self,
+        wavs,
+        length,
+        text=None,
+        wavs_ref=None,
+        length_ref=None,
+        sample_rate=None,
+        sample_rate_ref=None,
+    ):
+        # Resample
+        if sample_rate is not None:
+            wavs = torchaudio.functional.resample(
+                wavs, orig_freq=sample_rate, new_freq=self.model_sample_rate
+            )
+        if sample_rate_ref is not None:
+            wavs_ref = torchaudio.functional.resample(
+                wavs_ref,
+                orig_freq=sample_rate_ref,
+                new_freq=self.model_sample_rate,
+            )
+
+        # Concatenate
+        batch_size, wavs_max_len = wavs.shape
+        _, wavs_ref_max_len = wavs_ref.shape
+        length_abs = length * wavs_max_len
+        length_ref_abs = length_ref * wavs_ref_max_len
+        max_len = max(wavs_max_len, wavs_ref_max_len)
+        wavs, _ = pad_right_to(wavs, (batch_size, max_len))
+        wavs_ref, _ = pad_right_to(wavs_ref, (batch_size, max_len))
+        audio = torch.cat([wavs, wavs_ref])
+
+        length_cat_abs = torch.cat([length_abs, length_ref_abs])
+        # Attention mask
+        attention_mask = length_to_mask(
+            length_cat_abs.int()
+        ).long()  # 0 for masked tokens
+        # Forward
+        with torch.inference_mode():
+            embs = self.model(
+                input_values=audio,
+                attention_mask=attention_mask,
+                output_attentions=False,
+            ).embeddings
+        hyp_embs, ref_embs = embs.split([len(wavs), len(wavs_ref)])
+        scores = torch.nn.functional.cosine_similarity(
+            hyp_embs, ref_embs, dim=-1
+        )
+
+        return SpeechEvaluationResult(scores, {"score": scores})
 
 
 def vocoder_to_device(vocoder, device):

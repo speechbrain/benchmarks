@@ -1,50 +1,56 @@
+# ############################################################################
+# Evaluation Hyperparameters
+# Common to old models, appended to main hyperparameters
+#
+# Authors:  Artem Ploujnikov
+# ############################################################################
+
+eval_enabled: True
 eval_sample_rate: 16000
 eval_samples: null
 eval_interval: 1
 eval_asr_type: whisper
-eval_asr_source: !apply:speechbrain.utils.hparams.choice
-  value: !ref <eval_asr_type>
-  choices:
-    encoder_decoder: speechbrain/asr-transformer-transformerlm-librispeech
-    whisper: openai/whisper-small
+eval_asr_source: openai/whisper-small
 evaluations: utmos,asr
 tmp_folder: null
-utmos_batch_size: 8
-utmos_model_path: ./utmos
-utmos_ckpt_name: epoch=3-step=7459.ckpt
-utmos_ckpt_path: !ref <utmos_model_path>/<utmos_ckpt_name>
-utmos_use_python: True
-utmos_script: predict.py
+eval_utmos_source: chaanks/wav2vec2-small
+eval_utmos_save_path: !ref <pretrained_model_save_folder>/utmos
+eval_utmos_model_name: utmos.ckpt
+eval_utmos_model_url: https://huggingface.co/chaanks/UTMOS/resolve/main
+eval_utmos_domain_id: null
+eval_utmos_judge_id: null
+eval_perf: False
 
 
-eval_asr: !apply:speechbrain.utils.hparams.choice
-  value: !ref <eval_asr_type>
-  choices:
-    encoder_decoder: !name:eval.EncoderDecoderASRSpeechEvaluator
-      source: !ref <eval_asr_source>
-      sample_rate: !ref <eval_sample_rate>
-      overrides:
-        lm_weight: 0.0
-    whisper: !name:eval.WhisperASRSpeechEvaluator
-      source: !ref <eval_asr_source>
-      sample_rate: !ref <eval_sample_rate>
-      savedir: !ref <pretrained_model_save_folder>
+eval_utmos: !name:eval.UTMOSSpeechEvaluator
+  source: !ref <eval_utmos_source>
+  save_path: !ref <eval_utmos_save_path>
+  model_name: !ref <eval_utmos_model_name>
+  model_url: !ref <eval_utmos_model_url>
+  domain_id: !ref <eval_utmos_domain_id>
+  judge_id: !ref <eval_utmos_judge_id>
+
+eval_asr: !name:eval.WhisperASRSpeechEvaluator
+  source: !ref <eval_asr_source>
+  sample_rate: !ref <eval_sample_rate>
+  savedir: !ref <pretrained_model_save_folder>
 
 evaluators:
+  utmos: !ref <eval_utmos>
   asr: !ref <eval_asr>
-
-bulk_evaluators:
-  utmos: !name:eval.UTMOSSpeechEvaluator
-    model_path: !ref <utmos_model_path>
-    output_folder: !ref <output_folder>
-    ckpt_path: !ref <utmos_ckpt_path>
-    batch_size: !ref <utmos_batch_size>
-    script: !ref <utmos_script>
-    use_python: !ref <utmos_use_python>
-    tmp_folder: !ref <tmp_folder>
 
 eval_summary:
   asr:
     descriptive: ["wer", "cer", "wer_ref", "cer_ref", "dwer", "dcer"]
   utmos:
     descriptive: ["utmos"]
+
+eval_summary_log:
+  utmos: utmos_utmos_mean
+  dwer: asr_dwer_median
+
+eval_threshold:
+  dwer_max: 90.0
+
+eval_threshold_set:
+  utmos: 0.0

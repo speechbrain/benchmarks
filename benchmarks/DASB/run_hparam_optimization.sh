@@ -224,7 +224,7 @@ while [[ $# -gt 0 ]]; do
           eval_run_additional_flags+="$name $value "
         fi
         additional_flags+="$name $value " # store additional flags
-      fi    
+      fi
       shift # past argument
       ;;
 

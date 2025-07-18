@@ -28,7 +28,7 @@ from speechbrain.utils.distributed import run_on_main
 base_dir = str(Path(__file__).resolve().parent.parent.parent.parent)
 sys.path.append(base_dir)
 
-from model.Tokotron import (
+from model.Tokotron import (  # noqa: E402
     get_silence_token,
     use_silence_padding,
     feature_pad_to,

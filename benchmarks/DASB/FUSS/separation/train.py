@@ -357,7 +357,7 @@ if __name__ == "__main__":
         "splits": hparams["splits"],
     }
 
-    #run_on_main(prepare_data, kwargs=prepare_data_kwargs)
+    run_on_main(prepare_data, kwargs=prepare_data_kwargs)
 
     # Create the datasets objects
     from utils import dataio_prepare

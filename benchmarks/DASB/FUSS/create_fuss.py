@@ -94,9 +94,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "root_dir",
         type=str,
-        help="Path to the root directory of the FUSS eval set."
+        help="Path to the root directory of the FUSS."
     )
 
     args = parser.parse_args()
     root_dir = args.root_dir
-    process_directories(root_dir)
+    
+    required_subdirs = ['eval', 'train', 'validation']
+    missing = [d for d in required_subdirs if not os.path.isdir(os.path.join(root_dir, d))]
+
+    if missing:
+        raise FileNotFoundError(f"Missing required subdirectories in '{root_dir}': {', '.join(missing)}")
+
+    for subdir in required_subdirs:
+        subdir_path = os.path.join(root_dir, subdir)
+        process_directories(subdir_path)

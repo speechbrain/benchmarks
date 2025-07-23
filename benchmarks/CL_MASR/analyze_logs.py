@@ -851,7 +851,7 @@ if __name__ == "__main__":
                 f"{name.lower().replace(' ', '_')}.{args.format}",
             ),
             xlabel=None,
-            ylabel=f"{name} (\%)"
+            ylabel=f"{name} (\\%)"
             if args.usetex
             else f"{name} (%)",  # noqa: W605
             xticks=["base"] + [f"L{i}" for i in range(1, 1 + len(new_locales))],

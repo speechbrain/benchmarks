@@ -128,7 +128,7 @@ if __name__ == "__main__":
     )
     hparams["train_logger"].log_stats(
         stats_meta={
-            f"Codec parameters/buffers (M)": f"{codec_params / 1e6:.2f}",
+            "Codec parameters/buffers (M)": f"{codec_params / 1e6:.2f}",
             "Model parameters/buffers (M)": f"{model_params / 1e6:.2f}",
         },
     )

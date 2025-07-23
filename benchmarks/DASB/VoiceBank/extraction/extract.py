@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     if hparams["save_embedding"]:
         save_folder = pl.Path(hparams["save_folder"])
-        logger.info(f"Saving embeddings ...")
+        logger.info("Saving embeddings ...")
         tokens_extractor_in.save_pretrained_embeddings(
             (save_folder / "embeddings" / "input").as_posix(),
             vocab_size=hparams["vocab_size"],
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     if hparams["save_embedding"]:
         save_folder = pl.Path(hparams["save_folder"])
-        logger.info(f"Saving embeddings ...")
+        logger.info("Saving embeddings ...")
         tokens_extractor_out.save_pretrained_embeddings(
             (save_folder / "embeddings" / "output").as_posix(),
             vocab_size=hparams["vocab_size"],

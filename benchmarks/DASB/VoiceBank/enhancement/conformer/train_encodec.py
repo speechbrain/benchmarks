@@ -79,7 +79,7 @@ class Enhancement(sb.Brain):
         )  # [B, N, H]
 
         # Forward encoder
-        hyp_embs = self.modules.encoder(in_embs)
+        hyp_embs = self.modules.encoder.encode(in_embs, in_lens)  # [B, N, H]
 
         # Forward head
         log_probs = (

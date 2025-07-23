@@ -1,9 +1,9 @@
 #!/usr/bin/env/python
 
-"""Recipe for training a transformer-based speech enhancement system using EnCodec audio representations.
+"""Recipe for training a transformer-based speech enhancement system using continuous SSL audio representations.
 
 To run this recipe:
-> python train_encodec.py hparams/<path-to-config>.yaml
+> python train_continuous_ssl.py hparams/<path-to-config>.yaml
 
 Authors
  * Luca Della Libera 2024
@@ -23,19 +23,47 @@ from speechbrain.utils.distributed import if_main_process, run_on_main
 _CACHE = {}
 
 
+# To use in configuration files
+def len_(SSL_layers, embedding_dim):
+    return len(SSL_layers) * embedding_dim
+
+
 class Enhancement(sb.Brain):
     @torch.no_grad()
-    def sig_to_toks(self, sig, lens):
+    def sig_to_embs(self, sig, lens):
         # sig: [B, T]
-        self.hparams.codec.to(self.device).eval()
-        toks, _ = self.hparams.codec.encode(sig, lens)  # [B, N, K]
-        return toks
+        self.hparams.ssl_model.to(self.device).eval()
+        embs = self.hparams.ssl_model(sig, lens)[
+            self.hparams.SSL_layers
+        ]  # [K, B, N, H]
+        embs = embs.movedim(0, -2)  # [B, N, K, H]
+        return embs
 
     @torch.no_grad()
-    def toks_to_sig(self, toks):
-        # toks: [B, N, K]
-        self.hparams.codec.to(self.device).eval()
-        sig = self.hparams.codec.decode(toks)[:, 0]  # [B, T]
+    def embs_to_sig(self, embs):
+        # embs: [B, N, K, H]
+        self.hparams.ssl_vocoder.device = self.device
+        self.hparams.ssl_vocoder.to(self.device).eval()
+
+        # Handle missing codebooks
+        all_layer_ids = [1, 3, 7, 12, 18, 23]
+        if len(self.hparams.SSL_layers) < len(all_layer_ids):
+            offset_idxes = [
+                all_layer_ids.index(x) for x in self.hparams.SSL_layers
+            ]
+            full_embs = torch.zeros(
+                *embs.shape[:2],
+                len(all_layer_ids),
+                embs.shape[-1],
+                dtype=embs.dtype,
+                device=self.device,
+            )
+            for i, idx in enumerate(offset_idxes):
+                full_embs[..., idx, :] = embs[..., i, :]
+            embs = full_embs
+
+        self.hparams.ssl_vocoder.tokenize = False
+        sig = self.hparams.ssl_vocoder(embs)[:, 0]  # [B, T]
         return sig
 
     def compute_forward(self, batch, stage):
@@ -48,31 +76,33 @@ class Enhancement(sb.Brain):
         if stage == sb.Stage.TRAIN and self.hparams.augment:
             in_sig, in_lens = self.hparams.augmentation(in_sig, in_lens)
 
-        # Extract tokens (cache them at first epoch if augmentation is disabled)
+        # Extract features (cache them at first epoch if augmentation is disabled)
         key = tuple(sorted(batch.id))
         try:
-            in_toks, out_toks = _CACHE[key]
-            in_toks = in_toks.to(self.device)
-            out_toks = out_toks.to(self.device)
+            in_embs, out_embs = _CACHE[key]
+            in_embs = in_embs.to(self.device)
+            out_embs = out_embs.to(self.device)
         except KeyError:
             assert (in_lens == out_lens).all()
             sig = torch.cat([in_sig, out_sig])  # [B2, T]
             lens = torch.cat([in_lens, out_lens])  # [B2, T]
-            toks = self.sig_to_toks(sig, lens)  # [B2, N, K]
-            in_toks, out_toks = toks.split(
+            embs = self.sig_to_embs(sig, lens)  # [B2, N, K, H]
+            in_embs, out_embs = embs.split(
                 [len(in_sig), len(out_sig)]
-            )  # [B, N, K], [B, N, K]
-            out_toks = out_toks.reshape(
-                len(in_sig), -1, self.hparams.num_codebooks,
-            )  # [B, N, K]
+            )  # [B, N, K, H], [B, N, K, H]
+            out_embs = out_embs.reshape(
+                len(in_sig),
+                -1,
+                self.hparams.num_codebooks,
+                self.hparams.embedding_dim,
+            )  # [B, N, K, H]
             if self.hparams.use_cache and (not self.hparams.augment):
-                _CACHE[key] = in_toks.cpu(), out_toks.cpu()
+                _CACHE[key] = in_embs.cpu(), out_embs.cpu()
 
-        # Avoid in-place modification from embedding layer
-        in_toks = in_toks.clone()
+        # Avoid in-place modification from attention
+        in_embs = in_embs.clone()
 
-        # Forward embedding + attention
-        in_embs = self.modules.embedding(in_toks)  # [B, N, K, H]
+        # Forward attention
         att_w = self.modules.attention_mlp(in_embs)  # [B, N, K, 1]
         in_embs = torch.matmul(att_w.transpose(2, -1), in_embs).squeeze(
             -2
@@ -82,54 +112,40 @@ class Enhancement(sb.Brain):
         hyp_embs = self.modules.encoder(in_embs)
 
         # Forward head
-        log_probs = (
-            self.modules.head(hyp_embs)
-            .reshape(
-                len(hyp_embs),
-                -1,
-                self.hparams.num_codebooks,
-                self.hparams.vocab_size,
-            )
-            .log_softmax(dim=-1)
-        )  # [B, N, K, C]
+        hyp_embs = self.modules.head(hyp_embs).reshape(
+            len(hyp_embs),
+            -1,
+            self.hparams.num_codebooks,
+            self.hparams.embedding_dim,
+        )  # [B, N, K, H]
 
-        return log_probs, out_toks
+        return hyp_embs, out_embs
 
     def compute_objectives(self, predictions, batch, stage):
         """Computes the objectives."""
-        log_probs, out_toks = predictions  # [B, N, K, C], [B, N, K]
+        hyp_embs, out_embs = predictions  # [B, N, K, H], [B, N, K, H]
 
         IDs = batch.id
         in_sig, _ = batch.in_sig
         out_sig, out_lens = batch.out_sig
 
-        # Cross-entropy loss
-        loss = self.hparams.ce_loss(
-            log_probs.flatten(start_dim=1, end_dim=2),  # [B, NK, C]
-            out_toks.flatten(start_dim=1),  # [B, NK]
+        # Reconstruction loss
+        loss = self.hparams.rec_loss(
+            hyp_embs.flatten(start_dim=1, end_dim=-2),  # [B, NK, H]
+            out_embs.flatten(start_dim=1, end_dim=-2),  # [B, NK, H]
             length=out_lens,
         )
 
-        # Compute TER
-        if stage != sb.Stage.TRAIN:
-            self.ter_metric.append(
-                IDs,
-                log_probs.flatten(start_dim=1, end_dim=2),
-                out_toks.flatten(start_dim=1),
-                out_lens,
-            )
-
         # Vocode
         if stage == sb.Stage.TEST and self.hparams.compute_metrics:
-            hyp_toks = log_probs.argmax(dim=-1)  # [B, N, K]
-            self.vocode(IDs, in_sig, out_sig, hyp_toks, out_toks, out_lens)
+            self.vocode(IDs, in_sig, out_sig, hyp_embs, out_embs, out_lens)
 
         return loss
 
     @torch.no_grad()
-    def vocode(self, IDs, in_sig, out_sig, hyp_toks, out_toks, lens):
-        hyp_sig = self.toks_to_sig(hyp_toks)  # [B, T]
-        rec_sig = self.toks_to_sig(out_toks)  # [B, T]
+    def vocode(self, IDs, in_sig, out_sig, hyp_embs, out_embs, lens):
+        hyp_sig = self.embs_to_sig(hyp_embs)  # [B, T]
+        rec_sig = self.embs_to_sig(out_embs)  # [B, T]
 
         # Adjust length
         if out_sig.shape[-1] > hyp_sig.shape[-1]:
@@ -179,8 +195,6 @@ class Enhancement(sb.Brain):
     def on_stage_start(self, stage, epoch=None):
         """Gets called at the beginning of each epoch."""
         super().on_stage_start(stage, epoch)
-        if stage != sb.Stage.TRAIN:
-            self.ter_metric = self.hparams.ter_computer()
         if stage == sb.Stage.TEST and self.hparams.compute_metrics:
             self.dnsmos_metric = self.hparams.dnsmos_computer()
             self.rec_dnsmos_metric = self.hparams.dnsmos_computer()
@@ -196,12 +210,10 @@ class Enhancement(sb.Brain):
 
         if stage == sb.Stage.TRAIN:
             self.train_stats = stage_stats
-        else:
-            stage_stats["TER"] = self.ter_metric.summarize("average") * 100
 
         # Perform end-of-iteration operations, like annealing, logging, etc.
         if stage == sb.Stage.VALID:
-            _, lr = self.hparams.scheduler(stage_stats["TER"])
+            _, lr = self.hparams.scheduler(stage_stats["loss"])
             sb.nnet.schedulers.update_learning_rate(self.optimizer, lr)
             steps = self.optimizer_step
             self.hparams.train_logger.log_stats(
@@ -210,8 +222,8 @@ class Enhancement(sb.Brain):
                 valid_stats=stage_stats,
             )
             self.checkpointer.save_and_keep_only(
-                meta={"TER": stage_stats["TER"]},
-                min_keys=["TER"],
+                meta={"loss": stage_stats["loss"]},
+                min_keys=["loss"],
                 num_to_keep=self.hparams.keep_checkpoints,
             )
 
@@ -287,14 +299,10 @@ if __name__ == "__main__":
         run_on_main(hparams["pretrainer"].collect_files)
         run_on_main(hparams["pretrainer"].load_collected)
 
-    # Use pretrained embeddings
-    if hparams["pretrain_embedding"]:
-        embs = hparams["codec"].vocabulary.reshape(-1, hparams["embedding_dim"])
-        hparams["embedding"].embedding.weight.data.copy_(embs)
-
     # Log number of parameters/buffers
-    codec_params = sum(
-        [x.numel() for x in hparams["codec"].state_dict().values()]
+    ssl_params = sum(
+        [x.numel() for x in hparams["ssl_model"].state_dict().values()]
+        + [x.numel() for x in hparams["ssl_vocoder"].state_dict().values()]
     )
     model_params = sum(
         [
@@ -305,7 +313,7 @@ if __name__ == "__main__":
     )
     hparams["train_logger"].log_stats(
         stats_meta={
-            "Codec parameters/buffers (M)": f"{codec_params / 1e6:.2f}",
+            "SSL parameters/buffers (M)": f"{ssl_params / 1e6:.2f}",
             "Model parameters/buffers (M)": f"{model_params / 1e6:.2f}",
         },
     )
@@ -332,6 +340,6 @@ if __name__ == "__main__":
     brain.hparams.dwer_file = os.path.join(hparams["output_folder"], "dwer.txt")
     brain.evaluate(
         test_data,
-        min_key="TER",
+        min_key="loss",
         test_loader_kwargs=hparams["test_dataloader_kwargs"],
     )

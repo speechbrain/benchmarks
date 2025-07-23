@@ -63,7 +63,7 @@ class ASR(sb.Brain):
 
         if stage == sb.Stage.TRAIN and hasattr(self.hparams, "ewc_params"):
             for name, param in self.modules.wavlm.named_parameters():
-                if not param.requires_grad or param.grad is None:
+                if not param.requires_grad:
                     continue
                 old_param, fisher = self.hparams.ewc_params
                 loss += (

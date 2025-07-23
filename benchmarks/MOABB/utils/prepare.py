@@ -83,11 +83,11 @@ def get_output_dict(
     )
 
     if verbose == 1:
-        for lang in np.unique(labels):
+        for label in np.unique(labels):
             print(
                 print(
                     "Number of label {0} examples: {1}".format(
-                        lang, np.where(labels == lang)[0].shape[0]
+                        label, np.where(labels == label)[0].shape[0]
                     )
                 )
             )

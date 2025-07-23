@@ -373,7 +373,7 @@ def plot_wer(
             plt.xticks(range(len(locales)), locales, rotation=90)
             if xlabel is not None:
                 plt.xlabel(xlabel)
-            plt.ylabel("WER (\%)" if usetex else "WER (%)")  # noqa: W605
+            plt.ylabel("WER (\\%)" if usetex else "WER (%)")  # noqa: W605
             fig.tight_layout()
             plt.savefig(output_image, bbox_inches="tight")
             plt.close()

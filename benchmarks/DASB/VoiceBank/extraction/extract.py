@@ -1,8 +1,10 @@
 #!/usr/bin/env/python3
-"""Recipe for extracting a discrete tokens with librispeech.
+
+"""Recipe for extracting a discrete tokens with VoiceBank.
 
 Authors
  * Jarod Duret 2024
+ * Luca Della Libera 2024
 """
 
 import os
@@ -35,39 +37,34 @@ if __name__ == "__main__":
         overrides=overrides,
     )
 
-    # Dataset prep (parsing Librispeech)
-    from librispeech_prepare import prepare_librispeech  # noqa
+    # Dataset prep (parsing voicebank)
+    from voicebank_prepare import prepare_voicebank  # noqa
 
     # multi-gpu (ddp) save data preparation
+    os.makedirs(hparams["save_folder"], exist_ok=True)
     run_on_main(
-        prepare_librispeech,
+        prepare_voicebank,
         kwargs={
             "data_folder": hparams["data_folder"],
-            "tr_splits": hparams["train_splits"],
-            "dev_splits": hparams["dev_splits"],
-            "te_splits": hparams["test_splits"],
-            "save_folder": hparams["cached_data_folder"],
-            "merge_lst": hparams["train_splits"],
-            "merge_name": "train.csv",
-            "skip_prep": hparams["skip_prep"],
+            "save_folder": hparams["save_folder"],
+            "splits": hparams["splits"],
+            "num_valid_speakers": hparams["num_valid_speakers"],
         },
     )
 
-    tokens_extractor = hparams["tokens_extractor"]
+    tokens_extractor_in = hparams["tokens_extractor_in"]
+    tokens_extractor_out = hparams["tokens_extractor_out"]
     data_folder = hparams["data_folder"]
+
     datasets = []
-    for split in ["train", "valid"]:
-        csv_path = hparams[f"{split}_csv"]
+    for csv_path in [
+        hparams["train_csv"],
+        hparams["valid_csv"],
+        hparams["test_csv"],
+    ]:
         name = pl.Path(csv_path).stem
         dataset = sb.dataio.dataset.DynamicItemDataset.from_csv(
-            csv_path=csv_path, replacements={"data_root": data_folder},
-        )
-        datasets.append(dataset)
-
-    for split in hparams["test_csv"]:
-        name = pl.Path(split).stem
-        dataset = sb.dataio.dataset.DynamicItemDataset.from_csv(
-            csv_path=split, replacements={"data_root": data_folder},
+            csv_path=csv_path, replacements={"DATA_ROOT": data_folder},
         )
         datasets.append(dataset)
 
@@ -79,18 +76,34 @@ if __name__ == "__main__":
     merged_dataset = DynamicItemDataset(merged_data)
 
     save_folder = pl.Path(hparams["save_folder"])
-    logger.info("Extracting dataset tokens ...")
-    tokens_extractor.extract_tokens(
+    logger.info("Extracting dataset input tokens ...")
+    tokens_extractor_in.extract_tokens(
         merged_dataset,
         hparams["num_codebooks"],
-        (save_folder / "librispeech").as_posix(),
+        (save_folder / "input").as_posix(),
     )
 
     if hparams["save_embedding"]:
         save_folder = pl.Path(hparams["save_folder"])
         logger.info("Saving embeddings ...")
-        tokens_extractor.save_pretrained_embeddings(
-            (save_folder / "embeddings").as_posix(),
+        tokens_extractor_in.save_pretrained_embeddings(
+            (save_folder / "embeddings" / "input").as_posix(),
+            vocab_size=hparams["vocab_size"],
+            num_codebooks=hparams["num_codebooks"],
+        )
+
+    logger.info("Extracting dataset output tokens ...")
+    tokens_extractor_out.extract_tokens(
+        merged_dataset,
+        hparams["num_codebooks"],
+        (save_folder / "output").as_posix(),
+    )
+
+    if hparams["save_embedding"]:
+        save_folder = pl.Path(hparams["save_folder"])
+        logger.info("Saving embeddings ...")
+        tokens_extractor_out.save_pretrained_embeddings(
+            (save_folder / "embeddings" / "output").as_posix(),
             vocab_size=hparams["vocab_size"],
             num_codebooks=hparams["num_codebooks"],
         )

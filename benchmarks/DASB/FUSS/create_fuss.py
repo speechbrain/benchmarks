@@ -4,6 +4,7 @@ import numpy as np
 import soundfile as sf
 from tqdm import tqdm
 
+
 def create_silent_audio(reference_path, target_path):
     """
     Create a silent audio file with the same length and sampling rate as the reference audio.
@@ -18,6 +19,7 @@ def create_silent_audio(reference_path, target_path):
 
     # Save the silent audio
     sf.write(target_path, silent_audio, samplerate)
+
 
 def create_mixture_audio(directory, required_files, output_path):
     """
@@ -42,8 +44,9 @@ def create_mixture_audio(directory, required_files, output_path):
 
     if mixture is not None and samplerate is not None:
         # Normalize the mixture to prevent clipping
-        #mixture = mixture / len(required_files)
+        # mixture = mixture / len(required_files)
         sf.write(output_path, mixture, samplerate)
+
 
 def ensure_audio_files(directory):
     """
@@ -60,7 +63,9 @@ def ensure_audio_files(directory):
     ]
 
     # Full paths to the required files
-    required_paths = {file: os.path.join(directory, file) for file in required_files}
+    required_paths = {
+        file: os.path.join(directory, file) for file in required_files
+    }
 
     # Check if 'background0_sound.wav' exists
     background_path = required_paths["background0_sound.wav"]
@@ -71,12 +76,13 @@ def ensure_audio_files(directory):
     # Ensure other files exist, creating silent versions if necessary
     for file, path in required_paths.items():
         if not os.path.exists(path):
-            #print(f"{file} is missing. Creating a silent version.")
+            # print(f"{file} is missing. Creating a silent version.")
             create_silent_audio(background_path, path)
 
     # Create the mixture audio file
     mixture_path = os.path.join(directory, "mixture.wav")
     create_mixture_audio(directory, required_files, mixture_path)
+
 
 def process_directories(root_directory):
     """
@@ -90,21 +96,27 @@ def process_directories(root_directory):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Ensure audio files and create mixture files in each subdirectory.")
+    parser = argparse.ArgumentParser(
+        description="Ensure audio files and create mixture files in each subdirectory."
+    )
     parser.add_argument(
-        "root_dir",
-        type=str,
-        help="Path to the root directory of the FUSS."
+        "root_dir", type=str, help="Path to the root directory of the FUSS."
     )
 
     args = parser.parse_args()
     root_dir = args.root_dir
-    
-    required_subdirs = ['eval', 'train', 'validation']
-    missing = [d for d in required_subdirs if not os.path.isdir(os.path.join(root_dir, d))]
+
+    required_subdirs = ["eval", "train", "validation"]
+    missing = [
+        d
+        for d in required_subdirs
+        if not os.path.isdir(os.path.join(root_dir, d))
+    ]
 
     if missing:
-        raise FileNotFoundError(f"Missing required subdirectories in '{root_dir}': {', '.join(missing)}")
+        raise FileNotFoundError(
+            f"Missing required subdirectories in '{root_dir}': {', '.join(missing)}"
+        )
 
     for subdir in required_subdirs:
         subdir_path = os.path.join(root_dir, subdir)

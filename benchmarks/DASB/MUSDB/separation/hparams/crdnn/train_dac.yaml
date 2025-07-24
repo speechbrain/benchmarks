@@ -211,7 +211,6 @@ ter_computer: !name:speechbrain.utils.metric_stats.MetricStats
         reduction: batch
 
 bsseval_computer: !name:metrics.bsseval.BSSEval
-    sample_rate: !ref <sample_rate>
     n_sources: !ref <num_speakers>
     permutation_invariant: !ref <use_pit>
 

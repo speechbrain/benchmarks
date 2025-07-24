@@ -4,7 +4,7 @@ Authors
  * Luca Della Libera 2024
 """
 
-import os, sys
+import os
 
 import speechbrain as sb
 import torch
@@ -23,8 +23,6 @@ __all__ = ["SBWav2Vec2ForwardWrapper", "dataio_prepare"]
 
 CHUNK = 10.0
 
-
-import torch
 
 class EncodecHelper:
     def __init__(self, codec, device):
@@ -53,14 +51,18 @@ class DacHelper:
     @torch.no_grad()
     def sig_to_toks(self, sig, lens):
         self.codec.to(self.device).eval()
-        toks, _ = self.codec(sig[:, None], n_quantizers=self.num_codebooks)  # [B, K, N]
+        toks, _ = self.codec(
+            sig[:, None], n_quantizers=self.num_codebooks
+        )  # [B, K, N]
         toks = toks.movedim(-1, -2)  # [B, N, K]
         return toks
 
     @torch.no_grad()
     def toks_to_sig(self, toks):
         self.codec.to(self.device).eval()
-        qfeats, _, _ = self.codec.quantizer.from_codes(toks.movedim(-1, -2))  # [B, K, N] -> [B, K, N]
+        qfeats, _, _ = self.codec.quantizer.from_codes(
+            toks.movedim(-1, -2)
+        )  # [B, K, N] -> [B, K, N]
         sig = self.codec.decode(qfeats)[:, 0]  # [B, T]
         return sig
 
@@ -88,7 +90,7 @@ class SQCodecHelper:
         arr = arr.clone()
         flattened_arr = arr.permute(1, 2, 0).reshape(B, N * K)
         return flattened_arr
-    
+
     def _unflatten_codebooks(self, flat_arr, N, K):
         # flat_arr: [B, N * K]
         B = flat_arr.shape[0]
@@ -96,9 +98,9 @@ class SQCodecHelper:
 
     @torch.no_grad()
     def toks_to_sig(self, toks):
-        toks = toks.permute(2,0,1) # [B, N, K] -> [K, B, N]
+        toks = toks.permute(2, 0, 1)  # [B, N, K] -> [K, B, N]
         flat_toks = self._flatten_codebooks(toks).to(torch.int32)
-        sig = self.codec.decode(flat_toks).squeeze(1) # [B, T]
+        sig = self.codec.decode(flat_toks).squeeze(1)  # [B, T]
         return sig.to(toks.device)
 
 
@@ -120,7 +122,6 @@ class WavTokenizerHelper:
         toks = toks.movedim(-1, -2)  # [B, N, K] -> [B, K, N]
         sig = self.codec.decode(toks)  # [B, T]
         return sig.clone()
-
 
 
 class SBWav2Vec2ForwardWrapper(torch.nn.Module):
@@ -254,7 +255,7 @@ def dataio_prepare(
         reverse=not debug,
         key_max_value={"duration": test_remove_if_longer},
     )
-    
+
     # train_data = train_data.overfit_test(32, 32)
     # valid_data = valid_data.overfit_test(8, 8)
     # test_data = test_data.overfit_test(3, 3)
@@ -263,12 +264,12 @@ def dataio_prepare(
 
     # Define audio pipeline
     takes = [
-                "mixture_wav",
-                "background0_sound_wav",
-                "foreground0_sound_wav",
-                "foreground1_sound_wav",
-                "foreground2_sound_wav",
-            ]
+        "mixture_wav",
+        "background0_sound_wav",
+        "foreground0_sound_wav",
+        "foreground1_sound_wav",
+        "foreground2_sound_wav",
+    ]
     provides = ["in_sig", "out_sig"]
 
     def audio_pipeline(mix_wav, *src_wavs):
@@ -280,8 +281,8 @@ def dataio_prepare(
             # total_frames = sb.dataio.dataio.read_audio_info(
             #     mix_wav
             # ).num_frames
-            
-            #start = randint(0, total_frames - int(CHUNK * original_sample_rate))
+
+            # start = randint(0, total_frames - int(CHUNK * original_sample_rate))
 
             # Source signals
             src_sigs = []
@@ -290,11 +291,17 @@ def dataio_prepare(
                     original_sample_rate
                     == sb.dataio.dataio.read_audio_info(src_wav).sample_rate
                 )
-                src_sig = sb.dataio.dataio.read_audio(dict(file=src_wav))#,start=start, stop=start + int(CHUNK * original_sample_rate)))
+                src_sig = sb.dataio.dataio.read_audio(
+                    dict(file=src_wav)
+                )  # ,start=start, stop=start + int(CHUNK * original_sample_rate)))
                 src_sigs.append(src_sig)
             src_sigs = torch.stack(src_sigs)  # [S, T]
-            max_vals = torch.max(torch.abs(src_sigs), dim=1, keepdim=True)[0]  # Find peak per source item
-            src_sigs = torch.where(max_vals > 0, src_sigs / max_vals, src_sigs)  # Normalize only non-silent signals
+            max_vals = torch.max(torch.abs(src_sigs), dim=1, keepdim=True)[
+                0
+            ]  # Find peak per source item
+            src_sigs = torch.where(
+                max_vals > 0, src_sigs / max_vals, src_sigs
+            )  # Normalize only non-silent signals
 
             out_sig = torchaudio.functional.resample(
                 src_sigs, original_sample_rate, sample_rate,

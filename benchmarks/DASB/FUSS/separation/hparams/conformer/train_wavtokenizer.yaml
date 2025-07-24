@@ -114,12 +114,12 @@ checkpoint: wavtokenizer_medium_music_audio_320_24k_v2.ckpt
 
 # Modules
 codec: !new:speechbrain.lobes.models.discrete.wavtokenizer.WavTokenizer
-  source: !ref <model_hub>
-  save_path: !ref <save_folder>
-  checkpoint: !ref <checkpoint>
-  config: !ref <config>
-  sample_rate: !ref <sample_rate>
-  freeze: True
+    source: !ref <model_hub>
+    save_path: !ref <save_folder>
+    checkpoint: !ref <checkpoint>
+    config: !ref <config>
+    sample_rate: !ref <sample_rate>
+    freeze: True
 
 embedding: !new:model.custom_model.Discrete_EmbeddingLayer
     num_codebooks: !ref <num_codebooks>
@@ -205,7 +205,6 @@ ter_computer: !name:speechbrain.utils.metric_stats.MetricStats
         reduction: batch
 
 bsseval_computer: !name:metrics.bsseval.BSSEval
-    sample_rate: !ref <sample_rate>
     n_sources: !ref <num_speakers>
     permutation_invariant: !ref <use_pit>
 

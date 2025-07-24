@@ -20,6 +20,7 @@ SOURCE_NAMES = [
 # Workaround to use fastest backend (SoundFile)
 try:
     import torchaudio
+
     torchaudio._backend.utils.get_available_backends().pop("ffmpeg", None)
 except Exception:
     pass
@@ -99,48 +100,60 @@ def prepare_musdb(
                 if os.path.exists(file_path):
                     file_paths[file_name] = file_path
                 else:
-                    print(f"Warning: {file_name} missing in {track_dir}. Skipping track.")
+                    print(
+                        f"Warning: {file_name} missing in {track_dir}. Skipping track."
+                    )
                     file_paths = None
                     break  # If any file is missing, skip the current track
-
 
             # If all required files are found, process the track
             if file_paths:
                 # Get the duration of the 'mixture.wav' file
-                mixture_wav_path = file_paths['mixture.wav']
-                info = sb.dataio.dataio.read_audio_info(
-                    mixture_wav_path
-                )
+                mixture_wav_path = file_paths["mixture.wav"]
+                info = sb.dataio.dataio.read_audio_info(mixture_wav_path)
                 duration = info.num_frames / info.sample_rate
 
                 # Prepare the row for the CSV
                 row = [
                     split,
-                    track_id,                           # ID
-                    duration,                            # duration
-                    file_paths['mixture.wav'],              # mixture_wav
-                    file_paths['bass.wav'],
-                    file_paths['drums.wav'],
-                    file_paths['other.wav'],
-                    file_paths['vocals.wav'],
+                    track_id,  # ID
+                    duration,  # duration
+                    file_paths["mixture.wav"],  # mixture_wav
+                    file_paths["bass.wav"],
+                    file_paths["drums.wav"],
+                    file_paths["other.wav"],
+                    file_paths["vocals.wav"],
                 ]
 
                 # Add the row to the appropriate data list
-                if split == 'train':
+                if split == "train":
                     train_data.append(row)
-                elif split == 'eval':
+                elif split == "eval":
                     test_data.append(row)
-                elif split == 'validation':
+                elif split == "validation":
                     valid_data.append(row)
 
     # Define the CSV file headers
-    headers = ['split', 'ID', 'duration', 'mixture_wav', 'bass_wav', 'drums_wav', 'other_wav', 'vocals_wav']
+    headers = [
+        "split",
+        "ID",
+        "duration",
+        "mixture_wav",
+        "bass_wav",
+        "drums_wav",
+        "other_wav",
+        "vocals_wav",
+    ]
 
     # Write the CSV files for each split
-    for data, split in [(train_data, 'train'), (test_data, 'eval'), (valid_data, 'validation')]:
+    for data, split in [
+        (train_data, "train"),
+        (test_data, "eval"),
+        (valid_data, "validation"),
+    ]:
         output_csv = os.path.join(save_folder, f"{split}.csv")
 
-        with open(output_csv, mode='w', newline='') as file:
+        with open(output_csv, mode="w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(headers)
             writer.writerows(data)

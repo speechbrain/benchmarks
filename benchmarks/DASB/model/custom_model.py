@@ -1,10 +1,12 @@
-import os, sys
-
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../model"))
-sys.path.append(base_dir)
-
+import os
+import sys
 import torch
 from sq_codec import decimal_to_ternary_matrix
+
+base_dir = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../../model")
+)
+sys.path.append(base_dir)
 
 
 class AttentionMLP(torch.nn.Module):
@@ -66,7 +68,7 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
         init=False,
         freeze=False,
         hidden_dim=None,
-        scalar = False,
+        scalar=False,
     ):
         super(Discrete_EmbeddingLayer, self).__init__()
         self.scalar = scalar
@@ -78,7 +80,7 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
             else num_codebooks
         )
         self.freeze = freeze
-        if not self.scalar: 
+        if not self.scalar:
             self.embedding = torch.nn.Embedding(
                 self.num_codebooks * vocab_size, emb_dim
             ).requires_grad_(not self.freeze)
@@ -107,19 +109,25 @@ class Discrete_EmbeddingLayer(torch.nn.Module):
         in_embs : torch.Tensor
         """
 
-
         if self.scalar:
             with torch.no_grad():
                 in_tokens = in_tokens.permute(2, 0, 1)
                 in_embs = []
                 for i in range(self.num_codebooks):
-                    tmp_list = decimal_to_ternary_matrix(in_tokens[i, :, :], D=self.emb_dim) - 1
+                    tmp_list = (
+                        decimal_to_ternary_matrix(
+                            in_tokens[i, :, :], D=self.emb_dim
+                        )
+                        - 1
+                    )
                     in_embs.append(tmp_list)
-                in_embs = torch.stack(in_embs, dim=0).float().to(in_tokens.device)  # Shape: (num_codebooks, B, D, T)
+                in_embs = (
+                    torch.stack(in_embs, dim=0).float().to(in_tokens.device)
+                )  # Shape: (num_codebooks, B, D, T)
                 # Permute to match (B, T, num_codebook, D)
                 in_embs = in_embs.permute(1, 3, 0, 2)  # Shape: (3, 150, 4, 9)
         else:
-            with torch.set_grad_enabled(not self.freeze):                
+            with torch.set_grad_enabled(not self.freeze):
                 #  Add unique token IDs across diffrent codebooks by adding num_codebooks * vocab_size
                 in_tokens += torch.arange(
                     0,

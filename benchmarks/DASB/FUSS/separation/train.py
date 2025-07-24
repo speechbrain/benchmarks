@@ -30,7 +30,9 @@ from utils import (
 
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 sys.path.append(base_dir)
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../model"))
+base_dir = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../model")
+)
 sys.path.append(base_dir)
 
 
@@ -41,9 +43,16 @@ _CACHE = {}
 
 
 class Separation(sb.Brain):
-    def __init__(self, modules=None, opt_class=None, hparams=None, run_opts=None, checkpointer=None):
+    def __init__(
+        self,
+        modules=None,
+        opt_class=None,
+        hparams=None,
+        run_opts=None,
+        checkpointer=None,
+    ):
         super().__init__(modules, opt_class, hparams, run_opts, checkpointer)
-        
+
         # Read tokenizer type from hparams
         tokenizer_type = self.hparams.codec.__class__.__name__
         self.encdec = self._get_encdec_helper(tokenizer_type)
@@ -52,14 +61,15 @@ class Separation(sb.Brain):
         if tokenizer_type == "Encodec":
             return EncodecHelper(self.hparams.codec, self.device)
         elif tokenizer_type == "DAC":
-            return DacHelper(self.hparams.codec, self.device, self.hparams.num_codebooks)
+            return DacHelper(
+                self.hparams.codec, self.device, self.hparams.num_codebooks
+            )
         elif tokenizer_type == "SQCodec":
             return SQCodecHelper(self.hparams.codec, self.device)
         elif tokenizer_type == "WavTokenizer":
             return WavTokenizerHelper(self.hparams.codec, self.device)
         else:
             raise ValueError(f"Unsupported tokenizer type: {tokenizer_type}")
-
 
     @torch.no_grad()
     def sig_to_toks(self, sig, lens):
@@ -123,9 +133,12 @@ class Separation(sb.Brain):
         # Forward embedding + attention
         in_embs = self.modules.embedding(in_toks)  # [B, N, K, H]
         # Get merged embedding based on strategy set, deafualt ATT_Pooling
-        if  hasattr(self.hparams,'embedding_strg') and  self.hparams.embedding_strg == 'concat':
+        if (
+            hasattr(self.hparams, "embedding_strg")
+            and self.hparams.embedding_strg == "concat"
+        ):
             B, T, N_Q, D = in_embs.shape
-            in_embs = in_embs.view(B,T,N_Q * D)
+            in_embs = in_embs.view(B, T, N_Q * D)
 
         else:
             att_w = self.modules.attention_mlp(in_embs)  # [B, N, K, 1]
@@ -134,8 +147,10 @@ class Separation(sb.Brain):
             )  # [B, N, H]
 
         # Forward encoder
-        if hasattr(self.modules.encoder, 'encode'):
-            hyp_embs = self.modules.encoder.encode(in_embs, in_lens)  # [B, N, H]
+        if hasattr(self.modules.encoder, "encode"):
+            hyp_embs = self.modules.encoder.encode(
+                in_embs, in_lens
+            )  # [B, N, H]
         else:
             hyp_embs = self.modules.encoder(in_embs)  # [B, N, H]
 
@@ -215,11 +230,17 @@ class Separation(sb.Brain):
         # Vocode
         if stage in [sb.Stage.TEST] and self.hparams.compute_metrics:
             hyp_toks = log_probs.argmax(dim=-1)  # [B, N, S, K]
-            hyp_sig, rec_sig, out_sig = self.vocode(IDs, in_sig, out_sig, hyp_toks, out_toks, out_lens)
+            hyp_sig, rec_sig, out_sig = self.vocode(
+                IDs, in_sig, out_sig, hyp_toks, out_toks, out_lens
+            )
             self.bsseval_metric.add(out_sig, hyp_sig, tag="clean-hyp")
             self.bsseval_metric.add(out_sig, rec_sig, tag="clean-rec")
             self.bsseval_metric.add(rec_sig, hyp_sig, tag="rec-hyp")
-            self.bsseval_metric.add(out_sig, in_sig.unsqueeze(1).repeat(1, self.hparams.num_speakers, 1), tag="clean-mix")
+            self.bsseval_metric.add(
+                out_sig,
+                in_sig.unsqueeze(1).repeat(1, self.hparams.num_speakers, 1),
+                tag="clean-mix",
+            )
 
         return loss
 
@@ -275,15 +296,24 @@ class Separation(sb.Brain):
                     in_sig[i].cpu(),
                     self.hparams.sample_rate,
                 )
-        hyp_sig = hyp_sig.reshape(len(IDs), self.hparams.num_speakers, -1)  # [B, S, T_out]
-        rec_sig = rec_sig.reshape(len(IDs), self.hparams.num_speakers, -1)  # [B, S, T_out]
-        out_sig = out_sig.reshape(len(IDs), self.hparams.num_speakers, -1)  # [B, S, T_out]
+        hyp_sig = hyp_sig.reshape(
+            len(IDs), self.hparams.num_speakers, -1
+        )  # [B, S, T_out]
+        rec_sig = rec_sig.reshape(
+            len(IDs), self.hparams.num_speakers, -1
+        )  # [B, S, T_out]
+        out_sig = out_sig.reshape(
+            len(IDs), self.hparams.num_speakers, -1
+        )  # [B, S, T_out]
         return hyp_sig, rec_sig, out_sig
 
     def on_stage_start(self, stage, epoch=None):
         """Gets called at the beginning of each epoch."""
         super().on_stage_start(stage, epoch)
-        if stage in [sb.Stage.TEST, sb.Stage.VALID] and self.hparams.compute_metrics:
+        if (
+            stage in [sb.Stage.TEST, sb.Stage.VALID]
+            and self.hparams.compute_metrics
+        ):
             self.bsseval_metric = self.hparams.bsseval_computer()
             self.ter_metric = self.hparams.ter_computer()
 
@@ -415,8 +445,9 @@ if __name__ == "__main__":
     # Test
     if hparams["testing"]:
         # Testing
-        brain.hparams.bsseval_file = os.path.join(hparams["output_folder"], "bsseval.txt")
+        brain.hparams.bsseval_file = os.path.join(
+            hparams["output_folder"], "bsseval.txt"
+        )
         brain.evaluate(
-            test_data,
-            test_loader_kwargs=hparams["test_dataloader_kwargs"],  
+            test_data, test_loader_kwargs=hparams["test_dataloader_kwargs"],
         )
